@@ -1,0 +1,3 @@
+version: 2.1
+
+description: "Handle interactions with giantswarm managed apps catalog."

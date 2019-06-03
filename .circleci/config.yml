@@ -1,0 +1,31 @@
+version: 2.1
+
+orbs:
+  orb-tools: circleci/orb-tools@8.3.0
+
+workflows:
+  catalog_build:
+    jobs:
+      - orb-tools/lint
+
+      - orb-tools/pack:
+          source-dir: catalog
+          destination-orb-path: packed/orb.yml
+          workspace-path: packed/orb.yml
+          artifact-path: packed/orb.yml
+          requires: [orb-tools/lint]
+
+      - orb-tools/publish-dev:
+          orb-name: giantswarm/architect-orb
+          orb-path: workspace/packed/orb.yml
+          publish-token-variable: CIRCLECI_DEV_API_TOKEN
+          requires: [orb-tools/pack]
+
+      - orb-tools/dev-promote-prod:
+          orb-name: giantswarm/architect-orb
+          publish-token-variable: CIRCLECI_DEV_API_TOKEN
+          release: patch
+          requires: [orb-tools/publish-dev]
+          filters:
+            branches:
+              only: master
