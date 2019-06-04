@@ -11,6 +11,7 @@ This repository hosts the source code for giantswarm/architect orb.
 Example usage
 
 ```yaml
+version: 2.1
 orbs:
   architect: giantswarm/architect@VERSION
 
@@ -22,4 +23,8 @@ workflows:
           app_catalog: "magic-catalog"
           app_catalog_test: "magic-test-catalog"
           chart: "magic-operator"
+          # needed to trigger job on git tag
+          filters:
+            tags:
+              only: /^v.*/
 ```
