@@ -10,6 +10,8 @@ This repository hosts the source code for giantswarm/architect orb.
 
 This job templates and packages a given `chart` from the helm directory and pushes it to `app_catalog` for tagged builds and `app_catalog_test` otherwise.
 
+**NOTE**: It requires `CATALOGBOT_SSH_KEY_PRIVATE_BASE64` environment variable to be set in the build. This must be base64 encoded private SSH key of [CatalogBot github user](https://github.com/catalogbot).
+
 Example usage
 
 ```yaml
