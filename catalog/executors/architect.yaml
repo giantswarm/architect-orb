@@ -1,0 +1,3 @@
+docker:
+  - image: quay.io/giantswarm/architect:latest
+    entrypoint: /bin/ash

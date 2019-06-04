@@ -1,0 +1,6 @@
+description: "update giantswarm catalog"
+executor: architect
+steps:
+  - setup_remote_docker:
+      docker_layer_caching: true
+  - run: echo "hello orb"
