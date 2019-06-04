@@ -9,7 +9,7 @@ workflows:
       - orb-tools/lint
 
       - orb-tools/pack:
-          source-dir: catalog
+          source-dir: src
           destination-orb-path: packed/orb.yml
           workspace-path: packed/orb.yml
           artifact-path: packed/orb.yml

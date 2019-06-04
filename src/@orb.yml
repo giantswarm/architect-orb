@@ -1,0 +1,5 @@
+version: 2.1
+
+description: |
+  Tools for interactions with giantswarm managed App Catalog. Full orb source
+  code: https://github.com/giantswarm/architect-orb.
