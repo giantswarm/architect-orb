@@ -27,7 +27,7 @@ workflows:
           app_catalog: "magic-catalog"
           app_catalog_test: "magic-test-catalog"
           chart: "magic-operator"
-          # Make sure docker image is sucessfuly built.
+          # Make sure docker image is successfully built.
           requires:
             - build
           # Needed to trigger job on git tag.
