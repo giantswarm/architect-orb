@@ -1,0 +1,19 @@
+executor: architect
+parameters:
+  app_catalog:
+    description: "Name of the Github repository inside giantswarm organization hosting the App Catalog for tagged builds."
+    type: "string"
+  app_catalog_test:
+    description: "Name of the Github repository inside giantswarm organization hosting the App Catalog for test builds."
+    type: "string"
+  chart:
+    description: "Name of the chart inside helm directory to push to the App Catalog."
+    type: "string"
+steps:
+  - checkout
+  - tools-info
+  - prepare-catalogbot-git-ssh
+  - package-and-push:
+      app_catalog: <<parameters.app_catalog>>
+      app_catalog_test: <<parameters.app_catalog_test>>
+      chart: <<parameters.chart>>

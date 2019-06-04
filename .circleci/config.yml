@@ -9,7 +9,7 @@ workflows:
       - orb-tools/lint
 
       - orb-tools/pack:
-          source-dir: catalog
+          source-dir: src
           destination-orb-path: packed/orb.yml
           workspace-path: packed/orb.yml
           artifact-path: packed/orb.yml
@@ -24,9 +24,9 @@ workflows:
       - orb-tools/dev-promote-prod:
           orb-name: giantswarm/architect
           publish-token-variable: CIRCLECI_DEV_API_TOKEN
-          release: patch
+          release: minor
           requires: [orb-tools/publish-dev]
           filters:
             branches:
-              #only: master
-              ignore: /.*/
+              only: master
+              #ignore: /.*/

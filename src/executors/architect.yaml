@@ -1,0 +1,3 @@
+docker:
+  - entrypoint: /bin/bash
+    image: quay.io/giantswarm/architect:latest
