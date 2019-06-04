@@ -10,7 +10,7 @@ parameters:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
 steps:
-  - checkout # This is build-in CircleCI command.
+  - checkout
   - tools-info
   - prepare-catalogbot-git-ssh
   - package-and-push:
