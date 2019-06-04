@@ -11,7 +11,8 @@ This repository hosts the source code for giantswarm/architect orb.
 Example usage
 
 ```yaml
-architect: giantswarm/architect@VERSION
+orbs:
+  architect: giantswarm/architect@VERSION
 
 workflows:
   my-workflow:
