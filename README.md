@@ -8,6 +8,8 @@ This repository hosts the source code for giantswarm/architect orb.
 
 ### push-to-app-catalog
 
+This job templates and packages a given `chart` from the helm directory and pushes it to `app_catalog` for tagged builds and `app_catalog_test` otherwise.
+
 Example usage
 
 ```yaml
