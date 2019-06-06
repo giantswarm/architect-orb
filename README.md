@@ -19,7 +19,7 @@ Design and goals of the project:
 - For a completely new job that is not reusing any of the existing commands the fastest way to prototype is probably creating an inline orb. Here is an example of working inline orb prototype: https://github.com/giantswarm/release-operator/pull/121/files.
 - Create a PR and test your changes using `dev:alpha` version. This version is updated every time job `orb-tools/publish-dev` configured in [circleci config](.circleci/config.yml) runs. Which is basically on every pushed commit. Beware that if someone else is developing on another branch at the same time `dev:aplha` version is likely to be overridden by their builds. You need to coordinate that. That should be enough for time being as we don't usually develop more than one CI feature at a time. To use `dev:alpha` version you need to just change the version of the orb declaration to `architect: giantswarm/architect@dev:alpha`.
 - Update [Unreleased section of CHANGELOG.md](CHANGELOG.md#Unreleased) file with the changes introduced in your PR.
-- If you want to also make a new release follow the steps in [Releases][#Releases] section (which is most likely the case) or merge your PR.
+- If you want to also make a new release follow the steps in [Releases](#Releases) section (which is most likely the case) or merge your PR.
 
 ## Releases
 
