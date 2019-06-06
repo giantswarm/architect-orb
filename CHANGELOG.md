@@ -13,5 +13,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/olivierlacan/keep-a-changelog/releases/tag/v0.1.0
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/giantswarm/architect-orb/releases/tag/v0.1.0
