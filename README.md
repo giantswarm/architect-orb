@@ -6,7 +6,7 @@ This repository hosts the source code for giantswarm/architect orb.
 
 Design and goals of the project:
 
-- Replacing [architect][architect] **is not** a goal.
+- Replacing [architect][architect] entirely **is not** a goal. But replacing most of its functionality is.
 - Being explicit. Desire to do actual job. E.g. building a docker image and pushing it to a registry should be explicitly specified in the build.
 - Making builds understandable without looking into [architect][architect] codebase.
 - Having one line binary call on each job step - to make the outputs grouped and visible and keeping build configurations sane. Good example is [package-and-push command][https://github.com/giantswarm/architect-orb/blob/master/src/commands/package-and-push.yaml].
