@@ -11,7 +11,7 @@ Design and goals of the project:
 - Making builds understandable without looking into [architect][architect] codebase.
 - Having one line binary call on each job step - to make the outputs grouped and visible and keeping build configurations sane. Good example is [package-and-push command](https://github.com/giantswarm/architect-orb/blob/master/src/commands/package-and-push.yaml).
 - Using [architect executor][architect-executor] with the latest [architect][architect] docker image most of time.
-- Using binaries other than architect when appropriate (they should be available inside [architect executor][architect-executor] most of the time). E.g. `docker`, `git`, `helm`, etc. Instead of wrapping existing well known functionality in [architect][architect] binary.
+- Using binaries other than `architect` when appropriate (they should be available inside [architect executor][architect-executor] most of the time). E.g. `docker`, `git`, `helm`, etc. Instead of wrapping existing well known functionality in [architect][architect] binary.
 - Using [architect][architect] commands for complex tasks. Good example is `architect helm template` instead of awkward and error prone `sed` calls.
 
 ## Jobs
