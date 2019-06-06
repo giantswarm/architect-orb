@@ -14,6 +14,24 @@ Design and goals of the project:
 - Using binaries other than `architect` when appropriate (they should be available inside [architect executor][architect-executor] most of the time). E.g. `docker`, `git`, `helm`, etc. Instead of wrapping existing well known functionality in [architect][architect] binary.
 - Using [architect][architect] commands for complex tasks. Good example is `architect helm template` instead of awkward and error prone `sed` calls.
 
+## Development
+
+- For a completely new job that is not reusing any of the existing commands the fastest way to prototype is probably creating an inline orb. Here is an example of working inline orb prototype: https://github.com/giantswarm/release-operator/pull/121/files.
+- Create a PR and test your changes using `dev:alpha` version. This version is updated every time job `orb-tools/publish-dev` configured in [circleci config](.circleci/config.yml) runs. Which is basically on every pushed commit. Beware that if someone else is developing on another branch at the same time `dev:aplha` version is likely to be overridden by their builds. You need to coordinate that. That should be enough for time being as we don't usually develop more than one CI feature at a time. To use `dev:alpha` version you need to just change the version of the orb declaration to `architect: giantswarm/architect@dev:alpha`.
+- Update [Unreleased section of CHANGELOG.md](CHANGELOG.md#Unreleased) file with the changes introduced in your PR.
+- If you want to also make a new release follow the steps in [Releases][#Releases] section (which is most likely the case) or merge your PR.
+
+## Releases
+
+1. Open a new PR with changes to `orb-tools/dev-promote-prod` job in [circleci config](.circleci/config.yml):
+    - Change `release: patch` line to `minor` or `major` if the release isn't a patch release.
+    - Uncomment `only: master` line and comment `ignore: /.*/`.
+2. Change [Unreleased header of CHANGELOG.md](CHANGELOG.md#Unreleased) to the version you are going to release. Please also update the URLs at the bottom.
+3. Create new _Unreleased_ section in _CHANGELOG.md_.
+4. Merge your PR.
+5. Push the version tag for the commit against which `orb-tools/dev-promote-prod` job ran. E.g. `git tag v0.1.0 dc15f409d09884784fab86ebb6725b14a3f3cd2e`.
+6. **IMPORTANT:** Create a new PR reverting changes introduced in 1. **immediately** so we don't create useless versions in branches created from master.
+
 ## Jobs
 
 ### push-to-app-catalog
