@@ -29,8 +29,8 @@ Design and goals of the project:
 2. Change [Unreleased header of CHANGELOG.md](CHANGELOG.md#Unreleased) to the version you are going to release. Please also update the URLs at the bottom.
 3. Create new _Unreleased_ section in _CHANGELOG.md_.
 4. Merge your PR.
-5. Push the version tag for the commit against which `orb-tools/dev-promote-prod` job ran. E.g. `git tag v0.1.0 dc15f409d09884784fab86ebb6725b14a3f3cd2e`.
-6. **IMPORTANT:** Create a new PR reverting changes introduced in 1. **immediately** so we don't create useless versions in branches created from master.
+5. **IMPORTANT:** Create a new PR reverting changes introduced in step 1. **immediately** so we don't create useless versions in branches created from master.
+6. Push the version tag for the commit against which `orb-tools/dev-promote-prod` job ran. E.g. `git tag v0.1.0 dc15f409d09884784fab86ebb6725b14a3f3cd2e` so links in [CHANGELOG.md](CHANGELOG.md) work nicely.
 
 ## Jobs
 
