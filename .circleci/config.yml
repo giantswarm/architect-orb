@@ -28,5 +28,5 @@ workflows:
           requires: [orb-tools/publish-dev]
           filters:
             branches:
-              #only: master
-              ignore: /.*/
+              only: master
+              #ignore: /.*/

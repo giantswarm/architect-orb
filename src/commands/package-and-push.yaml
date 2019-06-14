@@ -17,7 +17,7 @@ steps:
   - run: |
       helm package --save=false ./helm/<<parameters.chart>> --destination .app_catalog
   - run: |
-      helm repo index --url https://giantswarm.github.com/$(cat .catalog_name) .app_catalog
+      helm repo index --url https://giantswarm.github.com/$(cat .app_catalog_name) .app_catalog
   - run: |
       cd .app_catalog && git add -A
   - run: |
