@@ -48,8 +48,8 @@ Design and goals of the project:
 
 ## Releases
 
-1. Open a new PR with changes to `orb-tools/dev-promote-prod` job in
-   [circleci config](.circleci/config.yml):
+1. Open a new PR with changes to `orb-tools/dev-promote-prod` job in [circleci
+   config](.circleci/config.yml):
     - Change `release: patch` line to `minor` or `major` if the release isn't
       a patch release.
     - Uncomment `only: master` line and comment `ignore: /.*/`.
@@ -74,9 +74,26 @@ Design and goals of the project:
 This job templates and packages a given `chart` from the helm directory and
 pushes it to `app_catalog` for tagged builds and `app_catalog_test` otherwise.
 
-**NOTE**: It requires `CATALOGBOT_SSH_KEY_PRIVATE_BASE64` environment variable
-to be set in the build. This must be base64 encoded private SSH key of
-[CatalogBot github user](https://github.com/catalogbot).
+**NOTE**: The job requires `CATALOGBOT_SSH_KEY_PRIVATE_BASE64` environment
+variable to be set in the build. This must be base64 encoded private SSH key of
+[CatalogBot Github user][catalogbot-user].
+
+**NOTE**: App catalog repositories configured in the job parameters must be
+added to the [Catalog Editors][catalog-editors-team] GitHub team. See the
+paragraph below for explanation.
+
+This job assumes that the App Catalog is defined in a GitHub repository inside
+giantswarm organization. E.g. when `app_catalog` parameter is set to
+`"control-plane-test-catalog"` the job will try to use catalog
+https://github.com/giantswarm/control-plane-test-catalog. All interactions with
+the App Catalog GitHub repository are done with [CatalogBot github
+user] credentials.
+
+Detailed instructions on how to set up App Catalog can be found here:
+https://github.com/giantswarm/giantswarm/blob/master/processes/appcatalog.md#setting-up-a-new-app-catalog.
+
+[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/catalog-editors/repositories
+[CatalogBot github user]: https://github.com/catalogbot
 
 Example usage
 
