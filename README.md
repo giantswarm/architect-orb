@@ -76,21 +76,24 @@ pushes it to `app_catalog` for tagged builds and `app_catalog_test` otherwise.
 
 **NOTE**: The job requires `CATALOGBOT_SSH_KEY_PRIVATE_BASE64` environment
 variable to be set in the build. This must be base64 encoded private SSH key of
-[CatalogBot GitHub user][catalogbot-user].
+[CatalogBot Github user][catalogbot-user].
 
 **NOTE**: App catalog repositories configured in the job parameters must be
 added to the [Catalog Editors][catalog-editors-team] GitHub team. See the
 paragraph below for explanation.
 
 This job assumes that the App Catalog is defined in a GitHub repository inside
-giantswarm organization. E.g. when `app_catalog_test` parameter is set to
+giantswarm organization. E.g. when `app_catalog` parameter is set to
 `"control-plane-test-catalog"` the job will try to use catalog
 https://github.com/giantswarm/control-plane-test-catalog. All interactions with
-the App Catalog GitHub repository are done with [CatalogBot GitHub
-user][catalogbot-user] credentials.
+the App Catalog GitHub repository are done with [CatalogBot github
+user] credentials.
+
+Detailed instructions on how to set up App Catalog can be found here:
+https://github.com/giantswarm/giantswarm/blob/master/processes/appcatalog.md#setting-up-a-new-app-catalog.
 
 [catalog-editors-team]: https://github.com/orgs/giantswarm/teams/catalog-editors/repositories
-[catalogbot-user]: https://github.com/catalogbot
+[CatalogBot github user]: https://github.com/catalogbot
 
 Example usage
 
