@@ -17,7 +17,7 @@ steps:
   - run: |
       mkdir build && helm package ./helm/<<parameters.chart>> --destination ./build
   - run: |
-      helm repo index --url https://giantswarm.github.com/$(cat .app_catalog_name) --merge <<parameters.app_catalog>>/index.yaml ./build
+      helm repo index --url https://giantswarm.github.com/$(cat .app_catalog_name) --merge .app_catalog/index.yaml ./build
   - run: |
       cp ./build/* .app_catalog
   - run: |
