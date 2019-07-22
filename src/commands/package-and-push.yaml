@@ -15,6 +15,8 @@ steps:
   - run: |
       git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
   - run: |
+      helm init --client-only
+  - run: |
       mkdir build && helm package ./helm/<<parameters.chart>> --destination ./build
   - run: |
       helm repo index --url https://giantswarm.github.com/$(cat .app_catalog_name) --merge .app_catalog/index.yaml ./build
