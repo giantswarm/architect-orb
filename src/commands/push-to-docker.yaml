@@ -1,0 +1,11 @@
+parameters:
+  username:
+    type: "string"
+  password:
+    type: "string"
+  tag:
+    type: "string"
+steps:
+  - run: docker login --username '<<parameters.username>>' --password '<<parameters.password>>'
+  - run: docker build -t '<<parameters.tag>>' .
+  - run: docker push '<<parameters.tag>>'
