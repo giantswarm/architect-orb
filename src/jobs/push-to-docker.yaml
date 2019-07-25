@@ -11,6 +11,7 @@ parameters:
     type: "string"
     default: "quay.io"
 steps:
+  - checkout
   - attach_workspace:
       at: .
   - push-to-docker:
