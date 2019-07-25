@@ -11,6 +11,8 @@ parameters:
     type: "string"
     default: "quay.io"
 steps:
+  - attach_workspace:
+      at: .
   - push-to-docker:
       username: <<parameters.username>>
       password: <<parameters.password>>
