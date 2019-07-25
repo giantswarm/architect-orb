@@ -12,6 +12,9 @@ parameters:
     default: "quay.io"
 steps:
   - checkout
+  - setup_remote_docker:
+      docker_layer_caching: true
+      version: 18.09.3
   - attach_workspace:
       at: .
   - push-to-docker:
