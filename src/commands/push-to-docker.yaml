@@ -9,6 +9,6 @@ parameters:
     type: "string"
 steps:
   - run: echo -n "<<parameters.image>>:$(architect project version)" > docker_image_name
-  - run: docker login --username "<<parameters.username>>" --password "<<parameters.password>>" "<<parameters.registry>>"
+  - run: echo -n "<<parameters.password>>" | docker login --username "<<parameters.username>>" --password-stdin "<<parameters.registry>>"
   - run: docker build -t "$(cat docker_image_name)" .
   - run: docker push "$(cat docker_image_name)"
