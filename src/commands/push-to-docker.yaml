@@ -3,9 +3,10 @@ parameters:
     type: "string"
   password:
     type: "string"
-  tag:
+  registry:
     type: "string"
 steps:
-  - run: docker login --username '<<parameters.username>>' --password '<<parameters.password>>'
-  - run: docker build -t '<<parameters.tag>>' .
-  - run: docker push '<<parameters.tag>>'
+  - run: architect project version > project_version
+  - run: docker login --username '<<parameters.username>>' --password '<<parameters.password>>' '<<parameters.registry>>'
+  - run: docker build -t $(cat project_version) .
+  - run: docker push $(cat project_version)
