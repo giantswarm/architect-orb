@@ -5,8 +5,10 @@ parameters:
     type: "string"
   registry:
     type: "string"
+  image:
+    type: "string"
 steps:
-  - run: architect project version > project_version
+  - run: echo -n "<<parameters.image>>:$(architect project version)" > docker_image_name
   - run: docker login --username "<<parameters.username>>" --password "<<parameters.password>>" "<<parameters.registry>>"
-  - run: docker build -t $(cat project_version) .
-  - run: docker push $(cat project_version)
+  - run: docker build -t "$(cat docker_image_name)" .
+  - run: docker push $(cat docker_image_name)

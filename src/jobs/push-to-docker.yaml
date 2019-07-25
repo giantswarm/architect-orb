@@ -10,6 +10,8 @@ parameters:
     description: "Docker registry"
     type: "string"
     default: "quay.io"
+  image:
+    type: "string"
 steps:
   - checkout
   - setup_remote_docker:
@@ -21,3 +23,4 @@ steps:
       username: <<parameters.username>>
       password: <<parameters.password>>
       registry: <<parameters.registry>>
+      image: <<parameters.image>>
