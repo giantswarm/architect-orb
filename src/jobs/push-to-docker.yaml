@@ -1,0 +1,17 @@
+executor: architect
+parameters:
+  username:
+    description: "Docker username"
+    type: "string"
+  password:
+    description: "Docker password"
+    type: "string"
+  registry:
+    description: "Docker registry"
+    type: "string"
+    default: "quay.io"
+steps:
+  - push-to-docker:
+      username: <<parameters.username>>
+      password: <<parameters.password>>
+      registry: <<parameters.registry>>
