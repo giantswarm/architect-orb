@@ -7,6 +7,6 @@ parameters:
     type: "string"
 steps:
   - run: architect project version > project_version
-  - run: docker login --username '<<parameters.username>>' --password '<<parameters.password>>' '<<parameters.registry>>'
+  - run: docker login --username "<<parameters.username>>" --password "<<parameters.password>>" "<<parameters.registry>>"
   - run: docker build -t $(cat project_version) .
   - run: docker push $(cat project_version)
