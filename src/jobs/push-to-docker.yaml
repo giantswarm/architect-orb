@@ -1,16 +1,17 @@
 executor: architect
 parameters:
-  username:
-    description: "Docker username"
+  image:
+    description: "Name of the docker image, without tag"
     type: "string"
   password:
-    description: "Docker password"
+    description: "Docker registry password"
     type: "string"
   registry:
-    description: "Docker registry"
-    type: "string"
     default: "quay.io"
-  image:
+    description: "Docker registry server"
+    type: "string"
+  username:
+    description: "Docker registry username"
     type: "string"
 steps:
   - checkout
@@ -20,7 +21,7 @@ steps:
   - attach_workspace:
       at: .
   - push-to-docker:
-      username: <<parameters.username>>
+      image: <<parameters.image>>
       password: <<parameters.password>>
       registry: <<parameters.registry>>
-      image: <<parameters.image>>
+      username: <<parameters.username>>
