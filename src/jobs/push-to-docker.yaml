@@ -1,0 +1,23 @@
+executor: architect
+parameters:
+  image:
+    description: "Name of the docker image, without tag. e.g. quay.io/my-org/my-repo"
+    type: "string"
+  password_envar:
+    default: "ARCHITECT_DOCKER_REGISTRY_PASSWORD"
+    description: "Environment variable name holding docker registry password"
+    type: "string"
+  username_envar:
+    default: "ARCHITECT_DOCKER_REGISTRY_USERNAME"
+    description: "Environment variable name holding registry username"
+    type: "string"
+steps:
+  - checkout
+  - setup_remote_docker:
+      docker_layer_caching: true
+  - attach_workspace:
+      at: .
+  - push-to-docker:
+      image: <<parameters.image>>
+      password_envar: <<parameters.password_envar>>
+      username_envar: <<parameters.username_envar>>
