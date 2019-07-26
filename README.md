@@ -124,6 +124,7 @@ workflows:
 This job builds a docker image and pushes it to a registry.
 It requires the build context and Dockefile to be present at the root of worksapce directory.
 
+**NOTE**: docker registry username and password are read from environement variables which default to `ARCHITECT_DOCKER_REGISTRY_USERNAME` and `ARCHITECT_DOCKER_REGISTRY_PASSWORD` respectively. This can be changed via `username_var` and `password_var` arguments.
 **NOTE**: The docker image will be tagged with the version found by `architect project version` command.
 
 Example usage
