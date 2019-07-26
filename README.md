@@ -119,5 +119,34 @@ workflows:
               only: /^v.*/
 ```
 
+### push-to-docker
+
+This job builds a docker image and pushes it to a registry.
+It requires the build context and Dockefile to be present at the root of worksapce directory.
+
+**NOTE**: The docker image will be tagged with the version found by `architect project version` command.
+
+Example usage
+
+```yaml
+version: 2.1
+orbs:
+  architect: giantswarm/architect@VERSION
+
+workflows:
+  my-workflow:
+    jobs:
+      - architect/push-to-docker:
+          image: "quay.io/giantswarm/magic-operator"
+          username: "${QUAY_USERNAME}"
+          password: "${QUAY_PASSWORD}"
+          registry: "quay.io"
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v.*/
+```
+
 [architect]: https://github.com/giantswarm/architect
 [architect-executor]: https://github.com/giantswarm/architect-orb/blob/master/src/executors/architect.yaml
