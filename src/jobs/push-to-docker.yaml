@@ -3,7 +3,7 @@ parameters:
   image:
     description: "Name of the docker image, without tag"
     type: "string"
-  password_var:
+  password_envar:
     default: "ARCHITECT_DOCKER_REGISTRY_PASSWORD"
     description: "Environment variable name holding docker registry password"
     type: "string"
@@ -11,7 +11,7 @@ parameters:
     default: "quay.io"
     description: "Docker registry server"
     type: "string"
-  username_var:
+  username_envar:
     default: "ARCHITECT_DOCKER_REGISTRY_USERNAME"
     description: "Environment variable name holding registry username"
     type: "string"
@@ -23,6 +23,6 @@ steps:
       at: .
   - push-to-docker:
       image: <<parameters.image>>
-      password_var: <<parameters.password_var>>
+      password_envar: <<parameters.password_envar>>
       registry: <<parameters.registry>>
-      username_var: <<parameters.username_var>>
+      username_envar: <<parameters.username_envar>>
