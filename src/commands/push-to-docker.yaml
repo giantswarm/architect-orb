@@ -1,14 +1,18 @@
 parameters:
   image:
     type: "string"
-  password:
+  password_var:
     type: "string"
   registry:
     type: "string"
-  username:
+  username_var:
     type: "string"
 steps:
-  - run: echo -n "<<parameters.image>>:$(architect project version)" > docker_image_name
-  - run: echo -n "<<parameters.password>>" | docker login --username "<<parameters.username>>" --password-stdin "<<parameters.registry>>"
-  - run: docker build -t "$(cat docker_image_name)" .
-  - run: docker push "$(cat docker_image_name)"
+  - run: |
+      echo -n "<<parameters.registry>>/<<parameters.image>>:$(architect project version)" > docker_image_name
+  - run: |
+      echo -n "${<<parameters.password_var>>}" | docker login --username "${<<parameters.username_var>>}" --password-stdin "<<parameters.registry>>"
+  - run: |
+      docker build -t "$(cat docker_image_name)" .
+  - run: |
+      docker push "$(cat docker_image_name)"

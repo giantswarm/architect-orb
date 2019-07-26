@@ -137,10 +137,10 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-docker:
-          image: "quay.io/giantswarm/magic-operator"
-          username: "${QUAY_USERNAME}"
-          password: "${QUAY_PASSWORD}"
+          image: "giantswarm/magic-operator"
           registry: "quay.io"
+          username_var: "QUAY_USERNAME"
+          password_var: "QUAY_PASSWORD"
           requires:
             - build
           filters:
