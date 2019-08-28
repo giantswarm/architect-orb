@@ -27,4 +27,4 @@ steps:
   - run: |
       cd .app_catalog && git commit -m "add $(git status --porcelain | cut -c4- | grep <<parameters.chart>>)"
   - run: |
-      cd .app_catalog && git push
+      for i in {1..3}; do cd .app_catalog && git push && break || git pull && sleep 5; done
