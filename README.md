@@ -119,6 +119,21 @@ workflows:
               only: /^v.*/
 ```
 
+
+**NOTE**: There is a known issue produced by a race condition which produces a failed build with the following output.
+```
+To github.com:giantswarm/control-plane-test-catalog.git
+ ! [rejected]        master -> master (fetch first)
+error: failed to push some refs to 'git@github.com:giantswarm/control-plane-test-catalog.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+Exited with code 1
+```
+It is an rare case so triggering again the build should solve the issue.
+
 ### push-to-docker
 
 This job builds a docker image and pushes it to a registry.
