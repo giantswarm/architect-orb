@@ -34,7 +34,7 @@ steps:
           -q \
           --depth=1 \
           --single-branch \
-          -b test-gauss \
+          -b master \
           git@github.com:giantswarm/<<parameters.app_collection_repo>>.git \
           app-collection
         mkdir -p app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
