@@ -10,20 +10,10 @@ parameters:
   app_collection_repo:
     description: "Name of the app collection repository"
     type: "string"
-  docker_username_envar:
-    description: "Environment variable name holding registry username"
-    type: "string"
-  docker_password_envar:
-    description: "Environment variable name holding docker registry password"
-    type: "string"
 steps:
   - checkout
-  - setup_remote_docker:
-      docker_layer_caching: true
   - prepare-catalogbot-git-ssh
   - push-to-app-collection:
       app_name: <<parameters.app_name>>
       app_catalog: <<parameters.app_catalog>>
       app_collection_repo: <<parameters.app_collection_repo>>
-      docker_username_envar: <<parameters.docker_username_envar>>
-      docker_password_envar: <<parameters.docker_password_envar>>

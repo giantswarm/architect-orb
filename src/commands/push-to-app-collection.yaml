@@ -5,31 +5,20 @@ parameters:
     type: "string"
   app_collection_repo:
     type: "string"
-  docker_username_envar:
-    type: "string"
-  docker_password_envar:
-    type: "string"
 steps:
-  - run:
-      name: get project version
-      command: |
+  - run: |
         architect project version > version
+  - run: |
         echo -n "<<parameters.app_name>>-$(cat version)" | head -c 53 > cr-name
-  - run:
-      name: generate app CR
-      command: |
-        echo -n "${<<parameters.docker_password_envar>>}" | docker login --username "${<<parameters.docker_username_envar>>}" --password-stdin quay.io
-        docker run quay.io/giantswarm/opsctl:6e555aa40eb39a2cf9c58f5f7a7859b6e185763f \
-          create appcr \
+  - run: |
+        architect create appcr \
             --name $(cat cr-name) \
             --app-name <<parameters.app_name>> \
             --app-version $(cat version) \
             --catalog <<parameters.app_catalog>> \
             -o yaml \
           > app.yaml
-  - run:
-      name: update <<parameters.app_collection_repo>>
-      command: |
+  - run: |
         git clone \
           -q \
           --depth=1 \
@@ -37,9 +26,16 @@ steps:
           -b master \
           git@github.com:giantswarm/<<parameters.app_collection_repo>>.git \
           app-collection
+  - run: |
         mkdir -p app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
+  - run: |
         mv -n app.yaml app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat version).yaml
-        cd app-collection
+  - run: |
+        cd app-collection && \
         git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat ../version).yaml
+  - run: |
+        cd app-collection && \
         git commit -m "add $(git status --porcelain | cut -c4-)"
+  - run: |
+        cd app-collection && \
         git push
