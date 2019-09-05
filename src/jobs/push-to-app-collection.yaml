@@ -1,0 +1,22 @@
+description: >
+  Generates and adds an App CR to an app-collection.
+  Note: version will be detected automatically by architect.
+executor: architect
+parameters:
+  app_name:
+    description: "Name of the application"
+    type: "string"
+  app_catalog:
+    description: "Name of the catalog CR where the application belongs"
+    type: "string"
+    default: "control-plane-catalog"
+  app_collection_repo:
+    description: "Name of the app collection repository"
+    type: "string"
+steps:
+  - checkout
+  - prepare-catalogbot-git-ssh
+  - push-to-app-collection:
+      app_name: <<parameters.app_name>>
+      app_catalog: <<parameters.app_catalog>>
+      app_collection_repo: <<parameters.app_collection_repo>>

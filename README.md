@@ -164,5 +164,70 @@ workflows:
               only: /^v.*/
 ```
 
+### push-to-app-collection
+
+This job generate an App CR and add it to the an app collection chart repository.
+
+* The App name and catalog are passed by parameters (respectively `app_name` and `app_catalog`).
+* The App version is automatically detected by `architect project version`.
+* The app collection repository where the App CR is added to is passed by parameter (`app_collection_repo`).
+
+**NOTE**: The job requires `CATALOGBOT_SSH_KEY_PRIVATE_BASE64` environment
+variable to be set in the build. This must be base64 encoded private SSH key of
+[CatalogBot Github user][catalogbot-user].
+
+**NOTE**: app collection repositories configured in the job parameters must be
+added to the [Catalog Editors][catalog-editors-team] GitHub team with write permission. See the
+paragraph below for explanation.
+
+This job assumes that the app collection is defined in a GitHub repository inside
+giantswarm organization. E.g. when `app_collection_repo` parameter is set to
+`"aws-app-collection"` the job will try to use https://github.com/giantswarm/aws-app-collection.
+All interactions with the app collection GitHub repository are done with [CatalogBot github
+user] credentials.
+
+[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/catalog-editors/repositories
+[CatalogBot github user]: https://github.com/catalogbot
+
+Example usage
+
+```yaml
+version: 2.1
+orbs:
+  architect: giantswarm/architect@VERSION
+
+workflows:
+  my-workflow:
+    jobs:
+      - architect/push-to-app-collection:
+          name: "push-to-aws-app-collection"
+          app_name: "aws-operator"
+          app_collection_repo: "aws-app-collection"
+          requires:
+            - push-aws-operator-to-app-catalog
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+```
+
+
+**NOTE**: There is a known issue produced by a race condition which produces a failed build with the following output.
+
+```
+To github.com:giantswarm/aws-app-collection.git
+ ! [rejected]        master -> master (fetch first)
+error: failed to push some refs to 'git@github.com:giantswarm/aws-app-collection.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+Exited with code 1
+```
+It is an rare case so triggering again the build should solve the issue.
+
+
 [architect]: https://github.com/giantswarm/architect
 [architect-executor]: https://github.com/giantswarm/architect-orb/blob/master/src/executors/architect.yaml
