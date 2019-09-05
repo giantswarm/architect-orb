@@ -200,7 +200,7 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-collection:
-          name: "deploy via app collection"
+          name: "push-to-aws-app-collection"
           app_name: "aws-operator"
           app_collection_repo: "aws-app-collection"
           requires:
