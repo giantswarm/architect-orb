@@ -1,3 +1,6 @@
+description: >
+  Generates and adds an App CR to an app-collection.
+  Note: version will be detected automatically by architect.
 parameters:
   app_name:
     type: "string"
