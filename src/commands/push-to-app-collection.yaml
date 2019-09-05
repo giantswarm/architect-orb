@@ -16,17 +16,17 @@ steps:
   - run: |
         architect create appcr --name $(cat .cr-name) --app-name <<parameters.app_name>> --app-version $(cat .version) --catalog <<parameters.app_catalog>> -o yaml > app.yaml
   - run: |
-        git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git app-collection
+        git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run: |
-        mkdir -p app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
+        mkdir -p .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
   - run: |
-        mv -n app.yaml app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat .version).yaml
+        mv -n app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat .version).yaml
   - run: |
-        cd app-collection && \
+        cd .app-collection && \
         git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat ../.version).yaml
   - run: |
-        cd app-collection && \
+        cd .app-collection && \
         git commit -m "add $(git status --porcelain | cut -c4-)"
   - run: |
-        cd app-collection && \
+        cd .app-collection && \
         git push
