@@ -10,14 +10,14 @@ parameters:
     type: "string"
 steps:
   - run: |
-        architect project version > version
+        architect project version > .version
   - run: |
-        echo -n "<<parameters.app_name>>-$(cat version)" | head -c 53 > cr-name
+        echo -n "<<parameters.app_name>>-$(cat .version)" | head -c 53 > .cr-name
   - run: |
         architect create appcr \
-            --name $(cat cr-name) \
+            --name $(cat .cr-name) \
             --app-name <<parameters.app_name>> \
-            --app-version $(cat version) \
+            --app-version $(cat .version) \
             --catalog <<parameters.app_catalog>> \
             -o yaml \
           > app.yaml
@@ -32,10 +32,10 @@ steps:
   - run: |
         mkdir -p app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
   - run: |
-        mv -n app.yaml app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat version).yaml
+        mv -n app.yaml app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat .version).yaml
   - run: |
         cd app-collection && \
-        git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat ../version).yaml
+        git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat ../.version).yaml
   - run: |
         cd app-collection && \
         git commit -m "add $(git status --porcelain | cut -c4-)"
