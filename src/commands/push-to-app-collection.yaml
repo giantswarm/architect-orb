@@ -14,21 +14,9 @@ steps:
   - run: |
         echo -n "<<parameters.app_name>>-$(cat .version)" | head -c 53 > .cr-name
   - run: |
-        architect create appcr \
-            --name $(cat .cr-name) \
-            --app-name <<parameters.app_name>> \
-            --app-version $(cat .version) \
-            --catalog <<parameters.app_catalog>> \
-            -o yaml \
-          > app.yaml
+        architect create appcr --name $(cat .cr-name) --app-name <<parameters.app_name>> --app-version $(cat .version) --catalog <<parameters.app_catalog>> -o yaml > app.yaml
   - run: |
-        git clone \
-          -q \
-          --depth=1 \
-          --single-branch \
-          -b master \
-          git@github.com:giantswarm/<<parameters.app_collection_repo>>.git \
-          app-collection
+        git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git app-collection
   - run: |
         mkdir -p app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
   - run: |
