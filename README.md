@@ -214,6 +214,7 @@ workflows:
 
 
 **NOTE**: There is a known issue produced by a race condition which produces a failed build with the following output.
+
 ```
 To github.com:giantswarm/aws-app-collection.git
  ! [rejected]        master -> master (fetch first)
