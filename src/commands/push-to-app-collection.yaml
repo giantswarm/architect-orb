@@ -22,11 +22,8 @@ steps:
   - run: |
         mv -n .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat .version).yaml
   - run: |
-        cd .app-collection && \
-        git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat ../.version).yaml
+        cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat ../.version).yaml
   - run: |
-        cd .app-collection && \
-        git commit -m "add $(git status --porcelain | cut -c4-)"
+        cd .app-collection && git commit -m "add $(git status --porcelain | cut -c4-)"
   - run: |
-        cd .app-collection && \
-        git push
+        cd .app-collection && git push
