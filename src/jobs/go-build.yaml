@@ -1,0 +1,31 @@
+description: |
+	Checks if the code is formatted by `go fmt` and then runs `go vet`, `go test`
+  and `go build` against the codebase. It also injects following variables into
+  the "github.com/ORGANIZATION/REPOSITORY/pkg/project" package for testing and
+  building:
+
+  - "buildTimestamp" in RFC-3339 format in UTC time zone.
+  - "gitSHA" SHA of the built commit.
+  - "version" produced by `architect project version` command.
+
+	The command produces static binary named after the repository name. It is
+  persisted to workspace under "./REPOSITORY_NAME" path.
+executor: architect
+parameters:
+  binary:
+    default:
+    type: "string"
+  pkg:
+    default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
+    type: "string"
+steps:
+  - checkout
+  - tools-info
+  - attach_workspace:
+      at: .
+  - go-build:
+      binary: ${CIRCLE_PROJECT_REPONAME}
+  - persist_to_workspace:
+      root: .
+      paths:
+        - ./${CIRCLE_PROJECT_REPONAME}
