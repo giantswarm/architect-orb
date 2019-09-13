@@ -10,7 +10,7 @@ description: |
 
   The job produces static binary named after the repository name. It is
   persisted to workspace under "./REPOSITORY_NAME" path.
-executor: architect
+executor: go
 steps:
   - checkout
   - tools-info

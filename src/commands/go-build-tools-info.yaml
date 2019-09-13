@@ -1,9 +1,7 @@
 steps:
   - run: |
-      architect version
-  - run: |
       echo $BASH_VERSION
   - run: |
       git version
   - run: |
-      helm version -c
+      go version
