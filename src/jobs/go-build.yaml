@@ -8,7 +8,7 @@ description: |
   - "gitSHA" SHA of the built commit.
   - "version" produced by `architect project version` command.
 
-  The command produces static binary named after the repository name. It is
+  The job produces static binary named after the repository name. It is
   persisted to workspace under "./REPOSITORY_NAME" path.
 executor: architect
 parameters:
