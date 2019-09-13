@@ -5,8 +5,6 @@ parameters:
     default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
     type: "string"
 steps:
-  - attach_workspace:
-      at: .
   - restore_cache:
       keys:
         - go-build-go-mod-v1-{{ checksum "go.sum" }}
@@ -36,6 +34,8 @@ steps:
       key: go-build-go-mod-v1-{{ checksum "go.sum" }}
       paths:
         - "/go/pkg/mod"
+  - run: |
+      ./<< parameters.binary >> version
   - persist_to_workspace:
       root: .
       paths:
