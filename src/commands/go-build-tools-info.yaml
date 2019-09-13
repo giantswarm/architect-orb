@@ -1,7 +1,0 @@
-steps:
-  - run: |
-      echo $BASH_VERSION
-  - run: |
-      git version
-  - run: |
-      go version

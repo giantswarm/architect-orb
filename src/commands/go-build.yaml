@@ -5,9 +5,15 @@ parameters:
     default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
     type: "string"
 steps:
+  - attach_workspace:
+      at: .
   - restore_cache:
       keys:
         - go-build-go-mod-v1-{{ checksum "go.sum" }}
+  - run: |
+      architect project version > .project_version
+  - run: |
+      cat .project_version
   - run: |
       echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
   - run: |
@@ -15,7 +21,7 @@ steps:
   - run: |
       echo -n " -X '<< parameters.pkg >>.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
   - run: |
-      echo -n " -X '<< parameters.pkg >>.version=$(architect project version)'" >> .ldflags
+      echo -n " -X '<< parameters.pkg >>.version=$(cat .project_version)'" >> .ldflags
   - run: |
       echo "\"$(cat .ldflags)\""
   - run: |
@@ -30,3 +36,7 @@ steps:
       key: go-build-go-mod-v1-{{ checksum "go.sum" }}
       paths:
         - "/go/pkg/mod"
+  - persist_to_workspace:
+      root: .
+      paths:
+        - ./<< parameters.binary >>
