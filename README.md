@@ -32,14 +32,14 @@ Design and goals of the project:
   fastest way to prototype is probably creating an inline orb. Here is an
   example of working inline orb prototype:
   https://github.com/giantswarm/release-operator/pull/121/files.
-- Create a PR and test your changes using `dev:BRANCH_NAME` version. This
+- Create a PR and test your changes using `dev:$(git rev-parse --short=7 HEAD)` version. This
   version is updated every time job `orb-tools/publish-dev` configured in
   [circleci config](.circleci/config.yml) runs. Which is basically on every
   pushed commit in the feature branch. Dev versions are mutable and deleted
   after 90 days. Details here
-  https://circleci.com/docs/2.0/creating-orbs/#using-development-versions. To
-  use `dev:BRANCH_NAME` version you need to  change the version of the orb
-  declaration to `architect: giantswarm/architect@dev:BRANCH_NAME`.
+  https://circleci.com/docs/2.0/using-orbs/#development-and-production-orbs-versioning-semantics.
+  To use the dev version you need to  change the version of the orb
+  declaration to `architect: giantswarm/architect@dev:$(git rev-parse --short=7 HEAD)`.
 - Update [Unreleased section of CHANGELOG.md](CHANGELOG.md#Unreleased) file
   with the changes introduced in your PR.
 - If you want to also make a new release follow the steps in
