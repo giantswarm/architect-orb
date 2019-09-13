@@ -13,7 +13,7 @@ description: |
 executor: go
 steps:
   - checkout
-  - tools-info
+  - go-build-tools-info
   - attach_workspace:
       at: .
   - go-build:
