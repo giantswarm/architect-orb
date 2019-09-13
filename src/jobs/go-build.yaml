@@ -11,13 +11,6 @@ description: |
   The job produces static binary named after the repository name. It is
   persisted to workspace under "./REPOSITORY_NAME" path.
 executor: architect
-parameters:
-  binary:
-    default:
-    type: "string"
-  pkg:
-    default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
-    type: "string"
 steps:
   - checkout
   - tools-info
