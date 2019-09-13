@@ -1,2 +1,2 @@
 docker:
-  - image: quay.io/giantswarm/golang:1.13
+  - image: quay.io/giantswarm/golang:1.13.0
