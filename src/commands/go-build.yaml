@@ -36,7 +36,3 @@ steps:
         - "/go/pkg/mod"
   - run: |
       ./<< parameters.binary >> version
-  - persist_to_workspace:
-      root: .
-      paths:
-        - ./<< parameters.binary >>

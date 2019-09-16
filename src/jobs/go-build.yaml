@@ -9,10 +9,18 @@ description: |
   - "version" produced by `architect project version` command.
 
   The job produces static binary named after the repository name. It is
-  persisted to workspace under "./REPOSITORY_NAME" path.
+  persisted to workspace under "./" path.
+parameters:
+  binary:
+    description: "Name of the binary produced by the job. It is also persisted to the workspace."
+    type: "string"
 executor: architect
 steps:
   - checkout
   - tools-info
   - go-build:
-      binary: ${CIRCLE_PROJECT_REPONAME}
+      binary: << parameters.binary >>
+  - persist_to_workspace:
+      root: .
+      paths:
+        - ./<< parameters.binary >>
