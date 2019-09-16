@@ -106,10 +106,10 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-catalog:
-          name: "build and push magic-operator chart"
+          name: "push-aws-operator-to-app-catalog"
           app_catalog: "magic-catalog"
           app_catalog_test: "magic-test-catalog"
-          chart: "magic-operator"
+          chart: "aws-operator"
           # Make sure docker image is successfully built.
           requires:
             - build
@@ -153,7 +153,8 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-docker:
-          image: "giantswarm/magic-operator"
+          name: "push-aws-operator-to-docker"
+          image: "quay.io/giantswarm/aws-operator"
           registry: "quay.io"
           username_envvar: "QUAY_USERNAME"
           password_envvar: "QUAY_PASSWORD"
