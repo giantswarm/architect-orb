@@ -69,6 +69,34 @@ Design and goals of the project:
 
 ## Jobs
 
+### go-build
+
+This job:
+
+- Runs `go test` against the codebase.
+- Builds a go binary.
+- Runs `BINARY version` and checks if it returned 0 exit code.
+- Persists the binary to the workspace.
+
+Example usage:
+
+```yaml
+version: 2.1
+orbs:
+  architect: giantswarm/architect@VERSION
+
+workflows:
+  my-workflow:
+    jobs:
+      - architect/go-build:
+          name: go-build-MY-BINARY
+          binary: MY-BINARY
+          # Needed to trigger job also on git tag.
+          filters:
+            tags:
+              only: /^v.*/
+```
+
 ### push-to-app-catalog
 
 This job templates and packages a given `chart` from the helm directory and
