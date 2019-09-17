@@ -1,0 +1,26 @@
+description: |
+  Checks if the code is formatted by `go fmt` and then runs `go vet`, `go test`
+  and `go build` against the codebase. It also injects following variables into
+  the "github.com/ORGANIZATION/REPOSITORY/pkg/project" package for testing and
+  building:
+
+  - "buildTimestamp" in RFC-3339 format in UTC time zone.
+  - "gitSHA" SHA of the built commit.
+  - "version" produced by `architect project version` command.
+
+  The job produces static binary named after the repository name. It is
+  persisted to workspace under "./" path.
+parameters:
+  binary:
+    description: "Name of the binary produced by the job. It is also persisted to the workspace."
+    type: "string"
+executor: architect
+steps:
+  - checkout
+  - tools-info
+  - go-build:
+      binary: << parameters.binary >>
+  - persist_to_workspace:
+      root: .
+      paths:
+        - ./<< parameters.binary >>
