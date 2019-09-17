@@ -24,9 +24,9 @@ workflows:
       - orb-tools/dev-promote-prod:
           orb-name: giantswarm/architect
           publish-token-variable: CIRCLECI_DEV_API_TOKEN
-          release: patch
+          release: minor
           requires: [orb-tools/publish-dev]
           filters:
             branches:
-              #only: master
-              ignore: /.*/
+              only: master
+              #ignore: /.*/
