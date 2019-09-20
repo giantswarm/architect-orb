@@ -32,14 +32,14 @@ Design and goals of the project:
   fastest way to prototype is probably creating an inline orb. Here is an
   example of working inline orb prototype:
   https://github.com/giantswarm/release-operator/pull/121/files.
-- Create a PR and test your changes using `dev:BRANCH_NAME` version. This
+- Create a PR and test your changes using `dev:$(git rev-parse --short=7 HEAD)` version. This
   version is updated every time job `orb-tools/publish-dev` configured in
   [circleci config](.circleci/config.yml) runs. Which is basically on every
   pushed commit in the feature branch. Dev versions are mutable and deleted
   after 90 days. Details here
-  https://circleci.com/docs/2.0/creating-orbs/#using-development-versions. To
-  use `dev:BRANCH_NAME` version you need to  change the version of the orb
-  declaration to `architect: giantswarm/architect@dev:BRANCH_NAME`.
+  https://circleci.com/docs/2.0/using-orbs/#development-and-production-orbs-versioning-semantics.
+  To use the dev version you need to  change the version of the orb
+  declaration to `architect: giantswarm/architect@dev:$(git rev-parse --short=7 HEAD)`.
 - Update [Unreleased section of CHANGELOG.md](CHANGELOG.md#Unreleased) file
   with the changes introduced in your PR.
 - If you want to also make a new release follow the steps in
@@ -58,6 +58,34 @@ Design and goals of the project:
    [CHANGELOG.md](CHANGELOG.md) work nicely.
 
 ## Jobs
+
+### go-build
+
+This job:
+
+- Runs `go test` against the codebase.
+- Builds a go binary.
+- Runs `BINARY version` and checks if it returned 0 exit code.
+- Persists the binary to the workspace.
+
+Example usage:
+
+```yaml
+version: 2.1
+orbs:
+  architect: giantswarm/architect@VERSION
+
+workflows:
+  my-workflow:
+    jobs:
+      - architect/go-build:
+          name: go-build-MY-BINARY
+          binary: MY-BINARY
+          # Needed to trigger job also on git tag.
+          filters:
+            tags:
+              only: /^v.*/
+```
 
 ### push-to-app-catalog
 
@@ -96,10 +124,10 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-catalog:
-          name: "build and push magic-operator chart"
+          name: "push-aws-operator-to-app-catalog"
           app_catalog: "magic-catalog"
           app_catalog_test: "magic-test-catalog"
-          chart: "magic-operator"
+          chart: "aws-operator"
           # Make sure docker image is successfully built.
           requires:
             - build
@@ -143,7 +171,8 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-docker:
-          image: "giantswarm/magic-operator"
+          name: "push-aws-operator-to-docker"
+          image: "quay.io/giantswarm/aws-operator"
           registry: "quay.io"
           username_envvar: "QUAY_USERNAME"
           password_envvar: "QUAY_PASSWORD"

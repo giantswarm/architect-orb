@@ -6,4 +6,6 @@ steps:
   - run: |
       git version
   - run: |
+      go version
+  - run: |
       helm version -c

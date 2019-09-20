@@ -1,0 +1,38 @@
+parameters:
+  binary:
+    type: "string"
+  pkg:
+    default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
+    type: "string"
+steps:
+  - restore_cache:
+      keys:
+        - go-build-go-mod-v1-{{ checksum "go.sum" }}
+  - run: |
+      architect project version > .project_version
+  - run: |
+      cat .project_version
+  - run: |
+      echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
+  - run: |
+      echo -n " -X '<< parameters.pkg >>.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+  - run: |
+      echo -n " -X '<< parameters.pkg >>.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+  - run: |
+      echo -n " -X '<< parameters.pkg >>.version=$(cat .project_version)'" >> .ldflags
+  - run: |
+      echo "\"$(cat .ldflags)\""
+  - run: |
+      test -z $(gofmt -l .) || gofmt -d .
+  - run: |
+      CGO_ENABLED=0 go vet ./...
+  - run: |
+      CGO_ENABLED=0 go test  -ldflags "$(cat .ldflags)" ./...
+  - run: |
+      CGO_ENABLED=0 go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> .
+  - save_cache:
+      key: go-build-go-mod-v1-{{ checksum "go.sum" }}
+      paths:
+        - "/go/pkg/mod"
+  - run: |
+      ./<< parameters.binary >> version
