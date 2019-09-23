@@ -48,23 +48,13 @@ Design and goals of the project:
 
 ## Releases
 
-1. Open a new PR with changes to `orb-tools/dev-promote-prod` job in [circleci
-   config](.circleci/config.yml):
-    - Change `release: patch` line to `minor` or `major` if the release isn't
-      a patch release.
-    - Uncomment `only: master` line and comment `ignore: /.*/`.
-2. Change [Unreleased header of CHANGELOG.md](CHANGELOG.md#Unreleased) to the
-   version you are going to release. Please also update the URLs at the bottom.
-   To check the current version of the orb check "orb version" badge on the
-   top.
-3. Create new _Unreleased_ section in _CHANGELOG.md_.
-4. Merge your PR.
-5. **IMPORTANT:** Create a new PR reverting changes introduced in step 1.
-   **immediately** so we don't create useless versions in branches created from
-   master.
-6. Push the version tag for the commit against which
-   `orb-tools/dev-promote-prod` job ran. E.g. `git tag v0.1.0
-   dc15f409d09884784fab86ebb6725b14a3f3cd2e` so links in
+1. Open a new PR with following changes:
+    - Change [Unreleased header of CHANGELOG.md](CHANGELOG.md#Unreleased) to
+    the version you are going to release.
+    - Create new _Unreleased_ section in _CHANGELOG.md_.
+    - Update the URLs at the bottom.
+2. Merge your PR.
+3. Tag the version (e.g. `git tag v0.1.0 dc15f409d09884784fab86ebb6725b14a3f3cd2e && git push origin v0.1.0`) so links in
    [CHANGELOG.md](CHANGELOG.md) work nicely.
 
 ## Jobs
