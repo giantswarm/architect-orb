@@ -21,13 +21,21 @@ workflows:
             tags:
               only: /.*/
 
-      - orb-tools/publish-dev:
-          orb-name: giantswarm/architect
+      - orb-tools/publish:
+          name: publish-branch
+          attach-workspace: true
           orb-path: workspace/packed/orb.yml
+          orb-ref: giantswarm/architect@dev:${CIRCLE_BRANCH}
           publish-token-variable: CIRCLECI_DEV_API_TOKEN
           requires: [orb-tools/pack]
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              ignore: /.*/
 
       - orb-tools/publish:
+          name: publish-tag
           attach-workspace: true
           orb-path: workspace/packed/orb.yml
           orb-ref: giantswarm/architect@${CIRCLE_TAG##v}
