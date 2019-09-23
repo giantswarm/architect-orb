@@ -26,4 +26,4 @@ steps:
   - run: |
         cd .app-collection && git commit -m "add $(git status --porcelain | cut -c4-)"
   - run: |
-        cd .app-collection && git push
+        cd .app-collection && git push || || echo -n "Error pushing app to the catalog. See known errors in https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog"
