@@ -32,14 +32,10 @@ Design and goals of the project:
   fastest way to prototype is probably creating an inline orb. Here is an
   example of working inline orb prototype:
   https://github.com/giantswarm/release-operator/pull/121/files.
-- Create a PR and test your changes using `dev:$(git rev-parse --short=7 HEAD)` version. This
-  version is updated every time job `orb-tools/publish-dev` configured in
-  [circleci config](.circleci/config.yml) runs. Which is basically on every
-  pushed commit in the feature branch. Dev versions are mutable and deleted
-  after 90 days. Details here
+- Create a PR and test your changes using the dev version, by changing
+  the orb declaration to `architect: giantswarm/architect@dev:your-branch`.
+  Dev versions are mutable and deleted after 90 days. Details here
   https://circleci.com/docs/2.0/using-orbs/#development-and-production-orbs-versioning-semantics.
-  To use the dev version you need to  change the version of the orb
-  declaration to `architect: giantswarm/architect@dev:$(git rev-parse --short=7 HEAD)`.
 - Update [Unreleased section of CHANGELOG.md](CHANGELOG.md#Unreleased) file
   with the changes introduced in your PR.
 - If you want to also make a new release follow the steps in
@@ -48,23 +44,13 @@ Design and goals of the project:
 
 ## Releases
 
-1. Open a new PR with changes to `orb-tools/dev-promote-prod` job in [circleci
-   config](.circleci/config.yml):
-    - Change `release: patch` line to `minor` or `major` if the release isn't
-      a patch release.
-    - Uncomment `only: master` line and comment `ignore: /.*/`.
-2. Change [Unreleased header of CHANGELOG.md](CHANGELOG.md#Unreleased) to the
-   version you are going to release. Please also update the URLs at the bottom.
-   To check the current version of the orb check "orb version" badge on the
-   top.
-3. Create new _Unreleased_ section in _CHANGELOG.md_.
-4. Merge your PR.
-5. **IMPORTANT:** Create a new PR reverting changes introduced in step 1.
-   **immediately** so we don't create useless versions in branches created from
-   master.
-6. Push the version tag for the commit against which
-   `orb-tools/dev-promote-prod` job ran. E.g. `git tag v0.1.0
-   dc15f409d09884784fab86ebb6725b14a3f3cd2e` so links in
+1. Open a new PR with following changes:
+    - Change [Unreleased header of CHANGELOG.md](CHANGELOG.md#Unreleased) to
+    the version you are going to release.
+    - Create new _Unreleased_ section in _CHANGELOG.md_.
+    - Update the URLs at the bottom.
+2. Merge your PR.
+3. Tag the version (e.g. `git tag v0.1.0 dc15f409d09884784fab86ebb6725b14a3f3cd2e && git push origin v0.1.0`) so links in
    [CHANGELOG.md](CHANGELOG.md) work nicely.
 
 ## Jobs

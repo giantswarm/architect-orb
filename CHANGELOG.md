@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add message to known errors link if pushing to catalog or collection fails.
+
 ### Changed
 
 - Fail when go modules are not tidy in go-build.
@@ -48,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add push-to-app-catalog job.
 
 [Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.4.0...HEAD
-[0.3.0]: https://github.com/giantswarm/architect-orb/releases/tag/v0.4.0
+[0.4.0]: https://github.com/giantswarm/architect-orb/releases/tag/v0.4.0
 [0.3.0]: https://github.com/giantswarm/architect-orb/releases/tag/v0.3.0
 [0.2.0]: https://github.com/giantswarm/architect-orb/releases/tag/v0.2.0
 [0.1.2]: https://github.com/giantswarm/architect-orb/releases/tag/v0.1.2

@@ -6,7 +6,10 @@ orbs:
 workflows:
   catalog_build:
     jobs:
-      - orb-tools/lint
+      - orb-tools/lint:
+          filters:
+            tags:
+              only: /.*/
 
       - orb-tools/pack:
           source-dir: src
@@ -14,19 +17,32 @@ workflows:
           workspace-path: packed/orb.yml
           artifact-path: packed/orb.yml
           requires: [orb-tools/lint]
+          filters:
+            tags:
+              only: /.*/
 
-      - orb-tools/publish-dev:
-          orb-name: giantswarm/architect
+      - orb-tools/publish:
+          name: publish-branch
+          attach-workspace: true
           orb-path: workspace/packed/orb.yml
+          orb-ref: giantswarm/architect@dev:${CIRCLE_BRANCH}
           publish-token-variable: CIRCLECI_DEV_API_TOKEN
           requires: [orb-tools/pack]
-
-      - orb-tools/dev-promote-prod:
-          orb-name: giantswarm/architect
-          publish-token-variable: CIRCLECI_DEV_API_TOKEN
-          release: patch
-          requires: [orb-tools/publish-dev]
           filters:
             branches:
-              #only: master
+              only: /.*/
+            tags:
               ignore: /.*/
+
+      - orb-tools/publish:
+          name: publish-tag
+          attach-workspace: true
+          orb-path: workspace/packed/orb.yml
+          orb-ref: giantswarm/architect@${CIRCLE_TAG##v}
+          publish-token-variable: CIRCLECI_DEV_API_TOKEN
+          requires: [orb-tools/pack]
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
