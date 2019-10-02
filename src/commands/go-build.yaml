@@ -9,6 +9,8 @@ steps:
       keys:
         - go-build-go-mod-v1-{{ checksum "go.sum" }}
   - run: |
+      go mod tidy && git diff --exit-code
+  - run: |
       architect project version > .project_version
   - run: |
       cat .project_version
