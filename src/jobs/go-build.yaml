@@ -14,12 +14,18 @@ parameters:
   binary:
     description: "Name of the binary produced by the job. It is also persisted to the workspace."
     type: "string"
+  os:
+    default: "linux"
+    description: "The target Operating System for the binary. Must be one of \"linux\", \"darwin\"."
+    type: enum
+    enum: ["linux", "darwin"]
 executor: architect
 steps:
   - checkout
   - tools-info
   - go-build:
       binary: << parameters.binary >>
+      os: << parameters.os >>
   - persist_to_workspace:
       root: .
       paths:

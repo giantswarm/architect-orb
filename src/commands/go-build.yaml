@@ -1,6 +1,8 @@
 parameters:
   binary:
     type: "string"
+  os:
+    type: "string"
   pkg:
     default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
     type: "string"
@@ -31,10 +33,10 @@ steps:
   - run: |
       CGO_ENABLED=0 go test  -ldflags "$(cat .ldflags)" ./...
   - run: |
-      CGO_ENABLED=0 go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> .
+      CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> .
   - save_cache:
       key: go-build-go-mod-v1-{{ checksum "go.sum" }}
       paths:
         - "/go/pkg/mod"
   - run: |
-      ./<< parameters.binary >> version
+      [[ "<< parameters.os >>" == "linux" ]] && ./<< parameters.binary >> version || true
