@@ -169,11 +169,10 @@ workflows:
       - architect/push-to-docker:
           name: "push-aws-operator-to-docker"
           image: "quay.io/giantswarm/aws-operator"
-          registry: "quay.io"
-          username_envvar: "QUAY_USERNAME"
-          password_envvar: "QUAY_PASSWORD"
+          username_envar: "QUAY_USERNAME"
+          password_envar: "QUAY_PASSWORD"
           requires:
-            - build
+            - go-build-aws-operator
           filters:
             tags:
               only: /^v.*/
