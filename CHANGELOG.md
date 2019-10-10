@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add go-test job for building libraries.
+
 ## [0.4.2] 2019-10-04
 
 ### Added
