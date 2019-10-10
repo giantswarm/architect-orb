@@ -55,11 +55,37 @@ Design and goals of the project:
 
 ## Jobs
 
+### go-test
+
+This job:
+
+- Checks if Go modules are tidy.
+- Runs `go vet` against the codebase.
+- Runs `go test` against the codebase.
+
+Example usage:
+
+```yaml
+version: 2.1
+orbs:
+  architect: giantswarm/architect@VERSION
+
+workflows:
+  my-workflow:
+    jobs:
+      - architect/go-test:
+          name: go-test-MY-BINARY
+          # Needed to trigger job also on git tag.
+          filters:
+            tags:
+              only: /^v.*/
+```
+
 ### go-build
 
 This job:
 
-- Runs `go test` against the codebase.
+- Does everything (go-test)[#go-test] job does.
 - Builds a go binary.
 - Runs `BINARY version` and checks if it returned 0 exit code.
 - Persists the binary to the workspace.

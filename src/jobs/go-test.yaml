@@ -1,0 +1,15 @@
+description: |
+  Checks if the code is formatted by `go fmt` and then runs `go vet` and `go
+  test` It also injects following variables into the
+  "github.com/ORGANIZATION/REPOSITORY/pkg/project" package for testing:
+
+  - "buildTimestamp" in RFC-3339 format in UTC time zone.
+  - "gitSHA" SHA of the built commit.
+  - "version" produced by `architect project version` command.
+executor: architect
+steps:
+  - checkout
+  - tools-info
+  - go-cache-restore
+  - go-test
+  - go-cache-save

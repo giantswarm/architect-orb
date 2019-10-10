@@ -1,12 +1,8 @@
 description: |
-  Checks if the code is formatted by `go fmt` and then runs `go vet`, `go test`
-  and `go build` against the codebase. It also injects following variables into
-  the "github.com/ORGANIZATION/REPOSITORY/pkg/project" package for testing and
-  building:
-
-  - "buildTimestamp" in RFC-3339 format in UTC time zone.
-  - "gitSHA" SHA of the built commit.
-  - "version" produced by `architect project version` command.
+  It does everything that go-test
+  (https://circleci.com/orbs/registry/orb/giantswarm/architect#jobs-go-test)
+  job does and runs `go build` against the codebase on top of that. It injects
+  all the variables go-test job does into the produced binary.
 
   The job produces static binary named after the repository name. It is
   persisted to workspace under "./" path.
@@ -23,9 +19,11 @@ executor: architect
 steps:
   - checkout
   - tools-info
+  - go-cache-restore
   - go-build:
       binary: << parameters.binary >>
       os: << parameters.os >>
+  - go-cache-save
   - persist_to_workspace:
       root: .
       paths:

@@ -1,0 +1,27 @@
+parameters:
+  pkg:
+    default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
+    type: "string"
+steps:
+  - run: |
+      go mod tidy && git diff --exit-code
+  - run: |
+      architect project version > .project_version
+  - run: |
+      cat .project_version
+  - run: |
+      echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
+  - run: |
+      echo -n " -X '<< parameters.pkg >>.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+  - run: |
+      echo -n " -X '<< parameters.pkg >>.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+  - run: |
+      echo -n " -X '<< parameters.pkg >>.version=$(cat .project_version)'" >> .ldflags
+  - run: |
+      echo "\"$(cat .ldflags)\""
+  - run: |
+      test -z $(gofmt -l .) || gofmt -d .
+  - run: |
+      CGO_ENABLED=0 go vet ./...
+  - run: |
+      CGO_ENABLED=0 go test  -ldflags "$(cat .ldflags)" ./...
