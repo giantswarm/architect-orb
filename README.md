@@ -77,6 +77,7 @@ workflows:
           name: go-test-MY-BINARY
           # Needed to trigger job also on git tag.
           filters:
+            # Trigger job also on git tag.
             tags:
               only: /^v.*/
 ```
@@ -103,8 +104,8 @@ workflows:
       - architect/go-build:
           name: go-build-MY-BINARY
           binary: MY-BINARY
-          # Needed to trigger job also on git tag.
           filters:
+            # Trigger job also on git tag.
             tags:
               only: /^v.*/
 ```
@@ -153,8 +154,8 @@ workflows:
           # Make sure docker image is successfully built.
           requires:
             - build
-          # Needed to trigger job on git tag.
           filters:
+            # Trigger job also on git tag.
             tags:
               only: /^v.*/
 ```
@@ -200,6 +201,7 @@ workflows:
           requires:
             - go-build-aws-operator
           filters:
+            # Trigger job also on git tag.
             tags:
               only: /^v.*/
 ```
@@ -246,8 +248,10 @@ workflows:
           requires:
             - push-aws-operator-to-app-catalog
           filters:
+            # Do not trigger the job on commit.
             branches:
               ignore: /.*/
+            # Trigger job also on git tag.
             tags:
               only: /^v.*/
 ```
