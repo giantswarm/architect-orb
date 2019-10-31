@@ -17,6 +17,6 @@ steps:
   - run: |
       docker push "$(cat .docker_image_name)"
   - run: |
-      [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && docker tag "$(cat .docker_image_name)" "<<parameters.image>>:latest" || true
+      ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker tag "$(cat .docker_image_name)" "<<parameters.image>>:latest"
   - run: |
-      [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && docker push "<<parameters.image>>:latest" || true
+      ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker push "<<parameters.image>>:latest"
