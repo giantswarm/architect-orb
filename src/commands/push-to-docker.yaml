@@ -6,7 +6,7 @@ parameters:
   username_envar:
     type: "string"
   tag-latest-branch:
-    type: "boolean"
+    type: "string"
 steps:
   - run: |
       echo -n "<<parameters.image>>:$(architect project version)" > .docker_image_name
