@@ -23,5 +23,6 @@ steps:
       at: .
   - push-to-docker:
       image: <<parameters.image>>
+      latest: <<parameters.latest>>
       password_envar: <<parameters.password_envar>>
       username_envar: <<parameters.username_envar>>
