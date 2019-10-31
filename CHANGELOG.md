@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add "latest" parameter to the push-to-docker job.
+
 ## [0.4.3] 2019-10-10
 
 ### Added

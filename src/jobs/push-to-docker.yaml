@@ -1,15 +1,19 @@
 executor: architect
 parameters:
   image:
-    description: "Name of the docker image, without tag. e.g. quay.io/my-org/my-repo"
+    description: "Name of the docker image, without tag. e.g. \"quay.io/my-org/my-repo\"."
     type: "string"
+  latest:
+    description: "Whether the image should be tagged as \"latest\". By default it is tagged with the output of `architect project version`."
+    type: "boolean"
+    default: false
   password_envar:
     default: "ARCHITECT_DOCKER_REGISTRY_PASSWORD"
-    description: "Environment variable name holding docker registry password"
+    description: "Environment variable name holding docker registry password."
     type: "string"
   username_envar:
     default: "ARCHITECT_DOCKER_REGISTRY_USERNAME"
-    description: "Environment variable name holding registry username"
+    description: "Environment variable name holding registry username."
     type: "string"
 steps:
   - checkout
