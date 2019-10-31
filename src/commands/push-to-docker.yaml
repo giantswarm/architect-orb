@@ -1,26 +1,22 @@
 parameters:
   image:
     type: "string"
-  latest:
-    type: "boolean"
   password_envar:
     type: "string"
   username_envar:
     type: "string"
+  tag-latest-branch:
+    type: "boolean"
 steps:
   - run: |
+      echo -n "<<parameters.image>>:$(architect project version)" > .docker_image_name
+  - run: |
       echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "$(echo -n '<<parameters.image>>' | cut -d/ -f1)"
-  - unless:
-      condition: <<parameters.latest>>
-      steps:
-        - run: |
-            echo -n "<<parameters.image>>:$(architect project version)" > .docker_image_name
-  - when:
-      condition: <<parameters.latest>>
-      steps:
-        - run: |
-            echo -n "<<parameters.image>>:latest" > .docker_image_name
   - run: |
       docker build -t "$(cat .docker_image_name)" .
   - run: |
       docker push "$(cat .docker_image_name)"
+  - run: |
+      [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && docker tag "$(cat .docker_image_name)" "<<parameters.image>>:latest" || true
+  - run: |
+      [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && docker push "<<parameters.image>>:latest" || true

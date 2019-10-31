@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add "latest" parameter to the push-to-docker job.
+- Add "tag-latest-branch" parameter to the push-to-docker job.
 
 ## [0.4.3] 2019-10-10
 
