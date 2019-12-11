@@ -208,7 +208,7 @@ workflows:
 
 ### push-to-docker-legacy
 
-Same as `push-to-docker` with only change that the docker image tag is only including SHA of commit instead of version + SHA.
+Same as `push-to-docker` with only change that the docker image tag only includes the commit SHA instead of version + SHA.
 
 ### push-to-app-collection
 
