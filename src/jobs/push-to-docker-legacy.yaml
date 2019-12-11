@@ -1,0 +1,28 @@
+executor: architect
+parameters:
+  image:
+    description: "Name of the docker image, without tag. e.g. \"quay.io/my-org/my-repo\"."
+    type: "string"
+  password_envar:
+    default: "ARCHITECT_DOCKER_REGISTRY_PASSWORD"
+    description: "Environment variable name holding docker registry password."
+    type: "string"
+  username_envar:
+    default: "ARCHITECT_DOCKER_REGISTRY_USERNAME"
+    description: "Environment variable name holding registry username."
+    type: "string"
+  tag-latest-branch:
+    description: "Name of the branch on which the image will be additionally tagged as \"latest\"."
+    type: "string"
+    default: "master"
+steps:
+  - checkout
+  - setup_remote_docker:
+      docker_layer_caching: true
+  - attach_workspace:
+      at: .
+  - push-to-docker-legacy:
+      image: <<parameters.image>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      password_envar: <<parameters.password_envar>>
+      username_envar: <<parameters.username_envar>>

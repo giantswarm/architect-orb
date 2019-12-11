@@ -206,6 +206,10 @@ workflows:
               only: /^v.*/
 ```
 
+### push-to-docker-legacy
+
+Same as `push-to-docker` with only change that the docker image tag only includes the commit SHA instead of version + SHA.
+
 ### push-to-app-collection
 
 This job generate an App CR and add it to the an app collection chart repository.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add "push-to-docker-legacy" command to be able push old style docker image tags.
+
 ## [0.4.4] 2019-10-31
 
 ### Added
