@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.4.5...HEAD
 [0.4.5]: https://github.com/giantswarm/architect-orb/releases/tag/v0.4.5
 [0.4.4]: https://github.com/giantswarm/architect-orb/releases/tag/v0.4.4
 [0.4.3]: https://github.com/giantswarm/architect-orb/releases/tag/v0.4.3
