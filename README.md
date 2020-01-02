@@ -74,7 +74,7 @@ workflows:
   my-workflow:
     jobs:
       - architect/go-test:
-          name: go-test-MY-BINARY
+          name: go-test-REPOSITORY
           # Needed to trigger job also on git tag.
           filters:
             # Trigger job also on git tag.
@@ -102,8 +102,8 @@ workflows:
   my-workflow:
     jobs:
       - architect/go-build:
-          name: go-build-MY-BINARY
-          binary: MY-BINARY
+          name: go-build-REPOSITORY
+          binary: REPOSITORY
           filters:
             # Trigger job also on git tag.
             tags:
@@ -147,13 +147,13 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-catalog:
-          name: "push-aws-operator-to-app-catalog"
-          app_catalog: "magic-catalog"
-          app_catalog_test: "magic-test-catalog"
-          chart: "aws-operator"
-          # Make sure docker image is successfully built.
+          name: "push-REPOSITORY-to-CATALOG-app-catalog"
+          app_catalog: "CATALOG-catalog"
+          app_catalog_test: "CATALOG-test-catalog"
+          chart: "REPOSITORY"
           requires:
-            - build
+            # Make sure docker image is successfully built.
+            - push-REPOSITORY-to-quay
           filters:
             # Trigger job also on git tag.
             tags:
@@ -194,12 +194,13 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-docker:
-          name: "push-aws-operator-to-docker"
-          image: "quay.io/giantswarm/aws-operator"
+          name: "push-REPOSITORY-to-quay"
+          image: "quay.io/giantswarm/REPOSITORY"
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
           requires:
-            - go-build-aws-operator
+            # Make sure binary is built.
+            - go-build-REPOSITORY
           filters:
             # Trigger job also on git tag.
             tags:
@@ -246,11 +247,12 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-collection:
-          name: "push-to-aws-app-collection"
-          app_name: "aws-operator"
-          app_collection_repo: "aws-app-collection"
+          name: "push-REPOSITORY-to-COLLECTION-app-collection"
+          app_name: "REPOSITORY"
+          app_collection_repo: "COLLECTION-app-collection"
           requires:
-            - push-aws-operator-to-app-catalog
+            # Make sure the chart bechind the app is in the app catalog.
+            - push-REPOSITORY-to-CATALOG-app-catalog
           filters:
             # Do not trigger the job on commit.
             branches:
