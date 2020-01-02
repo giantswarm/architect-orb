@@ -247,7 +247,7 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-collection:
-          name: "push-to-COLLECTION-app-collection"
+          name: "push-REPOSITORY-to-COLLECTION-app-collection"
           app_name: "REPOSITORY"
           app_collection_repo: "COLLECTION-app-collection"
           requires:
