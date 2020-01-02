@@ -153,7 +153,7 @@ workflows:
           chart: "REPOSITORY"
           requires:
             # Make sure docker image is successfully built.
-            - build-REPOSITORY
+            - push-REPOSITORY-to-quay
           filters:
             # Trigger job also on git tag.
             tags:
@@ -194,7 +194,7 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-docker:
-          name: "push-REPOSITORY-to-docker"
+          name: "push-REPOSITORY-to-quay"
           image: "quay.io/giantswarm/REPOSITORY"
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
