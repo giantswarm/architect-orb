@@ -4,4 +4,4 @@
 
 ### Checklist
 
-- [ ] Update the [appcatalog docs](https://github.com/giantswarm/giantswarm/blob/master/processes/appcatalog.md) to use the new release.
+- [ ] Update the [appcatalog docs](https://github.com/giantswarm/giantswarm/blob/master/areas/managed-services/adding_app_to_appcatalog.md) to use the new release.
