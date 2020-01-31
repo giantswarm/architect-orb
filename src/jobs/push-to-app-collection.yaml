@@ -1,6 +1,8 @@
 description: >
   Generates and adds an App CR to an app-collection.
   Note: version will be detected automatically by architect.
+
+
 executor: architect
 parameters:
   app_name:
@@ -14,7 +16,7 @@ parameters:
     description: "Name of the app collection repository."
     type: "string"
   unique:
-    description: "Whether the previous App versions in the collection should be replaced with this one. Any non-empty string means true."
+    description: "Whether the previous App versions in the collection should be replaced with this one. Any non-empty string means true. This is useful when only one (usually latest) version of the app should be installed at a time. E.g. OPA gatekeeper."
     type: "string"
     default: ""
 steps:
