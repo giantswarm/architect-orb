@@ -8,6 +8,8 @@ parameters:
     type: "string"
   app_collection_repo:
     type: "string"
+  unique:
+    type: "string"
 steps:
   - run: |
         architect project version > .version
@@ -19,12 +21,30 @@ steps:
         git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run: |
         mkdir -p .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
+  - when:
+      condition: <<parameters.unique>>
+      steps:
+        - run: |
+              cd .app-collection && git rm helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-*.yaml
+        - run: |
+              echo -n "<<parameters.app_name>>-unique.yaml" > .app_file_name
+        - run: |
+              echo -n "update <<parameters.app_name>>-unique to $(cat .version)" > .git_commit_message
+  - unless:
+      condition: <<parameters.unique>>
+      steps:
+        - run: |
+              echo -n "<<parameters.app_name>>-$(cat .version).yaml" > .app_file_name
+        - run: |
+              echo -n "add <<parameters.app_name>>-$(cat .version)" > .git_commit_message
   - run: |
-        mv -n .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat .version).yaml
+        mv -n .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_file_name)
   - run: |
-        cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-$(cat ../.version).yaml
+        cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_file_name)
   - run: |
-        cd .app-collection && git commit -m "add $(git status --porcelain | cut -c4-)"
+        cd .app-collection && git commit -m "$(cat .git_commit_message)"
   - run: |
         cd .app-collection && git push || (echo "Error pushing app to the collection. See known errors in https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" && exit 1)
+  - run: |
+        rm .version .app_file_name .git_commit_message
 

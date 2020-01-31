@@ -1,18 +1,24 @@
 description: >
   Generates and adds an App CR to an app-collection.
   Note: version will be detected automatically by architect.
+
+
 executor: architect
 parameters:
   app_name:
-    description: "Name of the application"
+    description: "Name of the application."
     type: "string"
   app_catalog:
-    description: "Name of the catalog CR where the application belongs"
+    description: "Name of the catalog CR where the application belongs."
     type: "string"
     default: "control-plane-catalog"
   app_collection_repo:
-    description: "Name of the app collection repository"
+    description: "Name of the app collection repository."
     type: "string"
+  unique:
+    description: "Whether the previous App versions in the collection should be replaced with this one. Any non-empty string means true. This is useful when only one (usually latest) version of the app should be installed at a time. E.g. OPA gatekeeper."
+    type: "string"
+    default: ""
 steps:
   - checkout
   - prepare-catalogbot-git-ssh
@@ -20,3 +26,4 @@ steps:
       app_name: <<parameters.app_name>>
       app_catalog: <<parameters.app_catalog>>
       app_collection_repo: <<parameters.app_collection_repo>>
+      unique: <<parameters.unique>>
