@@ -13,8 +13,16 @@ parameters:
 steps:
   - run: |
         architect project version > .version
-  - run: |
-        echo -n "<<parameters.app_name>>-$(cat .version)" | head -c 53 > .cr-name
+  - when:
+      condition: <<parameters.unique>>
+      steps:
+        - run: |
+              echo -n "<<parameters.app_name>>-unique" > .cr-name
+  - unless:
+      condition: <<parameters.unique>>
+      steps:
+        - run: |
+              echo -n "<<parameters.app_name>>-$(cat .version)" | head -c 53 > .cr-name
   - run: |
         architect create appcr --name $(cat .cr-name) --app-name <<parameters.app_name>> --app-version $(cat .version) --catalog <<parameters.app_catalog>> -o yaml > .app.yaml
   - run: |
@@ -46,5 +54,5 @@ steps:
   - run: |
         cd .app-collection && git push || (echo "Error pushing app to the collection. See known errors in https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" && exit 1)
   - run: |
-        rm .version .app_file_name .git_commit_message
+        rm .cr_name .version .app_file_name .git_commit_message
 
