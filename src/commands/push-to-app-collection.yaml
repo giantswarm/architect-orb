@@ -40,9 +40,9 @@ steps:
   - run: |
         mv -n .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_file_name)
   - run: |
-        cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_file_name)
+        cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.app_file_name)
   - run: |
-        cd .app-collection && git commit -m "$(cat .git_commit_message)"
+        cd .app-collection && git commit -m "$(cat ../.git_commit_message)"
   - run: |
         cd .app-collection && git push || (echo "Error pushing app to the collection. See known errors in https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" && exit 1)
   - run: |
