@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Do not change CR name when "unique" parameter is set in push-to-app-collection job.
+
 ## [0.5.1] 2020-02-03
 
 ### Fixed
