@@ -6,8 +6,6 @@ steps:
   - run: |
       go mod tidy && git diff --exit-code
   - run: |
-      find . -path ./vendor -prune -o -name '*.go' -exec goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d "{}" +
-  - run: |
       architect project version > .project_version
   - run: |
       cat .project_version
@@ -21,6 +19,8 @@ steps:
       echo -n " -X '<< parameters.pkg >>.version=$(cat .project_version)'" >> .ldflags
   - run: |
       echo "\"$(cat .ldflags)\""
+  - run: |
+      go get golang.org/x/tools/cmd/goimports && find . -path ./vendor -prune -o -name '*.go' -exec goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d "{}" +
   - run: |
       test -z $(gofmt -l .) || gofmt -d .
   - run: |
