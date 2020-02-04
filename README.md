@@ -86,7 +86,7 @@ workflows:
 
 This job:
 
-- Does everything (go-test)[#go-test] job does.
+- Does everything [go-test](#go-test) job does.
 - Builds a go binary.
 - Runs `BINARY version` and checks if it returned 0 exit code.
 - Persists the binary to the workspace.
