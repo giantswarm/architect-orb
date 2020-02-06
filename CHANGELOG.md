@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix working files cleanup in push-to-app-collection job.
+
 ## [0.5.2] 2020-02-03
 
 ### Fixed
