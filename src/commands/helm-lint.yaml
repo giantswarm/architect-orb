@@ -1,0 +1,16 @@
+---
+description: Lint Helm charts
+parameters:
+  config_file:
+    type: string
+  additional_args:
+    type: string
+steps:
+  - when:
+      condition: <<parameters.config_file>>
+      steps:
+        - run: ct lint --config=<<parameters.config_file>>
+  - unless:
+      condition: <<parameters.config_file>>
+      steps:
+        - run: ct lint <<parameters.additional_args>>  --chart-dirs helm
