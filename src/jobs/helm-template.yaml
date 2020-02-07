@@ -1,0 +1,9 @@
+---
+executor: architect
+parameters:
+  chart:
+    type: string
+steps:
+  - checkout
+  - helm-chart-template:
+      chart: <<parameters.chart>>

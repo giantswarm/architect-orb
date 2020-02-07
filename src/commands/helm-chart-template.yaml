@@ -1,0 +1,7 @@
+---
+parameters:
+  chart:
+    type: string
+steps:
+  - run:
+      command: architect helm template --dir ./helm/<<parameters.chart>>

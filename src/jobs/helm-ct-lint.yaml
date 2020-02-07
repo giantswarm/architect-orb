@@ -1,0 +1,20 @@
+---
+executor: helm-chart-testing
+parameters:
+  config_file:
+    description: >-
+      Chart Testing config file
+      (see: https://github.com/helm/chart-testing#configuration)
+    type: string
+    default: ""
+  additional_args:
+    description: >-
+      Additonal command line arguments
+      (ignored if config_file is set)
+    type: string
+    default: ""
+steps:
+  - checkout
+  - helm-ct-lint:
+      config_file: <<parameters.config_file>>
+      additional_args: <<parameters.additional_args>>
