@@ -14,7 +14,6 @@ parameters:
     type: string
     default: ""
 steps:
-  - checkout
   - helm-ct-lint:
       config_file: <<parameters.config_file>>
       additional_args: <<parameters.additional_args>>
