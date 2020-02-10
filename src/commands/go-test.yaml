@@ -19,6 +19,10 @@ steps:
       echo -n " -X '<< parameters.pkg >>.version=$(cat .project_version)'" >> .ldflags
   - run: |
       echo "\"$(cat .ldflags)\""
+  - run:
+      name: Check if imports are properly sorted
+      command: |
+        go get golang.org/x/tools/cmd/goimports && [[ -n $(goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -l .) ]] && goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d . && exit 1
   - run: |
       test -z $(gofmt -l .) || gofmt -d .
   - run: |

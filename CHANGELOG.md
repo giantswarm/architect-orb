@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Fail when .go files not satisfying import rules specified in fmt are present.
+
 ## [0.5.2] 2020-02-03
 
 ### Fixed

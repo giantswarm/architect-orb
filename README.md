@@ -60,6 +60,7 @@ Design and goals of the project:
 This job:
 
 - Checks if Go modules are tidy.
+- Checks if imports in .go files satisfy import rules defined in fmt.
 - Runs `go vet` against the codebase.
 - Runs `go test` against the codebase.
 
