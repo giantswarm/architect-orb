@@ -3,10 +3,8 @@ description: Lint Helm charts
 parameters:
   config_file:
     type: string
-    default: ""
   additional_args:
     type: string
-    default: ""
 steps:
   - when:
       condition: <<parameters.config_file>>

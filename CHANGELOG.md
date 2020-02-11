@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Functionality to run Helm linting using Chart testing (https://github.com/helm/chart-testing)
+- Jobs:
+    - helm-ct-lint
+    - helm-template
 
 ## [0.5.2] 2020-02-03
 
