@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Fail when .go files not satisfying import rules specified in fmt are present.
+
 ### Fixed
 
 - Fix working files cleanup in push-to-app-collection job.
