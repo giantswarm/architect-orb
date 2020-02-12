@@ -22,7 +22,7 @@ steps:
   - run:
       name: Check if imports are properly sorted
       command: |
-        go get golang.org/x/tools/cmd/goimports && [[ -n $(goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -l .) ]] && goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d . && exit 1
+        go get golang.org/x/tools/cmd/goimports && if [[ -n $(goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -l .) ]]; then goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d . && exit 1; fi
   - run: |
       test -z $(gofmt -l .) || gofmt -d .
   - run: |
