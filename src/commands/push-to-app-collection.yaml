@@ -33,7 +33,7 @@ steps:
       condition: <<parameters.unique>>
       steps:
         - run: |
-              cd .app-collection && git rm helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-*.yaml
+              cd .app-collection && git rm --ignore-unmatch helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-*.yaml
         - run: |
               echo -n "<<parameters.app_name>>-unique.yaml" > .app_file_name
         - run: |
