@@ -1,6 +1,3 @@
-parameters:
-  push-tag-on-release:
-    type: "string"
 steps:
   - run:
       name: "architect/lint-changelog: validate Unreleased header existence"
