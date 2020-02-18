@@ -1,0 +1,52 @@
+parameters:
+  push-tag-on-release:
+    type: "string"
+steps:
+  - run:
+      name: "architect/lint-changelog: validate Unreleased header existence"
+      command: |
+          grep -E -e '^## \[Unreleased\]$' CHANGELOG.md
+  - run:
+      name: "architect/lint-changelog: list valid 1st level headers"
+      command: |
+          grep -E -e '^# Changelog$' CHANGELOG.md | tee .lint_changelog_headers_level_1_valid
+  - run:
+      name: "architect/lint-changelog: list all 1st level headers"
+      command: |
+          grep -e '^# ' CHANGELOG.md | tee .lint_changelog_headers_level_1_all
+  - run:
+      name: "architect/lint-changelog: validate 1st level headers"
+      command: |
+          git diff --exit-code --no-index .lint_changelog_headers_level_1_all .lint_changelog_headers_level_1_valid
+  - run:
+    name: "architect/lint-changelog: list valid 2nd level headers"
+      command: |
+          grep -E -e '^## \[[0-9]+\.[0-9]+\.[0-9]+\] - 20[0-9]{2}-[0-9]{2}-[0-9]{2}$' -e '^## \[Unreleased\]$' CHANGELOG.md | tee .lint_changelog_headers_level_2_valid
+  - run:
+      name: "architect/lint-changelog: list all 2nd level headers"
+      command: |
+          grep -e '^## ' CHANGELOG.md | tee .lint_changelog_headers_level_2_all
+  - run:
+      name: "architect/lint-changelog: validate 2nd level headers"
+      command: |
+          git diff --exit-code --no-index .lint_changelog_headers_level_2_all .lint_changelog_headers_level_2_valid
+  - run:
+    name: "architect/lint-changelog: list valid 3rd headers"
+      command: |
+           grep -E '### (Added|Changed|Deprecated|Removed|Fixed|Security)$' CHANGELOG.md | tee .lint_changelog_valid_headers | tee -a .lint_changelog_headers_level_3_valid
+  - run:
+      name: "architect/lint-changelog: list all 3nd level headers"
+      command: |
+          grep -E -e '^### ' CHANGELOG.md | tee .lint_changelog_headers_level_3_all
+  - run:
+      name: "architect/lint-changelog: validate 3nd level headers"
+      command: |
+          git diff --exit-code --no-index .lint_changelog_headers_level_3_all .lint_changelog_headers_level_3_valid
+  - run:
+      name: "architect/lint-changelog: validate there are no more headers"
+      command: |
+          ! grep -E -e '^####+ ' CHANGELOG.md
+  - run:
+      name: "architect/lint-changelog: cleanup"
+      command: |
+          rm -v .lint_changelog_*
