@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Stop injecting version into build info in `go-test` command to allow version to be maintained directly in source.
+
 ### Fixed
 
 - Fix pushing new unique app in push-to-app-collection job. https://github.com/giantswarm/architect-orb/pull/69
