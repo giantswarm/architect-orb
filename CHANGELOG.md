@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add lint-changelog job.
 
-## [0.5.3] 2020-02-11
+## [0.5.3] - 2020-02-11
 
 ### Added
 
@@ -21,49 +21,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix working files cleanup in push-to-app-collection job.
 
-## [0.5.2] 2020-02-03
+## [0.5.2] - 2020-02-03
 
 ### Fixed
 
 - Do not change CR name when "unique" parameter is set in push-to-app-collection job.
 
-## [0.5.1] 2020-02-03
+## [0.5.1] - 2020-02-03
 
 ### Fixed
 
 - Fix push-to-app-collection job broken in v0.5.0 release.
 
-## [0.5.0] 2020-01-31
+## [0.5.0] - 2020-01-31
 
 ### Added
 
 - Add "unique" parameter to push-to-app-collection job.
 
-## [0.4.5] 2019-12-11
+## [0.4.5] - 2019-12-11
 
 ### Added
 
 - Add "push-to-docker-legacy" command to be able push old style docker image tags.
 
-## [0.4.4] 2019-10-31
+## [0.4.4] - 2019-10-31
 
 ### Added
 
 - Add "tag-latest-branch" parameter to the push-to-docker job.
 
-## [0.4.3] 2019-10-10
+## [0.4.3] - 2019-10-10
 
 ### Added
 
 - Add go-test job for building libraries.
 
-## [0.4.2] 2019-10-04
+## [0.4.2] - 2019-10-04
 
 ### Added
 
 - Add "os" parameter to the go-build job.
 
-## [0.4.1] 2019-10-02
+## [0.4.1] - 2019-10-02
 
 ### Added
 
@@ -73,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fail when go modules are not tidy in go-build.
 
-## [0.4.0] 2019-09-17
+## [0.4.0] - 2019-09-17
 
 ### Added
 
