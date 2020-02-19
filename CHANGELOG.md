@@ -11,7 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add lint-changelog job.
 
-## [0.5.3] - 2020-02-11
+### Changed
+
+- Stop injecting version into build info in `go-test` command to allow version to be maintained directly in source.
+
+### Fixed
+
+- Fix pushing new unique app in push-to-app-collection job. https://github.com/giantswarm/architect-orb/pull/69
+
+## [0.5.3] 2020-02-11
 
 ### Added
 

@@ -6,17 +6,11 @@ steps:
   - run: |
       go mod tidy && git diff --exit-code
   - run: |
-      architect project version > .project_version
-  - run: |
-      cat .project_version
-  - run: |
       echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
   - run: |
       echo -n " -X '<< parameters.pkg >>.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
   - run: |
       echo -n " -X '<< parameters.pkg >>.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
-  - run: |
-      echo -n " -X '<< parameters.pkg >>.version=$(cat .project_version)'" >> .ldflags
   - run: |
       echo "\"$(cat .ldflags)\""
   - run:
