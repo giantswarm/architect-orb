@@ -2,6 +2,6 @@
 
 :warning: If you want to **create a new release** of this orb please read [Releases section of README.md](../README.md#Releases) carefully :exclamation:
 
-### Checklist
+## Checklist
 
-- [ ] Update the [appcatalog docs](https://github.com/giantswarm/giantswarm/blob/master/areas/managed-services/adding_app_to_appcatalog.md) to use the new release.
+- [ ] Update changelog in CHANGELOG.md.
