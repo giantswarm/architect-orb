@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] 2020-02-20
+
+### Added
+
+- Support for modern code analysis tools for dep-based projects using the new
+`architect/go-test-legacy` job. Based on the existing `architect/go-test` job.
+- Support for running arbitrary architect commands inside an architect container
+avoiding the requirement of installing the binary locally using the new
+`architect/go-architect` job.
+- New optional parameter `lockfile` for `architect/go-cache-save` command
+(defaults to `go.sum`) which enables `dep` dependencies to be cached by passing
+in `lockfile: "Gopkg.lock"`.
+- Names for steps in `tools-info` command.
+
 ## [0.6.0] 2020-02-19
 
 ### Changed

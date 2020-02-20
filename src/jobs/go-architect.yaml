@@ -1,5 +1,5 @@
 description: |
-  This job runs the given command for the current project from a container 
+  This job runs the given command for the current project from a container
   using the `latest` architect image and ultimately calling `architect <command>`.
 machine: true
 parameters:
