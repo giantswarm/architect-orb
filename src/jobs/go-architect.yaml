@@ -9,4 +9,4 @@ parameters:
 steps:
   - checkout
   - go-architect:
-    command: << parameters.command >>
+      command: << parameters.command >>
