@@ -1,4 +1,8 @@
+parameters:
+  lockfile:
+    type: "string"
+    default: "go.sum"
 steps:
   - restore_cache:
       keys:
-        - go-build-go-mod-v1-{{ checksum "go.sum" }}
+        - go-build-go-mod-v1-{{ checksum "<< parameters.lockfile >>" }}

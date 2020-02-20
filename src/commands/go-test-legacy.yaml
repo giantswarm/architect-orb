@@ -1,0 +1,48 @@
+steps:
+  - run:
+      name: Configuring Go Environment
+      command: |
+        mkdir -p /go/src/github.com/${CIRCLE_PROJECT_USERNAME}
+        ln -s /go/src/project /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+  - run:
+      name: Installing Dep
+      command: |
+        go get github.com/golang/dep/cmd/dep
+  - run:
+      name: Running Dep Ensure
+      command: |
+        export DEPPROJECTROOT=github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        dep ensure && git diff --exit-code
+  - run:
+      name: Installing Goimports
+      command: |
+        go get golang.org/x/tools/cmd/goimports
+  - run:
+      name: Deleting Vendor Directory
+      command: |
+        rm -rf vendor/
+  - run:
+      name: Ensuring Imports Are Properly Sorted
+      command: |
+        export PACKAGE=github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        if [[ -n $(goimports -local $PACKAGE -l .) ]];
+          then goimports -local $PACKAGE -d . && exit 1;
+        fi
+  - run:
+      name: Running Go Fmt
+      command: |
+        test -z $(gofmt -l .) || gofmt -d .
+  - run:
+      name: Restoring Vendor Directory
+      command: |
+        git checkout vendor/
+  - run:
+      name: Running Go Vet
+      command: |
+        cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        CGO_ENABLED=0 go vet ./...
+  - run:
+      name: Running Go Test
+      command: |
+        cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        CGO_ENABLED=0 go test ./...
