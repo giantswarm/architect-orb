@@ -9,8 +9,8 @@ steps:
   - checkout
   - tools-info
   - go-cache-restore:
-    lockfile: Gopkg.lock
+      lockfile: Gopkg.lock
   - go-test-legacy
   - go-cache-save:
-    lockfile: Gopkg.lock
+      lockfile: Gopkg.lock
 working_directory: /go/src/project
