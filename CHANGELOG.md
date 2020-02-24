@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Introduce `go-lint` for running configurable linting jobs on `Go` code
+
 ## [0.6.0] 2020-02-19
 
 ### Changed
