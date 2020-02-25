@@ -44,7 +44,7 @@ parameters:
     description: "Time allowed per audit. E.g. 10us, 30s, 1m, 1h10m1s."
     type: "string"
   verbose:
-    description: "If set, will print verbose output."
+    description: "If true, will print verbose output."
     type: "boolean"
 steps:
   - run: |
