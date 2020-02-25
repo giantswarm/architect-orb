@@ -40,7 +40,7 @@ parameters:
     type: "boolean"
   redact:
     default: false
-    description: "If set, redact secrets from log messages and leaks (default: false)."
+    description: "If true, redact secrets from log messages and leaks (default: false)."
     type: "boolean"
   report:
     default: ""
