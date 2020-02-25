@@ -28,7 +28,7 @@ parameters:
     description: "If true, pretty-prints json output (if output is being printed with -v. Default: true)."
     type: "boolean"
   redact:
-    description: "If set, redact secrets from log messages and leaks (default: false)."
+    description: "If true, redact secrets from log messages and leaks (default: false)."
     type: "boolean"
   report:
     description: "Path to write json leaks file."
