@@ -16,7 +16,7 @@ parameters:
     description: "Path to a config file to use for gitleaks configuration."
     type: "string"
   debug:
-    description: "If set, will print debug messages."
+    description: "If true, will print debug messages."
     type: "boolean"
   depth:
     description: "Number of commits to audit."
