@@ -24,7 +24,7 @@ parameters:
     type: "string"
   debug:
     default: false
-    description: "If set, will print debug messages."
+    description: "If true, will print debug messages."
     type: "boolean"
   depth:
     default: 0
