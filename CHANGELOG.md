@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Introduce `go-lint` for running configurable linting jobs on `Go` code
+- Introduce `gitleaks` for entropy-based checks for secrets in the repository (language-agnostic)
 
 ## [0.6.0] 2020-02-19
 
