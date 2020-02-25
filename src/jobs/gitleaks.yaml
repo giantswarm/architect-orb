@@ -61,7 +61,7 @@ parameters:
     type: "string"
   verbose:
     default: false
-    description: "If set, will print verbose output."
+    description: "If true, will print verbose output."
     type: "boolean"
 executor: gitleaks
 steps:
