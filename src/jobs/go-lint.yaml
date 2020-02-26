@@ -1,0 +1,47 @@
+description: "Runs golanglint-ci against the codebase."
+parameters:
+  disable:
+    default: ""
+    description: "The names of default linting modules to skip."
+    type: "string"
+  disable-all:
+    default: false
+    description: "If set, will disable all linters (except those included by '--enable')."
+    type: "boolean"
+  enable:
+    default: ""
+    description: "The names of additional linting modules to run."
+    type: "string"
+  new-from-rev:
+    default: ""
+    description: "Show only new issues created after git revision REV."
+    type: "string"
+  presets:
+    default: "none"
+    description: "Enable preset list of linters (bugs|complexity|format|performance|style|unused)."
+    type: "enum"
+    enum: ["bugs", "complexity", "format", "performance", "style", "unused", "none"]
+  skip-dirs:
+    default: ""
+    description: "Regular expressions for folder paths which should be skipped."
+    type: "string"
+  skip-files:
+    default: ""
+    description: "Regular expressions for file paths which should be skipped."
+    type: "string"
+  verbose:
+    default: false
+    description: "If set, will print verbose output."
+    type: "boolean"
+executor: go-lint
+steps:
+  - checkout
+  - go-lint:
+      disable: << parameters.disable >>
+      disable-all: << parameters.disable-all >>
+      enable: << parameters.enable >>
+      new-from-rev: << parameters.new-from-rev >>
+      presets: << parameters.presets >>
+      skip-dirs: << parameters.skip-dirs >>
+      skip-files: << parameters.skip-files >>
+      verbose: << parameters.verbose >>

@@ -1,0 +1,2 @@
+docker:
+    - image: quay.io/giantswarm/golangci-lint:v1.23.6

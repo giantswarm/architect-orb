@@ -1,0 +1,113 @@
+parameters:
+  branch:
+    description: "The branch to audit."
+    type: "string"
+  commit:
+    description: "Scan all files changed by this commit (rev. SHA)."
+    type: "string"
+  commit-from:
+    description: "Commit to start audit from (rev. SHA). This is the most recent commit to audit. Default is the latest."
+    type: "string"
+  commit-to:
+    description: "Commit to stop audit (rev. SHA). This is the oldest commit to audit. Default is the root commit. \
+    In CircleCI, you can use << pipeline.git.base_revision >> to scan only since the parent commit."
+    type: "string"
+  config:
+    description: "Path to a config file to use for gitleaks configuration."
+    type: "string"
+  debug:
+    description: "If true, will print debug messages."
+    type: "boolean"
+  depth:
+    description: "Number of commits to audit."
+    type: "integer"
+  files-at-commit:
+    description: "Scan all files as they are in this commit (rev. SHA), even if they did not change."
+    type: "string"
+  pretty:
+    description: "If true, pretty-prints json output (if output is being printed with -v. Default: true)."
+    type: "boolean"
+  redact:
+    description: "If true, redact secrets from log messages and leaks (default: false)."
+    type: "boolean"
+  report:
+    description: "Path to write json leaks file."
+    type: "string"
+  report-format:
+    description: "Format report as json or csv (default: json)."
+    type: "enum"
+    enum: ["json", "csv"]
+  threads:
+    description: "Maximum number of threads gitleaks spawns."
+    type: "integer"
+  timeout:
+    description: "Time allowed per audit. E.g. 10us, 30s, 1m, 1h10m1s."
+    type: "string"
+  verbose:
+    description: "If true, will print verbose output."
+    type: "boolean"
+steps:
+  - run: |
+      BRANCH="<< parameters.branch >>"
+      COMMIT="<< parameters.commit >>"
+      COMMIT_FROM="<< parameters.commit-from >>"
+      COMMIT_TO="<< parameters.commit-to >>"
+      CONFIG="<< parameters.config >>"
+      DEBUG="<< parameters.debug >>"
+      DEPTH="<< parameters.depth >>"
+      FILES_AT_COMMIT="<< parameters.files-at-commit >>"
+      PRETTY="<< parameters.pretty >>"
+      REDACT="<< parameters.redact >>"
+      REPORT="<< parameters.report >>"
+      REPORT_FORMAT="<< parameters.report-format >>"
+      THREADS="<< parameters.threads >>"
+      TIMEOUT="<< parameters.timeout >>"
+      VERBOSE="<< parameters.verbose >>"
+      LINT_ARGS=" "
+      if [ -n "${BRANCH}" ]; then
+        LINT_ARGS+=" --branch=${BRANCH}";
+      fi
+      if [ -n "${COMMIT}" ]; then
+        LINT_ARGS+=" --commit=${COMMIT}";
+      fi
+      if [ -n "${COMMIT_FROM}" ]; then
+        LINT_ARGS+=" --commit-from=${COMMIT_FROM}";
+      fi
+      if [ -n "${COMMIT_TO}" ]; then
+        LINT_ARGS+=" --commit-to=${COMMIT_TO}";
+      fi
+      if [ -n "${CONFIG}" ]; then
+        LINT_ARGS+=" --config=${CONFIG}";
+      fi
+      if [ "${DEBUG}" = "true" ]; then
+        LINT_ARGS+=" --debug";
+      fi
+      if [ -n "${DEPTH}" ]; then
+        LINT_ARGS+=" --depth=${DEPTH}";
+      fi
+      if [ -n "${FILES_AT_COMMIT}" ]; then
+        LINT_ARGS+=" --files-at-commit=${FILES_AT_COMMIT}";
+      fi
+      if [ "${PRETTY}" = "true" ]; then
+        LINT_ARGS+=" --pretty";
+      fi
+      if [ "${REDACT}" = "true" ]; then
+        LINT_ARGS+=" --redact";
+      fi
+      if [ -n "${REPORT}" ]; then
+        LINT_ARGS+=" --report=${REPORT}";
+        if [ -n "${REPORT_FORMAT}" ]; then
+          LINT_ARGS+=" --report-format=${REPORT_FORMAT}";
+        fi
+      fi
+      if [ -n "${THREADS}" ]; then
+        LINT_ARGS+=" --threads=${THREADS}";
+      fi
+      if [ -n "${TIMEOUT}" ]; then
+        LINT_ARGS+=" --timeout=${TIMEOUT}";
+      fi
+      if [ "${VERBOSE}" = "true" ]; then
+        LINT_ARGS+=" --verbose";
+      fi
+      echo "Running gitleaks $LINT_ARGS -r ./"
+      gitleaks $LINT_ARGS -r ./

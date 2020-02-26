@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.7.0] 2020-02-20
+## [0.7.0] 2020-02-26
 
 ### Added
 
+- Introduce `go-lint` for running configurable linting jobs on `Go` code
+- Introduce `gitleaks` for entropy-based checks for secrets in the repository (language-agnostic)
 - Support for modern code analysis tools for dep-based projects using the new
 `architect/go-test-legacy` job. Based on the existing `architect/go-test` job.
 - Support for running arbitrary architect commands inside an architect container
