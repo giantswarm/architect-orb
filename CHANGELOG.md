@@ -131,7 +131,7 @@ in `lockfile: "Gopkg.lock"`.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.7.0...HEAD
 [0.7.0]: https://github.com/giantswarm/architect-orb/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/giantswarm/architect-orb/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/giantswarm/architect-orb/compare/v0.5.2...v0.5.3

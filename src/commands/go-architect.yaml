@@ -3,7 +3,7 @@ parameters:
     type: "string"
 steps:
   - run:
-      name: Deploying Using Architect
+      name: "architect/go-architect: Executing architect command"
       command: |
         docker run \
           -e CIRCLE_PROJECT_REPONAME \
