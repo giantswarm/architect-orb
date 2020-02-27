@@ -9,5 +9,4 @@ steps:
       if [ -n "${CONFIG}" ]; then
         LINT_ARGS+=" --config=${CONFIG}";
       fi
-      echo "Running gitleaks $LINT_ARGS --redact -v --pretty -r ./"
       gitleaks $LINT_ARGS --redact -v --pretty -r ./
