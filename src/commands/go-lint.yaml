@@ -1,5 +1,3 @@
 steps:
   - run: |
-      # Enable some additional linters
-      echo "Running: golangci-lint run -E gosec -E goconst -E unparam"
       golangci-lint run -E gosec -E goconst -E unparam
