@@ -1,11 +1,5 @@
 description: "Runs golanglint-ci against the codebase."
-parameters:
-  new-from-rev:
-    default: ""
-    description: "Show only new issues created after git revision REV."
-    type: "string"
 executor: go-lint
 steps:
   - checkout
-  - go-lint:
-      new-from-rev: << parameters.new-from-rev >>
+  - go-lint

@@ -1,15 +1,5 @@
-parameters:
-  new-from-rev:
-    description: "Show only new issues created after git revision REV."
-    type: "string"
 steps:
   - run: |
-      NEW_FROM_REV="<< parameters.new-from-rev >>"
       # Enable some additional linters
-      ENABLED=" -E gosec -E goconst -E unparam"
-      LINT_ARGS=" "
-      if [ -n "${NEW_FROM_REV}" ]; then
-        LINT_ARGS+=" --new-from-rev ${NEW_FROM_REV}";
-      fi
-      echo "Running: golangci-lint run $ENABLED $LINT_ARGS"
-      golangci-lint run $ENABLED $LINT_ARGS
+      echo "Running: golangci-lint run -E gosec -E goconst -E unparam"
+      golangci-lint run -E gosec -E goconst -E unparam
