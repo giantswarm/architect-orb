@@ -1,28 +1,13 @@
 parameters:
-  commit-to:
-    description: "Commit to stop audit (rev. SHA). This is the oldest commit to audit. Default is the root commit. \
-    In CircleCI, you can use << pipeline.git.base_revision >> to scan only since the parent commit."
-    type: "string"
   config:
-    description: "Path to a config file to use for gitleaks configuration."
-    type: "string"
-  files-at-commit:
-    description: "Scan all files as they are in this commit (rev. SHA)."
+    description: "(Optional) Path to a config file to use for gitleaks configuration."
     type: "string"
 steps:
   - run: |
-      COMMIT_TO="<< parameters.commit-to >>"
       CONFIG="<< parameters.config >>"
-      FILES_AT_COMMIT="<< parameters.files-at-commit >>"
       LINT_ARGS=" "
-      if [ -n "${COMMIT_TO}" ]; then
-        LINT_ARGS+=" --commit-to=${COMMIT_TO}";
-      fi
       if [ -n "${CONFIG}" ]; then
         LINT_ARGS+=" --config=${CONFIG}";
-      fi
-      if [ -n "${FILES_AT_COMMIT}" ]; then
-        LINT_ARGS+=" --files-at-commit=${FILES_AT_COMMIT}";
       fi
       echo "Running gitleaks $LINT_ARGS --redact -v --pretty -r ./"
       gitleaks $LINT_ARGS --redact -v --pretty -r ./

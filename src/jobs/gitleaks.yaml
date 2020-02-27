@@ -1,22 +1,11 @@
 description: "Runs the gitleaks tool to search for secrets contained in commits since the last revision."
 parameters:
-  commit-to:
-    default: ""
-    description: "Commit to stop audit (rev. SHA). This is the oldest commit to audit. Default is the root commit. \
-    In CircleCI, you can use << pipeline.git.base_revision >> to scan only since the parent commit."
-    type: "string"
   config:
     default: ""
-    description: "Path to a config file to use for gitleaks configuration."
-    type: "string"
-  files-at-commit:
-    default: ""
-    description: "Scan all files as they are in this commit (rev. SHA)."
+    description: "(Optional) Path to a config file to use for gitleaks configuration."
     type: "string"
 executor: gitleaks
 steps:
   - checkout
   - gitleaks:
-      commit-to: << parameters.commit-to >>
       config: << parameters.config >>
-      files-at-commit: << parameters.files-at-commit >>
