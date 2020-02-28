@@ -14,13 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduce `go-lint` for running configurable linting jobs on `Go` code
 - Introduce `gitleaks` for entropy-based checks for secrets in the repository (language-agnostic)
 - Support for modern code analysis tools for dep-based projects using the new
-`architect/go-test-legacy` job. Based on the existing `architect/go-test` job.
+`go-test-legacy` job. Based on the existing `go-test` job.
 - Support for running arbitrary architect commands inside an architect container
 avoiding the requirement of installing the binary locally using the new
-`architect/go-architect` job.
-- New optional parameter `lockfile` for `architect/go-cache-save` command
-(defaults to `go.sum`) which enables `dep` dependencies to be cached by passing
-in `lockfile: "Gopkg.lock"`.
+`go-architect-legacy` job.
+- New `go-cache-save-legacy` and `go-cache-restore-legacy` commands
+which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doesn't change.
 - Names for steps in `tools-info` command.
 
 ## [0.6.0] 2020-02-19

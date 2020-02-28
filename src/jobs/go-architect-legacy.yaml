@@ -8,5 +8,5 @@ parameters:
     type: "string"
 steps:
   - checkout
-  - go-architect:
+  - go-architect-legacy:
       command: << parameters.command >>

@@ -1,10 +1,5 @@
-parameters:
-  lockfile:
-    type: "string"
-    default: "go.sum"
 steps:
   - save_cache:
-      key: go-build-go-mod-v1-{{ checksum "<< parameters.lockfile >>" }}
+      key: go-build-go-mod-v1-{{ checksum "go.sum" }}
       paths:
-        - "/go/pkg/dep"
         - "/go/pkg/mod"
