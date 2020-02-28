@@ -1,84 +1,11 @@
 description: "Runs the gitleaks tool to search for secrets contained in commits since the last revision."
 parameters:
-  branch:
-    default: ""
-    description: "The branch to audit. In CircleCI, you can use $CIRCLE_BRANCH to reference the current branch."
-    type: "string"
-  commit:
-    default: ""
-    description: "Scan all files changed by this commit (rev. SHA)."
-    type: "string"
-  # Commit-from and commit-to limit the scan to a specific range of commits https://github.com/zricethezav/gitleaks/issues/315
-  commit-from:
-    default: ""
-    description: "Commit to start audit from (rev. SHA). This is the most recent commit to audit. Default is the latest."
-    type: "string"
-  commit-to:
-    default: ""
-    description: "Commit to stop audit (rev. SHA). This is the oldest commit to audit. Default is the root commit. \
-    In CircleCI, you can use << pipeline.git.base_revision >> to scan only since the parent commit."
-    type: "string"
   config:
     default: ""
-    description: "Path to a config file to use for gitleaks configuration."
+    description: "(Optional) Path to a config file to use for gitleaks configuration."
     type: "string"
-  debug:
-    default: false
-    description: "If true, will print debug messages."
-    type: "boolean"
-  depth:
-    default: 0
-    description: "Number of commits to audit (default: 0 / all commits)."
-    type: "integer"
-  files-at-commit:
-    default: ""
-    description: "Scan all files as they are in this commit (rev. SHA), even if they did not change."
-    type: "string"
-  pretty:
-    default: true
-    description: "If true, pretty-prints json output (default: true)."
-    type: "boolean"
-  redact:
-    default: false
-    description: "If true, redact secrets from log messages and leaks (default: false)."
-    type: "boolean"
-  report:
-    default: ""
-    description: "Path to write json leaks file."
-    type: "string"
-  report-format:
-    default: "json"
-    description: "Format report as json or csv (default: json)."
-    type: "enum"
-    enum: ["json", "csv"]
-  threads:
-    default: 0
-    description: "Maximum number of threads gitleaks spawns (default: ALL - 1)."
-    type: "integer"
-  timeout:
-    default: ""
-    description: "Time allowed per audit. E.g. 10us, 30s, 1m, 1h10m1s."
-    type: "string"
-  verbose:
-    default: false
-    description: "If true, will print verbose output."
-    type: "boolean"
 executor: gitleaks
 steps:
   - checkout
   - gitleaks:
-      branch: << parameters.branch >>
-      commit: << parameters.commit >>
-      commit-from: << parameters.commit-from >>
-      commit-to: << parameters.commit-to >>
       config: << parameters.config >>
-      debug: << parameters.debug >>
-      depth: << parameters.depth >>
-      files-at-commit: << parameters.files-at-commit >>
-      pretty: << parameters.pretty >>
-      redact: << parameters.redact >>
-      report: << parameters.report >>
-      report-format: << parameters.report-format >>
-      threads: << parameters.threads >>
-      timeout: << parameters.timeout >>
-      verbose: << parameters.verbose >>
