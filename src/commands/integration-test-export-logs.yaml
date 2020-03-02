@@ -1,0 +1,9 @@
+steps:
+  - run:
+      name: "Export cluster logs"
+      command: |
+        kind export logs ./kind/logs
+      when: always
+  - store_artifacts:
+      path: ./kind/logs
+      destination: logs

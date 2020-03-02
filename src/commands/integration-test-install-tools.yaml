@@ -1,0 +1,12 @@
+steps:
+  - run:
+      name: "Install kind"
+      command: |
+        CGO_ENABLED=0 GO111MODULE="on" go get sigs.k8s.io/kind@v0.7.0
+  - run:
+      name: "Install kubectl"
+      command: |
+        curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl
+        chmod +x ./kubectl
+        sudo mv ./kubectl /usr/local/bin/kubectl
+        kubectl version --client

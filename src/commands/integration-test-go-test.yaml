@@ -1,0 +1,21 @@
+parameters:
+  env:
+    type: string
+  test-dir:
+    type: string
+steps:
+  - run:
+      name: "Create .env file"
+      command: |
+        echo '<< parameters.env >>' | sed -e 's/^\(.\)/export \1/' > .env
+  - run:
+      # TODO remove this part after switch to Go modules.
+      name: "Move code to $GOPATH"
+      command: |
+        mkdir -p $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME} && mv ~/project $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+  - run:
+      name: "Run test"
+      command: |
+        cd $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        source .env
+        CGO_ENABLED=0 E2E_KUBECONFIG=~/.kube/config go test -tags k8srequired -timeout 20m -v << parameters.test-dir >>
