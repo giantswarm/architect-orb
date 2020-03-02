@@ -6,12 +6,10 @@ steps:
       name: "Create cluster"
       command: |
         cd ~/project
-        
         if [ -e << parameters.kind-config >> ]; then
           cp << parameters.kind-config >> kind-config.yaml
         else
           echo "kind: Cluster" >> kind-config.yaml
           echo "apiVersion: kind.sigs.k8s.io/v1alpha3" >> kind-config.yaml
         fi
-
         kind create cluster --config kind-config.yaml --image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION
