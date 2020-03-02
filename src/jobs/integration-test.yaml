@@ -10,7 +10,7 @@ description: |
 environment:
   GOPATH: /go
   KUBERNETES_VERSION: v1.16.3
-executor: machine-executor
+executor: machine
 parameters:
   env:
     default: ""
