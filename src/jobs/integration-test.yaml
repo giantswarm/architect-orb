@@ -1,7 +1,7 @@
 description: |
   Runs an integration test by creating a KIND cluster and executing it as a Go
   test.
-  
+
   Uses the machine executor and replaces the Go version with a version
   controlled by us since the preinstalled Go is very outdated.
 
