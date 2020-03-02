@@ -27,7 +27,7 @@ steps:
       name: "Remove downloaded Go files"
       command: |
         rm go1.13.4.linux-amd64.tar.gz
-  - run: 
+  - run:
       name: "Check Go version"
       command: |
         go version
