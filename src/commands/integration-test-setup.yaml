@@ -5,11 +5,11 @@ steps:
   - when:
       condition: << parameters.setup-script >>
       steps:
-        - run: 
+        - run:
             name: "Output test setup commands"
             command: |
               cat << parameters.setup-script >>
-        - run: 
+        - run:
             name: "Run test setup commands"
             command: |
               sh << parameters.setup-script >>
