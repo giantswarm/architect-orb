@@ -2,13 +2,6 @@ parameters:
   kind-config:
     type: string
 steps:
-  - when:
-      condition: << parameters.kind-config >>
-      steps:
-        - run:
-            name: "architect/integration-test-create-cluster: Move kind config"
-            command: |
-                cp << parameters.kind-config >> .kind-config
   - unless:
       condition: << parameters.kind-config >>
       steps:
@@ -16,6 +9,13 @@ steps:
             name: "architect/integration-test-create-cluster: Prepare default kind config"
             command: |
                 printf "kind: Cluster\napiVersion: kind.sigs.k8s.io/v1alpha3\n" .kind-config
+  - when:
+      condition: << parameters.kind-config >>
+      steps:
+        - run:
+            name: "architect/integration-test-create-cluster: Move kind config"
+            command: |
+                cp << parameters.kind-config >> .kind-config
   - run:
       name: "architect/integration-test-create-cluster: Create cluster"
       command: |

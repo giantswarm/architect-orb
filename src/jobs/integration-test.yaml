@@ -17,7 +17,6 @@ parameters:
     description: "File of environment variables to set."
     type: string
   kind-config:
-    default: ".kind-config"
     description: "Path to kind config file."
     type: string
   setup-script:
