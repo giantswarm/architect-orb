@@ -1,33 +1,33 @@
 steps:
   - run:
-      name: "Remove old Go"
+      name: "architect/machine-install-go: Remove old Go"
       command: |
         sudo rm -rf /usr/local/go
   - run:
-      name: "Download Go"
+      name: "architect/machine-install-go: Download Go"
       command: |
         wget https://dl.google.com/go/go1.13.4.linux-amd64.tar.gz
   - run:
-      name: "Check downloaded Go checksum"
+      name: "architect/machine-install-go: Check downloaded Go checksum"
       command: |
         [[ "$(sha256sum go1.13.4.linux-amd64.tar.gz | cut -d ' ' -f 1)" == "692d17071736f74be04a72a06dab9cac1cd759377bd85316e52b2227604c004c" ]]
   - run:
-      name: "Install Go"
+      name: "architect/machine-install-go: Install Go"
       command: |
         sudo tar -C /usr/local -xzf go1.13.4.linux-amd64.tar.gz
   - run:
-      name: "Set Go environment"
+      name: "architect/machine-install-go: Set Go environment"
       command: |
         go env -w GOBIN=/home/circleci/.go_workspace/bin
   - run:
-      name: "Create $GOPATH directory"
+      name: "architect/machine-install-go: Create $GOPATH directory"
       command: |
         sudo mkdir $(go env GOPATH) && sudo chown $USER $(go env GOPATH)
   - run:
-      name: "Remove downloaded Go files"
+      name: "architect/machine-install-go: Remove downloaded Go files"
       command: |
         rm go1.13.4.linux-amd64.tar.gz
   - run:
-      name: "Check Go version"
+      name: "architect/machine-install-go: Check Go version"
       command: |
         go version

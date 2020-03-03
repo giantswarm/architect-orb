@@ -8,16 +8,16 @@ steps:
       condition: << parameters.env-file >>
       steps:
         - run:
-            name: "Process .env file"
+            name: "architect/integration-test-go-test: Process .env file"
             command: |
               echo '<< parameters.env-file >>' | sed -e 's/^\(.\)/export \1/' | tee .env
   - run:
       # TODO remove this part after switch to Go modules.
-      name: "Move code to $GOPATH"
+      name: "architect/integration-test-go-test: Move code to $GOPATH"
       command: |
         mkdir -p $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME} && mv ~/project $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
   - run:
-      name: "Run test"
+      name: "architect/integration-test-go-test: Run test"
       command: |
         # TODO remove `cd` line after switch to Go modules.
         cd $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}

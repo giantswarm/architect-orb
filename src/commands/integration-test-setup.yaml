@@ -6,10 +6,10 @@ steps:
       condition: << parameters.setup-script >>
       steps:
         - run:
-            name: "Output test setup commands"
+            name: "architect/integration-test-setup: Output test setup commands"
             command: |
               cat << parameters.setup-script >>
         - run:
-            name: "Run test setup commands"
+            name: "architect/integration-test-setup: Run test setup commands"
             command: |
               sh << parameters.setup-script >>
