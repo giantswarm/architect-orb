@@ -7,10 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] 2020-02-26
+
 ### Added
 
 - Introduce `go-lint` for running configurable linting jobs on `Go` code
 - Introduce `gitleaks` for entropy-based checks for secrets in the repository (language-agnostic)
+- Support for modern code analysis tools for dep-based projects using the new
+`go-test-legacy` job. Based on the existing `go-test` job.
+- Support for running arbitrary architect commands inside an architect container
+avoiding the requirement of installing the binary locally using the new
+`go-architect-legacy` job.
+- New `go-cache-save-legacy` and `go-cache-restore-legacy` commands
+which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doesn't change.
+- Names for steps in `tools-info` command.
 
 ## [0.6.0] 2020-02-19
 
@@ -120,7 +130,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/giantswarm/architect-orb/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/giantswarm/architect-orb/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/giantswarm/architect-orb/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/giantswarm/architect-orb/compare/v0.5.1...v0.5.2
