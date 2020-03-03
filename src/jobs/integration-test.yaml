@@ -38,6 +38,6 @@ steps:
   - integration-test-setup:
       setup-script: << parameters.setup-script >>
   - integration-test-go-test:
-      env-file: << parameters.env >>
+      env-file: << parameters.env-file >>
       test-dir: << parameters.test-dir >>
   - integration-test-export-logs
