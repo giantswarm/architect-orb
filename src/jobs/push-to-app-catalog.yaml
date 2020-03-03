@@ -16,10 +16,10 @@ parameters:
 steps:
   - checkout
   - when:
-    condition: << parameters.attach_workspace >>
-    steps:
-      - attach_workspace:
-          root: .
+      condition: << parameters.attach_workspace >>
+      steps:
+        - attach_workspace:
+            root: .
   - tools-info
   - prepare-catalogbot-git-ssh
   - package-and-push:
