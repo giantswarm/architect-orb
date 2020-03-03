@@ -2,15 +2,21 @@ parameters:
   kind-config:
     type: string
 steps:
+  - when:
+      condition: << parameters.kind-config >>
+      steps:
+        - run:
+            name: "Move kind config"
+            command: |
+                cp << parameters.kind-config >> .kind-config
   - unless:
       condition: << parameters.kind-config >>
       steps:
         - run:
             name: "Prepare default kind config"
             command: |
-              echo "kind: Cluster" >> << parameters.kind-config >>
-              echo "apiVersion: kind.sigs.k8s.io/v1alpha3" >> << parameters.kind-config >>
+                printf "kind: Cluster\napiVersion: kind.sigs.k8s.io/v1alpha3\n" .kind-config
   - run:
       name: "Create cluster"
       command: |
-        kind create cluster --config  << parameters.kind-config >>  --image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION
+          kind create cluster --config  .kind-config  --image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION
