@@ -13,15 +13,15 @@ environment:
 executor: machine
 parameters:
   env-file:
-    default: ".env"
+    default: ""
     description: "File of environment variables to set."
     type: string
   kind-config:
-    default: ".env"
+    default: ""
     description: "Path to kind config file."
     type: string
   setup-script:
-    default: "setup.sh"
+    default: ""
     description: "Path to setup script with commands to execute before each test."
     type: string
   test-dir:
