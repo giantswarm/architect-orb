@@ -3,13 +3,13 @@ parameters:
     type: string
 steps:
   - unless:
-    condition: << parameters.kind-config >>
-    steps:
-      - run:
-          name: "Prepare default kind config"
-          command: |
-            echo "kind: Cluster" >> << parameters.kind-config >>
-            echo "apiVersion: kind.sigs.k8s.io/v1alpha3" >> << parameters.kind-config >>
+      condition: << parameters.kind-config >>
+      steps:
+        - run:
+            name: "Prepare default kind config"
+            command: |
+              echo "kind: Cluster" >> << parameters.kind-config >>
+              echo "apiVersion: kind.sigs.k8s.io/v1alpha3" >> << parameters.kind-config >>
   - run:
       name: "Create cluster"
       command: |
