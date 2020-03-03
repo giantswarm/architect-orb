@@ -1,6 +1,0 @@
-description: |
-  Reusable job for attaching to a workspace previously persisted using `persist-workspace`.
-executor: architect
-steps:
-  - attach_workspace:
-      at: .

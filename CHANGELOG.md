@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Introduce `persist-workspace` and `attach-workspace` for persisting files across jobs as part of a multi-step workflow.
+- Support for optionally attaching the persisted workspace in the `push-to-app-collection` job.
 
 ## [0.7.0] 2020-02-26
 

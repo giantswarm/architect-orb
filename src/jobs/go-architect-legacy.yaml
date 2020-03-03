@@ -6,7 +6,18 @@ parameters:
   command:
     description: "Command to be run by architect. Should usually be 'build' or 'deploy'."
     type: "string"
+  persist_workspace:
+    description: "Path to file or directory to persist relative to the working directory. Pass an empty string (default) to not persist anything."
+    default: ""
+    type: "string"
 steps:
   - checkout
   - go-architect-legacy:
       command: << parameters.command >>
+  - when:
+      condition: << parameters.persist_workspace >>
+      steps:
+        - persist_to_workspace:
+            root: .
+            paths:
+              - ./<< parameters.persist_workspace >>
