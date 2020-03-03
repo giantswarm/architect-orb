@@ -31,7 +31,7 @@ steps:
   - checkout
   - attach_workspace:
       at: .
-  - integration-test-install-go
+  - machine-install-go
   - integration-test-install-tools
   - integration-test-create-cluster:
       kind-config: << parameters.kind-config >>
