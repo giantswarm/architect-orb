@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] 2020-03-03
+
+### Added
+
+- Introduce `persist-workspace` and `attach-workspace` for persisting files across jobs as part of a multi-step workflow.
+
 ## [0.7.0] 2020-02-26
 
 ### Added
@@ -130,7 +136,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/giantswarm/architect-orb/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/giantswarm/architect-orb/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/giantswarm/architect-orb/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/giantswarm/architect-orb/compare/v0.5.2...v0.5.3
