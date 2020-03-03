@@ -8,6 +8,5 @@ parameters:
     type: "string"
 steps:
   - checkout
-  - setup_remote_docker
   - go-architect-legacy:
       command: << parameters.command >>
