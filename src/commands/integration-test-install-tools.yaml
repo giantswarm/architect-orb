@@ -4,9 +4,14 @@ steps:
       command: |
         CGO_ENABLED=0 GO111MODULE="on" go get sigs.k8s.io/kind@v0.7.0
   - run:
-      name: "Install kubectl"
+      name: "Download kubectl"
       command: |
         curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl
-        chmod +x ./kubectl
-        sudo mv ./kubectl /usr/local/bin/kubectl
+  - run:
+      name: "Install kubectl"
+      command: |
+        chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+  - run:
+      name: "Check kubectl version"
+      command: |
         kubectl version --client
