@@ -12,13 +12,9 @@ environment:
   KUBERNETES_VERSION: v1.16.3
 executor: machine
 parameters:
-  env:
-    default: ""
-    description: |
-        Environment variables configuration. Must be in following format:
-
-            VAR_A="VALUE_A"
-            VAR_B="VALUE_B"
+  env-file:
+    default: ".env"
+    description: "File of environment variables to set."
     type: string
   kind-config:
     default: "kind-config.yaml"

@@ -1,13 +1,13 @@
 parameters:
-  env:
+  env-file:
     type: string
   test-dir:
     type: string
 steps:
   - run:
-      name: "Create .env file"
+      name: "Process .env file"
       command: |
-        echo '<< parameters.env >>' | sed -e 's/^\(.\)/export \1/' > .env
+        echo '<< parameters.env-file >>' | sed -e 's/^\(.\)/export \1/' | tee .env
   - run:
       # TODO remove this part after switch to Go modules.
       name: "Move code to $GOPATH"
