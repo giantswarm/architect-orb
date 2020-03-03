@@ -10,7 +10,7 @@ steps:
         - run:
             name: "architect/integration-test-go-test: Process .env file"
             command: |
-              echo '<< parameters.env-file >>' | sed -e 's/^\(.\)/export \1/' | tee .env
+              cat '<< parameters.env-file >>' | sed -e 's/^\(.\)/export \1/' | tee .env
   - run:
       # TODO remove this part after switch to Go modules.
       name: "architect/integration-test-go-test: Move code to $GOPATH"
