@@ -10,7 +10,7 @@ steps:
         - run:
             name: "architect/integration-test-go-test: Process .env file"
             command: |
-              cat << parameters.env-file >>' | sed -e 's/^\(.\)/export \1/' | tee .env
+              cat << parameters.env-file >> | sed -e 's/^\(.\)/export \1/' | tee .env
   - unless:
       condition: << parameters.env-file >>
       steps:
