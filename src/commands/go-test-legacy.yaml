@@ -1,0 +1,48 @@
+steps:
+  - run:
+      name: "architect/go-test-legacy: Configuring go environment"
+      command: |
+        mkdir -p /go/src/github.com/${CIRCLE_PROJECT_USERNAME}
+        ln -s /go/src/project /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+  - run:
+      name: "architect/go-test-legacy: Installing dep"
+      command: |
+        go get github.com/golang/dep/cmd/dep
+  - run:
+      name: "architect/go-test-legacy: Running dep ensure"
+      command: |
+        export DEPPROJECTROOT=github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        dep ensure && git diff --exit-code
+  - run:
+      name: "architect/go-test-legacy: Installing goimports"
+      command: |
+        go get golang.org/x/tools/cmd/goimports
+  - run:
+      name: "architect/go-test-legacy: Deleting vendor directory"
+      command: |
+        rm -rf vendor/
+  - run:
+      name: "architect/go-test-legacy: Ensuring imports are properly sorted"
+      command: |
+        export PACKAGE=github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        if [[ -n $(goimports -local $PACKAGE -l .) ]];
+          then goimports -local $PACKAGE -d . && exit 1;
+        fi
+  - run:
+      name: "architect/go-test-legacy: Running go fmt"
+      command: |
+        test -z $(gofmt -l .) || gofmt -d .
+  - run:
+      name: "architect/go-test-legacy: Restoring vendor directory"
+      command: |
+        git checkout vendor/
+  - run:
+      name: "architect/go-test-legacy: Running go vet"
+      command: |
+        cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        CGO_ENABLED=0 go vet ./...
+  - run:
+      name: "architect/go-test-legacy: Running go test"
+      command: |
+        cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        CGO_ENABLED=0 go test ./...

@@ -1,0 +1,12 @@
+description: |
+  This job runs the given command for the current project from a container
+  using the `latest` architect image and ultimately calling `architect <command>`.
+machine: true
+parameters:
+  command:
+    description: "Command to be run by architect. Should usually be 'build' or 'deploy'."
+    type: "string"
+steps:
+  - checkout
+  - go-architect-legacy:
+      command: << parameters.command >>

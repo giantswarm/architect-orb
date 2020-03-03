@@ -1,0 +1,19 @@
+parameters:
+  command:
+    type: "string"
+steps:
+  - run:
+      name: "architect/go-architect-legacy: Executing architect command"
+      command: |
+        docker run \
+          -e CIRCLE_PROJECT_REPONAME \
+          -e CIRCLE_PROJECT_USERNAME \
+          -e CIRCLECI \
+          -e QUAY_USERNAME \
+          -e QUAY_PASSWORD \
+          -e DEPLOYMENT_EVENTS_TOKEN \
+          -e CGO_ENABLED=0 \
+          -v /home/circleci/project:/home/circleci/project \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -w /home/circleci/project \
+          quay.io/giantswarm/architect << parameters.command >>
