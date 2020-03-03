@@ -15,21 +15,12 @@ parameters:
   app_collection_repo:
     description: "Name of the app collection repository."
     type: "string"
-  attach_workspace:
-    description: "If true, the previously persisted workspace will be attached after checkout."
-    type: "boolean"
-    default: false
   unique:
     description: "Whether the previous App versions in the collection should be replaced with this one. Any non-empty string means true. This is useful when only one (usually latest) version of the app should be installed at a time. E.g. OPA gatekeeper."
     type: "string"
     default: ""
 steps:
   - checkout
-  - when:
-      condition: << parameters.attach_workspace >>
-      steps:
-        - attach_workspace:
-            root: .
   - prepare-catalogbot-git-ssh
   - push-to-app-collection:
       app_name: <<parameters.app_name>>
