@@ -4,4 +4,4 @@ description: |
 executor: architect
 steps:
   - checkout
-  - lint-changelog
+  - changelog-lint
