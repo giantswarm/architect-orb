@@ -19,4 +19,4 @@ steps:
   - run:
       name: "architect/integration-test-create-cluster: Create cluster"
       command: |
-          kind create cluster --config kind-config --image quay.io/giantswarm/kind-node:$KUBERNETES_VERSION
+          kind create cluster --config kind-config --image quay.io/giantswarm/kind-node:<< parameters.kubernetes-version >>

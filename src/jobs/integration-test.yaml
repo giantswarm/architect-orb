@@ -7,8 +7,6 @@ description: |
 
   Tests can be customized by providing a KIND config file or a setup script
   which is run before the test is executed.
-environment:
-  KUBERNETES_VERSION: v1.16.3
 executor: machine
 parameters:
   env-file:
@@ -18,6 +16,10 @@ parameters:
   kind-config:
     default: ""
     description: "Path to kind config file."
+    type: string
+  kubernetes-version:
+    default: "v1.16.3"
+    description: "Kubernetes version for kind cluster."
     type: string
   setup-script:
     default: ""
@@ -35,6 +37,7 @@ steps:
   - integration-test-install-tools
   - integration-test-create-cluster:
       kind-config: << parameters.kind-config >>
+      kubernetes-version:  << parameters.kubernetes-version >>
   - integration-test-setup:
       setup-script: << parameters.setup-script >>
   - integration-test-go-test:
