@@ -12,4 +12,4 @@ steps:
         - run:
             name: "architect/integration-test-setup: Run test setup commands"
             command: |
-              sh << parameters.setup-script >>
+              ./<< parameters.setup-script >>

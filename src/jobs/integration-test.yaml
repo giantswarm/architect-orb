@@ -8,7 +8,6 @@ description: |
   Tests can be customized by providing a KIND config file or a setup script
   which is run before the test is executed.
 environment:
-  GOPATH: /go
   KUBERNETES_VERSION: v1.16.3
 executor: machine
 parameters:
@@ -31,6 +30,7 @@ steps:
   - checkout
   - attach_workspace:
       at: .
+  - go-cache-restore
   - machine-install-go
   - integration-test-install-tools
   - integration-test-create-cluster:
