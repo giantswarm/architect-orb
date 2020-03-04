@@ -7,7 +7,7 @@ orbs:
 workflows:
   catalog_build:
     jobs:
-      - architect/lint-changelog
+      - architect/changelog-lint
 
       - orb-tools/lint:
           filters:
