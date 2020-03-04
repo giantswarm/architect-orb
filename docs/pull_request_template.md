@@ -5,3 +5,4 @@
 ## Checklist
 
 - [ ] Update changelog in CHANGELOG.md.
+- [ ] After the release update architect orb version in .circleci/config.yml.
