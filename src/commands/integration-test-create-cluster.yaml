@@ -1,6 +1,8 @@
 parameters:
   kind-config:
     type: string
+  kubernetes-version:
+    type: string
 steps:
   - when:
       condition: << parameters.kind-config >>
