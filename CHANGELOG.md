@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Introduce `helm-lint` which uses Helm chart testing to lint Helm Charts
+- Introduce Helm Chart testing and linting in `push-to-app-catalog` job.
 - Add changelog-lint job.
 - Introduce `integration-test` job for running `Go` integration tests in a `KIND`
   cluster.
