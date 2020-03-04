@@ -1,0 +1,19 @@
+parameters:
+  setup-script:
+    type: string
+steps:
+  - when:
+      condition: << parameters.setup-script >>
+      steps:
+        - run:
+            name: "architect/integration-test-setup: Make script executable"
+            command: |
+              chmod 700 << parameters.setup-script >>
+        - run:
+            name: "architect/integration-test-setup: Output test setup commands"
+            command: |
+              cat << parameters.setup-script >>
+        - run:
+            name: "architect/integration-test-setup: Run test setup commands"
+            command: |
+              ./<< parameters.setup-script >>

@@ -1,0 +1,20 @@
+parameters:
+  kubernetes-version:
+    type: string
+steps:
+  - run:
+      name: "architect/integration-test-install-tools: Install kind"
+      command: |
+        CGO_ENABLED=0 GO111MODULE="on" go get sigs.k8s.io/kind@v0.7.0
+  - run:
+      name: "architect/integration-test-install-tools: Download kubectl"
+      command: |
+        curl -LO https://storage.googleapis.com/kubernetes-release/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl
+  - run:
+      name: "architect/integration-test-install-tools: Install kubectl"
+      command: |
+        chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+  - run:
+      name: "architect/integration-test-install-tools: Check kubectl version"
+      command: |
+        kubectl version --client

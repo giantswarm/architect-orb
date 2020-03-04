@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add changelog-lint job.
+- Introduce `integration-test` job for running `Go` integration tests in a `KIND`
+  cluster.
 
 ### Removed
 

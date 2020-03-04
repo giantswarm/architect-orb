@@ -1,0 +1,46 @@
+description: |
+  Runs an integration test by creating a KIND cluster and executing it as a Go
+  test.
+
+  Uses the machine executor and replaces the Go version with a version
+  controlled by us since the preinstalled Go is very outdated.
+
+  Tests can be customized by providing a .env file, a KIND config file or a setup
+  script which is run before the test is executed.
+executor: machine
+parameters:
+  env-file:
+    default: ""
+    description: "File of environment variables to set."
+    type: string
+  kind-config:
+    default: ""
+    description: "Path to kind config file."
+    type: string
+  kubernetes-version:
+    default: "v1.16.3"
+    description: "Kubernetes version for kind cluster."
+    type: string
+  setup-script:
+    default: ""
+    description: "Path to setup script with commands to execute before each test."
+    type: string
+  test-dir:
+    description: "Tested package directory."
+    type: string
+steps:
+  - checkout
+  - attach_workspace:
+      at: .
+  - machine-install-go
+  - integration-test-install-tools:
+      kubernetes-version:  << parameters.kubernetes-version >>
+  - integration-test-create-cluster:
+      kind-config: << parameters.kind-config >>
+      kubernetes-version:  << parameters.kubernetes-version >>
+  - integration-test-setup:
+      setup-script: << parameters.setup-script >>
+  - integration-test-go-test:
+      env-file: << parameters.env-file >>
+      test-dir: << parameters.test-dir >>
+  - integration-test-export-logs
