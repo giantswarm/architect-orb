@@ -17,8 +17,7 @@ parameters:
     default: "master"
 steps:
   - checkout
-  - setup_remote_docker:
-      docker_layer_caching: true
+  - setup_remote_docker
   - attach_workspace:
       at: .
   - push-to-docker-legacy:

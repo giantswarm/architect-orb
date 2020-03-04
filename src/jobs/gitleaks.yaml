@@ -1,0 +1,11 @@
+description: "Runs the gitleaks tool to search for secrets contained in commits since the last revision."
+parameters:
+  config:
+    default: ""
+    description: "(Optional) Path to a config file to use for gitleaks configuration."
+    type: "string"
+executor: gitleaks
+steps:
+  - checkout
+  - gitleaks:
+      config: << parameters.config >>

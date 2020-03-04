@@ -1,11 +1,21 @@
 steps:
-  - run: |
-      architect version
-  - run: |
-      echo $BASH_VERSION
-  - run: |
-      git version
-  - run: |
-      go version
-  - run: |
-      helm version -c
+  - run:
+      name: Showing Architect Version
+      command: |
+        architect version
+  - run:
+      name: Showing Bash Version
+      command: |
+        echo $BASH_VERSION
+  - run:
+      name: Showing Git Version
+      command: |
+        git version
+  - run:
+      name: Showing Go Version
+      command: |
+        go version
+  - run:
+      name: Showing Helm Version
+      command: |
+        helm version -c

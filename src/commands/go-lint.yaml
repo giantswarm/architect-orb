@@ -1,0 +1,3 @@
+steps:
+  - run: |
+      golangci-lint run -E gosec -E goconst -E unparam
