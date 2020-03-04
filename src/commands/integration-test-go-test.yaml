@@ -22,10 +22,10 @@ steps:
       # TODO remove this part after switch to Go modules.
       name: "architect/integration-test-go-test: Move code to $GOPATH"
       command: |
-        mkdir -p $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME} && mv ~/project $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        mkdir -p $(go env GOPATH | cut -d ':' -f 1)/src/github.com/${CIRCLE_PROJECT_USERNAME} && mv ~/project $(go env GOPATH | cut -d ':' -f 1)/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
   - run:
       name: "architect/integration-test-go-test: Run test"
       command: |
         # TODO remove `cd` line after switch to Go modules.
-        cd $GOPATH/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        cd $(go env GOPATH | cut -d ':' -f 1)/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
         source .env && CGO_ENABLED=0 E2E_KUBECONFIG=~/.kube/config go test -tags k8srequired -timeout 20m -v << parameters.test-dir >>
