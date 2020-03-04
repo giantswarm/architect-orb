@@ -5,8 +5,8 @@ description: |
   Uses the machine executor and replaces the Go version with a version
   controlled by us since the preinstalled Go is very outdated.
 
-  Tests can be customized by providing a KIND config file or a setup script
-  which is run before the test is executed.
+  Tests can be customized by providing a .env file, a KIND config file or a setup
+  script which is run before the test is executed.
 executor: machine
 parameters:
   env-file:
