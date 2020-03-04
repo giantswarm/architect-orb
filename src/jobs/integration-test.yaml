@@ -41,3 +41,4 @@ steps:
       env-file: << parameters.env-file >>
       test-dir: << parameters.test-dir >>
   - integration-test-export-logs
+    when: always
