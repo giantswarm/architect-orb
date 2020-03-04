@@ -40,6 +40,4 @@ steps:
   - integration-test-go-test:
       env-file: << parameters.env-file >>
       test-dir: << parameters.test-dir >>
-  - when: always
-      steps:
-        - integration-test-export-logs
+  - integration-test-export-logs
