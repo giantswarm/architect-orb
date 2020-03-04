@@ -32,7 +32,6 @@ steps:
   - checkout
   - attach_workspace:
       at: .
-  - go-cache-restore
   - machine-install-go
   - integration-test-install-tools
   - integration-test-create-cluster:

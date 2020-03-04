@@ -20,10 +20,6 @@ steps:
       command: |
         go env -w GOBIN=/home/circleci/.go_workspace/bin
   - run:
-      name: "architect/machine-install-go: Create $GOPATH directory"
-      command: |
-        sudo mkdir $(go env GOPATH | cut -d ':' -f 1) && sudo chown $USER $(go env GOPATH | cut -d ':' -f 1)
-  - run:
       name: "architect/machine-install-go: Remove downloaded Go files"
       command: |
         rm go1.13.4.linux-amd64.tar.gz
