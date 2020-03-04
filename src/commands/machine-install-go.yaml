@@ -22,7 +22,7 @@ steps:
   - run:
       name: "architect/machine-install-go: Create $GOPATH directory"
       command: |
-        sudo mkdir $(go env GOPATH) && sudo chown $USER $(go env GOPATH)
+        sudo mkdir $(go env GOPATH | cut -d ':' -f 1) && sudo chown $USER $(go env GOPATH | cut -d ':' -f 1)
   - run:
       name: "architect/machine-install-go: Remove downloaded Go files"
       command: |
