@@ -1,0 +1,7 @@
+description: |
+    It checks if CHANGELOG.md file is in format described in
+    https://keepachangelog.com/en/1.0.0/.
+executor: architect
+steps:
+  - checkout
+  - changelog-lint
