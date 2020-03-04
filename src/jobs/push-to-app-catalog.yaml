@@ -9,10 +9,27 @@ parameters:
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
+  chart_testing_config_file:
+    description: >-
+      Chart Testing config file
+      (see: https://github.com/helm/chart-testing#configuration)
+    type: string
+    default: ""
+  chart_testing_additional_args:
+    description: >-
+      Additonal command line arguments
+      (ignored if config_file is set)
+    type: string
+    default: ""
 steps:
   - checkout
   - tools-info
   - prepare-catalogbot-git-ssh
+  - helm-chart-template:
+      chart: <<parameters.chart>>
+  - helm-lint:
+      config_file: <<parameters.chart_testing_config_file>>
+      additional_args: <<parameters.chart_testing_additional_args>>
   - package-and-push:
       app_catalog: <<parameters.app_catalog>>
       app_catalog_test: <<parameters.app_catalog_test>>

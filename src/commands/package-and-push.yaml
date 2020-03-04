@@ -11,8 +11,6 @@ steps:
   - run: |
       [[ <<parameters.chart>> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
   - run: |
-      architect helm template --dir ./helm/<<parameters.chart>>
-  - run: |
       git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
   - run: |
       helm init --client-only
