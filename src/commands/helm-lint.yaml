@@ -1,14 +1,5 @@
 ---
 description: Lint Helm charts
-parameters:
-  config-file:
-    type: string
 steps:
-  - when:
-      condition: <<parameters.config-file>>
-      steps:
-        - run: ct lint --config=<<parameters.config-file>>
-  - unless:
-      condition: <<parameters.config-file>>
-      steps:
-        - run: ct lint --chart-dirs helm
+  - run: |
+      ct lint --validate-maintainers=false --chart-dirs helm
