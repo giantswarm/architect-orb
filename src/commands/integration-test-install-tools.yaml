@@ -1,3 +1,6 @@
+parameters:
+  kubernetes-version:
+    type: string
 steps:
   - run:
       name: "architect/integration-test-install-tools: Install kind"
@@ -6,7 +9,7 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Download kubectl"
       command: |
-        curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl
+        curl -LO https://storage.googleapis.com/kubernetes-release/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl
   - run:
       name: "architect/integration-test-install-tools: Install kubectl"
       command: |

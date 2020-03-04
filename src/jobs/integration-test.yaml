@@ -33,7 +33,8 @@ steps:
   - attach_workspace:
       at: .
   - machine-install-go
-  - integration-test-install-tools
+  - integration-test-install-tools:
+      kubernetes-version:  << parameters.kubernetes-version >>
   - integration-test-create-cluster:
       kind-config: << parameters.kind-config >>
       kubernetes-version:  << parameters.kubernetes-version >>
