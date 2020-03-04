@@ -15,12 +15,6 @@ parameters:
       (see: https://github.com/helm/chart-testing#configuration)
     type: string
     default: ""
-  chart-testing-additional-args:
-    description: >-
-      Additonal command line arguments
-      (ignored if config_file is set)
-    type: string
-    default: ""
 steps:
   - checkout
   - tools-info
@@ -29,7 +23,6 @@ steps:
       chart: <<parameters.chart>>
   - helm-lint:
       config-file: <<parameters.chart-testing-config-file>>
-      additional-args: <<parameters.chart-testing-additional-args>>
   - package-and-push:
       app_catalog: <<parameters.app_catalog>>
       app_catalog_test: <<parameters.app_catalog_test>>

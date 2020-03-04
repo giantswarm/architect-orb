@@ -3,8 +3,6 @@ description: Lint Helm charts
 parameters:
   config-file:
     type: string
-  additional-args:
-    type: string
 steps:
   - when:
       condition: <<parameters.config-file>>
@@ -13,4 +11,4 @@ steps:
   - unless:
       condition: <<parameters.config-file>>
       steps:
-        - run: ct lint <<parameters.additional-args>>  --chart-dirs helm
+        - run: ct lint --chart-dirs helm
