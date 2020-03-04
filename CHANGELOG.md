@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed Docker layer caching from remote docker setup (affects push-to-docker and push-to-docker-legacy)
+
 ## [0.7.0] 2020-02-26
 
 ### Added
