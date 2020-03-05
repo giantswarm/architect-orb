@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Support for optionally attaching the persisted workspace in the `push-to-app-catalog` job.
 - Introduce Helm Chart testing and linting in `push-to-app-catalog` job.
 - Add changelog-lint job.
 - Introduce `integration-test` job for running `Go` integration tests in a `KIND`

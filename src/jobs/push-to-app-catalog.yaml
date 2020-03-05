@@ -6,11 +6,20 @@ parameters:
   app_catalog_test:
     description: "Name of the Github repository inside giantswarm organization hosting the App Catalog for test builds."
     type: "string"
+  attach_workspace:
+    description: "If true, the previously persisted workspace will be attached after checkout."
+    type: "boolean"
+    default: false
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
 steps:
   - checkout
+  - when:
+      condition: << parameters.attach_workspace >>
+      steps:
+        - attach_workspace:
+            at: .
   - tools-info
   - prepare-catalogbot-git-ssh
   - helm-chart-template:
