@@ -32,6 +32,7 @@ steps:
   - checkout
   - attach_workspace:
       at: .
+  - go-cache-restore
   - machine-install-go
   - integration-test-install-tools:
       kubernetes-version:  << parameters.kubernetes-version >>
