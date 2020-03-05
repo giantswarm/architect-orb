@@ -42,6 +42,11 @@ steps:
         cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
         CGO_ENABLED=0 go vet ./...
   - run:
+      name: "architect/go-test-legacy: Running golangci-lint"
+      command: |
+        cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        CGO_ENABLED=0 golangci-lint run -E gosec -E goconst -E unparam
+  - run:
       name: "architect/go-test-legacy: Running go test"
       command: |
         cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
