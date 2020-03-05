@@ -7,11 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.7.1] 2020-03-03
-
 ### Added
 
-- Support for optionally attaching the persisted workspace in the `push-to-app-collection` job.
+- Support for optionally attaching the persisted workspace in the `push-to-app-catalog` job.
 
 ## [0.7.0] 2020-02-26
 
