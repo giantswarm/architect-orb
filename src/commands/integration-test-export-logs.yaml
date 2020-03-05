@@ -1,0 +1,9 @@
+steps:
+  - run:
+      when: always
+      name: "architect/integration-test-export-logs: Export cluster logs"
+      command: |
+        kind export logs ./kind/logs
+  - store_artifacts:
+      path: ./kind/logs
+      destination: logs

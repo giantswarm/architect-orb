@@ -10,8 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for optionally attaching the persisted workspace in the `push-to-app-catalog` job.
+- Introduce Helm Chart testing and linting in `push-to-app-catalog` job.
+- Add changelog-lint job.
+- Introduce `integration-test` job for running `Go` integration tests in a `KIND`
+  cluster.
 
-## [0.7.0] 2020-02-26
+### Removed
+
+- Removed Docker layer caching from remote docker setup (affects push-to-docker and push-to-docker-legacy)
+
+## [0.7.0] - 2020-02-26
 
 ### Added
 
@@ -26,7 +34,7 @@ avoiding the requirement of installing the binary locally using the new
 which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doesn't change.
 - Names for steps in `tools-info` command.
 
-## [0.6.0] 2020-02-19
+## [0.6.0] - 2020-02-19
 
 ### Changed
 
@@ -36,7 +44,7 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Fix pushing new unique app in push-to-app-collection job. https://github.com/giantswarm/architect-orb/pull/69
 
-## [0.5.3] 2020-02-11
+## [0.5.3] - 2020-02-11
 
 ### Added
 
@@ -46,49 +54,49 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Fix working files cleanup in push-to-app-collection job.
 
-## [0.5.2] 2020-02-03
+## [0.5.2] - 2020-02-03
 
 ### Fixed
 
 - Do not change CR name when "unique" parameter is set in push-to-app-collection job.
 
-## [0.5.1] 2020-02-03
+## [0.5.1] - 2020-02-03
 
 ### Fixed
 
 - Fix push-to-app-collection job broken in v0.5.0 release.
 
-## [0.5.0] 2020-01-31
+## [0.5.0] - 2020-01-31
 
 ### Added
 
 - Add "unique" parameter to push-to-app-collection job.
 
-## [0.4.5] 2019-12-11
+## [0.4.5] - 2019-12-11
 
 ### Added
 
 - Add "push-to-docker-legacy" command to be able push old style docker image tags.
 
-## [0.4.4] 2019-10-31
+## [0.4.4] - 2019-10-31
 
 ### Added
 
 - Add "tag-latest-branch" parameter to the push-to-docker job.
 
-## [0.4.3] 2019-10-10
+## [0.4.3] - 2019-10-10
 
 ### Added
 
 - Add go-test job for building libraries.
 
-## [0.4.2] 2019-10-04
+## [0.4.2] - 2019-10-04
 
 ### Added
 
 - Add "os" parameter to the go-build job.
 
-## [0.4.1] 2019-10-02
+## [0.4.1] - 2019-10-02
 
 ### Added
 
@@ -98,7 +106,7 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Fail when go modules are not tidy in go-build.
 
-## [0.4.0] 2019-09-17
+## [0.4.0] - 2019-09-17
 
 ### Added
 
