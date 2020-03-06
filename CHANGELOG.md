@@ -15,9 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduce `integration-test` job for running `Go` integration tests in a `KIND`
   cluster.
 
+### Changed
+
+- Update CircleCI config to use `orb-tools@8.27.6`.
+
 ### Removed
 
-- Removed Docker layer caching from remote docker setup (affects push-to-docker and push-to-docker-legacy)
+- Remove Docker layer caching from remote docker setup (affects push-to-docker and push-to-docker-legacy)
 
 ## [0.7.0] - 2020-02-26
 
