@@ -1,7 +1,7 @@
 parameters:
   binary:
     description: "If not empty, the path to the given binary relative to the working directory will be persisted to the workspace."
-    type: "boolean"
+    type: "string"
   command:
     description: "Command to be run by architect. Should usually be 'build' or 'deploy'."
     type: "string"
