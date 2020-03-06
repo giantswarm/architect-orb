@@ -3,10 +3,15 @@ description: |
   using the `latest` architect image and ultimately calling `architect <command>`.
 machine: true
 parameters:
+  binary:
+    description: "If not empty, the path to the given binary relative to the working directory will be persisted to the workspace."
+    default: ""
+    type: "boolean"
   command:
     description: "Command to be run by architect. Should usually be 'build' or 'deploy'."
     type: "string"
 steps:
   - checkout
   - go-architect-legacy:
+      binary: << parameters.binary >>
       command: << parameters.command >>

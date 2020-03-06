@@ -1,5 +1,9 @@
 parameters:
+  binary:
+    description: "If not empty, the path to the given binary relative to the working directory will be persisted to the workspace."
+    type: "boolean"
   command:
+    description: "Command to be run by architect. Should usually be 'build' or 'deploy'."
     type: "string"
 steps:
   - run:
@@ -17,3 +21,10 @@ steps:
           -v /var/run/docker.sock:/var/run/docker.sock \
           -w /home/circleci/project \
           quay.io/giantswarm/architect << parameters.command >>
+  - when:
+      condition: << parameters.binary >>
+      steps:
+        - persist_to_workspace:
+            root: .
+            paths:
+              - ./<< parameters.binary >>
