@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   architect: giantswarm/architect@dev:lint-changelog
-  orb-tools: circleci/orb-tools@8.3.0
+  orb-tools: circleci/orb-tools@8.27.6
 
 workflows:
   catalog_build:
