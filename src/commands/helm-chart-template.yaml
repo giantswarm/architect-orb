@@ -22,7 +22,7 @@ steps:
       name: "architect/helm-chart-template: For tagged operator build extract the version in Chart.yaml"
       command: |
           [ ! -f .helm_chart_template_tagged_operator_build ] && echo "skip: not tagged operator build" && exit 0
-          grep  -E 'version:' helm/<<parameters.chart>>/Chart.yaml | cut -d '"' -f 2 | tee .helm_chart_template_chart_version
+          grep  -E 'version:' helm/<<parameters.chart>>/Chart.yaml | cut -d ' ' -f 2 | tee .helm_chart_template_chart_version
   - run:
       name: "architect/helm-chart-template: For tagged operator build extract the version from the build tag"
       command: |
