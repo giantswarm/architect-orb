@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2020-03-09
+
+### Added
+
+- Enable linting during go-test command.
+
 ## [0.8.0] - 2020-03-05
 
 ### Added
@@ -16,7 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add changelog-lint job.
 - Introduce `integration-test` job for running `Go` integration tests in a `KIND`
   cluster.
-- Enables linting during go-test command.
 
 ### Changed
 
