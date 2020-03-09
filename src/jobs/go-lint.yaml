@@ -1,5 +1,0 @@
-description: "Runs golanglint-ci against the codebase."
-executor: go-lint
-steps:
-  - checkout
-  - go-lint
