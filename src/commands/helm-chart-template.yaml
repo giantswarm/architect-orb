@@ -11,7 +11,7 @@ steps:
       name: "architect/helm-chart-template: Check if build is triggered by a tagged operator"
       command: |
           [ ! -f pkg/project/project.go ] && echo "skip: not operator build" && exit 0
-          [ -z $CIRCLE_TAG ]) && echo "skip: not tag build" && exit 0
+          [ -z $CIRCLE_TAG ] && echo "skip: not tag build" && exit 0
           touch .helm-chart-template-tagged-operator-build
   - run:
       name: "architect/helm-chart-template: For tagged operator build extract the operator version"
