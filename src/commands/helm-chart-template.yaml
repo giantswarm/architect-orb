@@ -5,7 +5,8 @@ parameters:
 steps:
   - run:
       name: "architect/helm-chart-template: Template chart"
-      command: architect helm template --dir ./helm/<<parameters.chart>>
+      command: |
+          architect helm template --dir ./helm/<<parameters.chart>>
   - run:
       name: "architect/helm-chart-template: Check if build is triggered by a tagged operator"
       command: |
