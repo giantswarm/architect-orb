@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Enables linting during go-test command.
+- Enable linting during go-test command.
 
 ## [0.8.0] - 2020-03-05
 
