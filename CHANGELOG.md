@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2020-03-09
+
+### Added
+
+- Enable linting during go-test command.
+
 ## [0.8.0] - 2020-03-05
 
 ### Added
@@ -18,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cluster.
 - Verify chart, operator and tag versions while packing helm chart on tagged
   operator build in `push-to-app-collection` job.
-- Enable linting during go-test command. 
 
 ### Changed
 
