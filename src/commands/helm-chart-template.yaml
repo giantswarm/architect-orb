@@ -16,8 +16,14 @@ steps:
       name: "architect/helm-chart-template: For tagged operator build extract version in Chart.yaml"
       command: ! [ -f .helm-chart-template-tagged-operator-build ] && echo "skip" || grep  -E 'version:' helm/${CIRCLE_PROJECT_REPONAME}/Chart.yaml | cut -d '"' -f 2 | tee .helm-chart-template-chart-version
   - run:
+      name: "architect/helm-chart-template: For tagged operator build extract version from the build tag"
+      command: ! [ -f .helm-chart-template-tagged-operator-build ] && echo "skip" || echo "${CIRCLE_TAG#v}" | tee .helm-chart-template-tag-version
+  - run:
       name: "architect/helm-chart-template: For tagged operator build verify operator version and chart version are the same"
       command: ! [ -f .helm-chart-template-tagged-operator-build ] && echo "skip" || git diff --exit-code --no-index .helm-chart-template-operator-version .helm-chart-template-chart-version
+  - run:
+      name: "architect/helm-chart-template: For tagged operator build verify operator version and tag version are the same"
+      command: ! [ -f .helm-chart-template-tagged-operator-build ] && echo "skip" || git diff --exit-code --no-index .helm-chart-template-operator-version .helm-chart-template-tag-version
   - run:
       name: "architect/helm-chart-template: Cleanup"
       command: rm .helm-chart-template-*
