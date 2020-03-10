@@ -73,7 +73,7 @@ nodes:
 
 - The default kubernetes version we test with is set in the integration-test
 job.
-- This can be override if you need to test with another version.
+- This can be overriden if you need to test with another version.
 - The KIND node image must have been retagged with [retagger].
 
 ```yaml
