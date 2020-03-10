@@ -2,4 +2,4 @@
 description: Lint Helm charts
 steps:
   - run: |
-      ct lint --validate-maintainers=false --chart-dirs helm
+      ct lint --validate-maintainers=false --check-version-increment=false --chart-dirs helm

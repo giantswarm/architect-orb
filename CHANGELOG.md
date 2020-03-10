@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Fix GOPATH problem in `integration-test` job.
+- Disable version bump check for Helm lint
 
 ## [0.8.1] - 2020-03-09
 
