@@ -111,6 +111,11 @@ workflows:
               only: /^v.*/
 ```
 
+### integration-test
+
+- Runs an integration test by creating a KIND cluster and executing it as a Go test.
+- See [docs](docs/integration_test.md).
+
 ### push-to-app-catalog
 
 This job templates and packages a given `chart` from the helm directory and
