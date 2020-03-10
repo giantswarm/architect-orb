@@ -13,6 +13,14 @@ parameters:
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
+  lenient-lint:
+    description: "Use more lenient lint rules"
+    type: "boolean"
+    default: false
+  disable-lint:
+    description: "Disable linting alogether"
+    type: "boolean"
+    default: false
 steps:
   - checkout
   - when:
@@ -24,7 +32,9 @@ steps:
   - prepare-catalogbot-git-ssh
   - helm-chart-template:
       chart: <<parameters.chart>>
-  - helm-lint
+  - helm-lint:
+      lenient: <<parameters.lenient-lint>>
+      disable: <<parameters.disable-lint>>
   - package-and-push:
       app_catalog: <<parameters.app_catalog>>
       app_catalog_test: <<parameters.app_catalog_test>>

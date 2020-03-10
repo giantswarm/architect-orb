@@ -1,5 +1,25 @@
 ---
+parameters:
+  lenient:
+    description: "Use more lenient lint rules"
+    type: "boolean"
+    default: false
+  disable:
+    description: "Disable linting alogether"
+    type: "boolean"
+    default: false
 description: Lint Helm charts
 steps:
-  - run: |
-      ct lint --validate-maintainers=false --check-version-increment=false --chart-dirs helm
+  - unless:
+      condition: <<parameters.disable>>
+      steps:
+        - when:
+            condition: <<parameters.lenient>>
+            steps:
+              - run: |
+                  ct lint --validate-maintainers=false --check-version-increment=false --validate-chart-schema=false --chart-dirs helm
+        - unless:
+            condition: <<parameters.lenient>>
+            steps:
+              - run: |
+                  ct lint --validate-maintainers=false --check-version-increment=false --chart-dirs helm
