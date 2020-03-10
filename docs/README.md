@@ -1,4 +1,4 @@
 # Docs
 
-* [integration-test](integration_test_job.md)
+* [integration-test job](integration_test_job.md)
 * [PR template](pull_request_template.md)
