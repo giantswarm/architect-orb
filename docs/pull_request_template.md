@@ -1,8 +1,8 @@
-:wrench: Please make sure to familiarize yourself with [Development section of README.md](https://github.com/giantswarm/architect-orb/blob/master/README.md#development) before releasing a PR to this repository.
-
-:warning: If you want to **create a new release** of this orb please read [Releases section of README.md](https://github.com/giantswarm/architect-orb/blob/master/README.md#releases) carefully :exclamation:
-
 ## Checklist
 
-- [ ] Update changelog in CHANGELOG.md.
-- [ ] After the release update architect orb version in .circleci/config.yml.
+- [ ] Make yourself familiar with following readme sections:
+    - [ ] [Coding Standards](https://github.com/giantswarm/architect-orb#coding-guidelines).
+    - [ ] [Development](https://github.com/giantswarm/architect-orb#development).
+    - [ ] [Design and Goals](https://github.com/giantswarm/architect-orb#design-and-goals).
+- [ ] :warning: Update changelog in CHANGELOG.md.
+- [ ] :warning: After the release update architect orb version in .circleci/config.yml.
