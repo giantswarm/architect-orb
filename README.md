@@ -36,10 +36,10 @@ This repository hosts the source code for giantswarm/architect orb.
   format.
 - Steps defined in commands should be small. Ideally single binary call. One
   exception is step skipping described later.
-- Step skipping should be done using [`when:` and `unless:` steps](when-unless).
-- If using [`when:` and `unless:` steps](when-unless) is difficult then
+- Step skipping should be done using [`when:` and `unless:` steps][when-unless].
+- If using [`when:` and `unless:` steps][when-unless] is difficult then
   multiline skipping is acceptable. [See this code for
-  example.][multiline-skipping].
+  example][multiline-skipping].
 - Temporary information between steps should be carried in files prefixed with
   `.build_`.
 - Temporary `.build_*` files should be only used in scope of a single command.
