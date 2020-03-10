@@ -1,11 +1,11 @@
 ---
 parameters:
-  lenient:
-    description: "Use more lenient lint rules"
-    type: "boolean"
-    default: false
   disable:
     description: "Disable linting alogether"
+    type: "boolean"
+    default: false
+  lenient:
+    description: "Use more lenient lint rules"
     type: "boolean"
     default: false
 description: Lint Helm charts

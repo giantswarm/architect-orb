@@ -13,12 +13,12 @@ parameters:
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
-  lenient-lint:
-    description: "Use more lenient lint rules"
-    type: "boolean"
-    default: false
   disable-lint:
     description: "Disable linting alogether"
+    type: "boolean"
+    default: false
+  lenient-lint:
+    description: "Use more lenient lint rules"
     type: "boolean"
     default: false
 steps:
