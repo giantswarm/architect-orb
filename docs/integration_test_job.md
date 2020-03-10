@@ -75,7 +75,8 @@ nodes:
 job.
 - This can be overriden if you need to test with another version.
 - The KIND node image must have been retagged with [retagger].
-- It's recommended  to not change this version and have it updated together with the next orb release.
+- It's recommended to not change this version and have it updated together with
+the next orb release.
 
 ```yaml
     jobs:
