@@ -24,7 +24,8 @@ steps:
   - prepare-catalogbot-git-ssh
   - helm-chart-template:
       chart: <<parameters.chart>>
-  - helm-lint
+  - helm-lint:
+      charts: "helm/<< parameters.chart >>"
   - package-and-push:
       app_catalog: <<parameters.app_catalog>>
       app_catalog_test: <<parameters.app_catalog_test>>
