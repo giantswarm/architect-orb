@@ -1,7 +1,6 @@
 ---
 parameters:
-  charts:
-    description: "Comma seperated list of charts to lint (relative path)"
+  chart:
     type: "string"
 description: Lint Helm charts
 steps:
