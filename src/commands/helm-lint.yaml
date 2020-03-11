@@ -1,5 +1,8 @@
 ---
-description: Lint Helm charts
+parameters:
+  chart:
+    type: "string"
+description: Lint Helm chart
 steps:
   - run: |
-      ct lint --validate-maintainers=false --check-version-increment=false --chart-dirs helm
+      ct lint --validate-maintainers=false --charts="helm/<<parameters.chart>>"
