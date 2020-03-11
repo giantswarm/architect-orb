@@ -41,4 +41,4 @@ steps:
   - run:
       name: "architect/helm-chart-template: Cleanup"
       command: |
-          rm -v .build_*
+          rm -vf .build_*
