@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New parameter `production_branch` for the `package-and-push` command which allows merges 
   to the given branch to be deployed to the production app catalog without requiring a tag.
 
+### Changed
+
+- Don't run cleanup for helm chart template command on non-tagged builds.
+
 ## [0.8.2] - 2020-03-10
 
 ### Changed
