@@ -6,4 +6,4 @@ parameters:
 description: Lint Helm charts
 steps:
   - run: |
-      ct lint --validate-maintainers=false --charts <<parameters.charts>>
+      ct lint --validate-maintainers=false --charts="helm/<<parameters.charts>>"
