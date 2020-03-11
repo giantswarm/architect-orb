@@ -25,7 +25,7 @@ steps:
         - run:
             name: "architect/package-and-push: Determine target app catalog based on branch name"
             command: |
-              [[ <<parameters.production_branch>> == ${CIRCLE_BRANCH} ]] && echo -n '<< parameters.app_catalog_test >>' > .app_catalog_name || echo -n '<< parameters.app_catalog >>' > .app_catalog_name
+              [[ <<parameters.production_branch>> == ${CIRCLE_BRANCH} ]] && echo -n '<< parameters.app_catalog >>' > .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' > .app_catalog_name
   - run: |
       [[ << parameters.chart >> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
   - run: |
