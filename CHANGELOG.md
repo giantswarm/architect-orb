@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Don't run cleanup for helm chart template command on non-tagged builds.
+
 ## [0.8.2] - 2020-03-10
 
 ### Changed
