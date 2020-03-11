@@ -41,5 +41,4 @@ steps:
   - run:
       name: "architect/helm-chart-template: Cleanup"
       command: |
-          [ ! -f .build_tagged_operator_build ] && echo "skip: not tagged operator build" && exit 0
           rm -fv .build_*
