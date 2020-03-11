@@ -13,6 +13,13 @@ parameters:
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
+  production_branch:
+    type: string
+    default: ""
+    description: |
+      When this is a non-empty string, commits on the given branch will be treated as production releases
+      and the helm chart will be pushed to `app_catalog` instead of `app_catalog_test`. Use this for deployments
+      that follow a trunk branch (usually `master`) for production releases rather than using tags.
 steps:
   - checkout
   - when:
@@ -23,10 +30,11 @@ steps:
   - tools-info
   - prepare-catalogbot-git-ssh
   - helm-chart-template:
-      chart: <<parameters.chart>>
+      chart: << parameters.chart >>
   - helm-lint:
       chart: "<< parameters.chart >>"
   - package-and-push:
-      app_catalog: <<parameters.app_catalog>>
-      app_catalog_test: <<parameters.app_catalog_test>>
-      chart: <<parameters.chart>>
+      app_catalog: << parameters.app_catalog >>
+      app_catalog_test: << parameters.app_catalog_test >>
+      chart: << parameters.chart >>
+      production_branch: << parameters.production_branch >>

@@ -159,6 +159,10 @@ paragraph below for explanation.
 directory. Use this if files are generated/modified in a previous workflow
 job and need to be used in this job.
 
+**NOTE**: An optional parameter, `production_branch`, when set to the name of
+a branch (usually `master`) will allow this job to push to the app production
+catalog (i.e. `app_catalog`) without requiring a tag.
+
 This job assumes that the App Catalog is defined in a GitHub repository inside
 giantswarm organization. E.g. when `app_catalog` parameter is set to
 `"control-plane-test-catalog"` the job will try to use catalog
