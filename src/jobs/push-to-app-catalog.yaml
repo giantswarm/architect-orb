@@ -18,7 +18,7 @@ parameters:
     default: true
     description: |
       When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
-      Set this to `false` for deployments that follow a a master branch for production releases rather than 
+      Set this to `false` for deployments that follow a a master branch for production releases rather than
       using tags (the default).
 steps:
   - checkout
