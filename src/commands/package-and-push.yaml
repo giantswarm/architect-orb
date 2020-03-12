@@ -5,27 +5,28 @@ parameters:
     type: "string"
   chart:
     type: "string"
-  production_branch:
-    type: string
+  on_tag:
+    type: boolean
+    default: true
     description: |
-      When this is a non-empty string, commits on the given branch will be treated as production releases
-      and the helm chart will be pushed to `app_catalog` instead of `app_catalog_test`. Use this for deployments
-      that follow a trunk branch (usually `master`) for production releases rather than using tags.
+      When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
+      Set this to `false` for deployments that follow a a master branch for production releases rather than 
+      using tags (the default).
 steps:
-  - unless:
-      condition: << parameters.production_branch >>
+  - when:
+      condition: << parameters.on_tag >>
       steps:
         - run:
             name: "architect/package-and-push: Determine target app catalog based on presence of tag"
             command: |
               [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' > .app_catalog_name || echo -n '<< parameters.app_catalog >>' > .app_catalog_name
-  - when:
-      condition: << parameters.production_branch >>
+  - unless:
+      condition: << parameters.on_tag >>
       steps:
         - run:
             name: "architect/package-and-push: Determine target app catalog based on branch name"
             command: |
-              [[ <<parameters.production_branch>> == ${CIRCLE_BRANCH} ]] && echo -n '<< parameters.app_catalog >>' > .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' > .app_catalog_name
+              [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' > .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' > .app_catalog_name
   - run: |
       [[ << parameters.chart >> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
   - run: |
