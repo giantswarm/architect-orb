@@ -1,7 +1,9 @@
 # integration-test job
  
 - Runs an integration test by creating a [KIND] cluster and executing it as a Go test.
-- Uses the machine executor and replaces the Go version with a version
+- Runs in a Circle VM because KIND uses Docker in Docker and this doesn't work
+with the Circle Docker executor.
+- Uses the [machine executor] and replaces the Go version with a version
   controlled by us. Since the preinstalled Go is very outdated.
 
 ## Example usage
@@ -108,4 +110,5 @@ kubectl delete deployment coredns -n kube-system
 
 [KIND]: https://kind.sigs.k8s.io
 [KIND docs]: https://kind.sigs.k8s.io/docs/user/configuration/
+[machine executor]: https://circleci.com/docs/2.0/executor-types/#using-machine
 [retagger]: https://github.com/giantswarm/retagger
