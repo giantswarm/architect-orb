@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New parameter `on_tag` for the `package-and-push` command and 
-  `push-to-app-catalog` job which allows merges to the given branch 
+  `push-to-app-catalog` job which allows merges to the `master` branch 
   to be deployed to the non-testing app catalog without requiring a tag.
 
 ### Changed
