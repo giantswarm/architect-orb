@@ -13,6 +13,13 @@ parameters:
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
+  on_tag:
+    type: boolean
+    default: true
+    description: |
+      When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
+      Set this to `false` for deployments that follow a a master branch for production releases rather than
+      using tags (the default).
 steps:
   - checkout
   - when:
@@ -23,9 +30,11 @@ steps:
   - tools-info
   - prepare-catalogbot-git-ssh
   - helm-chart-template:
-      chart: <<parameters.chart>>
-  - helm-lint
+      chart: << parameters.chart >>
+  - helm-lint:
+      chart: "<< parameters.chart >>"
   - package-and-push:
-      app_catalog: <<parameters.app_catalog>>
-      app_catalog_test: <<parameters.app_catalog_test>>
-      chart: <<parameters.chart>>
+      app_catalog: << parameters.app_catalog >>
+      app_catalog_test: << parameters.app_catalog_test >>
+      chart: << parameters.chart >>
+      on_tag: << parameters.on_tag >>

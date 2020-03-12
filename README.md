@@ -4,7 +4,7 @@
 
 This repository hosts the source code for giantswarm/architect orb.
 
-Design and goals of the project:
+## Design and Goals
 
 - Replacing [architect][architect] entirely **is not** a goal. But replacing
   most of its functionality is.
@@ -14,7 +14,7 @@ Design and goals of the project:
   codebase.
 - Having one line binary call on each job step - to make the outputs grouped
   and visible and keeping build configurations sane. Good example is
-  [package-and-push command][package-and-push-command].
+  [helm-chart-template][helm-chart-template].
 - Using [architect executor][architect-executor] with the latest
   [architect][architect] docker image most of time.
 - Using binaries other than `architect` when appropriate (they should be
@@ -24,7 +24,32 @@ Design and goals of the project:
 - Using [architect][architect] commands for complex tasks. Good example is
   `architect helm template` instead of awkward and error prone `sed` calls.
 
-[package-and-push-command]: https://github.com/giantswarm/architect-orb/blob/master/src/commands/package-and-push.yaml
+[helm-chart-template]: https://github.com/giantswarm/architect-orb/blob/master/src/commands/helm-chart-template.yaml
+
+## Coding Guidelines
+
+- Jobs should be documented in [docs](/docs).
+- Jobs should call only commands and not have steps defined directly. I.e. no
+  `run:` key in _/jobs_ directory.
+- Steps defined in commands should be named. Names should be [prefixed with
+  `architect/COMMAND_NAME` like here][step-prefix]. They should have imperative
+  format.
+- Steps defined in commands should be small. Ideally single binary call. One
+  exception is step skipping described later.
+- Step skipping should be done using [`when:` and `unless:` steps][when-unless].
+- If using [`when:` and `unless:` steps][when-unless] is difficult then
+  multiline skipping is acceptable. [See this code for
+  example][multiline-skipping].
+- Temporary information between steps should be carried in files prefixed with
+  `.build_`.
+- Temporary `.build_*` files should be only used in scope of a single command.
+- A command using temporary files should clean them with [cleanup step in
+  format linked here][cleanup-step]. This should be the last step of the command.
+
+[cleanup-step]: https://github.com/giantswarm/architect-orb/blob/cbbb1b8d036ba7f10c58fa06e88028d759cd12e8/src/commands/helm-chart-template.yaml#L41-L44
+[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/cbbb1b8d036ba7f10c58fa06e88028d759cd12e8/src/commands/helm-chart-template.yaml#L13-L15
+[step-prefix]: https://github.com/giantswarm/architect-orb/blob/cbbb1b8d036ba7f10c58fa06e88028d759cd12e8/src/commands/helm-chart-template.yaml#L7
+[when-unless]: https://circleci.com/docs/2.0/configuration-reference/#the-when-step-requires-version-21
 
 ## Development
 
@@ -111,6 +136,11 @@ workflows:
               only: /^v.*/
 ```
 
+### integration-test
+
+- Runs an integration test by creating a KIND cluster and executing it as a Go test.
+- See [docs](docs/integration_test.md).
+
 ### push-to-app-catalog
 
 This job templates and packages a given `chart` from the helm directory and
@@ -123,11 +153,6 @@ variable to be set in the build. This must be base64 encoded private SSH key of
 **NOTE**: App catalog repositories configured in the job parameters must be
 added to the [Catalog Editors][catalog-editors-team] GitHub team. See the
 paragraph below for explanation.
-
-**NOTE**: An optional parameter, `attach_workspace`, will execute the CircleCI
-`attach_workspace` command immediately after `checkout` into the working
-directory. Use this if files are generated/modified in a previous workflow
-job and need to be used in this job.
 
 This job assumes that the App Catalog is defined in a GitHub repository inside
 giantswarm organization. E.g. when `app_catalog` parameter is set to

@@ -7,14 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2020-03-12
+
+### Added
+
+- New parameter `on_tag` for the `package-and-push` command and 
+  `push-to-app-catalog` job which allows merges to the `master` branch 
+  to be deployed to the non-testing app catalog without requiring a tag.
+
+### Changed
+
+- Don't run cleanup for helm chart template command on non-tagged builds.
+
+## [0.8.2] - 2020-03-10
+
+### Changed
+
+- Fix GOPATH problem in `integration-test` job.
+- Disable version bump check for Helm lint
+- Helm lint supports single chart rather than entire directory disabling version bump check.
+
+## [0.8.1] - 2020-03-09
+
+### Added
+
+- Enable linting during go-test command.
+
+## [0.8.0] - 2020-03-05
+
 ### Added
 
 - Support for optionally attaching the persisted workspace in the `push-to-app-catalog` job.
 - Support for optionally persisting the built binary to the workspace in the `go-architect-legacy` job.
 - Introduce Helm Chart testing and linting in `push-to-app-catalog` job.
-- Add changelog-lint job.
+- Add `changelog-lint` job.
 - Introduce `integration-test` job for running `Go` integration tests in a `KIND`
   cluster.
+- Verify chart, operator and tag versions while packing helm chart on tagged
+  operator build in `push-to-app-collection` job.
 
 ### Changed
 
@@ -147,7 +177,11 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.3...HEAD
+[0.8.3]: https://github.com/giantswarm/architect-orb/compare/v0.8.2...v0.8.3
+[0.8.2]: https://github.com/giantswarm/architect-orb/compare/v0.8.1...v0.8.2
+[0.8.1]: https://github.com/giantswarm/architect-orb/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/giantswarm/architect-orb/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/giantswarm/architect-orb/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/giantswarm/architect-orb/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/giantswarm/architect-orb/compare/v0.5.2...v0.5.3
