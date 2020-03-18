@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Rename `E2E_KUBECONFIG` to `KUBECONFIG` in integration-test job for clarity
+and compatiblity with kubectl.
+
 ## [0.8.3] - 2020-03-12
 
 ### Added
