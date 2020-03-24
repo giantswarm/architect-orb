@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+
+## [0.8.4] - 2020-03-24
+
 ### Added
 
 - New parameter `test-timeout` for the `integration-test-go-test` command and
@@ -233,7 +237,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.3...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.4...HEAD
+[0.8.4]: https://github.com/giantswarm/architect-orb/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/giantswarm/architect-orb/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/giantswarm/architect-orb/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/giantswarm/architect-orb/compare/v0.8.0...v0.8.1
