@@ -27,6 +27,10 @@ parameters:
   test-dir:
     description: "Tested package directory."
     type: string
+  test-timeout:
+    default: "20m"
+    description: "If a tests runs longer than this it will panic."
+    type: string
 steps:
   - checkout
   - attach_workspace:
@@ -42,4 +46,5 @@ steps:
   - integration-test-go-test:
       env-file: << parameters.env-file >>
       test-dir: << parameters.test-dir >>
+      test-timeout: << parameters.test-timeout >>
   - integration-test-export-logs

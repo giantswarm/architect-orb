@@ -108,6 +108,20 @@ the next orb release.
 kubectl delete deployment coredns -n kube-system
 ```
 
+### test-timeout
+
+If a test runs longer than this value it will panic.
+If it's 0, the timeout is disabled.
+The default is "20m" (20 minutes).
+
+```yaml
+    jobs:
+      - architect/integration-test:
+        name: basic-integration-test
+        test-timeout: "35m"
+        test-dir: "integration/test/basic"
+```
+
 [KIND]: https://kind.sigs.k8s.io
 [KIND docs]: https://kind.sigs.k8s.io/docs/user/configuration/
 [machine executor]: https://circleci.com/docs/2.0/executor-types/#using-machine
