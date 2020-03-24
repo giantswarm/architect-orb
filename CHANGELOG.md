@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New parameter `test-timeout` for the `integration-test-go-test` command and 
+  `integration-test` job which allows to define the timeout for the test execution.
+  It defaults to the value that was already in use.
+
 ### Changed
 
 - Don't run cleanup for helm chart template command on non-tagged builds.
