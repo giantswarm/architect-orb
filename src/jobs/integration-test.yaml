@@ -46,4 +46,5 @@ steps:
   - integration-test-go-test:
       env-file: << parameters.env-file >>
       test-dir: << parameters.test-dir >>
+      test-timeout: << parameters.test-timeout >>
   - integration-test-export-logs
