@@ -4,41 +4,12 @@ parameters:
     type: string
 steps:
   - run:
-      name: "architect/helm-chart-template: Template chart"
+      name: "architect/helm-chart-template: Template chart for branch build"
       command: |
-          architect helm template --dir ./helm/<<parameters.chart>>
+          [ ! -z $CIRCLE_TAG ] && echo "skip: not branch build" && exit 0
+          architect helm template --validate --dir ./helm/<<parameters.chart>>
   - run:
-      name: "architect/helm-chart-template: Check if build is triggered by a tagged operator"
+      name: "architect/helm-chart-template: Template chart for tag build"
       command: |
-          [ ! -f pkg/project/project.go ] && echo "skip: not operator build" && exit 0
           [ -z $CIRCLE_TAG ] && echo "skip: not tag build" && exit 0
-          touch .build_tagged_operator_build
-  - run:
-      name: "architect/helm-chart-template: For tagged operator build extract the operator version"
-      command: |
-          [ ! -f .build_tagged_operator_build ] && echo "skip: not tagged operator build" && exit 0
-          grep -E 'version\s+= ".*' pkg/project/project.go | cut -d '"' -f 2 | tee .build_operator_version
-  - run:
-      name: "architect/helm-chart-template: For tagged operator build extract the version in Chart.yaml"
-      command: |
-          [ ! -f .build_tagged_operator_build ] && echo "skip: not tagged operator build" && exit 0
-          grep -E 'version:' helm/<<parameters.chart>>/Chart.yaml | cut -d ' ' -f 2 | tee .build_chart_version
-  - run:
-      name: "architect/helm-chart-template: For tagged operator build extract the version from the build tag"
-      command: |
-          [ ! -f .build_tagged_operator_build ] && echo "skip: not tagged operator build" && exit 0
-          echo "${CIRCLE_TAG#v}" | tee .build_tag_version
-  - run:
-      name: "architect/helm-chart-template: For tagged operator build verify the operator version and the chart version are the same"
-      command: |
-          [ ! -f .build_tagged_operator_build ] && echo "skip: not tagged operator build" && exit 0
-          git diff --exit-code --no-index .build_operator_version .build_chart_version
-  - run:
-      name: "architect/helm-chart-template: For tagged operator build verify the operator version and the tag version are the same"
-      command: |
-          [ ! -f .build_tagged_operator_build ] && echo "skip: not tagged operator build" && exit 0
-          git diff --exit-code --no-index .build_operator_version .build_tag_version
-  - run:
-      name: "architect/helm-chart-template: Cleanup"
-      command: |
-          rm -fv .build_*
+          architect helm template --validate --tag-build --dir ./helm/<<parameters.chart>>
