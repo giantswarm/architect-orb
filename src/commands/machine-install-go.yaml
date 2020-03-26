@@ -27,3 +27,7 @@ steps:
       name: "architect/machine-install-go: Check Go version"
       command: |
         go version
+  - run:
+      name: "architect/machine-install-go: Install golangci-lint"
+      command: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $GOPATH/bin v1.23.8

@@ -17,6 +17,7 @@ parameters:
     enum: ["linux", "darwin"]
 executor: architect
 steps:
+  - machine-install-go
   - checkout
   - tools-info
   - go-cache-restore
