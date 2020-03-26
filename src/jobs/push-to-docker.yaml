@@ -1,5 +1,8 @@
 executor: architect
 parameters:
+  before-build:
+    description: "Steps to be executed before running `docker build`."
+    type: "steps"
   image:
     description: "Name of the docker image, without tag. e.g. \"quay.io/my-org/my-repo\"."
     type: "string"
@@ -21,6 +24,7 @@ steps:
   - attach_workspace:
       at: .
   - push-to-docker:
+      before-build: <<parameters.before-build>>
       image: <<parameters.image>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
       password_envar: <<parameters.password_envar>>

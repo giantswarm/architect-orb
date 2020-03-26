@@ -1,4 +1,6 @@
 parameters:
+  before-build:
+    type: "steps"
   image:
     type: "string"
   password_envar:
@@ -9,9 +11,10 @@ parameters:
     type: "string"
 steps:
   - run: |
-      echo -n "<<parameters.image>>:$(architect project version)" > .docker_image_name
-  - run: |
       echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "$(echo -n '<<parameters.image>>' | cut -d/ -f1)"
+  - steps: <<parameters.before-build>>
+  - run: |
+      echo -n "<<parameters.image>>:$(architect project version)" > .docker_image_name
   - run: |
       docker build -t "$(cat .docker_image_name)" .
   - run: |

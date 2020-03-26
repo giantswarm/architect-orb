@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `before-build` parameter to the `push-to-docker` job.
+
 ### Changed
 
 - Validate templated charts using `architect helm template` in
