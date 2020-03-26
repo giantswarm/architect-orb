@@ -3,6 +3,7 @@ parameters:
   before-build:
     description: "Steps to be executed before running `docker build`."
     type: "steps"
+    default: []
   image:
     description: "Name of the docker image, without tag. e.g. \"quay.io/my-org/my-repo\"."
     type: "string"
