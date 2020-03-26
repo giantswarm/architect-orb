@@ -15,7 +15,7 @@ parameters:
     description: "The target Operating System for the binary. Must be one of \"linux\", \"darwin\"."
     type: enum
     enum: ["linux", "darwin"]
-executor: architect
+executor: machine
 steps:
   - machine-install-go
   - checkout
