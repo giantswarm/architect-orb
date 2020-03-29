@@ -1,0 +1,8 @@
+---
+parameters:
+  chart:
+    type: "string"
+description: Test conftest policies
+steps:
+  - run: |
+      conftest -p /etc/policies/ "helm/<<parameters.chart>>"

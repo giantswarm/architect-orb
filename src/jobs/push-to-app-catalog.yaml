@@ -33,6 +33,8 @@ steps:
       chart: << parameters.chart >>
   - helm-lint:
       chart: "<< parameters.chart >>"
+  - helm-conftest:
+      chart: "<< parameters.chart >>"
   - package-and-push:
       app_catalog: << parameters.app_catalog >>
       app_catalog_test: << parameters.app_catalog_test >>
