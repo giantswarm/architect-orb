@@ -5,4 +5,4 @@ parameters:
 description: Test conftest policies
 steps:
   - run: |
-      conftest test -p /etc/policies/ "helm/<<parameters.chart>>"
+      test --update https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.16-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.17-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.18-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.19-deprek8ion.rego helm/<<parameters.chart>>
