@@ -5,4 +5,4 @@ parameters:
 description: Test conftest policies
 steps:
   - run: |
-      conftest -p /etc/policies/ "helm/<<parameters.chart>>"
+      conftest test -p /etc/policies/ "helm/<<parameters.chart>>"
