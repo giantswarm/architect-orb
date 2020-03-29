@@ -5,4 +5,5 @@ parameters:
 description: Test conftest policies
 steps:
   - run: |
-      test --update https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.16-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.17-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.18-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.19-deprek8ion.rego helm/<<parameters.chart>>
+      helm template helm/<<parameters.chart>> --values helm/<<parameters.chart>>/ci/default-values.yaml | \
+      conftest test --update https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.16-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.17-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.18-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/master/1.19-deprek8ion.rego -
