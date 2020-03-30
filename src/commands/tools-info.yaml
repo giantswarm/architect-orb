@@ -1,21 +1,21 @@
 steps:
   - run:
-      name: Showing Architect Version
+      name: architect/tools-info: Show architect version if it exists
       command: |
-        architect version
+        command -v architect > /dev/null && architect version
   - run:
-      name: Showing Bash Version
+      name: architect/tools-info: Show bash version
       command: |
         echo $BASH_VERSION
   - run:
-      name: Showing Git Version
+      name: architect/tools-info: Show git version
       command: |
         git version
   - run:
-      name: Showing Go Version
+      name: architect/tools-info: Show go version
       command: |
         go version
   - run:
-      name: Showing Helm Version
+      name: architect/tools-info: Show helm version
       command: |
         helm version -c
