@@ -2,7 +2,8 @@ steps:
   - run:
       name: "architect/tools-info: Show architect version if it exists"
       command: |
-        command -v architect > /dev/null && architect version
+        ! command -v architect > /dev/null && echo "skip: architect not installed" && exit 0
+        architect version
   - run:
       name: "architect/tools-info: Show bash version"
       command: |
