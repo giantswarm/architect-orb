@@ -18,6 +18,7 @@ parameters:
 executor: machine
 steps:
   - machine-install-go
+  - machine-install-tools
   - checkout
   - tools-info
   - go-cache-restore
