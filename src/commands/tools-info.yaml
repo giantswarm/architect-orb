@@ -17,6 +17,7 @@ steps:
       command: |
         go version
   - run:
-      name: "architect/tools-info: Show helm version"
+      name: "architect/tools-info: Show helm version if it exists"
       command: |
+        ! command -v helm > /dev/null && echo "skip: architect not installed" && exit 0
         helm version -c
