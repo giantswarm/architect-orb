@@ -2,8 +2,13 @@
 parameters:
   chart:
     type: "string"
+  policy_path:
+    description: Path to the Rego policy files directory.
+    type: string
+    default: policy
 description: Test conftest policies
 steps:
   - run: |
       helm template helm/<<parameters.chart>> | \
-      conftest test --update https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.16-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.17-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.18-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.19-deprek8ion.rego -
+          conftest test --policy << parameters.policy_path >> \
+              --update https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.16-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.17-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.18-deprek8ion.rego,https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.19-deprek8ion.rego -

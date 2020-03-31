@@ -20,6 +20,10 @@ parameters:
       When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
       Set this to `false` for deployments that follow a a master branch for production releases rather than
       using tags (the default).
+  policy_path:
+    description: Path to the Rego policy files directory.
+    type: string
+    default: policy
 steps:
   - checkout
   - when:
@@ -35,6 +39,7 @@ steps:
       chart: "<< parameters.chart >>"
   - helm-conftest:
       chart: "<< parameters.chart >>"
+      policy_path: "<< parameters.policy_path >>"
   - package-and-push:
       app_catalog: << parameters.app_catalog >>
       app_catalog_test: << parameters.app_catalog_test >>
