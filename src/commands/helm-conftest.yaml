@@ -18,7 +18,7 @@ steps:
           conftest pull --policy policy https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/1.20-deprek8ion.rego
       fi
       if [ -d "helm/<<parameters.chart>>/ci" ]; then
-        for t in $(ls ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | conftest test --policy << parameters.policy_path >> -; done
+        for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | conftest test --policy << parameters.policy_path >> -; done
       else
         helm template helm/<<parameters.chart>> | conftest test --policy << parameters.policy_path >> -
       fi
