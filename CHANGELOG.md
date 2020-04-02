@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `conftest` to validate helm template using `rego` policies in `push-to-app-catalog` job.
 
 
+
 ## [0.8.5] - 2020-03-30
 
 ### Changed
