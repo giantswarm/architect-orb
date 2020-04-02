@@ -1,5 +1,19 @@
 # push-to-app-catalog job
 
+This job pushes the app to the specified catalog.
+Before doing that, it runs some validations.
+
+## Validations
+
+### conftest
+
+We use [`conftest`](https://www.conftest.dev/) to validate that the manifests inside the Helm chart don't use features
+that will be deprecated on future kubernetes releases.
+This is done using these [rego policies](https://github.com/swade1987/deprek8ion).
+
+The policies are evaluated using the **rendered kubernetes manifests in the Helm chart**.
+If there are values files in the `ci` folder of the chart, they will be used to render the chart templates.
+
 ## Parameters
 
 ### attach_workspace (optional boolean, default=false)
