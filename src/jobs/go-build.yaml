@@ -16,6 +16,7 @@ parameters:
     type: enum
     enum: ["linux", "darwin"]
 executor: architect
+resource_class: "xlarge"
 steps:
   - checkout
   - tools-info
