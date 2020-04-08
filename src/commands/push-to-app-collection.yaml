@@ -4,6 +4,8 @@ description: >
 parameters:
   app_name:
     type: "string"
+  app_namespace:
+    type: "string"
   app_catalog:
     type: "string"
   app_collection_repo:
@@ -24,7 +26,7 @@ steps:
         - run: |
               echo -n "<<parameters.app_name>>-$(cat .version)" | head -c 53 > .cr_name
   - run: |
-        architect create appcr --name $(cat .cr_name) --app-name <<parameters.app_name>> --app-version $(cat .version) --catalog <<parameters.app_catalog>> -o yaml > .app.yaml
+        architect create appcr --name $(cat .cr_name) --app-name <<parameters.app_name>> --app-namespace <<parameters.app_namespace>> --app-version $(cat .version) --catalog <<parameters.app_catalog>> -o yaml > .app.yaml
   - run: |
         git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run: |
