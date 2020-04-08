@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add new parameter `namespace` to `push-to-app-collection` job, which allows
-  configuring namespace, where chart should be installed.
+- Add new parameter `namespace` to `push-to-app-collection` job which allows
+  configuring namespace where chart should be installed.
 
 
 
