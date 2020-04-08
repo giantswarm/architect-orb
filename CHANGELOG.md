@@ -9,13 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
 ## [0.8.7] - 2020-04-08
 
 ### Added
 
 - Add new parameter `namespace` to `push-to-app-collection` job, which allows
   configuring namespace, where chart should be installed.
+
+
 
 ## [0.8.6] - 2020-03-30
 
@@ -260,7 +261,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.6...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.7...HEAD
+[0.8.7]: https://github.com/giantswarm/architect-orb/compare/v0.8.6...v0.8.7
 [0.8.6]: https://github.com/giantswarm/architect-orb/compare/v0.8.5...v0.8.6
 [0.8.5]: https://github.com/giantswarm/architect-orb/compare/v0.8.4...v0.8.5
 [0.8.4]: https://github.com/giantswarm/architect-orb/compare/v0.8.3...v0.8.4
