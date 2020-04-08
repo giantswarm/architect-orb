@@ -8,6 +8,9 @@ parameters:
   app_name:
     description: "Name of the application."
     type: "string"
+  app_namespace:
+    description: "Namespace of the application."
+    type: "string"
   app_catalog:
     description: "Name of the catalog CR where the application belongs."
     type: "string"
@@ -24,6 +27,7 @@ steps:
   - prepare-catalogbot-git-ssh
   - push-to-app-collection:
       app_name: <<parameters.app_name>>
+      app_namespace: <<parameters.app_namespace>>
       app_catalog: <<parameters.app_catalog>>
       app_collection_repo: <<parameters.app_collection_repo>>
       unique: <<parameters.unique>>
