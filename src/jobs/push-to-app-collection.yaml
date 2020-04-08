@@ -9,6 +9,7 @@ parameters:
     description: "Name of the application."
     type: "string"
   app_namespace:
+    default: "giantswarm"
     description: "Namespace of the application."
     type: "string"
   app_catalog:
