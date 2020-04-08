@@ -246,7 +246,7 @@ Same as `push-to-docker` with only change that the docker image tag only include
 
 This job generate an App CR and add it to the an app collection chart repository.
 
-* The App name and catalog are passed by parameters (respectively `app_name` and `app_catalog`).
+* The App name, App namespace and catalog are passed by parameters (respectively `app_name`, `app_namespace` and `app_catalog`).
 * The App version is automatically detected by `architect project version`.
 * The app collection repository where the App CR is added to is passed by parameter (`app_collection_repo`).
 
@@ -280,6 +280,7 @@ workflows:
       - architect/push-to-app-collection:
           name: "push-REPOSITORY-to-COLLECTION-app-collection"
           app_name: "REPOSITORY"
+          app_namespace: "NAMESPACE"
           app_collection_repo: "COLLECTION-app-collection"
           requires:
             # Make sure the chart bechind the app is in the app catalog.
