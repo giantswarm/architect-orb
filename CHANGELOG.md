@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.8.7] - 2020-04-08
+
+### Added
+
+- Add new parameter `namespace` to `push-to-app-collection` job, which allows
+  configuring namespace, where chart should be installed.
+
 ## [0.8.6] - 2020-03-30
 
 ### Added
