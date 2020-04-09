@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a new job `run-kat-tests` that executes application tests using
+  [kube-app-testing](https://github.com/giantswarm/kube-app-testing)
+
+### Changed
+
+- `push-to-app-catalog` doesn't lint helm charts anymore, as that is now part
+  of tests run by `kube-app-testing`
 
 
 ## [0.8.8] - 2020-04-09
@@ -20,7 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update Go version used in integration tests to 1.14.1.
-
 
 
 ## [0.8.7] - 2020-04-08

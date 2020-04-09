@@ -294,10 +294,9 @@ workflows:
               only: /^v.*/
 ```
 
-
 **NOTE**: There is a known issue produced by a race condition which produces a failed build with the following output.
 
-```
+```text
 To github.com:giantswarm/aws-app-collection.git
  ! [rejected]        master -> master (fetch first)
 error: failed to push some refs to 'git@github.com:giantswarm/aws-app-collection.git'
@@ -308,8 +307,52 @@ hint: (e.g., 'git pull ...') before pushing again.
 hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 Exited with code 1
 ```
-It is an rare case so triggering again the build should solve the issue.
 
+It is an rare case so triggering again the build should solve the issue.
 
 [architect]: https://github.com/giantswarm/architect
 [architect-executor]: https://github.com/giantswarm/architect-orb/blob/master/src/executors/architect.yaml
+
+### run-kat-tests
+
+This job installs all the required software to run
+[kube-app-testing](https://github.com/giantswarm/kube-app-testing).
+
+This includes:
+
+- helm chart validation
+- deploying app on a test cluster
+- optionally executing functional tests
+
+Parameters:
+
+- `chart` - the name of the chart to test in `/helm` directory
+- `cluster_type` - type of the cluster to create for test execution. `kind` is default
+  and the only one supported right now.
+
+Example usage
+
+```yaml
+version: 2.1
+orbs:
+  architect: giantswarm/architect@VERSION
+
+workflows:
+  my-workflow:
+    jobs:
+      - architect/push-to-app-collection:
+          name: "push-REPOSITORY-to-COLLECTION-app-collection"
+          app_name: "REPOSITORY"
+          app_namespace: "NAMESPACE"
+          app_collection_repo: "COLLECTION-app-collection"
+          requires:
+            # Make sure the chart bechind the app is in the app catalog.
+            - push-REPOSITORY-to-CATALOG-app-catalog
+          filters:
+            # Do not trigger the job on commit.
+            branches:
+              ignore: /.*/
+            # Trigger job also on git tag.
+            tags:
+              only: /^v.*/
+```
