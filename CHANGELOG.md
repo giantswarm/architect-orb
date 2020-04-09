@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+
+## [0.8.8] - 2020-04-09
+
 ### Added
 
 - Add `resource_class` parameter to all jobs (excluding legacy jobs).
@@ -271,7 +275,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.7...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.8...HEAD
+
+[0.8.8]: https://github.com/giantswarm/architect-orb/compare/v0.8.7...v0.8.8
 [0.8.7]: https://github.com/giantswarm/architect-orb/compare/v0.8.6...v0.8.7
 [0.8.6]: https://github.com/giantswarm/architect-orb/compare/v0.8.5...v0.8.6
 [0.8.5]: https://github.com/giantswarm/architect-orb/compare/v0.8.4...v0.8.5
@@ -296,4 +302,5 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 [0.2.0]: https://github.com/giantswarm/architect-orb/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/giantswarm/architect-orb/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/giantswarm/architect-orb/compare/v0.1.0...v0.1.1
+
 [0.1.0]: https://github.com/giantswarm/architect-orb/releases/tag/v0.1.0
