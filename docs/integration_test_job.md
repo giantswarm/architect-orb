@@ -1,5 +1,5 @@
 # integration-test job
- 
+
 - Runs an integration test by creating a [KIND] cluster and executing it as a Go test.
 - Runs in a Circle VM because KIND uses Docker in Docker and this doesn't work
 with the Circle Docker executor.
@@ -7,8 +7,6 @@ with the Circle Docker executor.
   controlled by us. Since the preinstalled Go is very outdated.
 
 ## Example usage
-
-The only required parameter is the `test-dir` containing the integration test.
 
 ```yaml
 version: 2.1
@@ -25,7 +23,14 @@ workflows:
 
 ## Parameters
 
-These optional parameters allow configuring the test.
+- [common parameters](common.md#parameters) shared in all jobs.
+- [test-dir](#attach_workspace) (required string)
+- [env-file](#env-file) (optional string, default="")
+- [kind-config](#kind-config) (optional string, default="")
+- [kubernetes-version](#kubernetes-version) (optional string, default="v1.16.3")
+- [setup-script](#setup-script) (optional string, default="")
+- [test-dir](#test-dir) (required string)
+- [test-timeout](#test-timeout) (optional string, default="20m")
 
 ### env-file
 
@@ -107,6 +112,10 @@ the next orb release.
 # Delete coredns resources
 kubectl delete deployment coredns -n kube-system
 ```
+
+### test-dir
+
+The directory containing the integration test.
 
 ### test-timeout
 

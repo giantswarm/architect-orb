@@ -6,7 +6,16 @@ description: |
   - "buildTimestamp" in RFC-3339 format in UTC time zone.
   - "gitSHA" SHA of the built commit.
   - "version" produced by `architect project version` command.
-executor: architect
+  resource_class:
+    default: "medium"
+    description: |
+        Configures amount CPU and RAM for the job. See
+        https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+        for details.
+    type: "enum"
+    enum: ["small", "medium", "medium+", "large", "xlarge"]
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - tools-info
