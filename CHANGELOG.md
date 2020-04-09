@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update Go version used in integration tests to 1.14.1.
+- Update Go version to 1.14.1 in `integration-test` job.
+- Use dockerized `ct` in `push-to-app-catalog` job.
 
 
 
