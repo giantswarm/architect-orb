@@ -1,4 +1,3 @@
-executor: architect
 parameters:
   image:
     description: "Name of the docker image, without tag. e.g. \"quay.io/my-org/my-repo\"."
@@ -15,6 +14,16 @@ parameters:
     description: "Name of the branch on which the image will be additionally tagged as \"latest\"."
     type: "string"
     default: "master"
+  resource_class:
+    default: "small"
+    description: |
+        Configures amount CPU and RAM for the job. See
+        https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+        for details.
+    type: "enum"
+    enum: ["small", "medium", "medium+", "large", "xlarge"]
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - setup_remote_docker

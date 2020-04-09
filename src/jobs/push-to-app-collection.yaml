@@ -3,7 +3,6 @@ description: >
   Note: version will be detected automatically by architect.
 
 
-executor: architect
 parameters:
   app_name:
     description: "Name of the application."
@@ -23,6 +22,16 @@ parameters:
     description: "Whether the previous App versions in the collection should be replaced with this one. Any non-empty string means true. This is useful when only one (usually latest) version of the app should be installed at a time. E.g. OPA gatekeeper."
     type: "string"
     default: ""
+  resource_class:
+    default: "small"
+    description: |
+        Configures amount CPU and RAM for the job. See
+        https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+        for details.
+    type: "enum"
+    enum: ["small", "medium", "medium+", "large", "xlarge"]
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - prepare-catalogbot-git-ssh
