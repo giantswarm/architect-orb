@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `resource_class` parameter to all jobs (excluding legacy jobs).
+
+### Changed
+
+- Update Go version used in integration tests to 1.14.1.
+
+
+
 ## [0.8.7] - 2020-04-08
 
 ### Added

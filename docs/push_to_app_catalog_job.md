@@ -16,7 +16,10 @@ If there are values files in the `ci` folder of the chart, they will be used to 
 
 ## Parameters
 
-### attach_workspace (optional boolean, default=false)
+- [common parameters](common.md#parameters) shared in all jobs.
+- [attach_workspace](#attach_workspace) (optional boolean, default=false)
+
+### attach_workspace
 
 When this is `true`, the CircleCI `attach_workspace` command will be executed
 immediately after `checkout` into the working directory. Use this if files are
