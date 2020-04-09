@@ -5,7 +5,7 @@ architect orb.
 
 ## Parameters
 
-### resource_class
+### resource_class (optional string, default="medium")
 
 Allows specifying [CircleCI `resource_class`] for the job if the default is not
 sufficient. Note that it differs between docker and machine executors. Details
