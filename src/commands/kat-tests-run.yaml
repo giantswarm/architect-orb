@@ -1,0 +1,16 @@
+parameters:
+    chart:
+        type: string
+steps:
+    - run: /tmp/bin/helm init -c
+    - run: PATH="/tmp/bin:$PATH" /tmp/kind-app-testing.sh -c << parameters.chart >>
+    - run: if [[ -d /tmp/kat ]]; then sudo chown -R circleci.circleci /tmp/kat; fi
+    - save_cache:
+          key: v2-python-cache-{{ checksum "test/kind/Pipfile.lock" }}
+          paths:
+              - /tmp/kat/.local
+              - /tmp/kat/.cache
+    - store_test_results:
+          path: test-results
+    - store_artifacts:
+          path: test-results

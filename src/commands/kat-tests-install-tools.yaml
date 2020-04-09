@@ -1,0 +1,18 @@
+steps:
+  - restore_cache:
+      key: v2-python-cache-{{ checksum "test/kind/Pipfile.lock" }}
+  - run: curl -Lo /tmp/kind-app-testing.sh -q https://github.com/giantswarm/kind-app-testing/raw/master/kind-app-testing.sh
+  - run: chmod +x /tmp/kind-app-testing.sh
+  - run: mkdir /tmp/bin || true
+  - restore_cache:
+      key: bin-{{ checksum "/tmp/kind-app-testing.sh" }}
+  - run: |
+      [[ ! -f /tmp/bin/kind ]] && curl -Lo /tmp/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(uname)-amd64" && chmod +x /tmp/bin/kind
+  - run: |
+      [[ ! -f /tmp/bin/helm ]] && curl -Lo /tmp/helm.tar.gz https://get.helm.sh/helm-v2.16.5-linux-amd64.tar.gz && tar zxf /tmp/helm.tar.gz -C /tmp && mv /tmp/linux-amd64/helm /tmp/bin/helm
+  - run: |
+      [[ ! -f /tmp/bin/kubectl ]] && curl -Lo /tmp/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.18.0/bin/linux/amd64/kubectl && chmod +x /tmp/bin/kubectl
+  - save_cache:
+      key: bin-{{ checksum "/tmp/kind-app-testing.sh" }}
+      paths:
+        - /tmp/bin
