@@ -5,4 +5,4 @@ parameters:
 description: Lint Helm chart
 steps:
   - run: |
-      ct lint --validate-maintainers=false --charts="helm/<<parameters.chart>>"
+      docker run -it -v "$(pwd)/helm:/helm" quay.io/giantswarm/helm-chart-testing:v2.4.0 ct lint --validate-maintainers=false --charts="/helm/<< parameters.chart >>"

@@ -22,6 +22,7 @@ parameters:
       using tags (the default).
 steps:
   - checkout
+  - setup_remote_docker
   - when:
       condition: << parameters.attach_workspace >>
       steps:
