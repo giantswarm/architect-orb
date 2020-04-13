@@ -75,9 +75,9 @@ This repository hosts the source code for giantswarm/architect orb.
     - Create new _Unreleased_ section in _CHANGELOG.md_.
     - Update the URLs at the bottom.
 2. Merge your PR.
-3. Create GitHub release for the commit merged to master branch here
-   https://github.com/giantswarm/architect-orb/releases/new. Fill in only the
-   `Tag version` fields. The rest should remain empty.
+3. Create GitHub release for the commit merged to master branch [here]
+   (https://github.com/giantswarm/architect-orb/releases/new). Fill in only
+   the `Tag version` fields. The rest should remain empty.
 
 ## Jobs
 
