@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.8.9] - 2020-04-14
+
 ### Added
 
 - Added a new job `run-kat-tests` that executes application tests using
@@ -283,8 +286,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.8...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.9...HEAD
 
+[0.8.9]: https://github.com/giantswarm/architect-orb/compare/v0.8.8...v0.8.9
 [0.8.8]: https://github.com/giantswarm/architect-orb/compare/v0.8.7...v0.8.8
 [0.8.7]: https://github.com/giantswarm/architect-orb/compare/v0.8.6...v0.8.7
 [0.8.6]: https://github.com/giantswarm/architect-orb/compare/v0.8.5...v0.8.6
