@@ -4,7 +4,7 @@ parameters:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
   cluster_type:
-    description: "Type of the cluster to execute this test on"
+    description: "Type of cluster to execute this test on"
     type: "string"
     default: "kind"
 steps:
