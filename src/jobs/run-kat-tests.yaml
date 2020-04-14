@@ -1,0 +1,14 @@
+executor: machine
+parameters:
+  chart:
+    description: "Name of the chart inside helm directory to push to the App Catalog."
+    type: "string"
+  cluster_type:
+    description: "Type of cluster to execute this test on"
+    type: "string"
+    default: "kind"
+steps:
+  - checkout
+  - kat-tests-install-tools
+  - kat-tests-run:
+      chart: << parameters.chart >>

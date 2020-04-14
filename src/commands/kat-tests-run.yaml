@@ -1,0 +1,25 @@
+parameters:
+    chart:
+        type: string
+steps:
+  - run:
+      name: "initialize helm"
+      command: |
+        /tmp/bin/helm init -c
+  - run:
+      name: "start kube-app-testing tool"
+      command: |
+        PATH="/tmp/bin:$PATH" /tmp/kube-app-testing.sh -c << parameters.chart >>
+  - run:
+      name: ""
+      command: |
+        if [[ -d /tmp/kat ]]; then sudo chown -R circleci.circleci /tmp/kat; fi
+  - save_cache:
+        key: v2-python-cache-{{ checksum "test/kat/Pipfile.lock" }}
+        paths:
+            - /tmp/kat/.local
+            - /tmp/kat/.cache
+  - store_test_results:
+        path: test-results
+  - store_artifacts:
+        path: test-results

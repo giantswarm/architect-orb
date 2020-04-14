@@ -297,10 +297,9 @@ workflows:
               only: /^v.*/
 ```
 
-
 **NOTE**: There is a known issue produced by a race condition which produces a failed build with the following output.
 
-```
+```text
 To github.com:giantswarm/aws-app-collection.git
  ! [rejected]        master -> master (fetch first)
 error: failed to push some refs to 'git@github.com:giantswarm/aws-app-collection.git'
@@ -311,8 +310,8 @@ hint: (e.g., 'git pull ...') before pushing again.
 hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 Exited with code 1
 ```
-It is an rare case so triggering again the build should solve the issue.
 
+It is an rare case so triggering again the build should solve the issue.
 
 [architect]: https://github.com/giantswarm/architect
 [architect-executor]: https://github.com/giantswarm/architect-orb/blob/master/src/executors/architect.yaml

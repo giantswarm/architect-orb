@@ -1,0 +1,40 @@
+parameters:
+  kind-version:
+    type: string
+    default: "0.7.0"
+  helm-version:
+    type: string
+    default: "2.16.5"
+  kubectl-version:
+    type: string
+    default: "1.18.0"
+steps:
+  - restore_cache:
+      key: v2-python-cache-{{ checksum "test/kat/Pipfile.lock" }}
+  - run:
+      name: "download kat script"
+      command: |
+        curl -Lo /tmp/kube-app-testing.sh -q https://raw.githubusercontent.com/giantswarm/kube-app-testing/master/kube-app-testing.sh
+        chmod +x /tmp/kube-app-testing.sh
+  - run:
+      name: "create temporary bin dir /tmp/bin"
+      command: |
+        mkdir /tmp/bin || true
+  - restore_cache:
+      key: bin-{{ checksum "/tmp/kube-app-testing.sh" }}
+  - run:
+      name: "install kind"
+      command: |
+        if [[ ! -f /tmp/bin/kind ]]; then curl -Lo /tmp/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/v<< parameters.kind-version >>/kind-$(uname)-amd64" && chmod +x /tmp/bin/kind; fi
+  - run:
+      name: "install helm"
+      command: |
+        if [[ ! -f /tmp/bin/helm ]]; then curl -Lo /tmp/helm.tar.gz https://get.helm.sh/helm-v<< parameters.helm-version >>-linux-amd64.tar.gz && tar zxf /tmp/helm.tar.gz -C /tmp && mv /tmp/linux-amd64/helm /tmp/bin/helm; fi
+  - run:
+      name: "install kubectl"
+      command: |
+        if [[ ! -f /tmp/bin/kubectl ]]; then curl -Lo /tmp/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v<< parameters.kubectl-version >>/bin/linux/amd64/kubectl && chmod +x /tmp/bin/kubectl; fi
+  - save_cache:
+      key: bin-{{ checksum "/tmp/kube-app-testing.sh" }}
+      paths:
+        - /tmp/bin
