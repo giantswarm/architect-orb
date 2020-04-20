@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `push-to-app-catalog` will lint the helm charts again.
 
 ## [0.8.9] - 2020-04-14
 
