@@ -1,0 +1,8 @@
+---
+parameters:
+  chart:
+    type: "string"
+description: Lint Helm chart
+steps:
+  - run: |
+      ct lint --validate-maintainers=false --charts="helm/<<parameters.chart>>"
