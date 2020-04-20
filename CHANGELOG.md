@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.10] - 2020-04-20
+
 ### Changed
 
 - `push-to-app-catalog` will lint the helm charts again.
@@ -289,8 +291,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.9...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.10...HEAD
 
+[0.8.9]: https://github.com/giantswarm/architect-orb/compare/v0.8.9...v0.8.10
 [0.8.9]: https://github.com/giantswarm/architect-orb/compare/v0.8.8...v0.8.9
 [0.8.8]: https://github.com/giantswarm/architect-orb/compare/v0.8.7...v0.8.8
 [0.8.7]: https://github.com/giantswarm/architect-orb/compare/v0.8.6...v0.8.7
