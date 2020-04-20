@@ -40,6 +40,8 @@ steps:
   - prepare-catalogbot-git-ssh
   - helm-chart-template:
       chart: << parameters.chart >>
+  - helm-lint:
+      chart: "<< parameters.chart >>"
   - helm-conftest:
       chart: "<< parameters.chart >>"
   - package-and-push:
