@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `conftest` is used to check deprecation policies only up to Kubernetes 1.17.
+
 ## [0.8.10] - 2020-04-20
 
 ### Changed
