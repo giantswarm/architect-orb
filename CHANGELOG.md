@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.11] - 2020-04-21
+
 ### Changed
 
 - `conftest` is used to check deprecation policies only up to Kubernetes 1.17.
@@ -295,9 +297,10 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.10...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.11...HEAD
 
-[0.8.9]: https://github.com/giantswarm/architect-orb/compare/v0.8.9...v0.8.10
+[0.8.11]: https://github.com/giantswarm/architect-orb/compare/v0.8.10...v0.8.11
+[0.8.10]: https://github.com/giantswarm/architect-orb/compare/v0.8.9...v0.8.10
 [0.8.9]: https://github.com/giantswarm/architect-orb/compare/v0.8.8...v0.8.9
 [0.8.8]: https://github.com/giantswarm/architect-orb/compare/v0.8.7...v0.8.8
 [0.8.7]: https://github.com/giantswarm/architect-orb/compare/v0.8.6...v0.8.7
