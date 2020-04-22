@@ -21,7 +21,7 @@ parameters:
   disable_force_upgrade:
     description: "Disable helm chart force upgrade."
     type: "boolean"
-    default: "false"
+    default: false
   unique:
     description: "Whether the previous App versions in the collection should be replaced with this one. Any non-empty string means true. This is useful when only one (usually latest) version of the app should be installed at a time. E.g. OPA gatekeeper."
     type: "string"
