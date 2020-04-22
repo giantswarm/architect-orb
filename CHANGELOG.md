@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add new parameter `disable_force_upgrade` to `push-to-app-collection` job which allows
+  configuring App CR annotation `chart-operator.giantswarm.io/force-helm-upgrade`.
+  This annotation defines whether `chart-operator` forces helm chart upgrade on failure.
+
+
 ## [0.8.11] - 2020-04-21
 
 ### Changed
