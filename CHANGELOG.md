@@ -5,9 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
-
 ## [Unreleased]
+
+
+## [0.8.12] - 2020-04-22
 
 ### Added
 
@@ -304,8 +305,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.11...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.12...HEAD
 
+[0.8.12]: https://github.com/giantswarm/architect-orb/compare/v0.8.11...v0.8.12
 [0.8.11]: https://github.com/giantswarm/architect-orb/compare/v0.8.10...v0.8.11
 [0.8.10]: https://github.com/giantswarm/architect-orb/compare/v0.8.9...v0.8.10
 [0.8.9]: https://github.com/giantswarm/architect-orb/compare/v0.8.8...v0.8.9
