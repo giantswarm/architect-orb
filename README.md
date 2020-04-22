@@ -250,6 +250,7 @@ Same as `push-to-docker` with only change that the docker image tag only include
 This job generate an App CR and add it to the an app collection chart repository.
 
 * The App name, App namespace and catalog are passed by parameters (respectively `app_name`, `app_namespace` and `app_catalog`).
+* Tha App CR annotation `chart-operator.giantswarm.io/force-helm-upgrade` can be configured with `disable_force_upgrade` parameter.
 * The App version is automatically detected by `architect project version`.
 * The app collection repository where the App CR is added to is passed by parameter (`app_collection_repo`).
 
