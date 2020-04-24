@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.13] - 2020-04-24
+
 ### Changed
 
 - `go-build` job will fail if it fails to compile.
@@ -312,8 +314,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.12...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.13...HEAD
 
+[0.8.13]: https://github.com/giantswarm/architect-orb/compare/v0.8.12...v0.8.13
 [0.8.12]: https://github.com/giantswarm/architect-orb/compare/v0.8.11...v0.8.12
 [0.8.11]: https://github.com/giantswarm/architect-orb/compare/v0.8.10...v0.8.11
 [0.8.10]: https://github.com/giantswarm/architect-orb/compare/v0.8.9...v0.8.10
