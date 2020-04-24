@@ -1,16 +1,12 @@
-parameters:
-  pkg:
-    default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
-    type: "string"
 steps:
   - run: |
       go mod tidy && git diff --exit-code
   - run: |
       echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
   - run: |
-      echo -n " -X '<< parameters.pkg >>.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+      echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
   - run: |
-      echo -n " -X '<< parameters.pkg >>.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+      echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
   - run: |
       echo "\"$(cat .ldflags)\""
   - run:
