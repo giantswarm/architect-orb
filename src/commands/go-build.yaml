@@ -9,6 +9,6 @@ parameters:
 steps:
   - go-test
   - run: |
-      CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> . || true
+      CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> .
   - run: |
       [[ "<< parameters.os >>" == "linux" ]] && ./<< parameters.binary >> version || true
