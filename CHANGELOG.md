@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+### Fixed
 
 - The `go-test` command takes into consideration go modules when generating flags to inject values into the binary.
 
