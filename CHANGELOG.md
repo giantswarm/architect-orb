@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `go-build` command will fail if it fails to compile.
+- `go-build` job will fail if it fails to compile.
 
 ### Fixed
 
-- The `go-test` command takes into consideration go modules when generating flags to inject values into the binary.
+- The `go-test` job takes into consideration go modules when generating flags to inject values into the binary.
 
 ## [0.8.12] - 2020-04-22
 
