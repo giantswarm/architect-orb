@@ -9,6 +9,8 @@ parameters:
 steps:
   - go-test
   - run: |
+      apk add gcc musl-dev
+  - run: |
       go get -v github.com/sqreen/go-agent/sdk/sqreen-instrumentation-tool
   - run: |
       CGO_ENABLED=1 GOARCH="amd64" GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> -a -toolexec $(go env GOPATH)/bin/sqreen-instrumentation-tool .
