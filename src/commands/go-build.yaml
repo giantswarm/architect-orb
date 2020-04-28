@@ -11,6 +11,6 @@ steps:
   - run: |
       go get -v github.com/sqreen/go-agent/sdk/sqreen-instrumentation-tool
   - run: |
-      CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> -a -toolexec $(go env GOPATH)/bin/sqreen-instrumentation-tool .
+      CGO_ENABLED=1 GOARCH="amd64" GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> -a -toolexec $(go env GOPATH)/bin/sqreen-instrumentation-tool .
   - run: |
       [[ "<< parameters.os >>" == "linux" ]] && ./<< parameters.binary >> version || true
