@@ -68,8 +68,8 @@ steps:
               >&2
             exit 1
           fi
-          git pull --rebase --autostash
           sleep 5
+          git pull --rebase --autostash
         done
   - run: |
         rm .cr_name .version .app_file_name .git_commit_message
