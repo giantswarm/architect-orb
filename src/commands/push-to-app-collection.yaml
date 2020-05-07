@@ -56,7 +56,16 @@ steps:
   - run: |
         cd .app-collection && git commit -m "$(cat ../.git_commit_message)"
   - run: |
-        cd .app-collection && git push || (echo "Error pushing app to the collection. See known errors in https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" && exit 1)
+        cd .app-collection && \
+        declare -i attempt=0 && \
+        while ! git push; do
+          attempt+=1
+          if ((attempt >= 4)); then
+            echo "giving up after $attempt failures"
+            exit 1
+          fi
+          sleep 5
+        done
   - run: |
         rm .cr_name .version .app_file_name .git_commit_message
 
