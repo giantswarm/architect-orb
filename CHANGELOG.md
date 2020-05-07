@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `push-to-app-collection`: retry the push up to 4 times to better handle transient errors
+
 ## [0.8.13] - 2020-04-24
 
 ### Changed

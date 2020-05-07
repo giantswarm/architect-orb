@@ -312,7 +312,7 @@ hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 Exited with code 1
 ```
 
-It is an rare case so triggering again the build should solve the issue.
+Integrating the remote changes and the push is already retried a couple of times so this should be very rare, but in case it does happen triggering the build again should solve the issue.
 
 [architect]: https://github.com/giantswarm/architect
 [architect-executor]: https://github.com/giantswarm/architect-orb/blob/master/src/executors/architect.yaml
