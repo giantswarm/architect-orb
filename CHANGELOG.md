@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `push-to-app-catalog`: retry the push up to 4 times to better handle transient errors.
+- `push-to-app-catalog` and `run-kat-tests`: Support providing Chart Testing (`ct`) configuration file
 
 ## [0.8.14] - 2020-05-11
 

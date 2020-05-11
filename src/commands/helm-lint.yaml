@@ -2,7 +2,11 @@
 parameters:
   chart:
     type: "string"
+  ct_config:
+    description: Chart Testing Config file path
+    type: "string"
+    default: ""
 description: Lint Helm chart
 steps:
   - run: |
-      ct lint --validate-maintainers=false --charts="helm/<<parameters.chart>>"
+      ct lint <<# parameters.ct_config >> << parameters.ct_config >> <</ parameters.ct_config >> --validate-maintainers=false --charts="helm/<<parameters.chart>>"

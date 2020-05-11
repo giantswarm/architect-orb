@@ -1,6 +1,9 @@
 parameters:
     chart:
         type: string
+    ct_config:
+        type: string
+        default: ""
 steps:
   - run:
       name: "initialize helm"
@@ -8,6 +11,8 @@ steps:
         /tmp/bin/helm init -c
   - run:
       name: "start kube-app-testing tool"
+      environment:
+        CT_CONFIG_FILE: << parameters.ct_config >>
       command: |
         PATH="/tmp/bin:$PATH" /tmp/kube-app-testing.sh -c << parameters.chart >>
   - run:
