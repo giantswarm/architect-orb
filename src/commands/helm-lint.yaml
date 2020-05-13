@@ -9,4 +9,4 @@ parameters:
 description: Lint Helm chart
 steps:
   - run: |
-      ct lint <<# parameters.ct_config >> << parameters.ct_config >> <</ parameters.ct_config >> --validate-maintainers=false --charts="helm/<<parameters.chart>>"
+      ct lint <<# parameters.ct_config >> --config << parameters.ct_config >> <</ parameters.ct_config >> --validate-maintainers=false --charts="helm/<<parameters.chart>>"
