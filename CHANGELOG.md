@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `push-to-app-catalog`: retry the push up to 4 times to better handle transient errors.
+
 ## [0.8.14] - 2020-05-11
 
-### Changed
+### Fixed
 
-- `push-to-app-collection`: retry the push up to 4 times to better handle transient errors
+- `push-to-app-collection`: retry the push up to 4 times to better handle transient errors.
 
 ## [0.8.13] - 2020-04-24
 
