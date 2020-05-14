@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.15] - 2020-05-14
+
 ### Fixed
 
 - `push-to-app-catalog`: retry the push up to 4 times to better handle transient errors.
+
+### Added
+
 - `push-to-app-catalog` and `run-kat-tests`: Support providing Chart Testing (`ct`) configuration file
 
 ## [0.8.14] - 2020-05-11
@@ -325,8 +330,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.14...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.15...HEAD
 
+[0.8.15]: https://github.com/giantswarm/architect-orb/compare/v0.8.14...v0.8.15
 [0.8.14]: https://github.com/giantswarm/architect-orb/compare/v0.8.13...v0.8.14
 [0.8.13]: https://github.com/giantswarm/architect-orb/compare/v0.8.12...v0.8.13
 [0.8.12]: https://github.com/giantswarm/architect-orb/compare/v0.8.11...v0.8.12
