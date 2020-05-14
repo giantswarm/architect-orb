@@ -24,9 +24,8 @@ Parameters:
   and the only one supported right now.
 - `ct_config` - Path to configuration file for Chart Testing (`ct`). This is
   required, if the app relies on external dependencies. You would use this
-  config file to add additional Helm repositories. See
-  https://github.com/helm/chart-testing/tree/v2.4.1#using-private-chart-repositories.
-  Otherwise this parameter is optional
+  config file [to add additional Helm repositories](https://github.com/helm/chart-testing/tree/v2.4.1#using-private-chart-repositories).
+  Otherwise this parameter is optional.
 
 Example usage
 
