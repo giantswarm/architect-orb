@@ -1,4 +1,3 @@
-
 # run-kat-tests
 
 This job installs all the required software to run
@@ -23,6 +22,10 @@ Parameters:
 - `chart` - the name of the chart to test in `/helm` directory
 - `cluster_type` - type of the cluster to create for test execution. `kind` is default
   and the only one supported right now.
+- `ct_config` - Path to configuration file for Chart Testing (`ct`). This is
+  required, if the app relies on external dependencies. You would use this
+  config file [to add additional Helm repositories](https://github.com/helm/chart-testing/tree/v2.4.1#using-private-chart-repositories).
+  Otherwise this parameter is optional.
 
 Example usage
 
@@ -37,6 +40,7 @@ workflows:
       - architect/run-kat-tests:
           name: "test the chart with kat"
           chart: "[CHART_NAME]"
+          ct_config: ".circleci/ct-config.yaml"
           filters:
             tags:
               only: /^v.*/

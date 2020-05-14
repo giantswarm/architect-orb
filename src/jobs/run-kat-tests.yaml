@@ -7,8 +7,13 @@ parameters:
     description: "Type of cluster to execute this test on"
     type: "string"
     default: "kind"
+  ct_config:
+    description: Chart Testing Config file path
+    type: "string"
+    default: ""
 steps:
   - checkout
   - kat-tests-install-tools
   - kat-tests-run:
       chart: << parameters.chart >>
+      ct_config: << parameters.ct_config >>
