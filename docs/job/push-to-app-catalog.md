@@ -79,6 +79,7 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-catalog:
+          context: "architect"
           name: "push-REPOSITORY-to-CATALOG-app-catalog"
           app_catalog: "CATALOG-catalog"
           app_catalog_test: "CATALOG-test-catalog"
