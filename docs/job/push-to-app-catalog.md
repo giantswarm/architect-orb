@@ -19,7 +19,7 @@ interactions with the App Catalog GitHub repository are done with [CatalogBot
 github user][catalogbot-user] credentials.
 
 Detailed instructions on how to set up App Catalog can be found
-[here][setting-up-a-new-app-catalog].
+[here][creating_app_catalog].
 
 **NOTE**: There is a known issue produced by a race condition which produces a failed build with the following output.
 ```
@@ -38,7 +38,7 @@ It is an rare case so triggering again the build should solve the issue.
 [catalog-editors-team]: https://github.com/orgs/giantswarm/teams/catalog-editors/repositories
 [catalogbot-user]: https://github.com/catalogbot
 [control-plane-test-catalog]: https://github.com/giantswarm/control-plane-test-catalog
-[setting-up-a-new-app-catalog]: https://github.com/giantswarm/giantswarm/blob/master/processes/appcatalog.md#setting-up-a-new-app-catalog
+[creating_app_catalog]: https://intranet.giantswarm.io/docs/dev-and-releng/app-developer-processes/creating_app_catalog/
 
 ## Validations
 
