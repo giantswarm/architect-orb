@@ -17,6 +17,7 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-docker:
+          context: "architect"
           name: "push-REPOSITORY-to-quay"
           image: "quay.io/giantswarm/REPOSITORY"
           username_envar: "QUAY_USERNAME"

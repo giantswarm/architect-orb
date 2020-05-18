@@ -9,7 +9,9 @@ This job generate an App CR and add it to the an app collection chart repository
 
 **NOTE**: The job requires `CATALOGBOT_SSH_KEY_PRIVATE_BASE64` environment
 variable to be set in the build. This must be base64 encoded private SSH key of
-[CatalogBot Github user][catalogbot-user].
+[CatalogBot Github user][catalogbot-user]. It is defined in [architect
+context][architect-context] so it's enough to include `context: "architect"`
+line in your workflow definitions.
 
 **NOTE**: app collection repositories configured in the job parameters must be
 added to the [Catalog Editors][catalog-editors-team] GitHub team with write permission. See the
@@ -22,6 +24,7 @@ job will try to use [giantswarm/aws-app-collection][aws-app-collection].
 giantswarm organization. E.g. when `app_collection_repo` parameter is set to
 user] credentials.
 
+[architect-context]: https://circleci.com/gh/organizations/giantswarm/settings#contexts/ff685959-6b0d-48a9-a79d-4f1089caa3d6
 [aws-app-collection]: https://github.com/giantswarm/aws-app-collection
 [catalog-editors-team]: https://github.com/orgs/giantswarm/teams/bot-catalog-editors/repositories
 [catalogbot-user]: https://github.com/catalogbot
@@ -37,6 +40,7 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-collection:
+          context: "architect"
           name: "push-REPOSITORY-to-COLLECTION-app-collection"
           app_name: "REPOSITORY"
           app_namespace: "NAMESPACE"
