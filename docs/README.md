@@ -1,7 +1,12 @@
 # Docs
 
-* [integration-test job](integration_test_job.md)
-* [push-to-app-catalog job](push_to_app_catalog_job.md)
-* [run application tests](run_kat_tests.md)
-* [PR template](pull_request_template.md)
-  
+## Jobs
+
+- [go-build](job/go-build.md)
+- [go-test](job/go-test.md)
+- [integration-test](job/integration-test.md)
+- [push-to-app-catalog](job/push-to-app-catalog.md)
+- [push-to-app-collection](job/push-to-app-collection.md)
+- [push-to-docker-legacy](job/push-to-docker-legacy.md)
+- [push-to-docker](job/push-to-docker.md)
+- [run-kat-tests](job/run-kat-tests.md)
