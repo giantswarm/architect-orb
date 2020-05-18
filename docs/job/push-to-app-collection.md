@@ -15,9 +15,10 @@ variable to be set in the build. This must be base64 encoded private SSH key of
 added to the [Catalog Editors][catalog-editors-team] GitHub team with write permission. See the
 paragraph below for explanation.
 
-All interactions with the app collection GitHub repository are done with [CatalogBot github
-This job assumes that the app collection is defined in a GitHub repository inside
-`"aws-app-collection"` the job will try to use [giantswarm/aws-app-collection][aws-app-collection].
+All interactions with the app collection GitHub repository are done with
+[CatalogBot GitHub user][catalogbot-user] This job assumes that the app
+collection is defined in a GitHub repository inside `"aws-app-collection"` the
+job will try to use [giantswarm/aws-app-collection][aws-app-collection].
 giantswarm organization. E.g. when `app_collection_repo` parameter is set to
 user] credentials.
 
