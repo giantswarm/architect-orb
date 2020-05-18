@@ -35,7 +35,7 @@ Exited with code 1
 ```
 It is an rare case so triggering again the build should solve the issue.
 
-[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/catalog-editors/repositories
+[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/bot-catalog-editors/repositories
 [catalogbot-user]: https://github.com/catalogbot
 [control-plane-test-catalog]: https://github.com/giantswarm/control-plane-test-catalog
 [creating_app_catalog]: https://intranet.giantswarm.io/docs/dev-and-releng/app-developer-processes/creating_app_catalog/

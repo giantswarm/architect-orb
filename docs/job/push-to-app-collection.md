@@ -23,7 +23,7 @@ giantswarm organization. E.g. when `app_collection_repo` parameter is set to
 user] credentials.
 
 [aws-app-collection]: https://github.com/giantswarm/aws-app-collection
-[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/catalog-editors/repositories
+[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/bot-catalog-editors/repositories
 [catalogbot-user]: https://github.com/catalogbot
 
 Example usage
