@@ -14,12 +14,12 @@ paragraph below for explanation.
 This job assumes that the App Catalog is defined in a GitHub repository inside
 giantswarm organization. E.g. when `app_catalog` parameter is set to
 `"control-plane-test-catalog"` the job will try to use catalog
-https://github.com/giantswarm/control-plane-test-catalog. All interactions with
-the App Catalog GitHub repository are done with [CatalogBot github
-user] credentials.
+[giantswarm/control-plane-test-catalog][control-plane-test-catalog]. All
+interactions with the App Catalog GitHub repository are done with [CatalogBot
+github user][catalogbot-user] credentials.
 
-Detailed instructions on how to set up App Catalog can be found here:
-https://github.com/giantswarm/giantswarm/blob/master/processes/appcatalog.md#setting-up-a-new-app-catalog.
+Detailed instructions on how to set up App Catalog can be found
+[here][creating_app_catalog].
 
 **NOTE**: There is a known issue produced by a race condition which produces a failed build with the following output.
 ```
@@ -35,8 +35,10 @@ Exited with code 1
 ```
 It is an rare case so triggering again the build should solve the issue.
 
-[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/catalog-editors/repositories
-[CatalogBot github user]: https://github.com/catalogbot
+[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/bot-catalog-editors/repositories
+[catalogbot-user]: https://github.com/catalogbot
+[control-plane-test-catalog]: https://github.com/giantswarm/control-plane-test-catalog
+[creating_app_catalog]: https://intranet.giantswarm.io/docs/dev-and-releng/app-developer-processes/creating_app_catalog/
 
 ## Validations
 
