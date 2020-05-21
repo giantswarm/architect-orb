@@ -51,6 +51,10 @@ steps:
           ret=1
           tires=4
           for i in $(seq 1 $tries) ; do
+            echo "====> Attempt $i: Running \"git pull --rebase\""
+            git pull --rebase
+
+            echo "====> Attempt $i: Running \"git push\""
             set +e
             git push
             ret=$?
@@ -59,7 +63,6 @@ steps:
             [[ $ret -eq 0 ]] && exit $ret
 
             sleep 5
-            git pull --rebase --autostash
           done
 
           echo "Error pushing changes. See known errors in:" >&2
