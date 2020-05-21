@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.16] - 2020-05-21
+
+### Added
+
+- `push-to-docker`: add option to add additional custom tag for the container image.
+
 ## [0.8.15] - 2020-05-14
 
 ### Fixed
