@@ -1,7 +1,4 @@
 parameters:
-  name:
-    description: "Name of the step."
-    type: "string"
   command:
     description: "Command to run."
     type: "string"
@@ -16,7 +13,7 @@ parameters:
     type: "integer"
 steps:
   - run:
-      name: "<< parameters.name >>"
+      name: 'Retry command: << parameters.command >>'
       command: |
         ret=1
         try=0
