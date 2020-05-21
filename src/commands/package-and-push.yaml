@@ -46,18 +46,24 @@ steps:
   - run:
       name: Push to app catalog repo
       command: |
-          cd .app_catalog && \
-          declare -i attempt=0 && \
-          while ! git push; do
-            attempt+=1
-            if ((attempt >= 4)); then
-              printf '%s\n' \
-                "Error pushing app to the catalog. See known errors in:" \
-                "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" \
-                "Giving up after $attempt failures." \
-                >&2
-              exit 1
-            fi
+          cd .app_catalog
+
+          ret=1
+          tires=1
+          for i in $(seq 1 $tries) ; do
+            set +e
+            git push
+            ret=$?
+            set -e
+
+            [[ $ret -eq 0 ]] && exit $ret
+
             sleep 5
             git pull --rebase --autostash
           done
+
+          echo "Error pushing changes. See known errors in:" >&2
+          echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
+          echo "Giving up after $tries failures." >&2
+
+          exit $ret

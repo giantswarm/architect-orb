@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `push-to-app-catalog`: fix retries.
+- `push-to-app-collection`: fix retries.
+
 ## [0.8.15] - 2020-05-14
 
 ### Fixed
