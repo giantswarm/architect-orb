@@ -45,7 +45,7 @@ steps:
           readonly head="$(git rev-parse HEAD)"
 
           ret=1
-          tires=4
+          tries=4
           for i in $(seq 1 $tries) ; do
             echo "====> Attempt $i: Running: git reset --hard \$head"
             git reset --hard $head
