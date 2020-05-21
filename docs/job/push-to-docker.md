@@ -5,7 +5,7 @@ It requires the build context and Dockefile to be present at the root of worksap
 
 **NOTE**: docker registry username and password are read from environement variables which default to `ARCHITECT_DOCKER_REGISTRY_USERNAME` and `ARCHITECT_DOCKER_REGISTRY_PASSWORD` respectively. This can be changed via `username_var` and `password_var` arguments.
 **NOTE**: The docker image will be tagged with the version found by `architect project version` command.
-**NOTE**: In case you want to set a custom tag for your image define `custom-tag` with the tag value desired.
+**NOTE**: In case you want to set a custom tag for your image define `custom_tag` with the tag value desired.
 
 Example usage
 
@@ -19,7 +19,7 @@ workflows:
     jobs:
       - architect/push-to-docker:
           context: "architect"
-          custom-tag: "1.0.0"
+          custom_tag: "1.0.0"
           name: "push-REPOSITORY-to-quay"
           image: "quay.io/giantswarm/REPOSITORY"
           username_envar: "QUAY_USERNAME"
