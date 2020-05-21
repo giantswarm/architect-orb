@@ -18,3 +18,10 @@ steps:
       name: "architect/integration-test-install-tools: Check kubectl version"
       command: |
         kubectl version --client
+  - run:
+      name: "architect/integration-test-install-tools: Install Helm"
+      command: |
+        curl -L https://get.helm.sh/helm-v2.16.7-linux-amd64.tar.gz >./helm.tar.gz
+        tar xzvf helm.tar.gz
+        chmod u+x linux-amd64/helm
+        sudo mv linux-amd64/helm /usr/local/bin/
