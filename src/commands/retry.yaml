@@ -1,0 +1,41 @@
+parameters:
+  name:
+    description: "Name of the step."
+    type: "string"
+  command:
+    description: "Command to run."
+    type: "string"
+  error:
+    description: "Error message displayed in case of failure."
+    type: "string"
+  sleep:
+    description: "Time between tries."
+    type: "integer"
+  tries:
+    description: "Number of tries before failing."
+    type: "integer"
+steps:
+  - run:
+      name: "<< parameters.name >>"
+      command: |
+        ret=1
+        try=0
+
+        while [[ $ret -ne 0 ]] && [[ $try -lt << parameters.tries >> ]] ; do
+          set +e
+          << parameters.command >>
+          ret=$?
+          set -e
+        done
+
+        [[ $ret -ne 0 ]] && cat <<EOF >&2 || true
+        Error: << parameters.error >>
+
+        Failed to run command:
+
+            << parameters.command >>
+
+        Giving up after << parameters.tries >> attempts.
+        EOF
+
+        exit $ret

@@ -1,0 +1,24 @@
+parameters:
+  resource_class:
+    default: "small"
+    description: |
+        Configures amount CPU and RAM for the job. See
+        https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+        for details.
+    type: "enum"
+    enum: ["small", "medium", "medium+", "large", "xlarge"]
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
+steps:
+  - architect/retry:
+      name: "Running \"echo hello && true\""
+      command: "echo hello && true"
+      error: ">> Failed error <<"
+      sleep: 0
+      tries: 5
+  - architect/retry:
+      name: "Running \"echo hello && false\""
+      command: "echo hello && false"
+      error: ">> Failed error <<"
+      sleep: 0
+      tries: 5

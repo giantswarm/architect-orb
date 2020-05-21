@@ -55,24 +55,12 @@ steps:
         cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.app_file_name)
   - run: |
         cd .app-collection && git commit -m "$(cat ../.git_commit_message)"
-  - run:
-      name: Push to app collection repo
-      command: |
-          cd .app-collection && \
-          declare -i attempt=0 && \
-          while ! git push; do
-            attempt+=1
-            if ((attempt >= 4)); then
-              printf '%s\n' \
-                "Error pushing app to the collection. See known errors in:" \
-                "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" \
-                "Giving up after $attempt failures." \
-                >&2
-              exit 1
-            fi
-            sleep 5
-            git pull --rebase --autostash
-          done
+  - architect/retry:
+      name: "Push changes to app collection"
+      command: "git pull --rebase --autostash && git push"
+      error: "See known errors in: https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection."
+      tries: 4
+      sleep: 5
   - run: |
         rm .cr_name .version .app_file_name .git_commit_message
 
