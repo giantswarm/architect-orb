@@ -23,4 +23,4 @@ steps:
   - run: |
       ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker push "<<parameters.image>>:latest"
   - run: |
-      ! [[ "<<parameters.custom_tag>>" == "" ]] && echo "skip" || docker tag "$(cat .docker_image_name)" "<<parameters.image>>:<<parameters.custom_tag>>"
+      ! [[ "<<parameters.custom_tag>>" != "" ]] && echo "skip" || docker tag "$(cat .docker_image_name)" "<<parameters.image>>:<<parameters.custom_tag>>"
