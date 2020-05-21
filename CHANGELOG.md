@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `integration-test-install-tools`: installs Helm 2.16.1.
+
 ### Changed
 
 - `integration-test`: upgraded kind from `v0.7.0` to `v0.8.1`.
@@ -15,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `integration-test-install-tools` now installs Helm 2.16.7.
+- `integration-test-install-tools`: installs Helm 2.16.7.
 
 ## [0.8.15] - 2020-05-14
 
