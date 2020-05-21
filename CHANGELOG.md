@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.16] - 2020-05-21
+
 ### Added
 
 - `integration-test-install-tools` now installs Helm 2.16.7.
@@ -334,8 +336,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.15...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.16...HEAD
 
+[0.8.16]: https://github.com/giantswarm/architect-orb/compare/v0.8.15...v0.8.16
 [0.8.15]: https://github.com/giantswarm/architect-orb/compare/v0.8.14...v0.8.15
 [0.8.14]: https://github.com/giantswarm/architect-orb/compare/v0.8.13...v0.8.14
 [0.8.13]: https://github.com/giantswarm/architect-orb/compare/v0.8.12...v0.8.13
