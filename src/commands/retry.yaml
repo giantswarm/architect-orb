@@ -13,7 +13,7 @@ parameters:
     type: "integer"
 steps:
   - run:
-      name: 'Retry command: << parameters.command >>'
+      name: 'Retry command "<< parameters.command >>"'
       command: |
         ret=1
         try=0
