@@ -25,7 +25,7 @@ steps:
           set -e
         done
 
-        [[ $ret -ne 0 ]] && cat <<EOF >&2 || true
+        [[ $ret -ne 0 ]] && cat \<<EOF >&2 || true
         Error: << parameters.error >>
 
         Failed to run command:
