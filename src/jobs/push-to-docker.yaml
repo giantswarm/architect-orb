@@ -1,4 +1,8 @@
 parameters:
+  custom-tag:
+    description: "Name of the tag that will be used for tagging the image besides usual sha tagging"
+    type: "string"
+    default: ""
   image:
     description: "Name of the docker image, without tag. e.g. \"quay.io/my-org/my-repo\"."
     type: "string"
@@ -30,6 +34,7 @@ steps:
   - attach_workspace:
       at: .
   - push-to-docker:
+      custom-tag: <<parameters.custom-tag>>
       image: <<parameters.image>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
       password_envar: <<parameters.password_envar>>

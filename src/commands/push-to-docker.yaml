@@ -1,4 +1,6 @@
 parameters:
+  custom-tag:
+    type: "string"
   image:
     type: "string"
   password_envar:
@@ -20,3 +22,5 @@ steps:
       ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker tag "$(cat .docker_image_name)" "<<parameters.image>>:latest"
   - run: |
       ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker push "<<parameters.image>>:latest"
+  - run: |
+      ! [[ "<<parameters.custom-tag>>" == "" ]] && echo "skip" || docker tag "$(cat .docker_image_name)" "<<parameters.image>>:<<parameters.custom-tag>>"
