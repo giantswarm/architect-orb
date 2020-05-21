@@ -49,7 +49,7 @@ steps:
           cd .app_catalog
 
           ret=1
-          tires=1
+          tires=4
           for i in $(seq 1 $tries) ; do
             set +e
             git push
