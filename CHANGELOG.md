@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `integration-test`: upgraded kind from `v0.7.0` to `v0.8.1`.
+
 ## [0.8.16] - 2020-05-21
 
 ### Added
