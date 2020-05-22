@@ -63,10 +63,10 @@ steps:
           ret=1
           tries=4
           for i in $(seq 1 $tries) ; do
-            echo "====> Attempt $i: Running \"git pull --rebase\""
+            echo "====> Attempt $i: Running: git pull --rebase"
             git pull --rebase
 
-            echo "====> Attempt $i: Running \"git push\""
+            echo "====> Attempt $i: Running: git push"
             set +e
             git push
             ret=$?
@@ -84,4 +84,3 @@ steps:
           exit $ret
   - run: |
         rm .cr_name .version .app_file_name .git_commit_message
-
