@@ -21,4 +21,14 @@ steps:
   - run:
       name: "architect/integration-test-create-cluster: Create cluster"
       command: |
-          kind create cluster --config kind-config --image quay.io/giantswarm/kind-node:<< parameters.kubernetes-version >>
+          declare -i attempt=0 && \
+          while ! kind create cluster --config kind-config --image quay.io/giantswarm/kind-node:<< parameters.kubernetes-version >>; do
+            attempt+=1
+            if ((attempt >= 4)); then
+              printf '%s\n' \
+                "Error creating kind cluster. Giving up after $attempt failures." \
+                >&2
+              exit 1
+            fi
+            sleep 5
+          done

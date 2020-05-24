@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `integration-test-create-cluster`: retries creating kind cluster.
+
 ## [0.8.17] - 2020-05-21
 
 ### Fixed
