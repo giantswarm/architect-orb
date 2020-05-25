@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `integration-test-create-cluster`: retry creating kind cluster.
+
 ### Fixed
 
 - `push-to-app-catalog`: fix retries.
@@ -16,13 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `integration-test-install-tools`: installs Helm 2.16.1 since it's required by our Helm client.
+- `integration-test-install-tools`: install Helm 2.16.1 since it's required by our Helm client.
 
 ## [0.8.16] - 2020-05-21
 
 ### Added
 
-- `integration-test-install-tools`: installs Helm 2.16.7.
+- `integration-test-install-tools`: install Helm 2.16.7.
 
 
 ## [0.8.15] - 2020-05-14

@@ -21,4 +21,15 @@ steps:
   - run:
       name: "architect/integration-test-create-cluster: Create cluster"
       command: |
+        ret=1
+        tries=4
+        for i in $(seq 1 $tries) ; do
+          echo "====> Attempt $i: Creating kind cluster"
+          set +e
           kind create cluster --config kind-config --image quay.io/giantswarm/kind-node:<< parameters.kubernetes-version >>
+          ret=$?
+          set -e
+          [[ $ret -eq 0 ]] && exit $ret
+          sleep 5
+          kind delete cluster || true
+        done
