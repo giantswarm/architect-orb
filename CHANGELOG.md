@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `integration-test-create-cluster`: retry creating kind cluster.
 
+### Fixed
+
+- `push-to-app-catalog`: fix retries.
+- `push-to-app-collection`: fix retries.
+
 ## [0.8.17] - 2020-05-21
 
 ### Fixed

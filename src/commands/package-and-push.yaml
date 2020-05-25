@@ -19,14 +19,14 @@ steps:
         - run:
             name: "architect/package-and-push: Determine target app catalog based on presence of tag"
             command: |
-              [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' > .app_catalog_name || echo -n '<< parameters.app_catalog >>' > .app_catalog_name
+              [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
   - unless:
       condition: << parameters.on_tag >>
       steps:
         - run:
             name: "architect/package-and-push: Determine target app catalog based on branch name"
             command: |
-              [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' > .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' > .app_catalog_name
+              [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
   - run: |
       [[ << parameters.chart >> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
   - run: |
@@ -35,29 +35,49 @@ steps:
       helm init --client-only
   - run: |
       mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
-  - run: |
-      helm repo index --url https://giantswarm.github.com/$(cat .app_catalog_name) --merge .app_catalog/index.yaml ./build
-  - run: |
-      cp ./build/* .app_catalog
-  - run: |
-      cd .app_catalog && git add -A
-  - run: |
-      cd .app_catalog && git commit -m "add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)"
   - run:
       name: Push to app catalog repo
       command: |
-          cd .app_catalog && \
-          declare -i attempt=0 && \
-          while ! git push; do
-            attempt+=1
-            if ((attempt >= 4)); then
-              printf '%s\n' \
-                "Error pushing app to the catalog. See known errors in:" \
-                "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" \
-                "Giving up after $attempt failures." \
-                >&2
-              exit 1
-            fi
+          readonly app_catalog_name="$(cat .app_catalog_name)"
+
+          cd .app_catalog
+
+          readonly head="$(git rev-parse HEAD)"
+
+          ret=1
+          tries=4
+          for i in $(seq 1 $tries) ; do
+            echo "====> Attempt $i: Running: git reset --hard \$head"
+            git reset --hard $head
+
+            echo "====> Attempt $i: Running: git pull --rebase"
+            git pull --rebase
+
+            echo "====> Attempt $i: Running: helm repo index --url https://giantswarm.github.com/$app_catalog_name --merge index.yaml ../build"
+            helm repo index --url https://giantswarm.github.com/$app_catalog_name --merge index.yaml ../build
+
+            echo "====> Attempt $i: Running: cp ../build/* ."
+            cp ../build/* .
+
+            echo "====> Attempt $i: Running: git add -A"
+            git add -A
+
+            echo "====> Attempt $i: Running: git commit -m \"add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)\""
+            git commit -m "add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)"
+
+            echo "====> Attempt $i: Running \"git push\""
+            set +e
+            git push
+            ret=$?
+            set -e
+
+            [[ $ret -eq 0 ]] && exit $ret
+
             sleep 5
-            git pull --rebase --autostash
           done
+
+          echo "Giving up after $tries failures." >&2
+          echo "Error pushing changes. See known errors in:" >&2
+          echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
+
+          exit $ret

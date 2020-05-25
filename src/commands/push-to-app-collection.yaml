@@ -58,21 +58,29 @@ steps:
   - run:
       name: Push to app collection repo
       command: |
-          cd .app-collection && \
-          declare -i attempt=0 && \
-          while ! git push; do
-            attempt+=1
-            if ((attempt >= 4)); then
-              printf '%s\n' \
-                "Error pushing app to the collection. See known errors in:" \
-                "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" \
-                "Giving up after $attempt failures." \
-                >&2
-              exit 1
-            fi
+          cd .app-collection
+
+          ret=1
+          tries=4
+          for i in $(seq 1 $tries) ; do
+            echo "====> Attempt $i: Running: git pull --rebase"
+            git pull --rebase
+
+            echo "====> Attempt $i: Running: git push"
+            set +e
+            git push
+            ret=$?
+            set -e
+
+            [[ $ret -eq 0 ]] && exit $ret
+
             sleep 5
-            git pull --rebase --autostash
           done
+
+          echo "Giving up after $tries failures." >&2
+          echo "Error pushing changes. See known errors in:" >&2
+          echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" >&2
+
+          exit $ret
   - run: |
         rm .cr_name .version .app_file_name .git_commit_message
-
