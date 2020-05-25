@@ -76,8 +76,8 @@ steps:
             sleep 5
           done
 
+          echo "Giving up after $tries failures." >&2
           echo "Error pushing changes. See known errors in:" >&2
           echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
-          echo "Giving up after $tries failures." >&2
 
           exit $ret
