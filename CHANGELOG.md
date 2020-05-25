@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.18] - 2020-05-25
+
 ### Added
 
 - `integration-test-create-cluster`: retry creating kind cluster.
@@ -346,8 +348,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.17...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.8.18...HEAD
 
+[0.8.18]: https://github.com/giantswarm/architect-orb/compare/v0.8.17...v0.8.18
 [0.8.17]: https://github.com/giantswarm/architect-orb/compare/v0.8.16...v0.8.17
 [0.8.16]: https://github.com/giantswarm/architect-orb/compare/v0.8.15...v0.8.16
 [0.8.15]: https://github.com/giantswarm/architect-orb/compare/v0.8.14...v0.8.15
