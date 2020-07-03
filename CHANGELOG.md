@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Delete `helm init` step which was not needed after helm 3.
-- Pin `architect` binary version to v1.2.0.
+- Pin `architect` binary version to v2.0.0.
 
 ## [0.9.0] - 2020-06-02
 

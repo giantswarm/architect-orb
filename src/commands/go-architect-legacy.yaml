@@ -16,4 +16,4 @@ steps:
           -v /home/circleci/project:/home/circleci/project \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -w /home/circleci/project \
-          quay.io/giantswarm/architect:1.2.0 << parameters.command >>
+          quay.io/giantswarm/architect:2.0.0 << parameters.command >>
