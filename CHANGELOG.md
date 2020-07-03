@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Delete `helm init` step which was not needed after helm 3.
+
 ## [0.9.0] - 2020-06-02
 
 ### Changed

@@ -6,10 +6,6 @@ parameters:
         default: ""
 steps:
   - run:
-      name: "initialize helm"
-      command: |
-        /tmp/bin/helm init -c
-  - run:
       name: "start kube-app-testing tool"
       environment:
         CT_CONFIG_FILE: << parameters.ct_config >>
