@@ -32,8 +32,6 @@ steps:
   - run: |
       git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
   - run: |
-      helm init --client-only
-  - run: |
       mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
   - run:
       name: Push to app catalog repo
