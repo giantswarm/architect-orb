@@ -23,4 +23,4 @@ steps:
   - run:
       name: "architect/integration-test-go-test: Run test"
       command: |
-        source .env && CGO_ENABLED=0 E2E_KUBECONFIG=~/.kube/config go test -tags k8srequired -timeout << parameters.test-timeout >> -v ./<< parameters.test-dir >>
+        CGO_ENABLED=0 E2E_KUBECONFIG=~/.kube/config go test -tags k8srequired -timeout << parameters.test-timeout >> -v ./<< parameters.test-dir >>
