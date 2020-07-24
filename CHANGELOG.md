@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2020-07-24
+
 ### Changed
 
 - Install `kind` as a binary file.
@@ -371,8 +373,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.10.0...HEAD
-
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/giantswarm/architect-orb/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/giantswarm/architect-orb/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/giantswarm/architect-orb/compare/v0.8.18...v0.9.0
 [0.8.18]: https://github.com/giantswarm/architect-orb/compare/v0.8.17...v0.8.18
