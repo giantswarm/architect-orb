@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+### Added
 
-- Pin `architect` binary version to v2.1.3.
+- Update `architect` binary version to v2.1.3.
 
 ## [0.10.1] - 2020-07-24
 
