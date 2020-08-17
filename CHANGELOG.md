@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Scan for Go dependency vulnerabilities with `nancy`.
+
 ## [0.10.2] - 2020-08-11
 
 ### Added
