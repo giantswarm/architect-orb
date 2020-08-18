@@ -47,6 +47,11 @@ steps:
         cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
         CGO_ENABLED=0 golangci-lint run -E gosec -E goconst -E unparam
   - run:
+      name: "architect/go-test-legacy: Running nancy vulnerability scan"
+      command: |
+        cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+        CGO_ENABLED=0 go list -json -m all | nancy -quiet
+  - run:
       name: "architect/go-test-legacy: Running go test"
       command: |
         cd /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
