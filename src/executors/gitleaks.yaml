@@ -1,3 +1,3 @@
 docker:
-    - image: quay.io/giantswarm/gitleaks:v3.3.0
+    - image: quay.io/giantswarm/gitleaks:v6.0.0
       entrypoint: /bin/bash
