@@ -6,23 +6,23 @@ steps:
   - run:
       name: Run gitleaks scan
       command: |
-      CONFIG="<< parameters.config >>"
-      LINT_ARGS=" "
-      if [ -n "${CONFIG}" ]; then
-        # Use the specified config file if given.
-        LINT_ARGS+=" --config=${CONFIG}";
-      elif [[ -f .gitleaks.toml || -f gitleaks.toml ]]; then
-        # Use the repo's config file if it has one.
-        LINT_ARGS+=" --repo-config";
-      fi
+        CONFIG="<< parameters.config >>"
+        LINT_ARGS=" "
+        if [ -n "${CONFIG}" ]; then
+          # Use the specified config file if given.
+          LINT_ARGS+=" --config=${CONFIG}";
+        elif [[ -f .gitleaks.toml || -f gitleaks.toml ]]; then
+          # Use the repo's config file if it has one.
+          LINT_ARGS+=" --repo-config";
+        fi
 
-      # Limit the scan to a single branch as scanning large histories is slow.
-      # It would be better to use --commit-to and scan between the latest
-      # commit and the oldest common ancestor with the target branch.
-      # This would include sub-/feature branches in the scan as well.
-      # However, CircleCI doesn't provide a way to get the target branch,
-      # so this is currently impossible. So we use the current branch.
-      LINT_ARGS+=" --branch=${CIRCLE_BRANCH}";
+        # Limit the scan to a single branch as scanning large histories is slow.
+        # It would be better to use --commit-to and scan between the latest
+        # commit and the oldest common ancestor with the target branch.
+        # This would include sub-/feature branches in the scan as well.
+        # However, CircleCI doesn't provide a way to get the target branch,
+        # so this is currently impossible. So we use the current branch.
+        LINT_ARGS+=" --branch=${CIRCLE_BRANCH}";
 
-      echo Running: gitleaks $LINT_ARGS --redact -v --pretty -r ./
-      gitleaks $LINT_ARGS --redact -v --pretty -r ./
+        echo Running: gitleaks $LINT_ARGS --redact -v --pretty -r ./
+        gitleaks $LINT_ARGS --redact -v --pretty -r ./
