@@ -3,7 +3,8 @@ parameters:
     description: "(Optional) Path to a config file to use for gitleaks configuration."
     type: "string"
 steps:
-  - run: |
+  - name: Run gitleaks scan
+    run: |
       CONFIG="<< parameters.config >>"
       LINT_ARGS=" "
       if [ -n "${CONFIG}" ]; then
@@ -22,4 +23,5 @@ steps:
       # so this is currently impossible. So we use the current branch.
       LINT_ARGS+=" --branch=${CIRCLE_BRANCH}";
 
+      echo Running: gitleaks $LINT_ARGS --redact -v --pretty -r ./
       gitleaks $LINT_ARGS --redact -v --pretty -r ./
