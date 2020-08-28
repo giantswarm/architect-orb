@@ -2,26 +2,24 @@ parameters:
   config:
     description: "(Optional) Path to a config file to use for gitleaks configuration."
     type: "string"
-  scan_since_rev:
-    description: "(Optional) A commit SHA1. If given, will scan only commits since this commit."
-    type: "string"
 steps:
   - run: |
       CONFIG="<< parameters.config >>"
       LINT_ARGS=" "
       if [ -n "${CONFIG}" ]; then
+        # Use the specified config file if given.
         LINT_ARGS+=" --config=${CONFIG}";
       elif [[ -f .gitleaks.toml || -f gitleaks.toml ]]; then
+        # Use the repo's config file if it has one.
         LINT_ARGS+=" --repo-config";
       fi
 
-      BASE_REV="<< parameters.scan_since_rev >>"
-      if [ -n "${BASE_REV}" ]; then
-        # Stop scanning one commit before the base revision
-        # echo git log --left-right --cherry-pick --pretty=format:"%H" ${BASE_REV}...${CIRCLE_SHA1}
-        # Gets the SHA1s of every commit between CIRCLE_SHA1 and the base, and takes the oldest one.
-        stop_at=$(git log --left-right --cherry-pick --pretty=format:"%H" ${BASE_REV}...${CIRCLE_SHA1} | tail -n 1)
-        LINT_ARGS+=" --commit-to=${stop_at}";
-      fi
+      # Limit the scan to a single branch as scanning large histories is slow.
+      # It would be better to use --commit-to and scan between the latest
+      # commit and the oldest common ancestor with the target branch.
+      # This would include sub-/feature branches in the scan as well.
+      # However, CircleCI doesn't provide a way to get the target branch,
+      # so this is currently impossible. So we use the current branch.
+      LINT_ARGS+=" --branch=${CIRCLE_BRANCH}";
 
       gitleaks $LINT_ARGS --redact -v --pretty -r ./

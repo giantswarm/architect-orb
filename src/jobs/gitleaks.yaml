@@ -12,13 +12,9 @@ parameters:
         for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
-  scan_since_rev:
-    description: "(Optional) A commit SHA1. If given, will scan only commits since this commit."
-    type: "string"
 executor: "gitleaks"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - gitleaks:
       config: << parameters.config >>
-      scan_since_rev: << parameters.scan_since_rev >>
