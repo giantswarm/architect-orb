@@ -50,6 +50,8 @@ steps:
   - integration-test-create-cluster:
       kind-config: << parameters.kind-config >>
       kubernetes-version:  << parameters.kubernetes-version >>
+  - go-architect-legacy:
+      command: "project version > architect-project-version"
   - integration-test-setup:
       setup-script: << parameters.setup-script >>
   - integration-test-go-test:
