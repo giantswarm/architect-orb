@@ -6,15 +6,15 @@ steps:
   - run:
       name: "architect/machine-install-go: Download Go"
       command: |
-        wget https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz
+        wget https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz
   - run:
       name: "architect/machine-install-go: Check downloaded Go checksum"
       command: |
-        [[ "$(sha256sum go1.14.1.linux-amd64.tar.gz | cut -d ' ' -f 1)" == "2f49eb17ce8b48c680cdb166ffd7389702c0dec6effa090c324804a5cac8a7f8" ]]
+        [[ "$(sha256sum go1.15.2.linux-amd64.tar.gz | cut -d ' ' -f 1)" == "b49fda1ca29a1946d6bb2a5a6982cf07ccd2aba849289508ee0f9918f6bb4552" ]]
   - run:
       name: "architect/machine-install-go: Install Go"
       command: |
-        sudo tar -C /usr/local -xzf go1.14.1.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.2.linux-amd64.tar.gz
   - run:
       name: "architect/machine-install-go: Set Go environment"
       command: |
@@ -22,7 +22,7 @@ steps:
   - run:
       name: "architect/machine-install-go: Remove downloaded Go files"
       command: |
-        rm go1.14.1.linux-amd64.tar.gz
+        rm go1.15.2.linux-amd64.tar.gz
   - run:
       name: "architect/machine-install-go: Check Go version"
       command: |
