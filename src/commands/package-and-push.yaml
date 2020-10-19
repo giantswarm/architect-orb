@@ -27,14 +27,20 @@ steps:
             name: "architect/package-and-push: Determine target app catalog based on branch name"
             command: |
               [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
-  - run: |
-      [[ << parameters.chart >> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
-  - run: |
-      git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
-  - run: |
-      mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
   - run:
-      name: Push to app catalog repo
+      name: Verify chart parameters
+      command: |
+        [[ << parameters.chart >> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
+  - run:
+      name: Clone app catalog repo
+      command: |
+        git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
+  - run:
+      name: Package the chart archive
+      command: |
+        mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
+  - run:
+      name: Push chart archive to app catalog repo
       command: |
           readonly app_catalog_name="$(cat .app_catalog_name)"
 
