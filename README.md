@@ -43,6 +43,8 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
   format.
 - Steps defined in commands should be small. Ideally single binary call. One
   exception is step skipping described later.
+- Steps should be described using the `name:` attribute, to make it as easy as
+  possible to understand what's happening.
 - Step skipping should be done using [`when:` and `unless:` steps][when-unless].
 - If using [`when:` and `unless:` steps][when-unless] is difficult then
   multiline skipping is acceptable. [See this code for
