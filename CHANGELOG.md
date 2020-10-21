@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add multiple parameters to `run-kat-tests` job.
+
 ## [0.14.0] - 2020-10-14
 
 ### Added
