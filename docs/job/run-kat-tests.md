@@ -20,12 +20,15 @@ This includes:
 Parameters:
 
 - `chart` - the name of the chart to test in `/helm` directory
-- `cluster_type` - type of the cluster to create for test execution. `kind` is default
-  and the only one supported right now.
+- `cluster_type` - type of the cluster to create for test execution. `kind` is default.
 - `ct_config` - Path to configuration file for Chart Testing (`ct`). This is
   required, if the app relies on external dependencies. You would use this
   config file [to add additional Helm repositories](https://github.com/helm/chart-testing/tree/v2.4.1#using-private-chart-repositories).
   Otherwise this parameter is optional.
+- `kind-version` - Version of `kind` used.
+- `helm-version` - Version of `helm` used.
+- `kube-app-testing-commit` - Commit of [`kube-app-testing](https://github.com/giantswarm/kube-app-testing) to use.
+- `additional_kube-app-testing_flags` - Additional flags supplied to the `kube-app-testing.sh` script.
 
 Example usage
 
