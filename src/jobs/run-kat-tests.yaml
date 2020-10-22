@@ -18,9 +18,10 @@ parameters:
     type: string
   kubectl-version:
     type: string
-  kube-app-testing-commit:
-    description: "Commit of kube-app-testing to use"
+  kube-app-testing-version:
+    description: "Version of kube-app-testing to use"
     type: string
+    default: "v0.5.2"
   additional_kube-app-testing_flags:
     description: "Additional kube-app-testing flags to use"
     type: string
@@ -31,7 +32,7 @@ steps:
       kind-version: << parameters.kind-version >>
       helm-version: << parameters.helm-version >>
       kubectl-version: << parameters.kubectl-version >>
-      kube-app-testing-commit: << parameters.kube-app-testing-commit >>
+      kube-app-testing-version: << parameters.kube-app-testing-version >>
   - kat-tests-run:
       chart: << parameters.chart >>
       ct_config: << parameters.ct_config >>

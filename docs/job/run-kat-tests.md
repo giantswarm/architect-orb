@@ -27,7 +27,7 @@ Parameters:
   Otherwise this parameter is optional.
 - `kind-version` - Version of `kind` used.
 - `helm-version` - Version of `helm` used.
-- `kube-app-testing-commit` - Commit of [`kube-app-testing](https://github.com/giantswarm/kube-app-testing) to use.
+- `kube-app-testing-version` - Version of [`kube-app-testing](https://github.com/giantswarm/kube-app-testing) to use.
 - `additional_kube-app-testing_flags` - Additional flags supplied to the `kube-app-testing.sh` script.
 
 Example usage
