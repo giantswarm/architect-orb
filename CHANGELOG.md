@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Set defaults for 'helm-version' (2.16.5), 'kind-version' (0.7.0) and 'kubectl-version' (1.18.0) in 'run-kat-tests' job.
+
 ## [0.15.0] - 2020-10-26
 
 ### Added
