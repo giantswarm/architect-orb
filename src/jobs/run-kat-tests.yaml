@@ -14,10 +14,13 @@ parameters:
   kind-version:
     description: "Version of kind used for cluster_type: kind tests"
     type: string
+    default: "0.7.0"
   helm-version:
     type: string
+    default: "2.16.5"
   kubectl-version:
     type: string
+    default: "1.18.0"
   kube-app-testing-version:
     description: "Version of kube-app-testing to use"
     type: string
