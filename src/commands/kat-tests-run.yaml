@@ -4,13 +4,18 @@ parameters:
     ct_config:
         type: string
         default: ""
+    cluster_type:
+        type: string
+    additional_kube-app-testing_flags:
+        type: string
+        default: ""
 steps:
   - run:
       name: "start kube-app-testing tool"
       environment:
         CT_CONFIG_FILE: << parameters.ct_config >>
       command: |
-        PATH="/tmp/bin:$PATH" /tmp/kube-app-testing.sh -c << parameters.chart >>
+        PATH="/tmp/bin:$PATH" /tmp/kube-app-testing.sh -t << parameters.cluster_type >> -c << parameters.chart >> << parameters.additional_kube-app-testing_flags >>
   - run:
       name: ""
       command: |

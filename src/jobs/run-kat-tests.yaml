@@ -11,9 +11,30 @@ parameters:
     description: Chart Testing Config file path
     type: "string"
     default: ""
+  kind-version:
+    description: "Version of kind used for cluster_type: kind tests"
+    type: string
+  helm-version:
+    type: string
+  kubectl-version:
+    type: string
+  kube-app-testing-version:
+    description: "Version of kube-app-testing to use"
+    type: string
+    default: "v0.5.2"
+  additional_kube-app-testing_flags:
+    description: "Additional kube-app-testing flags to use"
+    type: string
+    default: ""
 steps:
   - checkout
-  - kat-tests-install-tools
+  - kat-tests-install-tools:
+      kind-version: << parameters.kind-version >>
+      helm-version: << parameters.helm-version >>
+      kubectl-version: << parameters.kubectl-version >>
+      kube-app-testing-version: << parameters.kube-app-testing-version >>
   - kat-tests-run:
       chart: << parameters.chart >>
       ct_config: << parameters.ct_config >>
+      cluster_type: << parameters.cluster_type >>
+      additional_kube-app-testing_flags: << parameters.additional_kube-app-testing_flags >>

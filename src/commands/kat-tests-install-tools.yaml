@@ -8,13 +8,16 @@ parameters:
   kubectl-version:
     type: string
     default: "1.18.0"
+  kube-app-testing-version:
+    type: string
+    default: "v0.5.2"
 steps:
   - restore_cache:
       key: v2-python-cache-{{ checksum "test/kat/Pipfile.lock" }}
   - run:
       name: "download kat script"
       command: |
-        curl -Lo /tmp/kube-app-testing.sh -q https://raw.githubusercontent.com/giantswarm/kube-app-testing/master/kube-app-testing.sh
+        curl -Lo /tmp/kube-app-testing.sh -q https://raw.githubusercontent.com/giantswarm/kube-app-testing/<< parameters.kube-app-testing-version >>/kube-app-testing.sh
         chmod +x /tmp/kube-app-testing.sh
   - run:
       name: "create temporary bin dir /tmp/bin"
