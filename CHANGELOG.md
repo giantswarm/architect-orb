@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `resource_class` parameter to `run-kat-tests` job.
+
 ## [0.15.1] - 2020-10-26
 
 ### Changed
