@@ -1,4 +1,6 @@
 parameters:
+  apptestctl-version:
+    type: string
   install-app-platform:
     type: boolean
 steps:
