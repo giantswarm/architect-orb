@@ -7,10 +7,20 @@ description: |
 
   See [docs](docs/integration_test.md) for more details.
 parameters:
+  apptestctl-version:
+    default: "v0.4.1"
+    description: "apptestctl version for bootstrapping app platform."
+    type: string
   env-file:
     default: ""
     description: "File of environment variables to set."
     type: string
+  install-app-platform:
+    type: boolean
+    default: false
+    description: |
+      When true the apptestctl bootstrap command is used to add support for
+      installing components in tests via app CRs.
   kind-config:
     default: ""
     description: "Path to kind config file."
@@ -45,6 +55,9 @@ steps:
   - attach_workspace:
       at: .
   - machine-install-go
+  - integration-test-install-app-platform:
+      apptestctl-version:  << parameters.apptestctl-version >>
+      install-app-platform:  << parameters.install-app-platform >>
   - integration-test-install-tools:
       kubernetes-version:  << parameters.kubernetes-version >>
   - integration-test-create-cluster:
