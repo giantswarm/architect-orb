@@ -17,7 +17,7 @@ steps:
         - run:
             name: "architect/integration-test-create-cluster: Prepare default kind config"
             command: |
-                printf "kind: Cluster\napiVersion: kind.sigs.k8s.io/v1alpha4\n" > kind-config
+                printf "kind: Cluster\napiVersion: kind.sigs.k8s.io/v1alpha3\n" > kind-config
   - run:
       name: "architect/integration-test-create-cluster: Create cluster"
       command: |
