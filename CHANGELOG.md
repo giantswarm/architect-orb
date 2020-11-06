@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `install-app-platform` param to integration-test job that runs
+`apptestctl bootstrap` to add support for using app CRs in tests.
 - Update kubernetes in integration-test job to v1.17.11.
 - Update kind in integration-test job to v0.9.0.
 - Update helm CLI in integration-test job to v3.4.0.
