@@ -18,6 +18,7 @@ workflows:
     jobs:
       - architect/integration-test:
         name: basic-integration-test
+        install-app-platform: true
         test-dir: "integration/test/basic"
 ```
 
@@ -25,12 +26,18 @@ workflows:
 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [test-dir](#attach_workspace) (required string)
+- [apptestctl-version](#apptestctl-version) (optional string, default="v0.4.1")
 - [env-file](#env-file) (optional string, default="")
+- [install-app-platform](#install-app-platform) (optional boolean, default=false)
 - [kind-config](#kind-config) (optional string, default="")
-- [kubernetes-version](#kubernetes-version) (optional string, default="v1.16.3")
+- [kubernetes-version](#kubernetes-version) (optional string, default="v1.17.11")
 - [setup-script](#setup-script) (optional string, default="")
 - [test-dir](#test-dir) (required string)
 - [test-timeout](#test-timeout) (optional string, default="20m")
+
+### apptestctl-version
+
+- Version of [apptestctl] to use if `install-app-platform` is true.
 
 ### env-file
 
@@ -51,6 +58,12 @@ e.g.
 FOO=bar
 BAR=foo
 ```
+
+### install-app-platform
+
+- If true then [apptestctl] is installed and `apptestctl bootstrap` is run.
+- This enables using app CRs to install components in tests. For Go tests the
+[apptest] library can be used to create the app CRs.
 
 ### kind-config
 
@@ -131,6 +144,8 @@ The default is "20m" (20 minutes).
         test-dir: "integration/test/basic"
 ```
 
+[apptest]: https://github.com/giantswarm/apptest
+[apptestctl]: https://github.com/giantswarm/apptestctl
 [KIND]: https://kind.sigs.k8s.io
 [KIND docs]: https://kind.sigs.k8s.io/docs/user/configuration/
 [machine executor]: https://circleci.com/docs/2.0/executor-types/#using-machine
