@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Update kubernetes in integration-test job to v1.17.11.
+- Update kind in integration-test job to v0.9.0.
+- Update helm CLI in integration-test job to v3.4.0.
+
+### Fixed
+
+- Remove copying code to GOPATH in integration-test job since migration to
+Go modules is complete.
+
 ## [0.16.0] - 2020-10-27
 
 ### Added
