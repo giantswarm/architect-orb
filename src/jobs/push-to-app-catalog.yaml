@@ -12,10 +12,10 @@ parameters:
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
-ct_config:
-  description: "Chart Testing Config file path"
-  type: "string"
-  default: ""
+  ct_config:
+    description: "Chart Testing Config file path"
+    type: "string"
+    default: ""
   on_tag:
     type: boolean
     default: true
