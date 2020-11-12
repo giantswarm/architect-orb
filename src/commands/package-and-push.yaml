@@ -36,9 +36,9 @@ steps:
       command: |
         git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
   - run:
-      name: Package the chart archive
+      name: Execute App Build Suite
       command: |
-        mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
+        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build
   - run:
       name: Push chart archive to app catalog repo
       command: |
