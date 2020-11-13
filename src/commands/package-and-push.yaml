@@ -61,7 +61,7 @@ steps:
             helm repo index --url https://giantswarm.github.com/$app_catalog_name --merge index.yaml ../build
 
             echo "====> Attempt $i: Running: cp ../build/* ."
-            cp ../build/* .
+            cp -r ../build/* .
 
             echo "====> Attempt $i: Running: git add -A"
             git add -A
