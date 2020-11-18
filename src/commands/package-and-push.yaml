@@ -38,7 +38,7 @@ steps:
   - run:
       name: Execute App Build Suite
       command: |
-        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build
+        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/"
   - run:
       name: Push chart archive to app catalog repo
       command: |
