@@ -32,13 +32,13 @@ steps:
       command: |
         [[ << parameters.chart >> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
   - run:
-      name: Clone app catalog repo
-      command: |
-        git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
-  - run:
       name: Execute App Build Suite
       command: |
         mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/"
+  - run:
+      name: Clone app catalog repo
+      command: |
+        git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
   - run:
       name: Push chart archive to app catalog repo
       command: |
