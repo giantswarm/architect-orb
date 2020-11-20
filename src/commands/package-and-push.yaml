@@ -39,10 +39,10 @@ steps:
       name: Install git and prepare to communicate with github
       command: |
         apt update && apt install --no-install-recommends -y openssh-client && \
-        mkdir ~/.ssh &&\
-        chmod 700 ~/.ssh &&\
-        ssh-keyscan github.com >> ~/.ssh/known_hosts &&\
-        printf "Host github.com\n IdentitiesOnly yes\n IdentityFile ~/.ssh/id_rsa\n" >> ~/.ssh/config &&\
+        mkdir -p ~/.ssh && \
+        chmod 700 ~/.ssh && \
+        ssh-keyscan github.com >> ~/.ssh/known_hosts && \
+        printf "Host github.com\n IdentitiesOnly yes\n IdentityFile ~/.ssh/id_rsa\n" >> ~/.ssh/config && \
         chmod 600 ~/.ssh/*
   - run:
       name: Clone app catalog repo
