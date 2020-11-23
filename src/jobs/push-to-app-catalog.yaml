@@ -12,10 +12,6 @@ parameters:
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
-  # ct_config:
-  #   description: "Chart Testing Config file path"
-  #   type: "string"
-  #   default: ""
   on_tag:
     type: boolean
     default: true
@@ -45,13 +41,6 @@ steps:
       show_go_version: false
       show_abs_version: true
   - prepare-catalogbot-git-ssh
-  #- helm-chart-template:
-  #    chart: << parameters.chart >>
-  # - helm-lint:
-  #     chart: "<< parameters.chart >>"
-  #     ct_config: "<< parameters.ct_config >>"
-  # - helm-conftest:
-  #     chart: "<< parameters.chart >>"
   - package-and-push:
       app_catalog: << parameters.app_catalog >>
       app_catalog_test: << parameters.app_catalog_test >>

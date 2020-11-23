@@ -34,7 +34,15 @@ steps:
   - run:
       name: Execute App Build Suite
       command: |
-        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/"
+        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+  - run:
+      name: Test conftest policies
+      command: |
+        if [ -d "helm/<<parameters.chart>>/ci" ]; then
+          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | conftest test --update $(echo https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/{1.16,1.17}-deprek8ion.rego | tr ' ' ',') - ; done
+        else
+          helm template helm/<<parameters.chart>> | conftest test --update $(echo https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/{1.16,1.17}-deprek8ion.rego | tr ' ' ',') -
+        fi
   - run:
       name: Install git and prepare to communicate with github
       command: |

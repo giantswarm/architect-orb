@@ -1,3 +1,3 @@
 docker:
   - entrypoint: /bin/bash
-    image: quay.io/giantswarm/app-build-suite:0.0.0-c7ccaea7d7b8580db12bf4cfb275cfd39c609b5c
+    image: quay.io/giantswarm/app-build-suite:0.0.0-2aeeb9241b24a39e3f332a456ebeb29ac746a7e0
