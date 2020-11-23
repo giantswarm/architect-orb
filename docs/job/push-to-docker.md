@@ -1,10 +1,13 @@
 # push-to-docker
 
 This job builds a docker image and pushes it to a registry.
-It requires the build context and Dockefile to be present at the root of worksapce directory.
+It uses the Dockerfile at the root of the workspace directory and the root directory as build context by default.
+Otherwise, it is possible to specify the Dockerfile and build context to use with `dockerfile` and `build-context` arguments respectively.
 
-**NOTE**: docker registry username and password are read from environement variables which default to `ARCHITECT_DOCKER_REGISTRY_USERNAME` and `ARCHITECT_DOCKER_REGISTRY_PASSWORD` respectively. This can be changed via `username_var` and `password_var` arguments.
+**NOTE**: docker registry username and password are read from environment variables which default to `ARCHITECT_DOCKER_REGISTRY_USERNAME` and `ARCHITECT_DOCKER_REGISTRY_PASSWORD` respectively. This can be changed via `username_var` and `password_var` arguments.
 **NOTE**: The docker image will be tagged with the version found by `architect project version` command.
+
+Argument `tag-suffix` allows to specify a special suffix to be added after the generated container tag.
 
 Example usage
 
@@ -22,6 +25,9 @@ workflows:
           image: "quay.io/giantswarm/REPOSITORY"
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
+          build-context: "."
+          dockerfile: "./Dockerfile"
+          tag-suffix: ""
           requires:
             # Make sure binary is built.
             - go-build-REPOSITORY

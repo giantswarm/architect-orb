@@ -22,6 +22,15 @@ parameters:
         for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
+  build-context:
+    type: "string"
+    default: "."
+  dockerfile:
+    type: "string"
+    default: "./Dockerfile"
+  tag-suffix:
+    type: "string"
+    default: ""
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -34,3 +43,6 @@ steps:
       tag-latest-branch: <<parameters.tag-latest-branch>>
       password_envar: <<parameters.password_envar>>
       username_envar: <<parameters.username_envar>>
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      tag-suffix: <<parameters.tag-suffix>>
