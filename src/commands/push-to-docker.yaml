@@ -7,16 +7,37 @@ parameters:
     type: "string"
   tag-latest-branch:
     type: "string"
+  build-context:
+    type: "string"
+    default: "."
+  dockerfile:
+    type: "string"
+    default: "./Dockerfile"
+  tag-suffix:
+    type: "string"
+    default: ""
 steps:
-  - run: |
-      echo -n "<<parameters.image>>:$(architect project version)" > .docker_image_name
-  - run: |
-      echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "$(echo -n '<<parameters.image>>' | cut -d/ -f1)"
-  - run: |
-      docker build -t "$(cat .docker_image_name)" .
-  - run: |
-      docker push "$(cat .docker_image_name)"
-  - run: |
-      ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker tag "$(cat .docker_image_name)" "<<parameters.image>>:latest"
-  - run: |
-      ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker push "<<parameters.image>>:latest"
+  - run:
+      name: Generate container tag from 'architect project version' and tag-suffix parameter
+      command: |
+        echo -n "<<parameters.image>>:$(architect project version)<<parameters.tag-suffix>>" > .docker_image_name
+  - run:
+      name: Authenticate to container registry
+      command: |
+        echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "$(echo -n '<<parameters.image>>' | cut -d/ -f1)"
+  - run:
+      name: Build the container image using 'docker build'
+      command: |
+        docker build -f "<<parameters.dockerfile>>" -t "$(cat .docker_image_name)" "<<parameters.build-context>>"
+  - run:
+      name: Push the container image using 'docker push'
+      command: |
+        docker push "$(cat .docker_image_name)"
+  - run:
+      name: "When parameter 'tag-latest-branch' matches this branch: Retag the image as 'latest'"
+      command: |
+        ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker tag "$(cat .docker_image_name)" "<<parameters.image>>:latest<<parameters.tag-suffix>>"
+  - run:
+      name: "When parameter 'tag-latest-branch' matches this branch: Push the 'latest' image to the container registry"
+      command: |
+        ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || docker push "<<parameters.image>>:latest<<parameters.tag-suffix>>"
