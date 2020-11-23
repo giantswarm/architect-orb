@@ -2,7 +2,7 @@
 
 This job builds a docker image and pushes it to a registry.
 It uses the Dockerfile at the root of the workspace directory and the root directory as build context by default.
-Otherwise, it is possible to specify the used Dockerfile and build context by specifying `dockerfile` and `build-context` arguments.
+Otherwise, it is possible to specify the Dockerfile and build context to use with `dockerfile` and `build-context` arguments respectively.
 
 **NOTE**: docker registry username and password are read from environment variables which default to `ARCHITECT_DOCKER_REGISTRY_USERNAME` and `ARCHITECT_DOCKER_REGISTRY_PASSWORD` respectively. This can be changed via `username_var` and `password_var` arguments.
 **NOTE**: The docker image will be tagged with the version found by `architect project version` command.
