@@ -44,15 +44,6 @@ steps:
           helm template helm/<<parameters.chart>> | conftest test --update $(echo https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/{1.16,1.17}-deprek8ion.rego | tr ' ' ',') -
         fi
   - run:
-      name: Install git and prepare to communicate with github
-      command: |
-        apt update && apt install --no-install-recommends -y openssh-client && \
-        mkdir -p ~/.ssh && \
-        chmod 700 ~/.ssh && \
-        ssh-keyscan github.com >> ~/.ssh/known_hosts && \
-        printf "Host github.com\n IdentitiesOnly yes\n IdentityFile ~/.ssh/id_rsa\n" >> ~/.ssh/config && \
-        chmod 600 ~/.ssh/*
-  - run:
       name: Clone app catalog repo
       command: |
         git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
