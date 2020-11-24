@@ -55,6 +55,7 @@ If there are values files in the `ci` folder of the chart, they will be used to 
 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [attach_workspace](#attach_workspace) (optional boolean, default=false)
+- [executor](#executor) (optional, either `architect` or `app-build-suite`, default=`architect`)
 
 ### attach_workspace
 
@@ -67,6 +68,13 @@ generated/modified in a previous workflow job and need to be used in this job.
 When this is `false`, commits to `master` will be pushed to `app_catalog`
 instead of `app_catalog_test`. Set this to `false` for deployments that follow
 a a master branch for production releases rather than using tags (the default).
+
+### executor (optional, either `architect` or `app-build-suite`, default=`architect`)
+
+Enables users to select the executor and control wether metadata should be generated.
+Selecting `app-build-suite` will execute chart linting, validating and packaging using
+[app-build-suite](https://github.com/giantswarm/app-build-suite). This also enables
+generation and publishing of metadata into the catalog.
 
 ## Example
 
@@ -84,6 +92,7 @@ workflows:
           app_catalog: "CATALOG-catalog"
           app_catalog_test: "CATALOG-test-catalog"
           chart: "REPOSITORY"
+          executor: "app-build-suite"
           requires:
             # Make sure docker image is successfully built.
             - push-REPOSITORY-to-quay
@@ -92,8 +101,3 @@ workflows:
             tags:
               only: /^v.*/
 ```
-
-## Metadata
-
-
-TODO
