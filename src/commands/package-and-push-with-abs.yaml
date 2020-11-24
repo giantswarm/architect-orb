@@ -1,0 +1,95 @@
+parameters:
+  app_catalog:
+    type: "string"
+  app_catalog_test:
+    type: "string"
+  chart:
+    type: "string"
+  on_tag:
+    type: boolean
+    default: true
+    description: |
+      When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
+      Set this to `false` for deployments that follow a a master branch for production releases rather than
+      using tags (the default).
+steps:
+  - when:
+      condition: << parameters.on_tag >>
+      steps:
+        - run:
+            name: "architect/package-and-push: Determine target app catalog based on presence of tag"
+            command: |
+              [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
+  - unless:
+      condition: << parameters.on_tag >>
+      steps:
+        - run:
+            name: "architect/package-and-push: Determine target app catalog based on branch name"
+            command: |
+              [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
+  - run:
+      name: Verify chart parameters
+      command: |
+        [[ << parameters.chart >> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
+  - run:
+      name: Execute App Build Suite
+      command: |
+        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+  - run:
+      name: Test conftest policies
+      command: |
+        if [ -d "helm/<<parameters.chart>>/ci" ]; then
+          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | conftest test --update $(echo https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/{1.16,1.17}-deprek8ion.rego | tr ' ' ',') - ; done
+        else
+          helm template helm/<<parameters.chart>> | conftest test --update $(echo https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/{1.16,1.17}-deprek8ion.rego | tr ' ' ',') -
+        fi
+  - run:
+      name: Clone app catalog repo
+      command: |
+        git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
+  - run:
+      name: Push chart archive to app catalog repo
+      command: |
+          readonly app_catalog_name="$(cat .app_catalog_name)"
+
+          cd .app_catalog
+
+          readonly head="$(git rev-parse HEAD)"
+
+          ret=1
+          tries=4
+          for i in $(seq 1 $tries) ; do
+            echo "====> Attempt $i: Running: git reset --hard \$head"
+            git reset --hard $head
+
+            echo "====> Attempt $i: Running: git pull --rebase"
+            git pull --rebase
+
+            echo "====> Attempt $i: Running: helm repo index --url https://giantswarm.github.com/$app_catalog_name --merge index.yaml ../build"
+            helm repo index --url https://giantswarm.github.com/$app_catalog_name --merge index.yaml ../build
+
+            echo "====> Attempt $i: Running: cp ../build/* ."
+            cp -r ../build/* .
+
+            echo "====> Attempt $i: Running: git add -A"
+            git add -A
+
+            echo "====> Attempt $i: Running: git commit -m \"add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)\""
+            git commit -m "add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)"
+
+            echo "====> Attempt $i: Running \"git push\""
+            set +e
+            git push
+            ret=$?
+            set -e
+
+            [[ $ret -eq 0 ]] && exit $ret
+
+            sleep 5
+          done
+
+          echo "Giving up after $tries failures." >&2
+          echo "Error pushing changes. See known errors in:" >&2
+          echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
+
+          exit $ret

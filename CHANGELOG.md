@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `build-context`, `dockerfile` and `tag-suffix` parameters to `push-to-docker`.
 - Added names to steps in `push-to-docker` command.
+- Added `app-build-suite` executor.
+- Add `executor` parameter to `push-to-catalog` job to enable building charts using [app-build-suite](https://github.com/giantswarm/app-build-suite) for metadata generation in `push-to-app-catalog` job.
 
 ## [0.17.0] - 2020-11-06
 

@@ -1,21 +1,62 @@
+parameters:
+  show_architect_version:
+    type: boolean
+    default: true
+  show_bash_version:
+    type: boolean
+    default: true
+  show_git_version:
+    type: boolean
+    default: true
+  show_go_version:
+    type: boolean
+    default: true
+  show_helm_version:
+    type: boolean
+    default: true
+  show_abs_version:
+    type: boolean
+    default: false
 steps:
-  - run:
-      name: Showing Architect Version
-      command: |
-        architect version
-  - run:
-      name: Showing Bash Version
-      command: |
-        echo $BASH_VERSION
-  - run:
-      name: Showing Git Version
-      command: |
-        git version
-  - run:
-      name: Showing Go Version
-      command: |
-        go version
-  - run:
-      name: Showing Helm Version
-      command: |
-        helm version -c
+  - when:
+      condition: << parameters.show_architect_version >>
+      steps:
+        - run:
+            name: Showing Architect Version
+            command: |
+              architect version
+  - when:
+      condition: << parameters.show_bash_version >>
+      steps:
+        - run:
+            name: Showing Bash Version
+            command: |
+              echo $BASH_VERSION
+  - when:
+      condition: << parameters.show_git_version >>
+      steps:
+        - run:
+            name: Showing Git Version
+            command: |
+              git version
+  - when:
+      condition: << parameters.show_go_version >>
+      steps:
+        - run:
+            name: Showing Go Version
+            command: |
+              go version
+  - when:
+      condition: << parameters.show_helm_version >>
+      steps:
+        - run:
+            name: Showing Helm Version
+            command: |
+              helm version -c
+  - when:
+      condition: << parameters.show_abs_version >>
+      steps:
+        - run:
+            name: Showing App Build Suite Version
+            command: |
+              python -m app_build_suite --version
