@@ -71,7 +71,7 @@ a a master branch for production releases rather than using tags (the default).
 
 ### executor (optional, either `architect` or `app-build-suite`, default=`architect`)
 
-Enables users to select the executor and control wether metadata should be generated.
+Enables users to select the executor and control whether metadata should be generated.
 Selecting `app-build-suite` will execute chart linting, validating and packaging using
 [app-build-suite](https://github.com/giantswarm/app-build-suite). This also enables
 generation and publishing of metadata into the catalog.
