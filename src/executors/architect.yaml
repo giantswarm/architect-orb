@@ -1,3 +1,4 @@
 docker:
   - entrypoint: /bin/bash
+    # NOTE: release and update architect version
     image: quay.io/giantswarm/architect:3.0.2

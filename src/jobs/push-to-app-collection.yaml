@@ -18,10 +18,18 @@ parameters:
   app_collection_repo:
     description: "Name of the app collection repository."
     type: "string"
+  configmap_name:
+    description: "Name of the app user config configmap."
+    type: "string"
+    default: ""
   disable_force_upgrade:
     description: "Disable helm chart force upgrade."
     type: "boolean"
     default: false
+  secret_name:
+    description: "Name of the app user config secret."
+    type: "string"
+    default: ""
   unique:
     description: "Whether the previous App versions in the collection should be replaced with this one. Any non-empty string means true. This is useful when only one (usually latest) version of the app should be installed at a time. E.g. OPA gatekeeper."
     type: "string"
@@ -44,5 +52,7 @@ steps:
       app_namespace: <<parameters.app_namespace>>
       app_catalog: <<parameters.app_catalog>>
       app_collection_repo: <<parameters.app_collection_repo>>
+      configmap_name: <<parameters.configmap_name>>
       disable_force_upgrade: <<parameters.disable_force_upgrade>>
+      secret_name: <<parameters.secret_name>>
       unique: <<parameters.unique>>
