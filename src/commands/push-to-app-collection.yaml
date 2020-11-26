@@ -13,53 +13,150 @@ parameters:
   configmap_name:
     description: "Name of the app user config configmap."
     type: "string"
+    default: ""
+  configmap_path:
+    description: "Path of the app user config configmap."
+    type: "string"
+    default: ""
   disable_force_upgrade:
     type: "boolean"
   secret_name:
     description: "Name of the app user config secret."
     type: "string"
+    default: ""
+  secret_path:
+    description: "Path of the app user config secret."
+    type: "string"
+    default: ""
   unique:
     type: "string"
 steps:
-  - run: |
+  - run:
+      name: Generate version
+      command: |
         architect project version > .version
   - when:
       condition: <<parameters.unique>>
       steps:
-        - run: |
+        - run:
+            name: Generate app name: <<parameters.app_name>>-<unique>
+            command: |
               echo -n "<<parameters.app_name>>-unique" > .cr_name
   - unless:
       condition: <<parameters.unique>>
       steps:
-        - run: |
+        - run:
+            name: Generate app name: <<parameters.app_name>>-<versioned>
+            command: |
               echo -n "<<parameters.app_name>>-$(cat .version)" | head -c 53 > .cr_name
-  - run: |
+  - run:
+      name: Generate app CR <<parameters.app_namespace>>/<<parameters.app_name>> for <<parameters.app_catalog>>
+      command: |
         architect create appcr --name $(cat .cr_name) --app-name <<parameters.app_name>> --app-namespace <<parameters.app_namespace>> --app-version $(cat .version) --configmap-name <<parameters.configmap_name>> --catalog <<parameters.app_catalog>> --disable-force-upgrade=<<parameters.disable_force_upgrade>> --secret-name <<parameters.secret_name>> -o yaml > .app.yaml
-  - run: |
+  - run:
+      name: Clone <<parameters.app_collection_repo>>
+      command: |
         git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
-  - run: |
+  - run:
+      name: Create <<parameters.app_collection_repo>> directory structure
+      command: |
         mkdir -p .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
   - when:
       condition: <<parameters.unique>>
       steps:
-        - run: |
+        - run:
+            name: Clean previous non-unique app CRs for <<parameters.app_name>> in <<parameters.app_collection_repo>>
+            command: |
               cd .app-collection && git rm --ignore-unmatch helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-*.yaml
-        - run: |
+        - run:
+            name: Generate app filename
+            command: |
               echo -n "<<parameters.app_name>>-unique.yaml" > .app_file_name
-        - run: |
+        - when:
+            condition:
+              and:
+              - <<parameters.configmap_name>>
+              - <<parameters.configmap_path>>
+            steps:
+              - run:
+                  name: Generate configmap filename
+                  command: |
+                    echo -n "<<parameters.app_name>>-unique.configmap.yaml" > .app_configmap_file_name
+        - when:
+            condition:
+              and:
+              - <<parameters.secret_name>>
+              - <<parameters.secret_path>>
+            steps:
+              - run:
+                  name: Generate secret filename
+                  command: |
+                    echo -n "<<parameters.app_name>>-unique.secret.yaml" > .app_secret_file_name
+        - run:
+            name: Generate commit message
+            command: |
               echo -n "update <<parameters.app_name>>-unique to $(cat .version)" > .git_commit_message
   - unless:
       condition: <<parameters.unique>>
       steps:
-        - run: |
+        - run:
+            name: Generate app filename
+            command: |
               echo -n "<<parameters.app_name>>-$(cat .version).yaml" > .app_file_name
-        - run: |
+        - when:
+            condition:
+              and:
+              - <<parameters.configmap_name>>
+              - <<parameters.configmap_path>>
+            steps:
+              - run:
+                  name: Generate configmap filename
+                  command: |
+                    echo -n "<<parameters.app_name>>-$(cat .version).configmap.yaml" > .app_configmap_file_name
+        - when:
+            condition:
+              and:
+              - <<parameters.secret_name>>
+              - <<parameters.secret_path>>
+            steps:
+              - run:
+                  name: Generate secret filename
+                  command: |
+                    echo -n "<<parameters.app_name>>-$(cat .version).secret.yaml" > .app_secret_file_name
+        - run:
+            name: Generate commit message
+            command: |
               echo -n "add <<parameters.app_name>>-$(cat .version)" > .git_commit_message
-  - run: |
+  - run:
+      name: Add app into <<parameters.app_collection_repo>>
+      command: |
         mv -n .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_file_name)
-  - run: |
         cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.app_file_name)
-  - run: |
+  - when:
+      condition:
+        and:
+        - <<parameters.configmap_name>>
+        - <<parameters.configmap_path>>
+      steps:
+        - run:
+            name: Add configmap <<parameters.configmap_path>> into <<parameters.app_collection_repo>>
+            command: |
+              mv -n <<parameters.configmap_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_configmap_file_name)
+              cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.configmap_file_name)
+  - when:
+      condition:
+        and:
+        - <<parameters.secret_name>>
+        - <<parameters.secret_path>>
+      steps:
+        - run:
+            name: Add secret <<parameters.secret_path>> into <<parameters.app_collection_repo>>
+            command: |
+              mv -n <<parameters.secret_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_secret_file_name)
+              cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.secret_file_name)
+  - run:
+      name: Commit changes
+      command: |
         cd .app-collection && git commit -m "$(cat ../.git_commit_message)"
   - run:
       name: Push to app collection repo
@@ -88,5 +185,7 @@ steps:
           echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" >&2
 
           exit $ret
-  - run: |
+  - run:
+      name: Cleanup
+      command: |
         rm .cr_name .version .app_file_name .git_commit_message
