@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix setting kubeconfig when running `apptestctl bootstrap`.
+
 ## [0.18.0] - 2020-11-27
 
 ### Added
