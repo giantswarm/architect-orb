@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bump architect to 3.1.0
+- Bump architect to 3.1.1
 
 ## [0.17.1] - 2020-11-24
 
