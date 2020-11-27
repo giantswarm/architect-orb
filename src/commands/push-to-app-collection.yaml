@@ -39,14 +39,14 @@ steps:
       condition: <<parameters.unique>>
       steps:
         - run:
-            name: Generate app name: <<parameters.app_name>>-<unique>
+            name: Generate app name <<parameters.app_name>>-<unique>
             command: |
               echo -n "<<parameters.app_name>>-unique" > .cr_name
   - unless:
       condition: <<parameters.unique>>
       steps:
         - run:
-            name: Generate app name: <<parameters.app_name>>-<versioned>
+            name: Generate app name <<parameters.app_name>>-<versioned>
             command: |
               echo -n "<<parameters.app_name>>-$(cat .version)" | head -c 53 > .cr_name
   - run:
