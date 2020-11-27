@@ -52,7 +52,7 @@ steps:
   - run:
       name: Generate app CR <<parameters.app_namespace>>/<<parameters.app_name>> for <<parameters.app_catalog>>
       command: |
-        architect create appcr --name $(cat .cr_name) --app-name <<parameters.app_name>> --app-namespace <<parameters.app_namespace>> --app-version $(cat .version) --user-configmap-name <<parameters.user_configmap_name>> --catalog <<parameters.app_catalog>> --disable-force-upgrade=<<parameters.disable_force_upgrade>> --user-secret-name <<parameters.user_secret_name>> -o yaml > .app.yaml
+        architect create appcr --name "$(cat .cr_name)" --app-name "<<parameters.app_name>>" --app-namespace "<<parameters.app_namespace>>" --app-version "$(cat .version)" --user-configmap-name "<<parameters.user_configmap_name>>" --catalog "<<parameters.app_catalog>>" --disable-force-upgrade=<<parameters.disable_force_upgrade>> --user-secret-name "<<parameters.user_secret_name>>" -o yaml > .app.yaml
   - run:
       name: Clone <<parameters.app_collection_repo>>
       command: |
