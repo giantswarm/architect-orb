@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Use apptestctl v0.5.0 in `integration-test` job.
+- Allow app user config configmap and secret configuration.
+
+### Changed
+
+- Bump architect to 3.1.1
 
 ## [0.17.1] - 2020-11-24
 

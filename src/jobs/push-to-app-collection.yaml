@@ -22,6 +22,22 @@ parameters:
     description: "Disable helm chart force upgrade."
     type: "boolean"
     default: false
+  user_configmap_name:
+    description: "Name of the app user config configmap."
+    type: "string"
+    default: ""
+  user_configmap_path:
+    description: "Path of the app user config configmap."
+    type: "string"
+    default: ""
+  user_secret_name:
+    description: "Name of the app user config secret."
+    type: "string"
+    default: ""
+  user_secret_path:
+    description: "Path of the app user config secret."
+    type: "string"
+    default: ""
   unique:
     description: "Whether the previous App versions in the collection should be replaced with this one. Any non-empty string means true. This is useful when only one (usually latest) version of the app should be installed at a time. E.g. OPA gatekeeper."
     type: "string"
@@ -44,5 +60,9 @@ steps:
       app_namespace: <<parameters.app_namespace>>
       app_catalog: <<parameters.app_catalog>>
       app_collection_repo: <<parameters.app_collection_repo>>
+      user_configmap_name: <<parameters.user_configmap_name>>
+      user_configmap_path: <<parameters.user_configmap_path>>
       disable_force_upgrade: <<parameters.disable_force_upgrade>>
+      user_secret_name: <<parameters.user_secret_name>>
+      user_secret_path: <<parameters.user_secret_path>>
       unique: <<parameters.unique>>
