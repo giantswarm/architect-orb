@@ -10,21 +10,21 @@ parameters:
     type: "string"
   app_collection_repo:
     type: "string"
-  configmap_name:
+  disable_force_upgrade:
+    type: "boolean"
+  user_configmap_name:
     description: "Name of the app user config configmap."
     type: "string"
     default: ""
-  configmap_path:
+  user_configmap_path:
     description: "Path of the app user config configmap."
     type: "string"
     default: ""
-  disable_force_upgrade:
-    type: "boolean"
-  secret_name:
+  user_secret_name:
     description: "Name of the app user config secret."
     type: "string"
     default: ""
-  secret_path:
+  user_secret_path:
     description: "Path of the app user config secret."
     type: "string"
     default: ""
@@ -52,7 +52,7 @@ steps:
   - run:
       name: Generate app CR <<parameters.app_namespace>>/<<parameters.app_name>> for <<parameters.app_catalog>>
       command: |
-        architect create appcr --name $(cat .cr_name) --app-name <<parameters.app_name>> --app-namespace <<parameters.app_namespace>> --app-version $(cat .version) --configmap-name <<parameters.configmap_name>> --catalog <<parameters.app_catalog>> --disable-force-upgrade=<<parameters.disable_force_upgrade>> --secret-name <<parameters.secret_name>> -o yaml > .app.yaml
+        architect create appcr --name $(cat .cr_name) --app-name <<parameters.app_name>> --app-namespace <<parameters.app_namespace>> --app-version $(cat .version) --user-configmap-name <<parameters.user_configmap_name>> --catalog <<parameters.app_catalog>> --disable-force-upgrade=<<parameters.disable_force_upgrade>> --user-secret-name <<parameters.user_secret_name>> -o yaml > .app.yaml
   - run:
       name: Clone <<parameters.app_collection_repo>>
       command: |
@@ -75,23 +75,23 @@ steps:
         - when:
             condition:
               and:
-              - <<parameters.configmap_name>>
-              - <<parameters.configmap_path>>
+              - <<parameters.user_configmap_name>>
+              - <<parameters.user_configmap_path>>
             steps:
               - run:
-                  name: Generate configmap filename
+                  name: Generate user configmap filename
                   command: |
-                    echo -n "<<parameters.app_name>>-unique.configmap.yaml" > .app_configmap_file_name
+                    echo -n "<<parameters.app_name>>-unique.user_configmap.yaml" > .app_user_configmap_file_name
         - when:
             condition:
               and:
-              - <<parameters.secret_name>>
-              - <<parameters.secret_path>>
+              - <<parameters.user_secret_name>>
+              - <<parameters.user_secret_path>>
             steps:
               - run:
-                  name: Generate secret filename
+                  name: Generate user secret filename
                   command: |
-                    echo -n "<<parameters.app_name>>-unique.secret.yaml" > .app_secret_file_name
+                    echo -n "<<parameters.app_name>>-unique.user_secret.yaml" > .app_user_secret_file_name
         - run:
             name: Generate commit message
             command: |
@@ -106,23 +106,23 @@ steps:
         - when:
             condition:
               and:
-              - <<parameters.configmap_name>>
-              - <<parameters.configmap_path>>
+              - <<parameters.user_configmap_name>>
+              - <<parameters.user_configmap_path>>
             steps:
               - run:
-                  name: Generate configmap filename
+                  name: Generate user configmap filename
                   command: |
-                    echo -n "<<parameters.app_name>>-$(cat .version).configmap.yaml" > .app_configmap_file_name
+                    echo -n "<<parameters.app_name>>-$(cat .version).user_configmap.yaml" > .app_user_configmap_file_name
         - when:
             condition:
               and:
-              - <<parameters.secret_name>>
-              - <<parameters.secret_path>>
+              - <<parameters.user_secret_name>>
+              - <<parameters.user_secret_path>>
             steps:
               - run:
-                  name: Generate secret filename
+                  name: Generate user secret filename
                   command: |
-                    echo -n "<<parameters.app_name>>-$(cat .version).secret.yaml" > .app_secret_file_name
+                    echo -n "<<parameters.app_name>>-$(cat .version).user_secret.yaml" > .app_user_secret_file_name
         - run:
             name: Generate commit message
             command: |
@@ -135,25 +135,25 @@ steps:
   - when:
       condition:
         and:
-        - <<parameters.configmap_name>>
-        - <<parameters.configmap_path>>
+        - <<parameters.user_configmap_name>>
+        - <<parameters.user_configmap_path>>
       steps:
         - run:
-            name: Add configmap <<parameters.configmap_path>> into <<parameters.app_collection_repo>>
+            name: Add user configmap <<parameters.user_configmap_path>> into <<parameters.app_collection_repo>>
             command: |
-              mv -n <<parameters.configmap_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_configmap_file_name)
-              cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.configmap_file_name)
+              mv -n <<parameters.user_configmap_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_user_configmap_file_name)
+              cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.app_user_configmap_file_name)
   - when:
       condition:
         and:
-        - <<parameters.secret_name>>
-        - <<parameters.secret_path>>
+        - <<parameters.user_secret_name>>
+        - <<parameters.user_secret_path>>
       steps:
         - run:
-            name: Add secret <<parameters.secret_path>> into <<parameters.app_collection_repo>>
+            name: Add user secret <<parameters.user_secret_path>> into <<parameters.app_collection_repo>>
             command: |
-              mv -n <<parameters.secret_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_secret_file_name)
-              cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.secret_file_name)
+              mv -n <<parameters.user_secret_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/$(cat .app_user_secret_file_name)
+              cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/$(cat ../.app_user_secret_file_name)
   - run:
       name: Commit changes
       command: |
