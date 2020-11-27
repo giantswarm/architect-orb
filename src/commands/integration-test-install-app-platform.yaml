@@ -17,4 +17,4 @@ steps:
         - run:
             name: "architect/integration-test-install-app-platform: Run apptestctl bootstrap"
             command: |
-              apptestctl bootstrap --kubeconfig="$(kind get kubeconfig)"
+              apptestctl bootstrap --kubeconfig-path=~/.kube/config

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Use apptestctl v0.5.0 in `integration-test` job.
 - Allow app user config configmap and secret configuration.
 
 ## [0.17.1] - 2020-11-24
