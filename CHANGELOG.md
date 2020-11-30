@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Use apptestctl v0.5.1 in `integration-test` job to add printer columns for
+app and chart CRDs.
+
+### Fixed
+
+- Fix setting kubeconfig when running `apptestctl bootstrap`.
+
 ## [0.18.0] - 2020-11-27
 
 ### Added
