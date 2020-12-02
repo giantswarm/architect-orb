@@ -59,7 +59,7 @@ steps:
       command: |
         mkdir -p .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
         mv -n .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
-        cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
+        git -C .app-collection add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
   - when:
       condition:
         and:
@@ -70,7 +70,7 @@ steps:
             name: Add user configmap <<parameters.user_configmap_path>> into <<parameters.app_collection_repo>>
             command: |
               mv -n <<parameters.user_configmap_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_configmap.yaml
-              cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_configmap.yaml
+              git -C .app-collection add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_configmap.yaml
   - when:
       condition:
         and:
@@ -81,7 +81,7 @@ steps:
             name: Add user secret <<parameters.user_secret_path>> into <<parameters.app_collection_repo>>
             command: |
               mv -n <<parameters.user_secret_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_secret.yaml
-              cd .app-collection && git add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_secret.yaml
+              git -C .app-collection add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_secret.yaml
   - run:
       name: Commit changes
       command: |
