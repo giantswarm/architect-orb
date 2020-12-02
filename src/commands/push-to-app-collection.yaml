@@ -52,7 +52,6 @@ steps:
         git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run:
       name: "architect/push-to-app-collection: Clean previous app CRs in the app collection repo"
-      name: Clean previous app CRs for <<parameters.app_name>> in <<parameters.app_collection_repo>>
       command: |
         git -C .app-collection rm --ignore-unmatch helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-*.yaml
   - run:
