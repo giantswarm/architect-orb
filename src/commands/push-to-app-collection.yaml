@@ -85,7 +85,7 @@ steps:
   - run:
       name: Commit changes
       command: |
-        cd .app-collection && git commit -m "update <<parameters.app_name>>-unique to $(cat .version)"
+        git -C .app-collection commit -m "update <<parameters.app_name>>-unique to $(cat ../.version)"
   - run:
       name: Push to app collection repo
       command: |
