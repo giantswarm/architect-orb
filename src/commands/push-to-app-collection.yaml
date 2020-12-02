@@ -40,6 +40,7 @@ steps:
           --name "<<parameters.app_name>>-unique" \
           --app-name "<<parameters.app_name>>" \
           --app-namespace "<<parameters.app_namespace>>" \
+          --app-version "$(cat .version)" \
           --catalog "<<parameters.app_catalog>>" \
           --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
           --user-configmap-name "<<parameters.user_configmap_name>>" \
