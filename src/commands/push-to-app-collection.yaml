@@ -53,7 +53,7 @@ steps:
   - run:
       name: Clean previous app CRs for <<parameters.app_name>> in <<parameters.app_collection_repo>>
       command: |
-        cd .app-collection && git rm --ignore-unmatch helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-*.yaml
+        git -C .app-collection rm --ignore-unmatch helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-*.yaml
   - run:
       name: Add app into <<parameters.app_collection_repo>>
       command: |
@@ -85,7 +85,7 @@ steps:
   - run:
       name: Commit changes
       command: |
-        git -C .app-collection commit -m "update <<parameters.app_name>>-unique to $(cat ../.version)"
+        git -C .app-collection commit -m "update <<parameters.app_name>>-unique to $(cat .version)"
   - run:
       name: Push to app collection repo
       command: |
