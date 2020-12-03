@@ -32,7 +32,12 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Generate version"
       command: |
-        architect project version | tee .version
+        architect project version | tee .app_version
+  - run:
+      name: "architect/push-to-app-collection: Find configuration version"
+      command: |
+        # Empty value for config version is ok.
+        grep 'config.giantswarm.io/version' helm/<<parameters.app_name>>/Chart.yaml | awk '{ print $2 }' | tee .config_version
   - run:
       name: "architect/push-to-app-collection: Generate app CR"
       command: |
@@ -40,8 +45,9 @@ steps:
           --name "<<parameters.app_name>>-unique" \
           --app-name "<<parameters.app_name>>" \
           --app-namespace "<<parameters.app_namespace>>" \
-          --app-version "$(cat .version)" \
+          --app-version "$(cat .app_version)" \
           --catalog "<<parameters.app_catalog>>" \
+          --config-version "$(cat .config_version)" \
           --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
           --user-configmap-name "<<parameters.user_configmap_name>>" \
           --user-secret-name "<<parameters.user_secret_name>>" \
@@ -85,7 +91,7 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Commit changes to the app collection repo"
       command: |
-        git -C .app-collection commit -m "update <<parameters.app_name>>-unique to $(cat .version)"
+        git -C .app-collection commit -m "update <<parameters.app_name>>-unique to $(cat .app_version)"
   - run:
       name: "architect/push-to-app-collection: Push changes to the app collection repo"
       command: |
@@ -116,4 +122,4 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Cleanup"
       command: |
-        rm .version
+        rm .app_version .config_version
