@@ -36,7 +36,14 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Find configuration version"
       command: |
-        # Empty value for config version is ok.
+        # Make sure file exists.
+        ls helm/<<parameters.app_name>>/Chart.yaml >/dev/null
+        # Skip if Chart.yaml doesn't contain the annotation.
+        if ! grep 'config.giantswarm.io/version' helm/<<parameters.app_name>>/Chart.yaml then
+          touch .config_version
+          echo "Skip: annotation \"config.giantswarm.io/version\" not found in helm/<<parameters.app_name>>/Chart.yaml"
+          exit 0
+        fi
         # Pipe trough xargs to remove quotes.
         grep 'config.giantswarm.io/version' helm/<<parameters.app_name>>/Chart.yaml | awk '{ print $2 }' | xargs | tee .config_version
   - run:
