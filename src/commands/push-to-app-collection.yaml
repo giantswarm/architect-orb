@@ -39,7 +39,7 @@ steps:
         # Make sure file exists.
         ls helm/<<parameters.app_name>>/Chart.yaml >/dev/null
         # Skip if Chart.yaml doesn't contain the annotation.
-        if ! grep 'config.giantswarm.io/version' helm/<<parameters.app_name>>/Chart.yaml then
+        if ! grep 'config.giantswarm.io/version' helm/<<parameters.app_name>>/Chart.yaml ; then
           touch .config_version
           echo "Skip: annotation \"config.giantswarm.io/version\" not found in helm/<<parameters.app_name>>/Chart.yaml"
           exit 0
