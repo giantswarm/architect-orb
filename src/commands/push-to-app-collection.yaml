@@ -58,6 +58,7 @@ steps:
           --catalog "<<parameters.app_catalog>>" \
           --config-version "$(cat .config_version)" \
           --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
+          --pause \
           --user-configmap-name "<<parameters.user_configmap_name>>" \
           --user-secret-name "<<parameters.user_secret_name>>" \
           -o yaml | tee .app.yaml
