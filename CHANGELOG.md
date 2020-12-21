@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Allow `chart` parameter value of job `push-to-app-catalog` to be
+"name of repository with optional -app suffix".
+
 ## [1.0.0] - 2020-12-04
 
 ### Added
