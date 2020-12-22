@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2020-12-22
+
 ### Changed
 
 - Allow `chart` parameter value of job `push-to-app-catalog` to be
@@ -489,7 +491,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/giantswarm/architect-orb/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/giantswarm/architect-orb/compare/v0.18.1...v1.0.0
 [0.18.1]: https://github.com/giantswarm/architect-orb/compare/v0.18.0...v0.18.1
 [v0.18.0]: https://github.com/giantswarm/architect-orb/compare/v0.17.1...v0.18.0
