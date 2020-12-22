@@ -4,7 +4,7 @@ parameters:
     default: "0.7.0"
   helm-version:
     type: string
-    default: "2.16.5"
+    default: "2.17.0"
   kubectl-version:
     type: string
     default: "1.18.0"
@@ -24,7 +24,7 @@ steps:
       command: |
         mkdir /tmp/bin || true
   - restore_cache:
-      key: bin-{{ checksum "/tmp/kube-app-testing.sh" }}
+      key: bin-<< parameters.kube-app-testing-version >>-<< parameters.kind-version >>-<< parameters.helm-version >>-<< parameters.kubectl-version >>
   - run:
       name: "install kind"
       command: |
@@ -38,6 +38,6 @@ steps:
       command: |
         if [[ ! -f /tmp/bin/kubectl ]]; then curl -Lo /tmp/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v<< parameters.kubectl-version >>/bin/linux/amd64/kubectl && chmod +x /tmp/bin/kubectl; fi
   - save_cache:
-      key: bin-{{ checksum "/tmp/kube-app-testing.sh" }}
+      key: bin-<< parameters.kube-app-testing-version >>-<< parameters.kind-version >>-<< parameters.helm-version >>-<< parameters.kubectl-version >>
       paths:
         - /tmp/bin
