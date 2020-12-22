@@ -56,6 +56,7 @@ If there are values files in the `ci` folder of the chart, they will be used to 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [attach_workspace](#attach_workspace) (optional boolean, default=false)
 - [executor](#executor) (optional, either `architect` or `app-build-suite`, default=`architect`)
+- [chart](#chart) name of the directory containing the chart in `helm/`
 
 ### attach_workspace
 
@@ -75,6 +76,11 @@ Enables users to select the executor and control whether metadata should be gene
 Selecting `app-build-suite` will execute chart linting, validating and packaging using
 [app-build-suite](https://github.com/giantswarm/app-build-suite). This also enables
 generation and publishing of metadata into the catalog.
+
+### chart
+
+Name of the directory containing the helm chart in the `helm/` directory. This should match
+the name of the repository with an optional `-app` suffix.
 
 ## Example
 

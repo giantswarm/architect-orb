@@ -30,7 +30,8 @@ steps:
   - run:
       name: Verify chart parameters
       command: |
-        [[ << parameters.chart >> == ${CIRCLE_PROJECT_REPONAME}* ]] && exit 0 || echo "chart parameter value must start with ${CIRCLE_PROJECT_REPONAME}" ; exit 1
+        CHART_NAME="<< parameters.chart >>"
+        [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
   - run:
       name: Execute App Build Suite
       command: |
