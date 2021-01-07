@@ -35,7 +35,7 @@ steps:
   - run:
       name: Execute App Build Suite
       command: |
-        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+        mkdir build && python -m app_build_suite --skip-steps test_all --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
   - run:
       name: Test conftest policies
       command: |
