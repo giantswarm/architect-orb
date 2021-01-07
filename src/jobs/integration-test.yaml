@@ -8,7 +8,7 @@ description: |
   See [docs](docs/integration_test.md) for more details.
 parameters:
   apptestctl-version:
-    default: "v0.5.1"
+    default: "v0.6.0"
     description: "apptestctl version for bootstrapping app platform."
     type: string
   env-file:

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Use apptestctl v0.6.0 in `integration-test` job.
+
 ### Changed
 
 - Bump helm version in `run-kat-tests` job
