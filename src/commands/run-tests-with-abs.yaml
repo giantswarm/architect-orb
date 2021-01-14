@@ -1,0 +1,22 @@
+parameters:
+  chart_dir:
+    type: string
+  app-build-suite_version:
+    description: "Version of app-build-suite to use"
+    type: string
+    default: "0.1.3"
+  additional_app-build-suite_flags:
+    description: "Additional app-build-suite flags to use"
+    type: string
+    default: ""
+steps:
+  - run:
+      name: "download dabs.sh script"
+      command: |
+        requested_version="<< parameters.app-build-suite_version >>"
+        wget https://github.com/giantswarm/app-build-suite/releases/download/v${requested_version#v}/dabs.sh
+        chmod +x dabs.sh
+  - run:
+      name: "execute app-build-suite with dabs.sh wrapper"
+      command: |
+        ./dabs.sh -c << parameters.chart_dir >> << parameters.additional_app-build-suite_flags >>
