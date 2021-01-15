@@ -5,7 +5,7 @@ parameters:
   app-build-suite_version:
     description: "Version of app-build-suite to use"
     type: string
-    default: "0.1.4"
+    default: "0.1.5"
   additional_app-build-suite_flags:
     description: "Additional app-build-suite flags to use"
     type: string
