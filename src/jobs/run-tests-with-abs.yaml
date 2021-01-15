@@ -22,7 +22,7 @@ executor: "machine"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
-  - abs-run-tests:
+  - run-tests-with-abs:
       chart_dir: << parameters.chart_dir >>
       app-build-suite_version: << parameters.app-build-suite_version >>
       additional_app-build-suite_flags: << parameters.additional_app-build-suite_flags >>
