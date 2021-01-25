@@ -3,7 +3,11 @@ parameters:
     description: "Directory in which the chart resides. Usually starts with ./helm"
     type: string
   app-build-suite_version:
-    description: "Version of app-build-suite to use"
+    description: "Version of app-build-suite dabs.sh container wrapper to use (git tag or commit)"
+    type: string
+    default: "v0.1.5"
+  app-build-suite_container_tag:
+    description: "Container tag of app-build-suite to use (check quay.io/giantswarm/app-build-suite)"
     type: string
     default: "0.1.5"
   additional_app-build-suite_flags:
@@ -25,4 +29,5 @@ steps:
   - run-tests-with-abs:
       chart_dir: << parameters.chart_dir >>
       app-build-suite_version: << parameters.app-build-suite_version >>
+      app-build-suite_container_tag: << parameters.app-build-suite_container_tag >>
       additional_app-build-suite_flags: << parameters.additional_app-build-suite_flags >>
