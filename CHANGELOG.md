@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Use version 0.1.7 of app-build-suite for `app-build-suite` executor.
+- Added experimental `run-tests-with-abs` job for test execution using app-build-suite.
+
 ## [1.1.1] - 2021-01-07
 
 ### Added
