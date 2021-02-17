@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update Go version used in integration tests to 1.16
+- Bump architect to TODO
+
 ## [1.1.2] - 2021-02-04
 
 ### Added
