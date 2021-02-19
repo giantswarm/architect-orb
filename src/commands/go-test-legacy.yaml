@@ -7,7 +7,7 @@ steps:
   - run:
       name: "architect/go-test-legacy: Installing dep"
       command: |
-        go install github.com/golang/dep/cmd/dep
+        go install github.com/golang/dep/cmd/dep@latest
   - run:
       name: "architect/go-test-legacy: Running dep ensure"
       command: |
@@ -16,7 +16,7 @@ steps:
   - run:
       name: "architect/go-test-legacy: Installing goimports"
       command: |
-        go install golang.org/x/tools/cmd/goimports
+        go install golang.org/x/tools/cmd/goimports@latest
   - run:
       name: "architect/go-test-legacy: Deleting vendor directory"
       command: |
