@@ -1,4 +1,0 @@
-steps:
-  - restore_cache:
-      keys:
-        - go-build-dep-v1-{{ checksum "Gopkg.lock" }}
