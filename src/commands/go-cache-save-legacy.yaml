@@ -1,5 +1,0 @@
-steps:
-  - save_cache:
-      key: go-build-dep-v1-{{ checksum "Gopkg.lock" }}
-      paths:
-        - "/go/pkg/dep"
