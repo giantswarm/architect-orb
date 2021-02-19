@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update Go version used in integration tests to 1.16.
+- Bump architect to 3.3.0.
+
 ### Removed
 
 - **Breaking**: Remove `legacy` jobs and commands
