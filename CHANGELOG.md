@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2021-02-24
+
 ### Changed
 
 - Change app catalog base domain to `giantswarm.github.io` because of upstream redirect deprecation.
@@ -521,7 +523,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/giantswarm/architect-orb/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/giantswarm/architect-orb/compare/v1.1.2...v2.0.0
 [1.1.2]: https://github.com/giantswarm/architect-orb/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/giantswarm/architect-orb/compare/v1.1.0...v1.1.1
