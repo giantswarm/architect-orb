@@ -58,8 +58,8 @@ steps:
             echo "====> Attempt $i: Running: git pull --rebase"
             git pull --rebase
 
-            echo "====> Attempt $i: Running: helm repo index --url https://giantswarm.github.com/$app_catalog_name --merge index.yaml ../build"
-            helm repo index --url https://giantswarm.github.com/$app_catalog_name --merge index.yaml ../build
+            echo "====> Attempt $i: Running: helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build"
+            helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build
 
             echo "====> Attempt $i: Running: cp ../build/* ."
             cp ../build/* .
