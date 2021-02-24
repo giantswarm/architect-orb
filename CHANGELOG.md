@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Change app catalog base domain to `giantswarm.github.io` because of upstream redirect deprecation.
+
 ## [2.0.0] - 2021-02-19
 
 ### Changed
