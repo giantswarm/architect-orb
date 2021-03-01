@@ -55,8 +55,10 @@ If there are values files in the `ci` folder of the chart, they will be used to 
 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [attach_workspace](#attach_workspace) (optional boolean, default=false)
-- [executor](#executor) (optional, either `architect` or `app-build-suite`, default=`architect`)
+- [executor](#executor-optional-either-architect-or-app-build-suite-defaultarchitect) (optional, either `architect` or `app-build-suite`, default=`architect`)
 - [chart](#chart) name of the directory containing the chart in `helm/`
+- [on_tag](#on_tag-optional-boolean-defaulttrue) only push tagged commits to `app_catalog`
+- [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
 
 ### attach_workspace
 
@@ -82,10 +84,12 @@ generation and publishing of metadata into the catalog.
 Name of the directory containing the helm chart in the `helm/` directory. This should match
 the name of the repository with an optional `-app` suffix.
 
-### explicit_allow_chart_name_mismatch
+### explicit_allow_chart_name_mismatch (optional boolean, default=false)
 
 Should be used to allow chart name validation. Set to `true` to explicitly disable checking against the name of the repository with optional `-app` suffix.
 This can be the case if the chart directory is generated during CI runs or when multiple charts reside in a single repository.
+
+Does not have any effect if `executor: app-build-suite` is set.
 
 ## Example
 
