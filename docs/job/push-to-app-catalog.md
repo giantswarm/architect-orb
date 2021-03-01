@@ -82,6 +82,11 @@ generation and publishing of metadata into the catalog.
 Name of the directory containing the helm chart in the `helm/` directory. This should match
 the name of the repository with an optional `-app` suffix.
 
+### explicit_allow_chart_name_mismatch
+
+Should be used to allow chart name validation. Set to `true` to explicitly disable checking against the name of the repository with optional `-app` suffix.
+This can be the case if the chart directory is generated during CI runs or when multiple charts reside in a single repository.
+
 ## Example
 
 ```yaml

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Allow chart name mismatch for `push-to-app-catalog` by setting `explicit_allow_chart_name_mismatch` to `true`.
+
 ## [2.1.0] - 2021-02-24
 
 ### Changed
