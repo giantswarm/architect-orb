@@ -12,6 +12,13 @@ parameters:
   chart:
     description: "Name of the chart inside helm directory to push to the App Catalog."
     type: "string"
+  explicit_allow_chart_name_mismatch:
+    type: boolean
+    default: false
+    description: |
+      If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
+      Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
+      Does not have any effect for 'executor: app-build-suite'.
   ct_config:
     description: "Chart Testing Config file path"
     type: "string"
@@ -67,6 +74,7 @@ steps:
             app_catalog_test: << parameters.app_catalog_test >>
             chart: << parameters.chart >>
             on_tag: << parameters.on_tag >>
+            explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
   - when:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
