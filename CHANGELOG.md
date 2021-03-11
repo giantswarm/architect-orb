@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update Go version used in `machine-install` command to 1.16.1.
+- Bump architect to 3.3.1.
 
 ## [2.2.0] - 2021-03-02
 
