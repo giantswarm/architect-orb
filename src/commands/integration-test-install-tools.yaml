@@ -5,7 +5,7 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Install kind"
       command: |
-        curl -Lo ./kind "https://kind.sigs.k8s.io/dl/v0.9.0/kind-$(uname)-amd64"
+        curl -Lo ./kind "https://kind.sigs.k8s.io/dl/v0.10.0/kind-$(uname)-amd64"
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin
   - run:
@@ -23,7 +23,7 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Install Helm"
       command: |
-        curl -L https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz >./helm.tar.gz
+        curl -L https://get.helm.sh/helm-v3.5.3-linux-amd64.tar.gz >./helm.tar.gz
         tar xzvf helm.tar.gz
         chmod u+x linux-amd64/helm
         sudo mv linux-amd64/helm /usr/local/bin/

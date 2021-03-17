@@ -8,7 +8,7 @@ description: |
   See [docs](docs/integration_test.md) for more details.
 parameters:
   apptestctl-version:
-    default: "v0.6.0"
+    default: "v0.7.0"
     description: "apptestctl version for bootstrapping app platform."
     type: string
   env-file:
@@ -26,7 +26,7 @@ parameters:
     description: "Path to kind config file."
     type: string
   kubernetes-version:
-    default: "v1.17.11"
+    default: "v1.19.4"
     description: "Kubernetes version for kind cluster."
     type: string
   setup-script:

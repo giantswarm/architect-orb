@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update Kubernetes version in integration-test job to 1.19.4.
+- Update Kind version in integration-test job to 0.10.0.
+- Bump apptestctl in integration-test job to 0.7.0.
+
 ## [2.3.0] - 2021-03-12
 
 ### Changed
