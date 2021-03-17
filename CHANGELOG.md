@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Update Kubernetes version in integration-test job to 1.19.4.
+- Update Kind version in integration-test job to 0.10.0.
+- Bump apptestctl in integration-test job to 0.7.0.
 - Update Go version used in `machine-install` command to 1.16.2.
 - Bump architect to [3.4.0](https://github.com/giantswarm/architect/releases/tag/v3.4.0).
   - Update `go` version to `v1.16.2`.
