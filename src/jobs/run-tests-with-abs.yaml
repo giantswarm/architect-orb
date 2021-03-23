@@ -5,11 +5,11 @@ parameters:
   app-build-suite_version:
     description: "Version of app-build-suite dabs.sh container wrapper to use (git tag or commit)"
     type: string
-    default: "v0.2.1"
+    default: "v0.2.2"
   app-build-suite_container_tag:
     description: "Container tag of app-build-suite to use (check quay.io/giantswarm/app-build-suite)"
     type: string
-    default: "0.2.1"
+    default: "0.2.2"
   additional_app-build-suite_flags:
     description: "Additional app-build-suite flags to use"
     type: string
