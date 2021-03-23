@@ -64,7 +64,12 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Clone app collection repo"
       command: |
-        git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
+        git ls-remote --exit-code --heads git@github.com:giantswarm/<<parameters.app_collection_repo>>.git main
+        if [ $? = 0 ]; then
+          git clone -q --depth=1 --single-branch -b main git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection ;
+        else
+          git clone -q --depth=1 --single-branch -b master git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection ;
+        fi
   - run:
       name: "architect/push-to-app-collection: Clean previous app CRs in the app collection repo"
       command: |
