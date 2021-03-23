@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Update `golangci-lint` version to `v1.38.0`.
   - Update `nancy` version to `v1.0.17`.
   - Update `helm-chart-testing` to `v3.3.1`.
+- Use version 0.2.2 of app-build-suite for `app-build-suite` executor.
 
 ## [2.3.0] - 2021-03-12
 
