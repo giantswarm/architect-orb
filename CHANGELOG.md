@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Upgrade architect to [3.4.1](https://github.com/giantswarm/architect/releases/tag/v3.4.1) which contains the extended chart schema of app-build-suite.
+
 ## [2.4.0] - 2021-03-23
 
 ### Changed
