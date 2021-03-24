@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.2] - 2021-03-24
+
 ### Fixed
 
 - Fix git clone for push to app collection using master as a main branch
@@ -569,7 +571,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.4.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.4.2...HEAD
+[2.4.2]: https://github.com/giantswarm/architect-orb/compare/v2.4.1...v2.4.2
 [2.4.1]: https://github.com/giantswarm/architect-orb/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/giantswarm/architect-orb/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/giantswarm/architect-orb/compare/v2.2.0...v2.3.0
