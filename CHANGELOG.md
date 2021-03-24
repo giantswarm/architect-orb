@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix git clone for push to app collection using master as a main branch
+
 ## [2.4.1] - 2021-03-24
 
 ### Changed
