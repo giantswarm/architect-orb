@@ -26,7 +26,7 @@ parameters:
     description: "Path to kind config file."
     type: string
   kubernetes-version:
-    default: "v1.19.4"
+    default: "v1.20.2"
     description: "Kubernetes version for kind cluster."
     type: string
   setup-script:
