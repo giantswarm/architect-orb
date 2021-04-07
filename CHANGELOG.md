@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update apptestctl version in integration-test job to 0.8.0.
+- Update Kubernetes version in integration-test job to 1.20.2.
+
 ## [2.5.0] - 2021-03-30
 
 ### Changed
