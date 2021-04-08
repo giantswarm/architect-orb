@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2021-04-08
+
 ### Fixed
 
 - Regenerate ssh public key in `push-to-app-catalog` and `push-to-app-collection` to match given private catalogbot ssh key.
@@ -588,7 +590,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.7.0...HEAD
+[2.7.0]: https://github.com/giantswarm/architect-orb/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/giantswarm/architect-orb/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/giantswarm/architect-orb/compare/v2.4.2...v2.5.0
 [2.4.2]: https://github.com/giantswarm/architect-orb/compare/v2.4.1...v2.4.2
