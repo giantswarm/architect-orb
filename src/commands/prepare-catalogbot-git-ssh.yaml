@@ -11,6 +11,7 @@ steps:
         mkdir -p ~/.ssh
         echo "${CATALOGBOT_SSH_KEY_PRIVATE_BASE64}" | base64 -d > ~/.ssh/id_rsa
         chmod 0600 ~/.ssh/id_rsa
+        ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
   - run:
       name: "architect/prepare-catalogbot-git-ssh: Configure git"
       command: |
