@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Remove `.status` field from App CR before pushing into app-collection.
+
 ## [2.7.0] - 2021-04-08
 
 ### Fixed
