@@ -62,7 +62,7 @@ steps:
           --user-secret-name "<<parameters.user_secret_name>>" \
           -o yaml | tee .app.yaml
   - run:
-      name: "archotect/push-to-app-collection: Remove status field from app CR"
+      name: "architect/push-to-app-collection: Remove status field from app CR"
       command: |
         yq d -i .app.yaml 'status'
   - run:
