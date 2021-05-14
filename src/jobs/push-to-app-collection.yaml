@@ -1,7 +1,7 @@
 description: >
-  Generates and adds an App CR to an app-collection.
-  Note: version will be detected automatically by architect.
-
+  Generates and adds an Argo Application CR to an app-collection. Application
+  version is detected automatically by architect. Configuration version is
+  taken from the config.giantswarm.io/version in Chart.yaml.
 
 parameters:
   app_name:
@@ -22,22 +22,6 @@ parameters:
     description: "Disable helm chart force upgrade."
     type: "boolean"
     default: false
-  user_configmap_name:
-    description: "Name of the app user config configmap."
-    type: "string"
-    default: ""
-  user_configmap_path:
-    description: "Path of the app user config configmap."
-    type: "string"
-    default: ""
-  user_secret_name:
-    description: "Name of the app user config secret."
-    type: "string"
-    default: ""
-  user_secret_path:
-    description: "Path of the app user config secret."
-    type: "string"
-    default: ""
   resource_class:
     default: "small"
     description: |
@@ -56,8 +40,4 @@ steps:
       app_namespace: <<parameters.app_namespace>>
       app_catalog: <<parameters.app_catalog>>
       app_collection_repo: <<parameters.app_collection_repo>>
-      user_configmap_name: <<parameters.user_configmap_name>>
-      user_configmap_path: <<parameters.user_configmap_path>>
       disable_force_upgrade: <<parameters.disable_force_upgrade>>
-      user_secret_name: <<parameters.user_secret_name>>
-      user_secret_path: <<parameters.user_secret_path>>

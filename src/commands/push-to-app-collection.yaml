@@ -12,54 +12,22 @@ parameters:
     type: "string"
   disable_force_upgrade:
     type: "boolean"
-  user_configmap_name:
-    description: "Name of the app user config configmap."
-    type: "string"
-    default: ""
-  user_configmap_path:
-    description: "Path of the app user config configmap."
-    type: "string"
-    default: ""
-  user_secret_name:
-    description: "Name of the app user config secret."
-    type: "string"
-    default: ""
-  user_secret_path:
-    description: "Path of the app user config secret."
-    type: "string"
-    default: ""
 steps:
   - run:
       name: "architect/push-to-app-collection: Generate version"
       command: |
         architect project version | tee .app_version
   - run:
-      name: "architect/push-to-app-collection: Find configuration version"
-      command: |
-        echo "====> Make sure Chart.yaml exists"
-        ls helm/<<parameters.app_name>>/Chart.yaml >/dev/null
-        echo "====> Skip if Chart.yaml does not contain the annotation"
-        if ! grep 'config.giantswarm.io/version' helm/<<parameters.app_name>>/Chart.yaml ; then
-          touch .config_version
-          echo "Skip: annotation \"config.giantswarm.io/version\" not found in helm/<<parameters.app_name>>/Chart.yaml"
-          exit 0
-        fi
-        echo "====> Extract annotation value"
-        # Pipe trough xargs to remove quotes.
-        grep 'config.giantswarm.io/version' helm/<<parameters.app_name>>/Chart.yaml | awk '{ print $2 }' | xargs | tee .config_version
-  - run:
       name: "architect/push-to-app-collection: Generate app CR"
       command: |
-        architect create appcr \
-          --name "<<parameters.app_name>>-unique" \
-          --app-name "<<parameters.app_name>>" \
-          --app-namespace "<<parameters.app_namespace>>" \
-          --app-version "$(cat .app_version)" \
-          --catalog "<<parameters.app_catalog>>" \
-          --config-version "$(cat .config_version)" \
+        architect create argoapp \
+          --name="<<parameters.app_name>>-unique" \
+          --app-name="<<parameters.app_name>>" \
+          --app-version="$(cat .app_version)" \
+          --app-destination-namespace="<<parameters.app_namespace>>" \
+          --app-catalog="<<parameters.app_catalog>>" \
+          --config-ref-from-chart="helm/<<parameters.app_name>>/Chart.yaml" \
           --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
-          --user-configmap-name "<<parameters.user_configmap_name>>" \
-          --user-secret-name "<<parameters.user_secret_name>>" \
           -o yaml | tee .app.yaml
   - run:
       name: "architect/push-to-app-collection: Clone app collection repo"
@@ -79,28 +47,6 @@ steps:
         mkdir -p .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
         mv -n .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
         git -C .app-collection add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
-  - when:
-      condition:
-        and:
-        - <<parameters.user_configmap_name>>
-        - <<parameters.user_configmap_path>>
-      steps:
-        - run:
-            name: "architect/push-to-app-collection: Add user ConfigMap to the app collection repo"
-            command: |
-              mv -n <<parameters.user_configmap_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_configmap.yaml
-              git -C .app-collection add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_configmap.yaml
-  - when:
-      condition:
-        and:
-        - <<parameters.user_secret_name>>
-        - <<parameters.user_secret_path>>
-      steps:
-        - run:
-            name: "architect/push-to-app-collection: Add user Secret to the app collection repo"
-            command: |
-              mv -n <<parameters.user_secret_path>> .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_secret.yaml
-              git -C .app-collection add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.user_secret.yaml
   - run:
       name: "architect/push-to-app-collection: Commit changes to the app collection repo"
       command: |
@@ -135,4 +81,4 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Cleanup"
       command: |
-        rm .app_version .config_version
+        rm .app_version .app.yaml

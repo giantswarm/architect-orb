@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- :warning: Use `architect create argoapp` instead of `architect create appcr` in `push-to-app-collection` job. This means Argo Application CR is now created as a result. This is a breaking change (also see the removed parameters in the _Removed_ section).
+
+### Removed
+
+- :warning: Remove `user_configmap*` and `user_secret*` parameters from
+  `push-to-app-collection` job. This is a breaking change.
+
 ## [2.7.0] - 2021-04-08
 
 ### Fixed
