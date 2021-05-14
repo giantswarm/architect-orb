@@ -30,6 +30,10 @@ steps:
           --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
           -o yaml | tee .app.yaml
   - run:
+      name: "architect/push-to-app-collection: Remove status field from app CR"
+      command: |
+        yq d -i .app.yaml 'status'
+  - run:
       name: "architect/push-to-app-collection: Clone app collection repo"
       command: |
         if git ls-remote --exit-code --heads git@github.com:giantswarm/<<parameters.app_collection_repo>>.git main ; then
