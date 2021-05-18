@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Create Argo CD Application CR alongside Giant Swarm App CR  in `push-to-app-collection` job. They are pushed to separate _/manifests_ directory.
+
 ## [2.8.0] - 2021-05-13
 
 ### Fixed
