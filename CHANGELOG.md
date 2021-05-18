@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] - 2021-05-18
+
 ### Added
 
 - Create Argo CD Application CR alongside Giant Swarm App CR  in `push-to-app-collection` job. They are pushed to separate _/manifests_ directory.
@@ -600,7 +602,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.8.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.9.0...HEAD
+[2.9.0]: https://github.com/giantswarm/architect-orb/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/giantswarm/architect-orb/compare/v2.7.0...v2.8.0
 [2.7.0]: https://github.com/giantswarm/architect-orb/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/giantswarm/architect-orb/compare/v2.5.0...v2.6.0
