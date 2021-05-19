@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update Kubernetes version in integration-test job to 1.21.1.
+- Update KinD version in integration-test job to 0.11.0.
+- Update Helm version in integration-test job to 3.5.4.
+
 ## [2.9.0] - 2021-05-18
 
 ### Added
