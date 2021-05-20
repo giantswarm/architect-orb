@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] - 2021-05-20
+
 ### Added
 
 - Add `selfHeal: true` and `allowEmpty: true` to the generated Application CR sync policy in `push-to-app-collectoin` job (See [architect@v3.6.0]).
@@ -620,7 +622,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.10.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v2.11.0...HEAD
+[2.11.0]: https://github.com/giantswarm/architect-orb/compare/v2.10.0...v2.11.0
 [2.10.0]: https://github.com/giantswarm/architect-orb/compare/v2.9.0...v2.10.0
 [2.9.0]: https://github.com/giantswarm/architect-orb/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/giantswarm/architect-orb/compare/v2.7.0...v2.8.0
