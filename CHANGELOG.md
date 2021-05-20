@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `selfHeal: true` and `allowEmpty: true` to the generated Application CR sync policy in `push-to-app-collectoin` job (See [architect@v3.6.0]).
+
+### Fixed
+
+- Temporarily don't fail when Chart.yaml doesn't have the config annotation in `push-to-app-collectoin` job (See [architect@v3.6.0]).
+
+[architect@v3.6.0]: https://github.com/giantswarm/architect/blob/master/CHANGELOG.md#360---2021-05-20
+
 ## [2.10.0] - 2021-05-19
 
 ### Changed
