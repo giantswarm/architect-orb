@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 ### Removed
 
-- :warning: Remove all `user_configmap*` and `user_secret` parameters from `push-to-app-collection` job. This is a breaking change.
+- :warning: Remove all `user_configmap*` and `user_secret*` parameters from `push-to-app-collection` job. This is a breaking change.
 
 ## [2.11.0] - 2021-05-20
 
