@@ -34,18 +34,18 @@ steps:
       command: |
         git clone -q --depth=1 --single-branch git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run:
+      # TODO(kopiczko): Remove this step when all apps are migrated.
+      name: "architect/push-to-app-collection: Add Application CR to the collection's repo helm chart (for migration period)"
+      command: |
+        mkdir -p .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
+        cp -f .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
+        git -C .app-collection add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
+  - run:
       name: "architect/push-to-app-collection: Add Application CR to the collection repo"
       command: |
         mkdir -p .app-collection/manifests
         mv -f .app.yaml .app-collection/manifests/<<parameters.app_name>>.yaml
         git -C .app-collection add manifests/<<parameters.app_name>>.yaml
-  - run:
-      # TODO(kopiczko): Remove this step when all apps are migrated.
-      name: "architect/push-to-app-collection: Add Application CR to the collection's repo helm chart (for migration period)"
-      command: |
-        mkdir -p .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates
-        mv -f .app.yaml .app-collection/helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
-        git -C .app-collection add helm/<<parameters.app_collection_repo>>-chart/templates/<<parameters.app_name>>-unique.yaml
   - run:
       name: "architect/push-to-app-collection: Commit changes to the app collection repo"
       command: |
