@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- :warning: Push Argo Application CRs instead of Giant Swarm App CRs to collections'
+  /helm directory. This is a breaking change.
+
 ## [2.11.0] - 2021-05-20
 
 ### Added
