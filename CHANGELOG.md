@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use version 0.2.3 of app-build-suite for `app-build-suite` executor.
+
 ## [3.0.0] - 2021-05-21
 
 ### Changed
 
 - :warning: Push Argo Application CRs instead of Giant Swarm App CRs to collections'
   /helm directory. This is a breaking change.
-  
+
 ### Removed
 
 - :warning: Remove all `user_configmap*` and `user_secret*` parameters from `push-to-app-collection` job. This is a breaking change.
