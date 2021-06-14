@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove `skip_helm_chart_linting` option introduced in [#256](https://github.com/giantswarm/architect-orb/pull/256).
+
 ## [3.1.0] - 2021-05-26
 
 ### Changed

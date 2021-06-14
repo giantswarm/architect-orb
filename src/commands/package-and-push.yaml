@@ -19,12 +19,6 @@ parameters:
       If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
       Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
       Does not have any effect for 'executor: app-build-suite'.
-  skip_helm_chart_linting:
-    type: boolean
-    default: false
-    description: |
-      If 'skip_helm_chart_linting' is set to true, the helm chart will not be checked for errors.
-      This flag is intended only for apps which have non-standard resources to apply which can't be validated with helm.
 steps:
   - when:
       condition: << parameters.on_tag >>

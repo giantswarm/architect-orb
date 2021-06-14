@@ -59,7 +59,6 @@ If there are values files in the `ci` folder of the chart, they will be used to 
 - [chart](#chart) name of the directory containing the chart in `helm/`
 - [on_tag](#on_tag-optional-boolean-defaulttrue) only push tagged commits to `app_catalog`
 - [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
-- [skip_helm_chart_linting](#skip_helm_chart_linting-optional-boolean-defaultfalse)
 
 ### attach_workspace
 
@@ -91,11 +90,6 @@ Should be used to allow chart name validation. Set to `true` to explicitly disab
 This can be the case if the chart directory is generated during CI runs or when multiple charts reside in a single repository.
 
 Does not have any effect if `executor: app-build-suite` is set.
-
-### skip_helm_chart_linting (optional boolean, default=false)
-
-If `skip_helm_chart_linting` is set to `true`, the helm chart will not be checked with `ct lint` or `conftest`.
-This flag is intended _only_ for apps which have non-standard resources to apply which can not be validated this way, such as the `ClusterPolicy` resources contained in [`clusterpolicies`](https://github.com/giantswarm/clusterpolicies).
 
 ## Example
 
