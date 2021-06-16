@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update architect to [3.7.1](https://github.com/giantswarm/architect/releases/tag/v3.7.1).
+
 ## [3.2.0] - 2021-06-15
 
 ### Changed
