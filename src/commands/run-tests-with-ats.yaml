@@ -1,0 +1,24 @@
+parameters:
+  chart_dir:
+    type: string
+  app-test-suite_version:
+    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit)"
+    type: string
+  app-test-suite_container_tag:
+    description: "Container tag of app-test-suite to use (check quay.io/giantswarm/app-test-suite)"
+    type: string
+  additional_app-test-suite_flags:
+    description: "Additional app-test-suite flags to use"
+    type: string
+    default: ""
+steps:
+  - run:
+      name: "download dats.sh script"
+      command: |
+        wget "https://raw.githubusercontent.com/giantswarm/app-test-suite/<< parameters.app-test-suite_version >>/dats.sh"
+        chmod +x dats.sh
+  - run:
+      name: "execute app-test-suite with dats.sh wrapper"
+      command: |
+        export DATS_TAG=<< parameters.app-test-suite_container_tag >>
+        ./dabs.sh -c << parameters.chart_dir >> << parameters.additional_app-test-suite_flags >>

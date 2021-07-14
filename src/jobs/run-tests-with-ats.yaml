@@ -1,0 +1,33 @@
+parameters:
+  chart_dir:
+    description: "Directory in which the chart resides. Usually starts with ./helm"
+    type: string
+  app-test-suite_version:
+    description: "Version of app-test-suite dabs.sh container wrapper to use (git tag or commit)"
+    type: string
+    default: "v0.1.1"
+  app-test-suite_container_tag:
+    description: "Container tag of app-test-suite to use (check quay.io/giantswarm/app-test-suite)"
+    type: string
+    default: "0.1.1"
+  additional_app-test-suite_flags:
+    description: "Additional app-test-suite flags to use"
+    type: string
+    default: ""
+  resource_class:
+    default: "medium"
+    description: |
+        Configures amount CPU and RAM for the job. See
+        https://circleci.com/docs/2.0/configuration-reference/#machine-executor-linux
+        for details.
+    type: "enum"
+    enum: ["medium", "large", "xlarge", "2xlarge"]
+executor: "machine"
+resource_class: "<< parameters.resource_class >>"
+steps:
+  - checkout
+  - run-tests-with-abs:
+      chart_dir: << parameters.chart_dir >>
+      app-test-suite_version: << parameters.app-test-suite_version >>
+      app-test-suite_container_tag: << parameters.app-test-suite_container_tag >>
+      additional_app-test-suite_flags: << parameters.additional_app-test-suite_flags >>
