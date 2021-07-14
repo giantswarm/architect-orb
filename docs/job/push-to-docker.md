@@ -36,3 +36,19 @@ workflows:
             tags:
               only: /^v.*/
 ```
+
+You might want to restrict the build of tags even further, by only building tags that are valid semver strings.
+You can do it like this:
+
+```yaml
+...
+workflows:
+  my-workflow:
+    jobs:
+      - architect/push-to-docker:
+          ...
+          filters:
+            # Trigger job also on git tag.
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+)?$/
+```
