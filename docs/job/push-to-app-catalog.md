@@ -52,7 +52,7 @@ The policies are evaluated using the **rendered kubernetes manifests in the Helm
 If there are values files in the `ci` folder of the chart, they will be used to render the chart templates.
 
 In case you don't want to check for deprecated manifests, it is possible to skip `conftest` checking by setting parameter
-`skip_conftest` to `true`.
+[`skip_conftest_deprek8ion`](#skip_conftest_deprek8ion-optional-boolean-defaultfalse) to `true`.
 
 ## Parameters
 
