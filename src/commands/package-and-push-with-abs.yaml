@@ -12,6 +12,11 @@ parameters:
       When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
       Set this to `false` for deployments that follow a a master branch for production releases rather than
       using tags (the default).
+  skip_conftest_deprek8ion:
+    type: boolean
+    default: false
+    description: |
+      When this is `false`, checking for deprecated manifest versions will be skipped.
 steps:
   - when:
       condition: << parameters.on_tag >>
@@ -36,14 +41,11 @@ steps:
       name: Execute App Build Suite
       command: |
         mkdir build && python -m app_build_suite --skip-steps test_all --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
-  - run:
-      name: Test conftest policies
-      command: |
-        if [ -d "helm/<<parameters.chart>>/ci" ]; then
-          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | conftest test --update $(echo https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/{1.16,1.17}-deprek8ion.rego | tr ' ' ',') - ; done
-        else
-          helm template helm/<<parameters.chart>> | conftest test --update $(echo https://raw.githubusercontent.com/swade1987/deprek8ion/6b1c53db2d48c9361c61d73dab3594f01324f68a/policies/{1.16,1.17}-deprek8ion.rego | tr ' ' ',') -
-        fi
+  - unless:
+      condition: << parameters.skip_conftest_deprek8ion >>
+      steps:
+      - helm-conftest:
+          chart: "<< parameters.chart >>"
   - run:
       name: Clone app catalog repo
       command: |
