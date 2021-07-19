@@ -51,7 +51,7 @@ parameters:
     type: boolean
     default: false
     description: |
-      When this is `false`, checking for deprecated manifest versions will be skipped.
+      When this is `true`, checking for deprecated manifest versions will be skipped.
 executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:

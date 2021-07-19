@@ -16,7 +16,7 @@ parameters:
     type: boolean
     default: false
     description: |
-      When this is `false`, checking for deprecated manifest versions will be skipped.
+      When this is `true`, checking for deprecated manifest versions will be skipped.
 steps:
   - when:
       condition: << parameters.on_tag >>
