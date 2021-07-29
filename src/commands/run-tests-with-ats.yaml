@@ -21,4 +21,4 @@ steps:
       name: "execute app-test-suite with dats.sh wrapper"
       command: |
         export DATS_TAG=<< parameters.app-test-suite_container_tag >>
-        ./dabs.sh -c << parameters.chart_dir >> << parameters.additional_app-test-suite_flags >>
+        ./dats.sh -c << parameters.chart_dir >> << parameters.additional_app-test-suite_flags >>
