@@ -26,7 +26,7 @@ executor: "machine"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
-  - run-tests-with-abs:
+  - run-tests-with-ats:
       chart_dir: << parameters.chart_dir >>
       app-test-suite_version: << parameters.app-test-suite_version >>
       app-test-suite_container_tag: << parameters.app-test-suite_container_tag >>
