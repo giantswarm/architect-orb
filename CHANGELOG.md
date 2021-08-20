@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2021-08-20
+
 ### Changed
 
 - Update [deprek8ion](https://github.com/swade1987/deprek8ion) policies to include checking for deprecated manifests of kubernetes releases 1.16, 1.17, 1.18, 1.19 and 1.20
@@ -670,7 +672,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.1.0...HEAD
+[4.1.0]: https://github.com/giantswarm/architect-orb/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/giantswarm/architect-orb/compare/v3.3.0...v4.0.0
 [3.3.0]: https://github.com/giantswarm/architect-orb/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/giantswarm/architect-orb/compare/v3.1.0...v3.2.0
