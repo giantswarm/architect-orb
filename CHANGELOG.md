@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update [deprek8ion](https://github.com/swade1987/deprek8ion) policies to include checking for deprecated manifests of kubernetes releases 1.16, 1.17, 1.18, 1.19 and 1.20
 
+### Removed
+
+- Remove pushing Argo Application CRs into `helm/` chart path.
+
 ## [4.0.0] - 2021-07-12
 
 ### Changed
