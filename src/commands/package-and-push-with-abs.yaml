@@ -41,6 +41,10 @@ steps:
       name: Execute App Build Suite
       command: |
         mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+  - persist_to_workspace:
+      root: build
+      paths:
+        - "<< parameters.chart >>*.tgz"
   - unless:
       condition: << parameters.skip_conftest_deprek8ion >>
       steps:
