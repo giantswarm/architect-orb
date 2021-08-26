@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use version [1.0.2](https://github.com/giantswarm/app-build-suite/blob/master/CHANGELOG.md#102---2021-08-10) of app-build-suite for `app-build-suite` executor.
+- Use new [`app-test-suite`](https://github.com/giantswarm/app-test-suite) in `run-tests-with-abs`
+
 ## [4.2.0] - 2021-08-25
 
 ### Changed
@@ -18,8 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update [deprek8ion](https://github.com/swade1987/deprek8ion) policies to include checking for deprecated manifests of kubernetes releases 1.16, 1.17, 1.18, 1.19 and 1.20
-- Use version [1.0.2](https://github.com/giantswarm/app-build-suite/blob/master/CHANGELOG.md#101---2021-06-29) of app-build-suite for `app-build-suite` executor.
-- Use new [`app-test-suite`](https://github.com/giantswarm/app-test-suite) in `run-tests-with-abs`
 
 ### Removed
 
