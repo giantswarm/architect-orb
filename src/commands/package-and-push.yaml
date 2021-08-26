@@ -19,6 +19,12 @@ parameters:
       If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
       Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
       Does not have any effect for 'executor: app-build-suite'.
+  persist_chart_archive:
+    type: boolean
+    default: false
+    description: |
+      When this is `true`, the packaged chart archive will be persisted to the workspace.
+      Set this to `true`, if you're planning to execute tests using app-test-suite.
 steps:
   - when:
       condition: << parameters.on_tag >>
@@ -50,6 +56,13 @@ steps:
       name: Package the chart archive
       command: |
         mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
+  - when:
+      condition: << parameters.persist_chart_archive >>
+      steps:
+        - persist_to_workspace:
+            root: build
+            paths:
+              - "<< parameters.chart >>*.tgz"
   - run:
       name: Push chart archive to app catalog repo
       command: |
