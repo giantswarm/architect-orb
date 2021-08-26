@@ -2,6 +2,7 @@ parameters:
   chart_archive_prefix:
     description: "Prefix for the chart archive file to execute tests for."
     type: string
+    default: ""
   app-test-suite_version:
     description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit)"
     type: string
