@@ -63,6 +63,7 @@ In case you don't want to check for deprecated manifests, it is possible to skip
 - [on_tag](#on_tag-optional-boolean-defaulttrue) only push tagged commits to `app_catalog`
 - [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
 - [skip_conftest_deprek8ion](#skip_conftest_deprek8ion-optional-boolean-defaultfalse)
+- [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
 
 ### attach_workspace
 
@@ -98,6 +99,11 @@ Does not have any effect if `executor: app-build-suite` is set.
 ### skip_conftest_deprek8ion (optional boolean, default=false)
 
 Disable checking manifests against deprecated apiVersions using [deprek8ion](https://github.com/swade1987/deprek8ion) rules.
+
+### persist_chart_archive (optional boolean, default=false)
+
+When set to `true` the packaged chart archive will be persisted to the workspace. Set this to `true` if you're planning to
+execute chart tests using the [`run-tests-with-ats`] job.
 
 ## Example
 
