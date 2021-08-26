@@ -1,6 +1,6 @@
 parameters:
-  chart_dir:
-    description: "Directory in which the chart resides. Usually starts with ./helm"
+  chart_archive_prefix:
+    description: "Prefix for the chart archive file to execute tests for."
     type: string
   app-test-suite_version:
     description: "Version of app-test-suite dabs.sh container wrapper to use (git tag or commit)"
@@ -27,7 +27,7 @@ resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - run-tests-with-ats:
-      chart_dir: << parameters.chart_dir >>
+      chart_archive_prefix: << parameters.chart_archive_prefix >>
       app-test-suite_version: << parameters.app-test-suite_version >>
       app-test-suite_container_tag: << parameters.app-test-suite_container_tag >>
       additional_app-test-suite_flags: << parameters.additional_app-test-suite_flags >>

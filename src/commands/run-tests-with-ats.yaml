@@ -1,5 +1,6 @@
 parameters:
-  chart_dir:
+  chart_archive_prefix:
+    description: "Prefix for the chart archive file to execute tests for."
     type: string
   app-test-suite_version:
     description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit)"
@@ -12,6 +13,8 @@ parameters:
     type: string
     default: ""
 steps:
+  - attach_workspace:
+      at: build
   - run:
       name: "download dats.sh script"
       command: |
@@ -21,4 +24,5 @@ steps:
       name: "execute app-test-suite with dats.sh wrapper"
       command: |
         export DATS_TAG=<< parameters.app-test-suite_container_tag >>
-        ./dats.sh -c << parameters.chart_dir >> << parameters.additional_app-test-suite_flags >>
+        chart_archive=$(find build -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit)
+        ./dats.sh -c "$chart_archive" << parameters.additional_app-test-suite_flags >>
