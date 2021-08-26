@@ -40,14 +40,14 @@ For git tags, the same container tag of app-test-suite will be used.
 **Attention:** For git commits or branches, `latest` will be used as container tag.
 This can be circumvented by also setting the parameter [`app-test-suite_container_tag`](#app-test-suite_container_tag).
 
-(Default: "v0.1.1")
+(Default: "v0.1.2")
 
 ### app-test-suite_container_tag
 
 Container tag of app-test-suite to use (check [quay.io/giantswarm/app-test-suite](https://quay.io/giantswarm/app-test-suite)).
 This parameter allows to specify the used container tag of app-test-suite.
 
-(Default: "0.1.1")
+(Default: "0.1.2")
 
 ### additional_app-test-suite_flags
 
