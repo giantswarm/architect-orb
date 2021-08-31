@@ -51,8 +51,8 @@ find -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit
 
 ### app-test-suite_version
 
-Version of app-test-suite `dabs.sh` container wrapper to use (git tag or commit).
-Use this parameter if you have some changes lined up in `dabs.sh` which is not released yet.
+Version of app-test-suite `dats.sh` container wrapper to use (git tag or commit).
+Use this parameter if you have some changes lined up in `dats.sh` which is not released yet.
 For git tags, the same container tag of app-test-suite will be used.
 
 **Attention:** For git commits or branches, `latest` will be used as container tag.
@@ -70,4 +70,4 @@ This parameter allows to specify the used container tag of app-test-suite.
 ### additional_app-test-suite_flags
 
 Allows to add additional flags to the execution of app-test-suite.
-If possible, specify your configuration using the `.abs/main.yaml` configuration file.
+If possible, specify your configuration using the `.ats/main.yaml` configuration file.
