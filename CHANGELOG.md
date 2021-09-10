@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Update `architect` version to [`v5.2.0`](https://github.com/giantswarm/architect/releases/tag/v5.2.0).
+  - Updates Go version to 1.17.1
+- Update Go version used in `machine-install` command to 1.17.1.
+
 ## [4.2.0] - 2021-08-25
 
 ### Changed
