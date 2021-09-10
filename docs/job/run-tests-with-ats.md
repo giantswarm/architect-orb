@@ -71,3 +71,11 @@ This parameter allows to specify the used container tag of app-test-suite.
 
 Allows to add additional flags to the execution of app-test-suite.
 If possible, specify your configuration using the `.ats/main.yaml` configuration file.
+
+A basic `.ats/main.yaml` could look like this:
+
+```yaml
+smoke-tests-cluster-type: kind # Create a kind cluster to run tests in
+
+skip-steps: functional, upgrade # Only execute smoke tests
+````
