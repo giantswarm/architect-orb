@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace `run-tests-with-abs` with `run-tests-with-ats`. Use new [`app-test-suite`](https://github.com/giantswarm/app-test-suite).
 - Add `persist_chart_archive` parameter to `push-to-app-catalog` job to be used together with `run-tests-with-abs` job.
 
+## [4.3.0] - 2021-09-13
+
+- Update `architect` version to [`v5.2.0`](https://github.com/giantswarm/architect/releases/tag/v5.2.0).
+  - Updates Go version to 1.17.1
+  - Updated `golangci-lint` to v1.42.1
+- Update Go version used in `machine-install` command to 1.17.1.
+
 ## [4.2.0] - 2021-08-25
 
 ### Changed
@@ -684,7 +691,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.2.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.3.0...HEAD
+[4.3.0]: https://github.com/giantswarm/architect-orb/compare/v4.2.0...v4.3.0
 [4.2.0]: https://github.com/giantswarm/architect-orb/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/giantswarm/architect-orb/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/giantswarm/architect-orb/compare/v3.3.0...v4.0.0
