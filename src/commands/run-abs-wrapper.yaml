@@ -1,0 +1,25 @@
+parameters:
+  chart_dir:
+    type: "string"
+  dabs_wrapper_version:
+    type: "string"
+    default: "1.0.4"
+  dabs_container_tag:
+    type: "string"
+    default: "1.0.4"
+  abs_flags:
+    type: "string"
+    default: "--generate-metadata"
+steps:
+  - run:
+      name: Fetch dabs.sh wrapper
+      command: |
+        wget -O dabs.sh https://github.com/giantswarm/app-build-suite/releases/download/v<< parameters.dabs_wrapper_version >>/dabs.sh
+        chmod +x dabs.sh
+  - run:
+      name: Execute App Build Suite
+      command: |
+        mkdir -p build
+
+        export DABS_TAG=<< parameters.dabs_container_tag >>
+        ./dabs.sh --chart-dir "<< parameters.chart_dir >>" << parameters.abs_flags >>
