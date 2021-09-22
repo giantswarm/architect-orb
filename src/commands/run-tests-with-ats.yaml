@@ -33,7 +33,5 @@ steps:
         # we're doing this to make sure .ats/main.yaml is picked up
         cp "$chart_archive" "${chart_archive##*/}"
 
-        ls -l
-
         # execute dats wrapper
-        ./dats.sh --debug --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>
+        ./dats.sh --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>
