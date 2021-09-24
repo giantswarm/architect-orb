@@ -1,0 +1,37 @@
+parameters:
+  chart_archive_prefix:
+    description: "Prefix for the chart archive file to execute tests for."
+    type: string
+    default: ""
+  app-test-suite_version:
+    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit)"
+    type: string
+  app-test-suite_container_tag:
+    description: "Container tag of app-test-suite to use (check quay.io/giantswarm/app-test-suite)"
+    type: string
+  additional_app-test-suite_flags:
+    description: "Additional app-test-suite flags to use"
+    type: string
+    default: ""
+steps:
+  - attach_workspace:
+      at: build
+  - run:
+      name: "download dats.sh script"
+      command: |
+        wget -O dats.sh "https://github.com/giantswarm/app-test-suite/releases/download/<< parameters.app-test-suite_version >>/dats.sh"
+        chmod +x dats.sh
+  - run:
+      name: "execute app-test-suite with dats.sh wrapper"
+      command: |
+        set -x
+
+        export DATS_TAG=<< parameters.app-test-suite_container_tag >>
+        # find the chart archive file name
+        chart_archive=$(find build -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit)
+        # move chart archive from build directory to root
+        # we're doing this to make sure .ats/main.yaml is picked up
+        cp "$chart_archive" "${chart_archive##*/}"
+
+        # execute dats wrapper
+        ./dats.sh --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use version [1.0.4](https://github.com/giantswarm/app-build-suite/blob/master/CHANGELOG.md#104---2021-09-21) of app-build-suite for `app-build-suite` executor.
+- Replace `run-tests-with-abs` with `run-tests-with-ats`. Use new [`app-test-suite`](https://github.com/giantswarm/app-test-suite).
+- Add `persist_chart_archive` parameter to `push-to-app-catalog` job to be used together with `run-tests-with-abs` job.
+
 ## [4.3.0] - 2021-09-13
 
 - Update `architect` version to [`v5.2.0`](https://github.com/giantswarm/architect/releases/tag/v5.2.0).
@@ -199,7 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use apptestctl v0.6.0 in `integration-test` job.
 - Bump helm version in `run-kat-tests` job.
-- Use version 0.1.2 of app-build-suite for `app-build-suite` executor.
+- Use version 0.1.3 of app-build-suite for `app-build-suite` executor.
 
 ## [1.1.0] - 2020-12-22
 

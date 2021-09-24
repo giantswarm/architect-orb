@@ -52,6 +52,12 @@ parameters:
     default: false
     description: |
       When this is `true`, checking for deprecated manifest versions will be skipped.
+  persist_chart_archive:
+    type: boolean
+    default: false
+    description: |
+      When this is `true`, the packaged chart archive will be persisted to the workspace.
+      Set this to `true`, if you're planning to execute tests using app-test-suite.
 executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -83,6 +89,7 @@ steps:
             chart: << parameters.chart >>
             on_tag: << parameters.on_tag >>
             explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
+            persist_chart_archive: << parameters.persist_chart_archive >>
   - when:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
@@ -98,3 +105,4 @@ steps:
             chart: << parameters.chart >>
             on_tag: << parameters.on_tag >>
             skip_conftest_deprek8ion: << parameters.skip_conftest_deprek8ion >>
+            persist_chart_archive: << parameters.persist_chart_archive >>

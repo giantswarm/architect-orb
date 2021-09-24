@@ -17,6 +17,12 @@ parameters:
     default: false
     description: |
       When this is `true`, checking for deprecated manifest versions will be skipped.
+  persist_chart_archive:
+    type: boolean
+    default: false
+    description: |
+      When this is `true`, the packaged chart archive will be persisted to the workspace.
+      Set this to `true`, if you're planning to execute tests using app-test-suite.
 steps:
   - when:
       condition: << parameters.on_tag >>
@@ -40,7 +46,14 @@ steps:
   - run:
       name: Execute App Build Suite
       command: |
-        mkdir build && python -m app_build_suite --skip-steps test_all --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+  - when:
+      condition: << parameters.persist_chart_archive >>
+      steps:
+        - persist_to_workspace:
+            root: build
+            paths:
+              - "<< parameters.chart >>*.tgz"
   - unless:
       condition: << parameters.skip_conftest_deprek8ion >>
       steps:
