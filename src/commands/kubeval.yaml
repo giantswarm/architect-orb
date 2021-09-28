@@ -2,10 +2,10 @@
 parameters:
   chart:
     type: "string"
-description: Test helm diff upgrade
+description: Validate Kubernetes resources.
 steps:
   - run:
-      name: helm-diff-upgrade
+      name: kubeval
       command: |
         if [ -d "helm/<<parameters.chart>>/ci" ]; then
           for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do
@@ -13,4 +13,9 @@ steps:
           done
         else
           helm diff upgrade --debug --dry-run --detailed-exitcode --no-color test helm/<<parameters.chart>>
+        fi
+        if [ -d "helm/<<parameters.chart>>/ci" ]; then
+          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | kubeval --ignore-missing-schemas - ; done
+        else
+          helm template helm/<<parameters.chart>> | kubeval --ignore-missing-schemas -
         fi
