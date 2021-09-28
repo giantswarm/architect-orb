@@ -1,3 +1,3 @@
 docker:
   - entrypoint: /bin/bash
-    image: quay.io/giantswarm/architect:5.2.0
+    image: quay.io/giantswarm/architect:5.2.0-50d892dc8a060b641cb60508c252f262b1614fd7
