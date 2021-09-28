@@ -1,0 +1,16 @@
+---
+parameters:
+  chart:
+    type: "string"
+description: Test helm diff upgrade
+steps:
+  - run:
+      name: helm-diff-upgrade
+      command: |
+        if [ -d "helm/<<parameters.chart>>/ci" ]; then
+          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do
+            helm diff upgrade --debug --dry-run --detailed-exitcode --no-color test helm/<<parameters.chart>> --values $t
+          done
+        else
+          helm diff upgrade --debug --dry-run --detailed-exitcode --no-color test helm/<<parameters.chart>>
+        fi
