@@ -8,7 +8,7 @@ steps:
       name: kubeval
       command: |
         if [ -d "helm/<<parameters.chart>>/ci" ]; then
-          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | kubeval --ignore-missing-schemas - ; done
+          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | kubeval --ignore-missing-schemas --kubernetes-version skip - ; done
         else
-          helm template helm/<<parameters.chart>> | kubeval --ignore-missing-schemas -
+          helm template helm/<<parameters.chart>> | kubeval --ignore-missing-schemas --kubernetes-version skip -
         fi
