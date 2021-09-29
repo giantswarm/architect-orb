@@ -7,7 +7,7 @@ steps:
   - run:
       name: kubeval
       environment:
-        KUBEVAL_SCHEMA_LOCATION: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master
+        KUBEVAL_SCHEMA_LOCATION: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/411622f5e91bc54d3eff7b700661ba03f23f7729
       command: |
         if [ -d "helm/<<parameters.chart>>/ci" ]; then
           for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | kubeval --ignore-missing-schemas --kubernetes-version skip - ; done
