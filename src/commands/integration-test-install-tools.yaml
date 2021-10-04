@@ -3,6 +3,10 @@ parameters:
     type: string
 steps:
   - run:
+      name: Update curl cacerts
+      command: |
+        echo "cacert /Users/$USER/flow/.circleci/cacert.pem" >> ~/.curlrc
+  - run:
       name: "architect/integration-test-install-tools: Install kind"
       command: |
         curl -Lo ./kind "https://kind.sigs.k8s.io/dl/v0.11.0/kind-$(uname)-amd64"
