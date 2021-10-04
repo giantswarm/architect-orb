@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Change `kubeval` k8s schema to more up-to-date source.
+- Add workaround to `Integration Test`'s `Install Tools` job to overcome Letsencrypt ROOT CA expiration issue.
 
 ## [4.5.0] - 2021-09-29
 
