@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Change `kubeval` k8s schema to more up-to-date source.
-- Specify image to use for `Integration Test`'s `Install Tools` job to overcome Letsencrypt ROOT CA expiration issue.
+- Specify machine `image` to use (`ubuntu-2004:202010-01`) for all jobs that use the `machine` executor.
 
 ## [4.5.0] - 2021-09-29
 
