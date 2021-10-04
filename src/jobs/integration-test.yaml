@@ -49,6 +49,8 @@ parameters:
     type: "enum"
     enum: ["medium", "large", "xlarge", "2xlarge"]
 executor: "machine"
+machine:
+  image: ubuntu-2004:202010-01
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
