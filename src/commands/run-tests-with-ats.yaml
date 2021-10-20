@@ -19,7 +19,7 @@ steps:
   - run:
       name: "download dats.sh script"
       command: |
-        wget -O dats.sh "https://github.com/giantswarm/app-test-suite/releases/download/<< parameters.app-test-suite_version >>/dats.sh"
+        wget -O dats.sh "https://raw.githubusercontent.com/giantswarm/app-test-suite/<< parameters.app-test-suite_version >>/dats.sh"
         chmod +x dats.sh
   - run:
       name: "execute app-test-suite with dats.sh wrapper"
