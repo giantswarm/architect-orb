@@ -3,10 +3,8 @@ parameters:
     type: "string"
   os:
     type: "string"
-  pkg:
-    default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
-    type: "string"
 steps:
+  - go-gen-ldflags
   - go-test
   - run: |
       CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> .

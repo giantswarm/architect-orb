@@ -1,14 +1,8 @@
 steps:
-  - run: |
+  - go-gen-ldflags
+  - name: Check if go.mod & go.sum are up to date
+    run: |
       go mod tidy && git diff --exit-code
-  - run: |
-      echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
-  - run: |
-      echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
-  - run: |
-      echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
-  - run: |
-      echo "\"$(cat .ldflags)\""
   - run:
       name: Check if imports are properly sorted
       command: |
