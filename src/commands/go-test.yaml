@@ -1,8 +1,9 @@
 steps:
   - go-gen-ldflags
-  - name: Check if go.mod & go.sum are up to date
-    run: |
-      go mod tidy && git diff --exit-code
+  - run:
+      name: Check if go.mod & go.sum are up to date
+      command: |
+        go mod tidy && git diff --exit-code
   - run:
       name: Check if imports are properly sorted
       command: |
