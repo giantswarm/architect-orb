@@ -1,5 +1,4 @@
 steps:
-  - go-gen-ldflags
   - run:
       name: Check if go.mod & go.sum are up to date
       command: |

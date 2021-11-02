@@ -16,11 +16,19 @@ parameters:
         for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
+  additional_ldflags:
+    default: ""
+    type: "string"
+    description: |
+      Allows to specify additional ldflags to be included
+      in go-test and go-build.
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - tools-info
   - go-cache-restore
+  - go-gen-ldflags:
+      additional_ldflags: << parameters.additional_ldflags >>
   - go-test
   - go-cache-save

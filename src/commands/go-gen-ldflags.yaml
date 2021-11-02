@@ -1,3 +1,10 @@
+parameters:
+  additional_ldflags:
+    default: ""
+    type: "string"
+    description: |
+      Allows to specify additional ldflags to be included
+      in go-test and go-build.
 steps:
   - run: |
       echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
@@ -5,5 +12,12 @@ steps:
       echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
   - run: |
       echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+  - when:
+      condition: << parameters.additional_ldflags >>
+      steps:
+        - run:
+            name: "Include additional ldflags '<< parameters.additional_ldflags >>' in final ldflags"
+            command: |
+                echo -n " parameters.additional_ldflags >>" >> .ldflags
   - run: |
       echo "\"$(cat .ldflags)\""
