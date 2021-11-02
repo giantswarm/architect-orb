@@ -18,6 +18,6 @@ steps:
         - run:
             name: "Include additional ldflags '<< parameters.additional_ldflags >>' in final ldflags"
             command: |
-                echo -n " parameters.additional_ldflags >>" >> .ldflags
+                echo -n " << parameters.additional_ldflags >>" >> .ldflags
   - run: |
       echo "\"$(cat .ldflags)\""
