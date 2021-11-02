@@ -3,12 +3,12 @@ parameters:
     type: "string"
   os:
     type: "string"
-  pkg:
-    default: "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pkg/project"
+  tags:
+    default: ""
     type: "string"
 steps:
   - go-test
   - run: |
-      CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -o << parameters.binary >> .
+      CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -tags "<< parameters.tags >>" -o << parameters.binary >> .
   - run: |
       [[ "<< parameters.os >>" == "linux" ]] && ./<< parameters.binary >> version || true
