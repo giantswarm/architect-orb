@@ -6,11 +6,11 @@ parameters:
   app-test-suite_version:
     description: "Version of app-test-suite dabs.sh container wrapper to use (git tag or commit)"
     type: string
-    default: "v0.1.4"
+    default: "v0.2.1"
   app-test-suite_container_tag:
     description: "Container tag of app-test-suite to use (check quay.io/giantswarm/app-test-suite)"
     type: string
-    default: "0.1.4"
+    default: "0.2.1"
   additional_app-test-suite_flags:
     description: "Additional app-test-suite flags to use"
     type: string
