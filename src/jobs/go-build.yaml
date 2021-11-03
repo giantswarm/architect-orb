@@ -23,6 +23,11 @@ parameters:
         for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
+  tags:
+    default: ""
+    description: |
+      Additional tags to include in -tags flag of go build.
+    type: string
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -32,6 +37,7 @@ steps:
   - go-build:
       binary: << parameters.binary >>
       os: << parameters.os >>
+      tags: << parameters.tags >>
   - go-cache-save
   - persist_to_workspace:
       root: .

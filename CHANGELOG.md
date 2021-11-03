@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.0] - 2021-11-02
+
+### Added
+
+- Add `tags` parameter to `go-build` job to allow specifying `-tags` flag when running `go build`.
+
 ### Changed
 
 - Change download URL of `dats.sh` wrapper to use raw.githubusercontent.com to be able to run pre-release versions of app-test-suite in `run-tests-with-ats` job.
@@ -14,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New test type - upgrade test
   - New test executor - go test
   - Update python to 3.9
+
+### Removed
+
+- Remove unused `pkg` parameter in `go-build` command.
 
 ## [4.6.0] - 2021-10-04
 
@@ -714,7 +724,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.6.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.7.0...HEAD
+[4.7.0]: https://github.com/giantswarm/architect-orb/compare/v4.6.0...v4.7.0
 [4.6.0]: https://github.com/giantswarm/architect-orb/compare/v4.5.0...v4.6.0
 [4.5.0]: https://github.com/giantswarm/architect-orb/compare/v4.4.0...v4.5.0
 [4.4.0]: https://github.com/giantswarm/architect-orb/compare/v4.3.0...v4.4.0
