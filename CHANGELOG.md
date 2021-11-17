@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.8.1] - 2021-11-17
+
 - Update `app-test-suite` to [0.2.2](https://github.com/giantswarm/app-test-suite/blob/master/CHANGELOG.md#022---2021-11-17). Includes 2 important bugfixes for working with ginatswarm catalog.
 
 ## [4.8.0] - 2021-11-03
@@ -731,7 +733,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.8.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.8.1...HEAD
+[4.8.1]: https://github.com/giantswarm/architect-orb/compare/v4.8.0...v4.8.1
 [4.8.0]: https://github.com/giantswarm/architect-orb/compare/v4.7.0...v4.8.0
 [4.7.0]: https://github.com/giantswarm/architect-orb/compare/v4.6.0...v4.7.0
 [4.6.0]: https://github.com/giantswarm/architect-orb/compare/v4.5.0...v4.6.0
