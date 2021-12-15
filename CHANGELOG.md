@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.9.0] - 2021-12-15
+
 ### Changed
 
 - Change `integration-test` job to always install `apptestctl` binary.
@@ -738,7 +740,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.8.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.9.0...HEAD
+[4.9.0]: https://github.com/giantswarm/architect-orb/compare/v4.8.1...v4.9.0
 [4.8.1]: https://github.com/giantswarm/architect-orb/compare/v4.8.0...v4.8.1
 [4.8.0]: https://github.com/giantswarm/architect-orb/compare/v4.7.0...v4.8.0
 [4.7.0]: https://github.com/giantswarm/architect-orb/compare/v4.6.0...v4.7.0
