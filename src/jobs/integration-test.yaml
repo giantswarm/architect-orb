@@ -8,12 +8,16 @@ description: |
   See [docs](docs/integration_test.md) for more details.
 parameters:
   apptestctl-version:
-    default: "v0.9.0"
+    default: "v0.13.0"
     description: "apptestctl version for bootstrapping app platform."
     type: string
   env-file:
     default: ""
     description: "File of environment variables to set."
+    type: string
+  helm-version:
+    default: "v3.6.3"
+    description: "Helm version to install."
     type: string
   install-app-platform:
     type: boolean
@@ -58,12 +62,13 @@ steps:
       at: .
   - machine-install-go
   - integration-test-install-tools:
+      apptestctl-version:  << parameters.apptestctl-version >>
+      helm-version:  << parameters.helm-version >>
       kubernetes-version:  << parameters.kubernetes-version >>
   - integration-test-create-cluster:
       kind-config: << parameters.kind-config >>
       kubernetes-version:  << parameters.kubernetes-version >>
   - integration-test-install-app-platform:
-      apptestctl-version:  << parameters.apptestctl-version >>
       install-app-platform:  << parameters.install-app-platform >>
   - integration-test-setup:
       setup-script: << parameters.setup-script >>

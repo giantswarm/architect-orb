@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Change `integration-test` job to always install `apptestctl` binary.
+- Add `helm-version` parameter to `integration-test` job.
+
 ## [4.8.1] - 2021-11-17
 
 - Update `app-test-suite` to [0.2.2](https://github.com/giantswarm/app-test-suite/blob/master/CHANGELOG.md#022---2021-11-17). Includes 2 important bugfixes for working with ginatswarm catalog.
