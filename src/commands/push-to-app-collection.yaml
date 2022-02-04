@@ -30,15 +30,32 @@ steps:
           --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
           -o yaml | tee .app.yaml
   - run:
+      name: "architect/push-to-app-collection: Generate Flux Generator"
+      command: |
+        architect create fluxgenerator \
+          --name="<<parameters.app_name>>" \
+          --app-name="<<parameters.app_name>>" \
+          --app-version="$(cat .app_version)" \
+          --app-destination-namespace="<<parameters.app_namespace>>" \
+          --app-catalog="<<parameters.app_catalog>>" \
+          --config-ref-from-chart="helm/<<parameters.app_name>>/Chart.yaml" \
+          --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
+          -o yaml | tee .fluxgenerator.yaml
+  - run:
       name: "architect/push-to-app-collection: Clone app collection repo"
       command: |
         git clone -q --depth=1 --single-branch git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run:
-      name: "architect/push-to-app-collection: Add Application CR to the collection repo"
+      name: "architect/push-to-app-collection: Add resources to the collection repo"
       command: |
         mkdir -p .app-collection/manifests
+        mkdir -p .app-collection/flux-manifests
         mv -f .app.yaml .app-collection/manifests/<<parameters.app_name>>.yaml
+        mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
+        architect create kustomization --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
         git -C .app-collection add manifests/<<parameters.app_name>>.yaml
+        git -C .app-collection add flux-manifests/<<parameters.app_name>>.yaml
+        git -C .app-collection add flux-manifests/kustomization.yaml
   - run:
       name: "architect/push-to-app-collection: Commit changes to the app collection repo"
       command: |
