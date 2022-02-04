@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Change `push-to-app-collection` command: generate resources for Flux to manage app collections
+
 ## [4.9.0] - 2021-12-15
 
 ### Changed
