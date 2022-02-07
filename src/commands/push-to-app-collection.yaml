@@ -38,7 +38,6 @@ steps:
           --app-version="$(cat .app_version)" \
           --app-destination-namespace="<<parameters.app_namespace>>" \
           --app-catalog="<<parameters.app_catalog>>" \
-          --config-ref-from-chart="helm/<<parameters.app_name>>/Chart.yaml" \
           --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
           -o yaml | tee .fluxgenerator.yaml
   - run:
@@ -54,8 +53,7 @@ steps:
         mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
         architect create kustomization --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
         git -C .app-collection add manifests/<<parameters.app_name>>.yaml
-        git -C .app-collection add flux-manifests/<<parameters.app_name>>.yaml
-        git -C .app-collection add flux-manifests/kustomization.yaml
+        git -C .app-collection add flux-manifests/
   - run:
       name: "architect/push-to-app-collection: Commit changes to the app collection repo"
       command: |
