@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
 - Update architect to [6.0.0](https://github.com/giantswarm/architect/blob/master/CHANGELOG.md#600---2022-02-07). Includes generators for Flux-friendly app collections.
 
 ## [4.10.0] - 2022-02-07
