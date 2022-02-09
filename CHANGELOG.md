@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [4.10.1] - 2022-02-07
+### Changed
 
+- Update architect to 6.1.1.
+
+## [4.10.1] - 2022-02-07
 
 ### Changed
 
