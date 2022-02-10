@@ -20,7 +20,7 @@ steps:
   - run:
       name: Generate container tag from 'architect project version' and tag-suffix parameter
       command: |
-        echo -n "<<parameters.image>>:$(architect project version)<<parameters.tag-suffix>>" > .docker_image_name
+        echo -n "<<parameters.image>>:$(architect project version)<<parameters.tag-suffix>>" | tee .docker_image_name
   - run:
       name: Authenticate to container registry
       command: |

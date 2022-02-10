@@ -35,7 +35,8 @@ executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
-  - setup_remote_docker
+  - setup_remote_docker:
+      version: 20.10.11
   - attach_workspace:
       at: .
   - push-to-docker:
@@ -46,3 +47,5 @@ steps:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
       tag-suffix: <<parameters.tag-suffix>>
+environment:
+  DOCKER_BUILDKIT: "1"
