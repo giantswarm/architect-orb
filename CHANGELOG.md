@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Default to use `DOCKER_BUILDKIT=1` environment variable in `push-to-docker` job.
+
 ## [4.11.0] - 2022-02-09
 
 ### Changed
