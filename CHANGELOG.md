@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Default to use `DOCKER_BUILDKIT=1` environment variable in `push-to-docker` job.
+- Update `architect` version to [`v6.2.0`](https://github.com/giantswarm/architect/releases/tag/v6.2.0).
+  - Updates Go version to 1.17.7
+- Update Go version used in `machine-install` command to 1.17.7.
 
 ## [4.11.0] - 2022-02-09
 
