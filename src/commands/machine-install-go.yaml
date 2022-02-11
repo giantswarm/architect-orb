@@ -1,10 +1,10 @@
 parameters:
   go_version:
     type: "string"
-    default: "1.17.1"
+    default: "1.17.7"
   archive_sha:
     type: "string"
-    default: "dab7d9c34361dc21ec237d584590d72500652e7c909bf082758fb63064fca0ef"
+    default: "02b111284bedbfa35a7e5b74a06082d18632eff824fd144312f6063943d49259"
 steps:
   - run:
       name: "architect/machine-install-go: Remove old Go"
@@ -13,7 +13,7 @@ steps:
   - run:
       name: "architect/machine-install-go: Download Go"
       command: |
-        wget https://dl.google.com/go/go<< parameters.go_version >>.linux-amd64.tar.gz
+        wget https://go.dev/dl/go<< parameters.go_version >>.linux-amd64.tar.gz
   - run:
       name: "architect/machine-install-go: Check downloaded Go checksum"
       command: |
