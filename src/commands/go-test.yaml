@@ -1,6 +1,6 @@
 steps:
   - run: |
-      go mod tidy && git diff --exit-code
+      go mod tidy -compat=1.17 && git diff --exit-code
   - run: |
       echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
   - run: |
