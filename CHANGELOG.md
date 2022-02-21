@@ -425,7 +425,7 @@ Go modules is complete.
 ### Changed
 
 - Recreate broken [0.8.18] release and discontinue 0.8.x line to avoid confusion. For details see:
-  - https://github.com/giantswarm/architect-orb/issues/10423#issuecomment-637398805
+  - https://github.com/giantswarm/giantswarm/issues/10423#issuecomment-637398805
 
 ## [0.8.18] - 2020-05-25
 
