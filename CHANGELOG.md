@@ -773,10 +773,10 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/giantswarm/compare/v4.13.0...HEAD
-[4.13.0]: https://github.com/giantswarm/giantswarm/compare/v4.12.0...v4.13.0
-[4.12.0]: https://github.com/giantswarm/giantswarm/compare/v4.11.0...v4.12.0
-[4.11.0]: https://github.com/giantswarm/giantswarm/compare/v4.10.1...v4.11.0
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.13.0...HEAD
+[4.13.0]: https://github.com/giantswarm/architect-orb/compare/v4.12.0...v4.13.0
+[4.12.0]: https://github.com/giantswarm/architect-orb/compare/v4.11.0...v4.12.0
+[4.11.0]: https://github.com/giantswarm/architect-orb/compare/v4.10.1...v4.11.0
 [4.10.1]: https://github.com/giantswarm/architect-orb/compare/v4.10.0...v4.10.1
 [4.10.0]: https://github.com/giantswarm/architect-orb/compare/v4.9.0...v4.10.0
 [4.9.0]: https://github.com/giantswarm/architect-orb/compare/v4.8.1...v4.9.0
