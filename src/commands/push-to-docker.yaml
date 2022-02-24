@@ -32,7 +32,7 @@ steps:
   - run:
       name: Push the container image using 'docker push'
       command: |
-        docker push "$(cat .docker_image_name)"
+        docker push "$(cat .docker_image_name)" || docker push "$(cat .docker_image_name)" || docker push "$(cat .docker_image_name)"
   - run:
       name: "When parameter 'tag-latest-branch' matches this branch: Retag the image as 'latest'"
       command: |
