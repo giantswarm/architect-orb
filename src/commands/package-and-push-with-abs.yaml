@@ -62,7 +62,7 @@ steps:
   - run:
       name: Clone app catalog repo
       command: |
-        git clone -q --depth=1 --single-branch -b master "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
+        git clone -q --depth=1 --single-branch "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
   - run:
       name: Push chart archive to app catalog repo
       command: |
