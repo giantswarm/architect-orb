@@ -1,10 +1,10 @@
 parameters:
   go_version:
     type: "string"
-    default: "1.17.7"
+    default: "1.17.8"
   archive_sha:
     type: "string"
-    default: "02b111284bedbfa35a7e5b74a06082d18632eff824fd144312f6063943d49259"
+    default: "d45bdb73eb0e1c4629e3e42082f2541cb0b997ca2ad9c60b86b33e8a71340681"
 steps:
   - run:
       name: "architect/machine-install-go: Remove old Go"
