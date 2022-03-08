@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.14.2] - 2022-03-08
+
 ### Fixed
 
 - Check out app catalog at default `HEAD` instead of specifying `master` branch for compatibility with `main` branch.
@@ -791,7 +793,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.14.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.14.2...HEAD
+[4.14.2]: https://github.com/giantswarm/architect-orb/compare/v4.14.1...v4.14.2
 [4.14.1]: https://github.com/giantswarm/architect-orb/compare/v4.14.0...v4.14.1
 [4.14.0]: https://github.com/giantswarm/architect-orb/compare/v4.13.0...v4.14.0
 [4.13.0]: https://github.com/giantswarm/architect-orb/compare/v4.12.0...v4.13.0
