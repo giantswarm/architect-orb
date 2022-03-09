@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Update to apptestctl to v0.14.1 to fix problem with AppCatalogEntry CRD.
+
 ## [4.14.2] - 2022-03-08
 
 ### Fixed
