@@ -28,7 +28,7 @@ steps:
   - run:
       name: Build the container image using 'docker build'
       command: |
-        docker build -f "<<parameters.dockerfile>>" -t "$(cat .docker_image_name)" "<<parameters.build-context>>"
+        docker build -f "<<parameters.dockerfile>>" -t "$(cat .docker_image_name)" "<<parameters.build-context>>" --progress plain
   - run:
       name: Push the container image using 'docker push'
       command: |
