@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.14.3] - 2022-03-11
+
 ### Changed
 
 - Let `docker build` command produce plain progress output
@@ -801,7 +803,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.14.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.14.3...HEAD
+[4.14.3]: https://github.com/giantswarm/architect-orb/compare/v4.14.2...v4.14.3
 [4.14.2]: https://github.com/giantswarm/architect-orb/compare/v4.14.1...v4.14.2
 [4.14.1]: https://github.com/giantswarm/architect-orb/compare/v4.14.0...v4.14.1
 [4.14.0]: https://github.com/giantswarm/architect-orb/compare/v4.13.0...v4.14.0
