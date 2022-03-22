@@ -1,0 +1,11 @@
+steps:
+  - run: |
+      test -z $(gofmt -l .) || gofmt -d .
+  - run: |
+      go mod tidy && git diff --exit-code
+  - run: |
+      CGO_ENABLED=0 golangci-lint run -E gosec -E goconst -E govet
+  - run:
+      name: Check if imports are properly sorted
+      command: |
+        go install golang.org/x/tools/cmd/goimports@latest && if [[ -n $(goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -l .) ]]; then goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d . && exit 1; fi
