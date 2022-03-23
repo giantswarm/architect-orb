@@ -4,7 +4,7 @@ steps:
   - run: |
       go mod tidy && git diff --exit-code
   - run: |
-      CGO_ENABLED=0 golangci-lint run -E gosec -E goconst -E govet
+      CGO_ENABLED=0 golangci-lint run -E gosec -E goconst
   - run:
       name: Check if imports are properly sorted
       command: |
