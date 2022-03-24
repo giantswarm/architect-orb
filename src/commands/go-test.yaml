@@ -1,5 +1,4 @@
 steps:
-  - go-lint
   - run: |
       echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
   - run: |
@@ -8,8 +7,7 @@ steps:
       echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
   - run: |
       echo "\"$(cat .ldflags)\""
-  - run: |
-      CGO_ENABLED=0 golangci-lint run -E gosec -E goconst
+  - go-lint
   - run: |
       CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet
   - run: |
