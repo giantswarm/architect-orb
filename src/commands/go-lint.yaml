@@ -1,5 +1,13 @@
 steps:
   - run: |
+      if [ -f .pre-commit-config.yaml ]; then
+        pip install pre-commit
+      fi
+  - run: |
+      if [ -f .pre-commit-config.yaml ]; then
+        pre-commit run -a
+      fi
+  - run: |
       if [ ! -f .pre-commit-config.yaml ]; then
         test -z $(gofmt -l .) || gofmt -d .
       fi
