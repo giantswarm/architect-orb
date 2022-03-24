@@ -1,13 +1,23 @@
 steps:
   - run: |
-      test -z $(gofmt -l .) || gofmt -d .
+      if [ ! -f .pre-commit-config.yaml ]; then
+        test -z $(gofmt -l .) || gofmt -d .
+      fi
   - run: |
-      go mod tidy && git diff --exit-code
+      if [ ! -f .pre-commit-config.yaml ]; then
+        go mod tidy && git diff --exit-code
+      fi
   - run: |
-      CGO_ENABLED=0 go vet ./...
+      if [ ! -f .pre-commit-config.yaml ]; then
+        CGO_ENABLED=0 go vet ./...
+      fi
   - run: |
-      CGO_ENABLED=0 golangci-lint run -E gosec -E goconst
+      if [ ! -f .pre-commit-config.yaml ]; then
+        CGO_ENABLED=0 golangci-lint run -E gosec -E goconst
+      fi
   - run:
       name: Check if imports are properly sorted
       command: |
-        go install golang.org/x/tools/cmd/goimports@latest && if [[ -n $(goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -l .) ]]; then goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d . && exit 1; fi
+        if [ ! -f .pre-commit-config.yaml ]; then
+            go install golang.org/x/tools/cmd/goimports@latest && if [[ -n $(goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -l .) ]]; then goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d . && exit 1; fi
+        fi
