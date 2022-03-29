@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 ## [4.15.0] - 2022-03-29
+
+### Changed
+
+- Update `app-build-suite` to v1.1.2
 
 ## [4.14.4] - 2022-03-24
 
