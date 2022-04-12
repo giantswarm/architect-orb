@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update [deprek8ion](https://github.com/swade1987/deprek8ion) policies to include checking for deprecated manifests of kubernetes releases 1.22
+- Change `kubeval` k8s schema to more up-to-date source. (1.21 and 1.22)
 
 ## [4.15.0] - 2022-03-29
 
