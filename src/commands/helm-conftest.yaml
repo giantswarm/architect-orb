@@ -8,7 +8,7 @@ steps:
       name: Test conftest policies
       command: |
         sha=4885005d95418aa13a578fe9de232808d1b3adcd
-        policies=$(echo https://raw.githubusercontent.com/swade1987/deprek8ion/${sha}/policies/kubernetes-{1.16,1.17,1.18,1.19,1.20}.rego | tr ' ' ',')
+        policies=$(echo https://raw.githubusercontent.com/swade1987/deprek8ion/${sha}/policies/kubernetes-{1.16,1.17,1.18,1.19,1.20,1.22}.rego | tr ' ' ',')
         policies="${policies},https://raw.githubusercontent.com/swade1987/deprek8ion/${sha}/policies/_cert-manager.rego"
         policies="${policies},https://raw.githubusercontent.com/swade1987/deprek8ion/${sha}/policies/_service-account.rego"
 
