@@ -70,7 +70,7 @@ steps:
             paths:
               - "<< parameters.chart >>*.tgz"
   - run:
-      name: Push chart archive to OCI registy app catalog
+      name: Push chart archive to OCI registry app catalog
       command: |
           readonly app_catalog_name="$(cat .app_catalog_name)"
           readonly reference="$(cat .reference)"
