@@ -1,0 +1,94 @@
+parameters:
+  app_catalog:
+    type: "string"
+    description: |
+      Set this to an OCI registry with a specific subpath, e.g.
+      `oci://giantswarmpublic.azurecr.io/charts/`. Last slash is mandatory.
+  app_catalog_test:
+    type: "string"
+    description: |
+      Set this to an OCI registry with a specific subpath, e.g.
+      `oci://giantswarmpublic.azurecr.io/test_charts/`. Last slash is mandatory.
+  chart:
+    type: "string"
+  on_tag:
+    type: boolean
+    default: true
+    description: |
+      When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
+      Set this to `false` for deployments that follow a a master branch for production releases rather than
+      using tags (the default).
+  explicit_allow_chart_name_mismatch:
+    type: boolean
+    default: false
+    description: |
+      If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
+      Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
+      Does not have any effect for 'executor: app-build-suite'.
+  persist_chart_archive:
+    type: boolean
+    default: false
+    description: |
+      When this is `true`, the packaged chart archive will be persisted to the workspace.
+      Set this to `true`, if you're planning to execute tests using app-test-suite.
+steps:
+  - when:
+      condition: << parameters.on_tag >>
+      steps:
+        - run:
+            name: "architect/package-and-push: Determine target app catalog based on presence of tag"
+            command: |
+              [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
+              echo -n ${CIRCLE_TAG} | tee .reference
+  - unless:
+      condition: << parameters.on_tag >>
+      steps:
+        - run:
+            name: "architect/package-and-push: Determine target app catalog based on branch name"
+            command: |
+              [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
+              echo -n ${CIRCLE_SHA1} | tee .reference
+  - unless:
+      condition: << parameters.explicit_allow_chart_name_mismatch >>
+      steps:
+        - run:
+            name: Verify chart parameters
+            command: |
+              CHART_NAME="<< parameters.chart >>"
+              [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
+  - run:
+      name: Package the chart archive
+      command: |
+        mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
+  - when:
+      condition: << parameters.persist_chart_archive >>
+      steps:
+        - persist_to_workspace:
+            root: build
+            paths:
+              - "<< parameters.chart >>*.tgz"
+  - run:
+      name: Push chart archive to OCI registy app catalog
+      command: |
+          readonly app_catalog_name="$(cat .app_catalog_name)"
+          readonly reference="$(cat .reference)"
+
+          ret=1
+          tries=4
+          for i in $(seq 1 $tries) ; do
+            echo "====> Attempt $i: Running: helm push ../build/*.tgz $app_catalog_name"
+            set +e
+            helm push ../build/*.tgz $app_catalog_name
+            ret=$?
+            set -e
+
+            [[ $ret -eq 0 ]] && exit $ret
+
+            sleep 5
+          done
+
+          echo "Giving up after $tries failures." >&2
+          echo "Error pushing changes. See known errors in:" >&2
+          echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
+
+          exit $ret
