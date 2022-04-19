@@ -1,11 +1,13 @@
 parameters:
   app_catalog:
     type: "string"
+    default: "oci://giantswarmpublic.azurecr.io/charts/"
     description: |
       Set this to an OCI registry with a specific subpath, e.g.
       `oci://giantswarmpublic.azurecr.io/charts/`. Last slash is mandatory.
   app_catalog_test:
     type: "string"
+    default: "oci://giantswarmpublic.azurecr.io/test_charts/"
     description: |
       Set this to an OCI registry with a specific subpath, e.g.
       `oci://giantswarmpublic.azurecr.io/test_charts/`. Last slash is mandatory.
