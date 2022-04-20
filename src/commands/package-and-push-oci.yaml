@@ -38,7 +38,7 @@ steps:
       condition: << parameters.on_tag >>
       steps:
         - run:
-            name: "architect/package-and-push: Determine target app catalog based on presence of tag"
+            name: "architect/package-and-push-oci: Determine target app catalog based on presence of tag"
             command: |
               [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
               echo -n ${CIRCLE_TAG} | tee .reference
@@ -46,7 +46,7 @@ steps:
       condition: << parameters.on_tag >>
       steps:
         - run:
-            name: "architect/package-and-push: Determine target app catalog based on branch name"
+            name: "architect/package-and-push-oci: Determine target app catalog based on branch name"
             command: |
               [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
               echo -n ${CIRCLE_SHA1} | tee .reference
