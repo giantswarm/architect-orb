@@ -109,7 +109,7 @@ steps:
             condition:
               equal: [<< parameters.push_to_appcatalog >>, true]
             steps:
-            - package-and-push:
+            - package-and-push-git:
                 app_catalog: << parameters.app_catalog >>
                 app_catalog_test: << parameters.app_catalog_test >>
                 chart: << parameters.chart >>
@@ -142,7 +142,7 @@ steps:
             condition:
               equal: [<< parameters.push_to_appcatalog >>, true]
             steps:
-            - package-and-push-with-abs:
+            - package-and-push-git-with-abs:
                 app_catalog: << parameters.app_catalog >>
                 app_catalog_test: << parameters.app_catalog_test >>
                 chart: << parameters.chart >>

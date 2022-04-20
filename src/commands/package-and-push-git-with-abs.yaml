@@ -12,13 +12,11 @@ parameters:
       When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
       Set this to `false` for deployments that follow a a master branch for production releases rather than
       using tags (the default).
-  explicit_allow_chart_name_mismatch:
+  skip_conftest_deprek8ion:
     type: boolean
     default: false
     description: |
-      If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
-      Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
-      Does not have any effect for 'executor: app-build-suite'.
+      When this is `true`, checking for deprecated manifest versions will be skipped.
   persist_chart_archive:
     type: boolean
     default: false
@@ -30,32 +28,25 @@ steps:
       condition: << parameters.on_tag >>
       steps:
         - run:
-            name: "architect/package-and-push: Determine target app catalog based on presence of tag"
+            name: "architect/package-and-push-git-with-abs: Determine target app catalog based on presence of tag"
             command: |
               [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
   - unless:
       condition: << parameters.on_tag >>
       steps:
         - run:
-            name: "architect/package-and-push: Determine target app catalog based on branch name"
+            name: "architect/package-and-push-git-with-abs: Determine target app catalog based on branch name"
             command: |
               [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
-  - unless:
-      condition: << parameters.explicit_allow_chart_name_mismatch >>
-      steps:
-        - run:
-            name: Verify chart parameters
-            command: |
-              CHART_NAME="<< parameters.chart >>"
-              [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
   - run:
-      name: Clone app catalog repo
+      name: Verify chart parameters
       command: |
-        git clone -q --depth=1 --single-branch "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
+        CHART_NAME="<< parameters.chart >>"
+        [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
   - run:
-      name: Package the chart archive
+      name: Execute App Build Suite
       command: |
-        mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
+        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
   - when:
       condition: << parameters.persist_chart_archive >>
       steps:
@@ -63,6 +54,15 @@ steps:
             root: build
             paths:
               - "<< parameters.chart >>*.tgz"
+  - unless:
+      condition: << parameters.skip_conftest_deprek8ion >>
+      steps:
+      - helm-conftest:
+          chart: "<< parameters.chart >>"
+  - run:
+      name: Clone app catalog repo
+      command: |
+        git clone -q --depth=1 --single-branch "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
   - run:
       name: Push chart archive to app catalog repo
       command: |
@@ -85,7 +85,7 @@ steps:
             helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build
 
             echo "====> Attempt $i: Running: cp ../build/* ."
-            cp ../build/* .
+            cp -r ../build/* .
 
             echo "====> Attempt $i: Running: git add -A"
             git add -A
