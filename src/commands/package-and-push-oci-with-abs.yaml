@@ -1,0 +1,112 @@
+parameters:
+  app_catalog:
+    type: "string"
+    default: "oci://giantswarmpublic.azurecr.io/charts/"
+    description: |
+      Set this to an OCI registry with a specific subpath, e.g.
+      `oci://giantswarmpublic.azurecr.io/charts/`. Last slash is mandatory.
+  app_catalog_test:
+    type: "string"
+    default: "oci://giantswarmpublic.azurecr.io/test_charts/"
+    description: |
+      Set this to an OCI registry with a specific subpath, e.g.
+      `oci://giantswarmpublic.azurecr.io/test_charts/`. Last slash is mandatory.
+  chart:
+    type: "string"
+  on_tag:
+    type: boolean
+    default: true
+    description: |
+      When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
+      Set this to `false` for deployments that follow a a master branch for production releases rather than
+      using tags (the default).
+  skip_conftest_deprek8ion:
+    type: boolean
+    default: false
+    description: |
+      When this is `true`, checking for deprecated manifest versions will be skipped.
+  persist_chart_archive:
+    type: boolean
+    default: false
+    description: |
+      When this is `true`, the packaged chart archive will be persisted to the workspace.
+      Set this to `true`, if you're planning to execute tests using app-test-suite.
+  password_envar:
+    type: "string"
+    default: AZURE_CLIENTSECRET
+  username_envar:
+    type: "string"
+    default: AZURE_CLIENTID
+steps:
+  - when:
+      condition: << parameters.on_tag >>
+      steps:
+        - run:
+            name: "architect/package-and-push-oci-with-abs: Determine target app catalog based on presence of tag"
+            command: |
+              [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
+              echo -n ${CIRCLE_TAG} | tee .reference
+  - unless:
+      condition: << parameters.on_tag >>
+      steps:
+        - run:
+            name: "architect/package-and-push-oci-with-abs: Determine target app catalog based on branch name"
+            command: |
+              [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
+              echo -n ${CIRCLE_SHA1} | tee .reference
+  - run:
+      name: Verify chart parameters
+      command: |
+        CHART_NAME="<< parameters.chart >>"
+        [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
+  - run:
+      name: Execute App Build Suite
+      command: |
+        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+  - when:
+      condition: << parameters.persist_chart_archive >>
+      steps:
+        - persist_to_workspace:
+            root: build
+            paths:
+              - "<< parameters.chart >>*.tgz"
+  - unless:
+      condition: << parameters.skip_conftest_deprek8ion >>
+      steps:
+      - helm-conftest:
+          chart: "<< parameters.chart >>"
+  - when:
+      condition:
+        or:
+          - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog >>"}
+          - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog_test >>"}
+      steps:
+        - run:
+            name: "architect/package-and-push-oci-with-abs: Authenticate to AzureCR"
+            command: |
+              helm registry login giantswarmpublic.azurecr.io --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
+  - run:
+      name: Push chart archive to OCI registry app catalog
+      command: |
+          readonly app_catalog_name="$(cat .app_catalog_name)"
+          readonly reference="$(cat .reference)"
+
+          ret=1
+          tries=4
+          for i in $(seq 1 $tries) ; do
+            echo "====> Attempt $i: Running: helm push ../build/*.tgz $app_catalog_name"
+            set +e
+            helm push ../build/*.tgz $app_catalog_name
+            ret=$?
+            set -e
+
+            [[ $ret -eq 0 ]] && exit $ret
+
+            sleep 5
+          done
+
+          echo "Giving up after $tries failures." >&2
+          echo "Error pushing changes. See known errors in:" >&2
+          echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
+
+          exit $ret
