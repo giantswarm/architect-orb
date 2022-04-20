@@ -70,14 +70,15 @@ steps:
             paths:
               - "<< parameters.chart >>*.tgz"
   - when:
-      or:
-        - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog >>"}
-        - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog_test >>"}
-    steps:
-      - run:
-          name: "architect/package-and-push-oci: Authenticate to AzureCR"
-          command: |
-            helm registry login giantswarmpublic.azurecr.io --username "${AZURE_CLIENTID}" --password "${AZURE_CLIENTSECRET}"
+      condition:
+        or:
+          - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog >>"}
+          - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog_test >>"}
+      steps:
+        - run:
+            name: "architect/package-and-push-oci: Authenticate to AzureCR"
+            command: |
+              helm registry login giantswarmpublic.azurecr.io --username "${AZURE_CLIENTID}" --password "${AZURE_CLIENTSECRET}"
   - run:
       name: Push chart archive to OCI registry app catalog
       command: |
