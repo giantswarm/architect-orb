@@ -70,7 +70,6 @@ steps:
             paths:
               - "<< parameters.chart >>*.tgz"
   - when:
-    condition:
       or:
         - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog >>"}
         - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog_test >>"}
