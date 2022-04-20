@@ -78,7 +78,7 @@ steps:
       - run:
           name: "architect/package-and-push-oci: Authenticate to AzureCR"
           command: |
-            helm registry login giantswarmpublic.azurecr.io --username ${AZURE_CLIENTID} --password ${AZURE_CLIENTSECRET}
+            helm registry login giantswarmpublic.azurecr.io --username "${AZURE_CLIENTID}" --password "${AZURE_CLIENTSECRET}"
   - run:
       name: Push chart archive to OCI registry app catalog
       command: |
