@@ -33,6 +33,12 @@ parameters:
     description: |
       When this is `true`, the packaged chart archive will be persisted to the workspace.
       Set this to `true`, if you're planning to execute tests using app-test-suite.
+  password_envar:
+    type: "string"
+    default: AZURE_CLIENTSECRET
+  username_envar:
+    type: "string"
+    default: AZURE_CLIENTID
 steps:
   - when:
       condition: << parameters.on_tag >>
@@ -78,7 +84,7 @@ steps:
         - run:
             name: "architect/package-and-push-oci: Authenticate to AzureCR"
             command: |
-              helm registry login giantswarmpublic.azurecr.io --username "${AZURE_CLIENTID}" --password "${AZURE_CLIENTSECRET}"
+              helm registry login giantswarmpublic.azurecr.io --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
   - run:
       name: Push chart archive to OCI registry app catalog
       command: |
