@@ -39,6 +39,16 @@ parameters:
       and packaging through https://github.com/giantswarm/app-build-suite
       The `app-build-suite` executor also enables metadata generation.
       Default: `architect`
+  push_to_appcatalog:
+    default: true
+    description: |
+      Push the chart to App Catalog git repository if this is `true`.
+    type: boolean
+  push_to_oci_registry:
+    default: false
+    description: |
+      Push the chart to OCI registry if this is `true`.
+    type: boolean
   resource_class:
     default: "small"
     description: |
@@ -58,6 +68,16 @@ parameters:
     description: |
       When this is `true`, the packaged chart archive will be persisted to the workspace.
       Set this to `true`, if you're planning to execute tests using app-test-suite.
+  password_envar:
+    default: AZURE_CLIENTSECRET
+    description: |
+      Required if `push_to_oci_registry` is set to `true`.
+    type: "string"
+  username_envar:
+    default: AZURE_CLIENTID
+    description: |
+      Required if `push_to_oci_registry` is set to `true`.
+    type: "string"
 executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -85,13 +105,30 @@ steps:
             steps:
             - helm-conftest:
                 chart: "<< parameters.chart >>"
-        - package-and-push:
-            app_catalog: << parameters.app_catalog >>
-            app_catalog_test: << parameters.app_catalog_test >>
-            chart: << parameters.chart >>
-            on_tag: << parameters.on_tag >>
-            explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
-            persist_chart_archive: << parameters.persist_chart_archive >>
+        - when:
+            condition:
+              equal: [<< parameters.push_to_appcatalog >>, true]
+            steps:
+            - package-and-push:
+                app_catalog: << parameters.app_catalog >>
+                app_catalog_test: << parameters.app_catalog_test >>
+                chart: << parameters.chart >>
+                on_tag: << parameters.on_tag >>
+                explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
+                persist_chart_archive: << parameters.persist_chart_archive >>
+        - when:
+            condition:
+              equal: [<< parameters.push_to_oci_registry >>, true]
+            steps:
+            - package-and-push-oci:
+                app_catalog: << parameters.app_catalog >>
+                app_catalog_test: << parameters.app_catalog_test >>
+                chart: << parameters.chart >>
+                on_tag: << parameters.on_tag >>
+                explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
+                persist_chart_archive: << parameters.persist_chart_archive >>
+                password_envar: << parameters.password_envar >>
+                username_envar: << parameters.username_envar >>
   - when:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
@@ -101,10 +138,27 @@ steps:
             show_go_version: false
             show_abs_version: true
         - prepare-catalogbot-git-ssh
-        - package-and-push-with-abs:
-            app_catalog: << parameters.app_catalog >>
-            app_catalog_test: << parameters.app_catalog_test >>
-            chart: << parameters.chart >>
-            on_tag: << parameters.on_tag >>
-            skip_conftest_deprek8ion: << parameters.skip_conftest_deprek8ion >>
-            persist_chart_archive: << parameters.persist_chart_archive >>
+        - when:
+            condition:
+              equal: [<< parameters.push_to_appcatalog >>, true]
+            steps:
+            - package-and-push-with-abs:
+                app_catalog: << parameters.app_catalog >>
+                app_catalog_test: << parameters.app_catalog_test >>
+                chart: << parameters.chart >>
+                on_tag: << parameters.on_tag >>
+                skip_conftest_deprek8ion: << parameters.skip_conftest_deprek8ion >>
+                persist_chart_archive: << parameters.persist_chart_archive >>
+        - when:
+            condition:
+              equal: [<< parameters.push_to_oci_registry >>, true]
+            steps:
+            - package-and-push-oci-with-abs:
+                app_catalog: << parameters.app_catalog >>
+                app_catalog_test: << parameters.app_catalog_test >>
+                chart: << parameters.chart >>
+                on_tag: << parameters.on_tag >>
+                skip_conftest_deprek8ion: << parameters.skip_conftest_deprek8ion >>
+                persist_chart_archive: << parameters.persist_chart_archive >>
+                password_envar: << parameters.password_envar >>
+                username_envar: << parameters.username_envar >>
