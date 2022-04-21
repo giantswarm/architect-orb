@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add support for pushing to OCI-based App catalogs.
+
 ## [4.16.0] - 2022-04-13
 
 ### Changed
@@ -54,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update `architect` version to [`v6.3.0`](https://github.com/giantswarm/architect/releases/tag/v6.3.0).
   - Updates Go version to 1.17.8.
-- Update Go version used in `machine install` command to 1.17.8. 
+- Update Go version used in `machine install` command to 1.17.8.
 
 ## [4.13.0] - 2022-02-18
 

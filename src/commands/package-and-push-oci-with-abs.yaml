@@ -23,21 +23,32 @@ parameters:
     description: |
       When this is `true`, the packaged chart archive will be persisted to the workspace.
       Set this to `true`, if you're planning to execute tests using app-test-suite.
+  password_envar:
+    type: "string"
+    default: AZURE_CLIENTSECRET
+  username_envar:
+    type: "string"
+    default: AZURE_CLIENTID
+  registry_url:
+    type: "string"
+    default: "giantswarmpublic.azurecr.io"
 steps:
   - when:
       condition: << parameters.on_tag >>
       steps:
         - run:
-            name: "architect/package-and-push: Determine target app catalog based on presence of tag"
+            name: "architect/package-and-push-oci-with-abs: Determine target app catalog based on presence of tag"
             command: |
               [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
+              echo -n ${CIRCLE_TAG} | tee .reference
   - unless:
       condition: << parameters.on_tag >>
       steps:
         - run:
-            name: "architect/package-and-push: Determine target app catalog based on branch name"
+            name: "architect/package-and-push-oci-with-abs: Determine target app catalog based on branch name"
             command: |
               [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
+              echo -n ${CIRCLE_SHA1} | tee .reference
   - run:
       name: Verify chart parameters
       command: |
@@ -46,7 +57,7 @@ steps:
   - run:
       name: Execute App Build Suite
       command: |
-        mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+        mkdir -p build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
   - when:
       condition: << parameters.persist_chart_archive >>
       steps:
@@ -60,42 +71,21 @@ steps:
       - helm-conftest:
           chart: "<< parameters.chart >>"
   - run:
-      name: Clone app catalog repo
+      name: "architect/package-and-push-oci-with-abs: Authenticate to the OCI registry"
       command: |
-        git clone -q --depth=1 --single-branch "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
+        helm registry login << parameters.registry_url >> --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
   - run:
-      name: Push chart archive to app catalog repo
+      name: Push chart archive to OCI registry app catalog
       command: |
-          readonly app_catalog_name="$(cat .app_catalog_name)"
-
-          cd .app_catalog
-
-          readonly head="$(git rev-parse HEAD)"
+          readonly app_catalog_name="oci://<< parameters.registry_url >>/$(cat .app_catalog_name)/"
+          readonly reference="$(cat .reference)"
 
           ret=1
           tries=4
           for i in $(seq 1 $tries) ; do
-            echo "====> Attempt $i: Running: git reset --hard \$head"
-            git reset --hard $head
-
-            echo "====> Attempt $i: Running: git pull --rebase"
-            git pull --rebase
-
-            echo "====> Attempt $i: Running: helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build"
-            helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build
-
-            echo "====> Attempt $i: Running: cp ../build/* ."
-            cp -r ../build/* .
-
-            echo "====> Attempt $i: Running: git add -A"
-            git add -A
-
-            echo "====> Attempt $i: Running: git commit -m \"add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)\""
-            git commit -m "add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)"
-
-            echo "====> Attempt $i: Running \"git push\""
+            echo "====> Attempt $i: Running: helm push build/*.tgz $app_catalog_name"
             set +e
-            git push
+            helm push build/*.tgz $app_catalog_name
             ret=$?
             set -e
 
