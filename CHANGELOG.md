@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add `package-and-push-oci` command.
+- Add support for pushing to OCI-based App catalogs.
 
 ## [4.16.0] - 2022-04-13
 
