@@ -71,7 +71,7 @@ steps:
             paths:
               - "<< parameters.chart >>*.tgz"
   - run:
-      name: "architect/package-and-push-oci: Authenticate to AzureCR"
+      name: "architect/package-and-push-oci: Authenticate to the OCI registry"
       command: |
         helm registry login << parameters.registry_url >> --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
   - run:
