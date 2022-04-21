@@ -1,16 +1,8 @@
 parameters:
   app_catalog:
     type: "string"
-    default: "oci://giantswarmpublic.azurecr.io/charts/"
-    description: |
-      Set this to an OCI registry with a specific subpath, e.g.
-      `oci://giantswarmpublic.azurecr.io/charts/`. Last slash is mandatory.
   app_catalog_test:
     type: "string"
-    default: "oci://giantswarmpublic.azurecr.io/test_charts/"
-    description: |
-      Set this to an OCI registry with a specific subpath, e.g.
-      `oci://giantswarmpublic.azurecr.io/test_charts/`. Last slash is mandatory.
   chart:
     type: "string"
   on_tag:
@@ -75,20 +67,14 @@ steps:
       steps:
       - helm-conftest:
           chart: "<< parameters.chart >>"
-  - when:
-      condition:
-        or:
-          - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog >>"}
-          - matches: {pattern: "^giantswarmpublic.azurecr.io/.*$", value: "<< parameters.app_catalog_test >>"}
-      steps:
-        - run:
-            name: "architect/package-and-push-oci-with-abs: Authenticate to AzureCR"
-            command: |
-              helm registry login giantswarmpublic.azurecr.io --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
+  - run:
+      name: "architect/package-and-push-oci-with-abs: Authenticate to AzureCR"
+      command: |
+        helm registry login giantswarmpublic.azurecr.io --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
   - run:
       name: Push chart archive to OCI registry app catalog
       command: |
-          readonly app_catalog_name="$(cat .app_catalog_name)"
+          readonly app_catalog_name="oci://giantswarmpublic.azurecr.io/$(cat .app_catalog_name)/"
           readonly reference="$(cat .reference)"
 
           ret=1
