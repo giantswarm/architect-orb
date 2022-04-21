@@ -31,6 +31,9 @@ parameters:
   username_envar:
     type: "string"
     default: AZURE_CLIENTID
+  registry_url:
+    type: "string"
+    default: "giantswarmpublic.azurecr.io"
 steps:
   - when:
       condition: << parameters.on_tag >>
@@ -70,11 +73,11 @@ steps:
   - run:
       name: "architect/package-and-push-oci: Authenticate to AzureCR"
       command: |
-        helm registry login giantswarmpublic.azurecr.io --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
+        helm registry login << parameters.registry_url >> --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
   - run:
       name: Push chart archive to OCI registry app catalog
       command: |
-          readonly app_catalog_name="oci://giantswarmpublic.azurecr.io/$(cat .app_catalog_name)/"
+          readonly app_catalog_name="oci://<< parameters.registry_url >>/$(cat .app_catalog_name)/"
           readonly reference="$(cat .reference)"
 
           ret=1
