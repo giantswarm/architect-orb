@@ -80,9 +80,9 @@ steps:
           ret=1
           tries=4
           for i in $(seq 1 $tries) ; do
-            echo "====> Attempt $i: Running: helm push ../build/*.tgz $app_catalog_name"
+            echo "====> Attempt $i: Running: helm push build/*.tgz $app_catalog_name"
             set +e
-            helm push ../build/*.tgz $app_catalog_name
+            helm push build/*.tgz $app_catalog_name
             ret=$?
             set -e
 
