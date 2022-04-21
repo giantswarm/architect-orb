@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.17.0] - 2022-04-21
+
 ### Added
 
 - Add support for pushing to OCI-based App catalogs.
@@ -826,7 +828,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.16.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.17.0...HEAD
+[4.17.0]: https://github.com/giantswarm/architect-orb/compare/v4.16.0...v4.17.0
 [4.16.0]: https://github.com/giantswarm/architect-orb/compare/v4.15.0...v4.16.0
 [4.15.0]: https://github.com/giantswarm/architect-orb/compare/v4.14.4...v4.15.0
 [4.14.4]: https://github.com/giantswarm/architect-orb/compare/v4.14.3...v4.14.4
