@@ -59,7 +59,7 @@ steps:
   - run:
       name: Package the chart archive
       command: |
-        mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
+        mkdir -p build && helm package ./helm/<< parameters.chart >> --destination ./build
   - when:
       condition: << parameters.persist_chart_archive >>
       steps:
