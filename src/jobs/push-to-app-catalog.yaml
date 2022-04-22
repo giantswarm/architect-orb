@@ -49,6 +49,11 @@ parameters:
     description: |
       Push the chart to OCI registry if this is `true`.
     type: boolean
+  registry_url:
+    type: "string"
+    default: "giantswarmpublic.azurecr.io"
+    description: |
+      Base URL of the OCI registry.
   resource_class:
     default: "small"
     description: |
@@ -129,6 +134,7 @@ steps:
                 persist_chart_archive: << parameters.persist_chart_archive >>
                 password_envar: << parameters.password_envar >>
                 username_envar: << parameters.username_envar >>
+                registry_url: << parameters.registry_url>>
   - when:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
@@ -162,3 +168,4 @@ steps:
                 persist_chart_archive: << parameters.persist_chart_archive >>
                 password_envar: << parameters.password_envar >>
                 username_envar: << parameters.username_envar >>
+                registry_url: << parameters.registry_url>>
