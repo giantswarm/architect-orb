@@ -3,6 +3,11 @@
 This job templates and packages a given `chart` from the helm directory and
 pushes it to `app_catalog` for tagged builds and `app_catalog_test` otherwise.
 
+It supports both classic GitHub-repository-based catalogs and OCI registry
+catalogs (by default in Azure Container Registry). Depending on parameters, it
+can push to one or the other, or both of them with a single job run.
+
+## Pushing to GitHub App Catalogs (`push_to_appcatalog: true`)
 **NOTE**: The job requires `CATALOGBOT_SSH_KEY_PRIVATE_BASE64` environment
 variable to be set in the build. This must be base64 encoded private SSH key of
 [CatalogBot Github user][catalogbot-user].
@@ -40,6 +45,17 @@ It is an rare case so triggering again the build should solve the issue.
 [control-plane-test-catalog]: https://github.com/giantswarm/control-plane-test-catalog
 [creating_app_catalog]: https://intranet.giantswarm.io/docs/dev-and-releng/app-developer-processes/creating_app_catalog/
 
+## Pushing to OCI Registries (`push_to_oci_registry: true`)
+
+This job assumes that App Catalog is hosted inside a suitable container
+registry specified by `registry_url` parameter, e.g.
+`giantswarmpublic.azurecr.io`. CircleCI environment variables (specified by
+`username_envar` and `password_envar`) will be used by `helm` to sign in to
+the registry.
+
+You can read more about storing helm charts in OCI registries in the [helm
+documentation](https://helm.sh/blog/storing-charts-in-oci/).
+
 ## Validations
 
 ### conftest
@@ -64,6 +80,11 @@ In case you don't want to check for deprecated manifests, it is possible to skip
 - [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
 - [skip_conftest_deprek8ion](#skip_conftest_deprek8ion-optional-boolean-defaultfalse)
 - [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
+- [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
+- [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaultfalse)
+- [registry_url](#registry_url-optional-string)
+- [username_envar](#username_envar-optional-string)
+- [password_envar](#password_envar-optional-string)
 
 ### attach_workspace
 
@@ -130,3 +151,32 @@ workflows:
             tags:
               only: /^v.*/
 ```
+
+### push_to_appcatalog (optional boolean, default=true)
+
+When set to `true`, the packaged chart will be pushed to a classic GitHub app
+catalog.
+
+### push_to_oci_registry (optional boolean, default=false)
+
+When set to `true`, the packaged chart will be pushed to the specified OCI
+registry.
+
+### registry_url (optional string)
+
+Defaults to `giantswarmpublic.azurecr.io`.
+
+Hostname (and subdomain if applies) of the OCI registry to push to. `oci://`
+scheme is implied and should not be added to the URL.
+
+### username_envar (optional string)
+
+Defaults to `AZURE_CLIENTID`.
+
+Specifies environment variable to use as OCI registry username.
+
+### password_envar (optional string)
+
+Defaults to `AZURE_CLIENTSECRET`.
+
+Specifies environment variable to use as OCI registry password.
