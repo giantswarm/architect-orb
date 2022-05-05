@@ -22,7 +22,7 @@ steps:
   - run:
       name: Tag container image using 'docker tag'
       command: |
-        docker tag "<<parameters.image>>:${CIRCLE_SHA1}" "$(cat .docker_image_name)"
+        docker tag "${CIRCLE_SHA1}" "$(cat .docker_image_name)"
   - run:
       name: Push container image using 'docker push'
       command: |
@@ -31,7 +31,7 @@ steps:
       name: Tag 'latest' container image, when parameter 'tag-latest-branch' matches this branch
       command: |
         ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || \
-        docker tag "<<parameters.image>>:${CIRCLE_SHA1}" "<<parameters.image>>:latest<<parameters.tag-suffix>>"
+        docker tag "${CIRCLE_SHA1}" "<<parameters.image>>:latest<<parameters.tag-suffix>>"
   - run:
       name: Push 'latest' container image, when parameter 'tag-latest-branch' matches this branch
       command: |

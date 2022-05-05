@@ -1,7 +1,4 @@
 parameters:
-  image:
-    description: "Name of the docker image, without tag. e.g. \"quay.io/my-org/my-repo\"."
-    type: "string"
   resource_class:
     default: "small"
     description: |
@@ -26,7 +23,6 @@ steps:
   - attach_workspace:
       at: .
   - docker-build:
-      image: <<parameters.image>>
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
 environment:
