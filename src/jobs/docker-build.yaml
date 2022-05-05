@@ -13,7 +13,7 @@ parameters:
   dockerfile:
     type: "string"
     default: "./Dockerfile"
-executor: machine
+executor: architect
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
