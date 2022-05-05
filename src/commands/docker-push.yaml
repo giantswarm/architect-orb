@@ -1,0 +1,39 @@
+parameters:
+  image:
+    type: "string"
+  password_envar:
+    type: "string"
+  username_envar:
+    type: "string"
+  tag-latest-branch:
+    type: "string"
+  tag-suffix:
+    type: "string"
+    default: ""
+steps:
+  - run:
+      name: Generate container tag from 'architect project version' and tag-suffix parameter
+      command: |
+        echo -n "<<parameters.image>>:$(architect project version)<<parameters.tag-suffix>>" | tee .docker_image_name
+  - run:
+      name: Authenticate to container registry
+      command: |
+        echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "$(echo -n '<<parameters.image>>' | cut -d/ -f1)"
+  - run:
+      name: Tag container image using 'docker tag'
+      command: |
+        docker tag "<<parameters.image>>:${CIRCLE_SHA1}" "$(cat .docker_image_name)"
+  - run:
+      name: Push container image using 'docker push'
+      command: |
+        docker push "$(cat .docker_image_name)"
+  - run:
+      name: Tag 'latest' container image, when parameter 'tag-latest-branch' matches this branch
+      command: |
+        ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || \
+        docker tag "<<parameters.image>>:${CIRCLE_SHA1}" "<<parameters.image>>:latest<<parameters.tag-suffix>>"
+  - run:
+      name: Push 'latest' container image, when parameter 'tag-latest-branch' matches this branch
+      command: |
+        ! [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]] && echo "skip" || \
+        docker push "<<parameters.image>>:latest<<parameters.tag-suffix>>"
