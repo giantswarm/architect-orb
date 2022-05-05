@@ -1,0 +1,14 @@
+parameters:
+  image:
+    type: "string"
+  build-context:
+    type: "string"
+    default: "."
+  dockerfile:
+    type: "string"
+    default: "./Dockerfile"
+steps:
+  - run:
+      name: Build the container image using 'docker build'
+      command: |
+        docker build -f "<<parameters.dockerfile>>" -t "<<parameters.image>>:${CIRCLE_SHA1}" "<<parameters.build-context>>" --progress plain
