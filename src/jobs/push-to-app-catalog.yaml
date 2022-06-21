@@ -45,7 +45,7 @@ parameters:
       Push the chart to App Catalog git repository if this is `true`.
     type: boolean
   push_to_oci_registry:
-    default: false
+    default: true
     description: |
       Push the chart to OCI registry if this is `true`.
     type: boolean
