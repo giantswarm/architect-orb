@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Set `push_to_oci_registry` to `true` by default, pushing all charts to OCI as a result.
+
 ## [4.21.1] - 2022-06-16
 
 ### Changed
