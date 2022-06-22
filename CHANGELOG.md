@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.23.0] - 2022-06-22
+
 ### Changed
 
 - Remove old k8s versions from `kubeval` job.
@@ -870,7 +872,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.22.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.23.0...HEAD
+[4.23.0]: https://github.com/giantswarm/architect-orb/compare/v4.22.0...v4.23.0
 [4.22.0]: https://github.com/giantswarm/architect-orb/compare/v4.21.1...v4.22.0
 [4.21.1]: https://github.com/giantswarm/architect-orb/compare/v4.21.0...v4.21.1
 [4.21.0]: https://github.com/giantswarm/architect-orb/compare/v4.20.0...v4.21.0
