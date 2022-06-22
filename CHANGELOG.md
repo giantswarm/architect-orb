@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Remove old k8s versions from `kubeval` job.
+
 ## [4.22.0] - 2022-06-21
+
+### Changed
 
 - Set `push_to_oci_registry` to `true` by default, pushing all charts to OCI as a result.
 
