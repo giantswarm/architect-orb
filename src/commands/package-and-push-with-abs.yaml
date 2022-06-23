@@ -39,11 +39,6 @@ steps:
             command: |
               [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
   - run:
-      name: Verify chart parameters
-      command: |
-        CHART_NAME="<< parameters.chart >>"
-        [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
-  - run:
       name: Execute App Build Suite
       command: |
         mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
