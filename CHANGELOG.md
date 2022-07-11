@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Update `architect` version to [`v6.6.0`](https://github.com/giantswarm/architect/releases/tag/v6.6.0).
+  - Update `nancy` to `v1.0.37`.
+- Use an additional nancy exclude vulnerabilities file at the root of the repositories: `.nancy-ignore.generated`. If the file does not exist, nancy will ignore it. The standard `.nancy-ignore` file should contain the repository specific excludes and `.nancy-ignore.generated` is a generated one that should contain globally ignored vulnerabilities, if any.
+
 ## [4.23.0] - 2022-06-22
 
 ### Changed
