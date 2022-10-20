@@ -3,10 +3,12 @@ parameters:
     description: "(Optional) Path to a config file to use for gitleaks configuration."
     type: "string"
 steps:
-  - run: |
-      CONFIG="<< parameters.config >>"
-      LINT_ARGS=" "
-      if [ -n "${CONFIG}" ]; then
-        LINT_ARGS+=" --config=${CONFIG}";
-      fi
-      gitleaks $LINT_ARGS --redact -v --pretty -r ./
+  - run:
+      name: Check if gitleaks detects any leaked secrets
+      command: |
+        CONFIG="<< parameters.config >>"
+        LINT_ARGS=" "
+        if [ -n "${CONFIG}" ]; then
+          LINT_ARGS+=" --config=${CONFIG}";
+        fi
+        gitleaks $LINT_ARGS --redact -v --pretty -r ./

@@ -1,25 +1,45 @@
 steps:
-  - run: |
-      go mod tidy && git diff --exit-code
-  - run: |
-      echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
-  - run: |
-      echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
-  - run: |
-      echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
-  - run: |
-      echo "\"$(cat .ldflags)\""
+  - run:
+      name: Check if go.mod and go.sum are clean
+      command: |
+        go mod tidy && git diff --exit-code
+  - run:
+      name: Create .ldflags
+      command: |
+        echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
+  - run:
+      name: Write build date to .ldflags
+      command: |
+        echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+  - run:
+      name: Write commit SHA to .ldflags
+      command: |
+        echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+  - run:
+      name: Print .ldflags content
+      command: |
+        echo "\"$(cat .ldflags)\""
   - run:
       name: Check if imports are properly sorted
       command: |
         go install golang.org/x/tools/cmd/goimports@latest && if [[ -n $(goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -l .) ]]; then goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d . && exit 1; fi
-  - run: |
-      test -z $(gofmt -l .) || gofmt -d .
-  - run: |
-      CGO_ENABLED=0 go vet ./...
-  - run: |
-      CGO_ENABLED=0 golangci-lint run -E gosec -E goconst
-  - run: |
-      CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet --exclude-vulnerability-file ./.nancy-ignore --additional-exclude-vulnerability-files ./.nancy-ignore.generated
-  - run: |
-      CGO_ENABLED=0 go test -ldflags "$(cat .ldflags)" ./...
+  - run:
+      name: Check if code structure differs from gofmt's
+      command: |
+        test -z $(gofmt -l .) || gofmt -d .
+  - run:
+      name: Check if go vet has any complaints
+      command: |
+        CGO_ENABLED=0 go vet ./...
+  - run:
+      name: Check if golangci-lint has any complaints
+      command: |
+        CGO_ENABLED=0 golangci-lint run -E gosec -E goconst
+  - run:
+      name: Check if dependencies have known security vulnerabilities
+      command: |
+        CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet --exclude-vulnerability-file ./.nancy-ignore --additional-exclude-vulnerability-files ./.nancy-ignore.generated
+  - run:
+      name: Run unit tests
+      command: |
+        CGO_ENABLED=0 go test -ldflags "$(cat .ldflags)" ./...
