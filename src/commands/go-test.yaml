@@ -38,7 +38,15 @@ steps:
   - run:
       name: Check if dependencies have known security vulnerabilities
       command: |
-        CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet --exclude-vulnerability-file ./.nancy-ignore --additional-exclude-vulnerability-files ./.nancy-ignore.generated
+        CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet --exclude-vulnerability-file ./.nancy-ignore --additional-exclude-vulnerability-files ./.nancy-ignore.generated | sed '/error accessing OSS Index/,$b;$q1'
+        pstats=(${PIPESTATUS[@]})
+        # Credit for the sed idea to https://unix.stackexchange.com/a/711864.
+        # If nancy gave us a bad exit code AND sed found an OSS index error in the output, then we don't fail the build.
+        if [[ ${pstats[1]} -eq 1 && ${pstats[2]} -eq 0 ]]; then
+          echo Ignoring failed scan due to problem with the external scanner.
+          exit 0
+        fi
+        exit ${pstats[1]}
   - run:
       name: Run unit tests
       command: |
