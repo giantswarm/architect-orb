@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
--- Increase timeout for `golangci-lint` to 10 minutes.
+- Increase timeout for `golangci-lint` to 10 minutes.
 
 ## [4.25.1] - 2022-10-20
 
