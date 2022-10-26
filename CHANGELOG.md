@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.25.2] - 2022-10-26
+
 ### Changed
 
 - Increase timeout for `golangci-lint` to 10 minutes.
@@ -896,7 +898,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.25.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.25.2...HEAD
+[4.25.2]: https://github.com/giantswarm/architect-orb/compare/v4.25.1...v4.25.2
 [4.25.1]: https://github.com/giantswarm/architect-orb/compare/v4.25.0...v4.25.1
 [4.25.0]: https://github.com/giantswarm/architect-orb/compare/v4.24.0...v4.25.0
 [4.24.0]: https://github.com/giantswarm/architect-orb/compare/v4.23.0...v4.24.0
