@@ -170,3 +170,4 @@ steps:
                 password_envar: << parameters.password_envar >>
                 username_envar: << parameters.username_envar >>
                 registry_url: << parameters.registry_url>>
+                explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
