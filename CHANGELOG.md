@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `explicit_allow_chart_name_mismatch` to `push-to-app-catalog` with `app-build-suite` executor.
+
 ## [4.25.3] - 2022-10-26
 
 ### Changed

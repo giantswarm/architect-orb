@@ -115,8 +115,6 @@ the name of the repository with an optional `-app` suffix.
 Should be used to allow chart name validation. Set to `true` to explicitly disable checking against the name of the repository with optional `-app` suffix.
 This can be the case if the chart directory is generated during CI runs or when multiple charts reside in a single repository.
 
-Does not have any effect if `executor: app-build-suite` is set.
-
 ### skip_conftest_deprek8ion (optional boolean, default=false)
 
 Disable checking manifests against deprecated apiVersions using [deprek8ion](https://github.com/swade1987/deprek8ion) rules.

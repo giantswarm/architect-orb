@@ -155,6 +155,7 @@ steps:
                 on_tag: << parameters.on_tag >>
                 skip_conftest_deprek8ion: << parameters.skip_conftest_deprek8ion >>
                 persist_chart_archive: << parameters.persist_chart_archive >>
+                explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
         - when:
             condition:
               equal: [<< parameters.push_to_oci_registry >>, true]
