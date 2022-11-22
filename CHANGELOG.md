@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [4.26.0] - 2022-10-26
-
 ### Added
 
 - Add `explicit_allow_chart_name_mismatch` to `push-to-app-catalog` with `app-build-suite` executor.
+
+## [4.26.0] - 2022-11-21
+
+- Update `architect` version to [`v6.8.0`](https://github.com/giantswarm/architect/releases/tag/v6.8.0).
+- Update `app-build-suite` version to [`v1.1.3`](https://github.com/giantswarm/app-build-suite/releases/tag/v1.1.3).
 
 ## [4.25.3] - 2022-10-26
 
