@@ -12,6 +12,12 @@ parameters:
       When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
       Set this to `false` for deployments that follow a a master branch for production releases rather than
       using tags (the default).
+  explicit_allow_chart_name_mismatch:
+    type: boolean
+    default: false
+    description: |
+      If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
+      Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
   skip_conftest_deprek8ion:
     type: boolean
     default: false
@@ -49,11 +55,14 @@ steps:
             command: |
               [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
               echo -n ${CIRCLE_SHA1} | tee .reference
-  - run:
-      name: Verify chart parameters
-      command: |
-        CHART_NAME="<< parameters.chart >>"
-        [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
+  - unless:
+      condition: << parameters.explicit_allow_chart_name_mismatch >>
+      steps:
+        - run:
+            name: Verify chart parameters
+            command: |
+              CHART_NAME="<< parameters.chart >>"
+              [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
   - run:
       name: Execute App Build Suite
       command: |
@@ -68,8 +77,8 @@ steps:
   - unless:
       condition: << parameters.skip_conftest_deprek8ion >>
       steps:
-      - helm-conftest:
-          chart: "<< parameters.chart >>"
+        - helm-conftest:
+            chart: "<< parameters.chart >>"
   - run:
       name: "architect/package-and-push-oci-with-abs: Authenticate to the OCI registry"
       command: |
@@ -77,25 +86,25 @@ steps:
   - run:
       name: Push chart archive to OCI registry app catalog
       command: |
-          readonly app_catalog_name="oci://<< parameters.registry_url >>/$(cat .app_catalog_name)/"
-          readonly reference="$(cat .reference)"
+        readonly app_catalog_name="oci://<< parameters.registry_url >>/$(cat .app_catalog_name)/"
+        readonly reference="$(cat .reference)"
 
-          ret=1
-          tries=4
-          for i in $(seq 1 $tries) ; do
-            echo "====> Attempt $i: Running: helm push build/*.tgz $app_catalog_name"
-            set +e
-            helm push build/*.tgz $app_catalog_name
-            ret=$?
-            set -e
+        ret=1
+        tries=4
+        for i in $(seq 1 $tries) ; do
+          echo "====> Attempt $i: Running: helm push build/*.tgz $app_catalog_name"
+          set +e
+          helm push build/*.tgz $app_catalog_name
+          ret=$?
+          set -e
 
-            [[ $ret -eq 0 ]] && exit $ret
+          [[ $ret -eq 0 ]] && exit $ret
 
-            sleep 5
-          done
+          sleep 5
+        done
 
-          echo "Giving up after $tries failures." >&2
-          echo "Error pushing changes. See known errors in:" >&2
-          echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
+        echo "Giving up after $tries failures." >&2
+        echo "Error pushing changes. See known errors in:" >&2
+        echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
 
-          exit $ret
+        exit $ret
