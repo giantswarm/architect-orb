@@ -24,7 +24,7 @@ parameters:
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
   test_target:
-    default: "test"
+    default: ""
     description: |
       Executes the requested Makefile target.
     type: string

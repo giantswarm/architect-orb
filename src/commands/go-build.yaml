@@ -7,7 +7,7 @@ parameters:
     default: ""
     type: "string"
   test_target:
-    default: "test"
+    default: ""
     description: |
       Executes the requested Makefile target.
     type: string
