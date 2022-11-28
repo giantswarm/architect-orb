@@ -18,7 +18,6 @@ parameters:
     description: |
       If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
       Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
-      Does not have any effect for 'executor: app-build-suite'.
   persist_chart_archive:
     type: boolean
     default: false

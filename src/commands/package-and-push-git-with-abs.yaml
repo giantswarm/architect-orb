@@ -17,6 +17,12 @@ parameters:
     default: false
     description: |
       When this is `true`, checking for deprecated manifest versions will be skipped.
+  explicit_allow_chart_name_mismatch:
+    type: boolean
+    default: false
+    description: |
+      If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
+      Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
   persist_chart_archive:
     type: boolean
     default: false
@@ -38,11 +44,15 @@ steps:
             name: "architect/package-and-push-git-with-abs: Determine target app catalog based on branch name"
             command: |
               [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
-  - run:
-      name: Verify chart parameters
-      command: |
-        CHART_NAME="<< parameters.chart >>"
-        [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
+
+  - unless:
+      condition: << parameters.explicit_allow_chart_name_mismatch >>
+      steps:
+        - run:
+            name: Verify chart parameters
+            command: |
+              CHART_NAME="<< parameters.chart >>"
+              [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
   - run:
       name: Execute App Build Suite
       command: |
