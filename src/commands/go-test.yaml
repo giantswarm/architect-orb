@@ -1,3 +1,9 @@
+parameters:
+  test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target.
+    type: string
 steps:
   - run:
       name: Check if go.mod and go.sum are clean
@@ -48,7 +54,17 @@ steps:
           exit 0
         fi
         exit $nancy_result
-  - run:
-      name: Run unit tests
-      command: |
-        CGO_ENABLED=0 go test -ldflags "$(cat .ldflags)" ./...
+  - when:
+      condition: <<parameters.test_target>>
+      steps:
+      - run:
+          name: Run unit tests via Makefile target
+          command: |
+            CGO_ENABLED=0 make <<parameters.test_target>>
+  - unless:
+      condition: <<parameters.test_target>>
+      steps:
+      - run:
+          name: Run unit tests
+          command: |
+            CGO_ENABLED=0 go test -ldflags "$(cat .ldflags)" ./...

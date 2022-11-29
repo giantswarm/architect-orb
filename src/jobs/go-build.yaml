@@ -23,6 +23,11 @@ parameters:
         for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
+  test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target.
+    type: string
   tags:
     default: ""
     description: |
@@ -38,6 +43,7 @@ steps:
       binary: << parameters.binary >>
       os: << parameters.os >>
       tags: << parameters.tags >>
+      test_target: <<parameters.test_target>>
   - go-cache-save
   - persist_to_workspace:
       root: .

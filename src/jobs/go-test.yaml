@@ -16,11 +16,17 @@ parameters:
         for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
+  test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target.
+    type: string
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - tools-info
   - go-cache-restore
-  - go-test
+  - go-test:
+      test_target: <<parameters.test_target>>
   - go-cache-save

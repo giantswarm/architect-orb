@@ -6,8 +6,14 @@ parameters:
   tags:
     default: ""
     type: "string"
+  test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target.
+    type: string
 steps:
-  - go-test
+  - go-test:
+      test_target: <<parameters.test_target>>
   - run:
       name: Build binaries
       command: |
