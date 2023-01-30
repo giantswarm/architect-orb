@@ -8,7 +8,7 @@ steps:
       name: kubeval
       environment:
         KUBEVAL_SCHEMA_LOCATION: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/411622f5e91bc54d3eff7b700661ba03f23f7729
-        KUBERNETES_VERSIONS: 1.20.0 1.21.0 1.22.0
+        KUBERNETES_VERSIONS: <<parameters.kubernetes_versions_validate>>
       command: |
         for v in $KUBERNETES_VERSIONS; do
           echo "Validating against kubernetes version $v"

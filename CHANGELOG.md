@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Use `1.22.0 1.23.0 1.24.0` as the versions to test helm charts instead of `1.20.0 1.21.0 1.22.0`.
+
 ### Added
 
+- Add `kubernetes_versions_validate` to kubeval command.
 - Add `explicit_allow_chart_name_mismatch` to `push-to-app-catalog` with `app-build-suite` executor.
 - Add `test_target` parameter to `go-test` command. This allows a Makefile target to be executed when specified.
 

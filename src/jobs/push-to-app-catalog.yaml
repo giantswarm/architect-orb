@@ -82,6 +82,11 @@ parameters:
     description: |
       Required if `push_to_oci_registry` is set to `true`.
     type: "string"
+  kubernetes_versions_validate:
+    default: "1.22.0 1.23.0 1.24.0"
+    description: |
+      Versions of kubernetes the chart will be validated against.
+    type: "string"
 executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -104,6 +109,7 @@ steps:
             ct_config: "<< parameters.ct_config >>"
         - kubeval:
             chart: << parameters.chart >>
+            kubernetes_versions_validate: "<< parameters.kubernetes_versions_validate >>"
         - unless:
             condition: << parameters.skip_conftest_deprek8ion >>
             steps:
