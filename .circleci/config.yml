@@ -26,6 +26,7 @@ workflows:
 
       - orb-tools/publish:
           name: publish-branch
+          context: architect
           attach-workspace: true
           orb-path: workspace/packed/orb.yml
           orb-ref: giantswarm/architect@dev:${CIRCLE_BRANCH}
@@ -39,6 +40,7 @@ workflows:
 
       - orb-tools/publish:
           name: publish-tag
+          context: architect
           attach-workspace: true
           orb-path: workspace/packed/orb.yml
           orb-ref: giantswarm/architect@${CIRCLE_TAG##v}
