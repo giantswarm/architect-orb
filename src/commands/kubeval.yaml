@@ -2,6 +2,8 @@
 parameters:
   chart:
     type: "string"
+  kubernetes_versions_validate:
+    type: "string"
 description: Validate Kubernetes resources.
 steps:
   - run:
