@@ -109,7 +109,7 @@ steps:
             ct_config: "<< parameters.ct_config >>"
         - kubeval:
             chart: << parameters.chart >>
-            kubernetes_versions_validate: "<< parameters.kubernetes_versions_validate >>"
+            kubernetes_versions_validate: << parameters.kubernetes_versions_validate >>
         - unless:
             condition: << parameters.skip_conftest_deprek8ion >>
             steps:

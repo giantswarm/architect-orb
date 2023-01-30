@@ -12,6 +12,7 @@ steps:
         KUBEVAL_SCHEMA_LOCATION: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/411622f5e91bc54d3eff7b700661ba03f23f7729
         KUBERNETES_VERSIONS: <<parameters.kubernetes_versions_validate>>
       command: |
+        echo $KUBERNETES_VERSIONS
         for v in $KUBERNETES_VERSIONS; do
           echo "Validating against kubernetes version $v"
           if [ -d "helm/<<parameters.chart>>/ci" ]; then
