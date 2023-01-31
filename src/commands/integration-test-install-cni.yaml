@@ -11,4 +11,6 @@ steps:
               --set nodePort.enabled=true \
               --set hostPort.enabled=true \
               --set ipam.mode=kubernetes \
-              --set localRedirectPolicy=true
+              --set localRedirectPolicy=true \
+              --set hostServices.enabled=false \
+              --set hostServices.protocols="tcp,udp"
