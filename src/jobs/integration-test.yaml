@@ -33,10 +33,6 @@ parameters:
     default: "v1.21.1"
     description: "Kubernetes version for kind cluster."
     type: string
-  cilium-version:
-    default: "v1.12.6"
-    description: "Cilium helm release from https://helm.cilium.io/"
-    type: string
   setup-script:
     default: ""
     description: "Path to setup script with commands to execute before each test."
@@ -72,8 +68,7 @@ steps:
   - integration-test-create-cluster:
       kind-config: << parameters.kind-config >>
       kubernetes-version:  << parameters.kubernetes-version >>
-  - integration-test-install-cni:
-      cilium-version: << parameters.cilium-version >>
+  - integration-test-install-cni
   - integration-test-install-app-platform:
       install-app-platform:  << parameters.install-app-platform >>
   - integration-test-setup:
