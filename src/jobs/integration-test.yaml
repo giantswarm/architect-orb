@@ -73,7 +73,7 @@ steps:
       kind-config: << parameters.kind-config >>
       kubernetes-version:  << parameters.kubernetes-version >>
   - integration-test-install-cni:
-      cilium-version: << parameters.kind-config >>
+      cilium-version: << parameters.cilium-version >>
   - integration-test-install-app-platform:
       install-app-platform:  << parameters.install-app-platform >>
   - integration-test-setup:
