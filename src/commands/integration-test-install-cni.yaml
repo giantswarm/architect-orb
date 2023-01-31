@@ -7,13 +7,4 @@ steps:
         - run:
             name: "architect/integration-test-install-app-platform: Run apptestctl bootstrap"
             command: |
-              KUBECONFIG=$(kind get kubeconfig) helm upgrade --install --version << parameters.cilium-version >> --namespace kube-system --repo https://helm.cilium.io cilium cilium \
-              --set kubeProxyReplacement=strict \
-              --set k8sServiceHost=kind-control-plane \
-              --set k8sServicePort=6443 \
-              --set hostServices.enabled=false \
-              --set externalIPs.enabled=true \
-              --set nodePort.enabled=true \
-              --set hostPort.enabled=true \
-              --set ipam.mode=kubernetes \
-              --set localRedirectPolicy=true
+              KUBECONFIG=$(kind get kubeconfig) helm upgrade --install --version << parameters.cilium-version >> --namespace kube-system --repo https://helm.cilium.io cilium cilium --set kubeProxyReplacement=strict --set k8sServiceHost=kind-control-plane --set k8sServicePort=6443 --set hostServices.enabled=false --set externalIPs.enabled=true --set nodePort.enabled=true --set hostPort.enabled=true --set ipam.mode=kubernetes --set localRedirectPolicy=true
