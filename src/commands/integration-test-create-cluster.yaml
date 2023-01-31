@@ -17,7 +17,7 @@ steps:
         - run:
             name: "architect/integration-test-create-cluster: Prepare default kind config"
             command: |
-                printf "kind: Cluster\napiVersion: kind.x-k8s.io/v1alpha4\n" > kind-config
+                printf "kind: Cluster\napiVersion: kind.x-k8s.io/v1alpha4\nnetworking:\n  disableDefaultCNI: true\n  kubeProxyMode: none\n" > kind-config
   - run:
       name: "architect/integration-test-create-cluster: Create cluster"
       command: |
