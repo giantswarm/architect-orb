@@ -1,6 +1,6 @@
 steps:
   - run:
-      name: "architect/integration-test-install-app-platform: Run apptestctl bootstrap"
+      name: "architect/integration-test-install-cni: Install Cilium"
       command: |
         export KUBECONFIG=~/.kube/config
         helm upgrade --install --version v1.12.6 --namespace kube-system --repo https://helm.cilium.io cilium cilium \
