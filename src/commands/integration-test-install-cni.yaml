@@ -6,7 +6,7 @@ steps:
       name: "architect/integration-test-install-app-platform: Run apptestctl bootstrap"
       command: |
         export KUBECONFIG=$(kind get kubeconfig)
-        helm upgrade --install --version << parameters.cilium-version >> --namespace kube-system --repo https://helm.cilium.io cilium cilium --values - <<EOF
+        helm upgrade --install --version << parameters.cilium-version >> --namespace kube-system --repo https://helm.cilium.io cilium cilium --values - \<<EOF
         kubeProxyReplacement: strict
         k8sServiceHost: kind-control-plane
         k8sServicePort: 6443
