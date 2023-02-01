@@ -4,13 +4,7 @@ steps:
       command: |
         export KUBECONFIG=~/.kube/config
         helm upgrade --install --version v1.12.6 --namespace kube-system --repo https://helm.cilium.io cilium cilium \
-              --set kubeProxyReplacement=strict \
-              --set k8sServiceHost=kind-control-plane \
-              --set k8sServicePort=6443 \
-              --set externalIPs.enabled=true \
-              --set nodePort.enabled=true \
-              --set hostPort.enabled=true \
               --set ipam.mode=kubernetes \
               --set localRedirectPolicy=true \
-              --set hostServices.enabled=false \
-              --set hostServices.protocols="tcp,udp"
+              --set image.pullPolicy=IfNotPresent \
+              --set ipam.mode=kubernetes
