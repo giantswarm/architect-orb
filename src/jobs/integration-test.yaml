@@ -70,6 +70,7 @@ steps:
       kubernetes-version:  << parameters.kubernetes-version >>
   - integration-test-install-app-platform:
       install-app-platform:  << parameters.install-app-platform >>
+  - integration-test-install-additional-crds
   - integration-test-setup:
       setup-script: << parameters.setup-script >>
   - integration-test-go-test:

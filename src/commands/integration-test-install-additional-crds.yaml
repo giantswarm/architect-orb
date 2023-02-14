@@ -1,0 +1,7 @@
+steps:
+  - run:
+      name: "architect/integration-test-install-additional-crds: Install Additional CRDs"
+      command: |
+        export KUBECONFIG=~/.kube/config
+        #Allow apps which define ServiceMonitors to be installed
+        kubectl apply -f https://raw.githubusercontent.com/giantswarm/prometheus-operator-crd/master/helm/prometheus-operator-crd/templates/crd-servicemonitors.yaml

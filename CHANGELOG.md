@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `explicit_allow_chart_name_mismatch` to `push-to-app-catalog` with `app-build-suite` executor.
 - Add `test_target` parameter to `go-test` command. This allows a Makefile target to be executed when specified.
+- Add `ServiceMonitors` CRD to allow app integration tests.
 
 ## [4.26.0] - 2022-11-21
 
