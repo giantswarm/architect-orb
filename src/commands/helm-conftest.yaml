@@ -13,7 +13,7 @@ steps:
         policies="${policies},https://raw.githubusercontent.com/swade1987/deprek8ion/${sha}/policies/_service-account.rego"
 
         if [ -d "helm/<<parameters.chart>>/ci" ]; then
-          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> | conftest test --update "${policies}" - ; done
+          for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do helm template --values $t helm/<<parameters.chart>> --api-versions monitoring.coreos.com/v1 | conftest test --update "${policies}" - ; done
         else
-          helm template helm/<<parameters.chart>> | conftest test --update "${policies}" -
+          helm template helm/<<parameters.chart>> --api-versions monitoring.coreos.com/v1| conftest test --update "${policies}" -
         fi
