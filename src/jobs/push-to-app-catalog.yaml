@@ -102,7 +102,7 @@ steps:
         - helm-lint:
             chart: "<< parameters.chart >>"
             ct_config: "<< parameters.ct_config >>"
-        - kubeval:
+        - kubeconform:
             chart: << parameters.chart >>
         - unless:
             condition: << parameters.skip_conftest_deprek8ion >>
