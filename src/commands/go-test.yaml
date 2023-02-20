@@ -45,11 +45,11 @@ steps:
       name: Check if dependencies have known security vulnerabilities
       command: |
         set +e
-        CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet --exclude-vulnerability-file ./.nancy-ignore --additional-exclude-vulnerability-files ./.nancy-ignore.generated | tee ./nancy-results.txt ; nancy_result=(${PIPESTATUS[1]})
+        CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet --exclude-vulnerability-file ./.nancy-ignore --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 | tee ./nancy-results.txt ; nancy_result=(${PIPESTATUS[1]})
         grep -q 'error accessing OSS Index' nancy-results.txt; grep_result=$?
         set -e
         # If nancy gave us a bad exit code AND grep found an OSS index error in the output, then we don't fail the build.
-        if [[ $nancy_result -eq 1 && $grep_result -eq 0 ]]; then
+        if [[ $nancy_result -ne 0 && $grep_result -eq 0 ]]; then
           echo Ignoring failed scan due to problem with the external scanner.
           exit 0
         fi
