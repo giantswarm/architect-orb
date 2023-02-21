@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `test_target` parameter to `go-test` command. This allows a Makefile target to be executed when specified.
 - Remove deprecated `kubeval` command in favor of `kubeconform`. Add more recent k8s version checks and validation against our giantswarm/json-schema repo
 
+### Changed
+
+- Update `architect` version to [`v6.10.0`](https://github.com/giantswarm/architect/releases/tag/v6.10.0).
+- Update Go version used in `machine-install` command to 1.19.6.
+
 ## [4.26.0] - 2022-11-21
 
 - Update `architect` version to [`v6.8.0`](https://github.com/giantswarm/architect/releases/tag/v6.8.0).
