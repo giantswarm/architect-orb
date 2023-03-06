@@ -10,13 +10,16 @@ parameters:
       Executes the requested Makefile target.
     type: string
 steps:
+  # We set `CGO_ENABLED=0` because the `architect` Docker image does not have a C compiler. Most cases
+  # should work without cgo.
+
   - when:
       condition: <<parameters.pre_test_target>>
       steps:
       - run:
           name: Run pre-test Makefile target
           command: |
-            make <<parameters.pre_test_target>>
+            CGO_ENABLED=0 make <<parameters.pre_test_target>>
   - run:
       name: Check if go.mod and go.sum are clean
       command: |
