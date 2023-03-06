@@ -1,10 +1,22 @@
 parameters:
+  pre_test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target before lints and tests. Helpful to generate code in advance.
+    type: string
   test_target:
     default: ""
     description: |
       Executes the requested Makefile target.
     type: string
 steps:
+  - when:
+      condition: <<parameters.pre_test_target>>
+      steps:
+      - run:
+          name: Run pre-test Makefile target
+          command: |
+            make <<parameters.pre_test_target>>
   - run:
       name: Check if go.mod and go.sum are clean
       command: |
