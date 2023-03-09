@@ -3,6 +3,11 @@ parameters:
     type: "string"
   os:
     type: "string"
+  pre_test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target before lints and tests. Helpful to generate code in advance.
+    type: string
   tags:
     default: ""
     type: "string"
@@ -13,6 +18,7 @@ parameters:
     type: string
 steps:
   - go-test:
+      pre_test_target: <<parameters.pre_test_target>>
       test_target: <<parameters.test_target>>
   - run:
       name: Build binaries
