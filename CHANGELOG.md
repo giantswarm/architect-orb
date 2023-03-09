@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.28.1] - 2023-03-09
+
 ### Added
 
 - Add `pre_test_target` parameter to `go-build` and `go-test` jobs. This allows a Makefile target to be executed when specified and is helpful for generating code before any linters run.
@@ -928,7 +930,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.28.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.28.1...HEAD
+[4.28.1]: https://github.com/giantswarm/architect-orb/compare/v4.28.0...v4.28.1
 [4.28.0]: https://github.com/giantswarm/architect-orb/compare/v4.26.0...v4.28.0
 [4.26.0]: https://github.com/giantswarm/architect-orb/compare/v4.25.3...v4.26.0
 [4.25.3]: https://github.com/giantswarm/architect-orb/compare/v4.25.2...v4.25.3
