@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.29.0] - 2023-04-28
+
 ### Changed
 
 - Update `apptestctl` to v0.15.0, which installs Cilium Network Policy and Cluster-wide Policy CRDs by default.
@@ -934,7 +936,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.28.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.29.0...HEAD
+[4.29.0]: https://github.com/giantswarm/architect-orb/compare/v4.28.1...v4.29.0
 [4.28.1]: https://github.com/giantswarm/architect-orb/compare/v4.28.0...v4.28.1
 [4.28.0]: https://github.com/giantswarm/architect-orb/compare/v4.26.0...v4.28.0
 [4.26.0]: https://github.com/giantswarm/architect-orb/compare/v4.25.3...v4.26.0
