@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update `apptestctl` to v0.17.0, which installs ServiceMonitor and PodMonitor CRDs to test clusters and makes it compatible with Kubernetes 1.25 and above.
+
 ## [4.29.0] - 2023-04-28
 
 ### Changed
