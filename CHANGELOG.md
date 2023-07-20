@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Bump architect image to v6.12.0 which includes bump of Go to v1.20
+
 ## [4.29.0] - 2023-04-28
 
 ### Changed
