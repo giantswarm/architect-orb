@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update `apptestctl` to v0.17.0, which installs ServiceMonitor and PodMonitor CRDs to test clusters and makes it compatible with Kubernetes 1.25 and above.
 
+## [4.30.1] - 2023-07-20
+
+### Changed
+
+- Bump architect image to v6.12.1 which includes latest golangci-lint
+
+## [4.30.0] - 2023-07-20
+
+### Changed
+
+- Bump architect image to v6.12.0 which includes bump of Go to v1.20
+
 ## [4.29.0] - 2023-04-28
 
 ### Changed
@@ -940,7 +952,9 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.29.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.30.1...HEAD
+[4.30.1]: https://github.com/giantswarm/architect-orb/compare/v4.30.0...v4.30.1
+[4.30.0]: https://github.com/giantswarm/architect-orb/compare/v4.29.0...v4.30.0
 [4.29.0]: https://github.com/giantswarm/architect-orb/compare/v4.28.1...v4.29.0
 [4.28.1]: https://github.com/giantswarm/architect-orb/compare/v4.28.0...v4.28.1
 [4.28.0]: https://github.com/giantswarm/architect-orb/compare/v4.26.0...v4.28.0
