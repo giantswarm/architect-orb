@@ -1,0 +1,22 @@
+---
+parameters:
+  chart:
+    type: "string"
+description: Validate Kubernetes resources.
+steps:
+  - run:
+      name: kubeconform
+      environment:
+        GS_SCHEMA_REPOSITORY: "https://raw.githubusercontent.com/giantswarm/json-schema/main/master"
+        KUBERNETES_VERSIONS: 1.20.0 1.21.0 1.22.0 1.23.0 1.24.0
+      command: |
+        for v in $KUBERNETES_VERSIONS; do
+          echo "Validating against kubernetes version $v"
+          if [ -d "helm/<<parameters.chart>>/ci" ]; then
+            for t in $(ls helm/<<parameters.chart>>/ci/*.yaml); do
+              helm template --values $t helm/<<parameters.chart>> | kubeconform --schema-location default --schema-location "${GS_SCHEMA_REPOSITORY}/{{ .ResourceKind }}{{ .KindSuffix }}.json" --ignore-missing-schemas --kubernetes-version $v -
+            done
+          else
+            helm template helm/<<parameters.chart>> | kubeconform --schema-location default --schema-location "${GS_SCHEMA_REPOSITORY}/{{ .ResourceKind }}{{ .KindSuffix }}.json" --ignore-missing-schemas --kubernetes-version $v -
+          fi
+        done

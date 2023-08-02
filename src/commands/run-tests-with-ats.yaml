@@ -17,12 +17,12 @@ steps:
   - attach_workspace:
       at: build
   - run:
-      name: "download dats.sh script"
+      name: "Download dats.sh script"
       command: |
         wget -O dats.sh "https://raw.githubusercontent.com/giantswarm/app-test-suite/<< parameters.app-test-suite_version >>/dats.sh"
         chmod +x dats.sh
   - run:
-      name: "execute app-test-suite with dats.sh wrapper"
+      name: "Execute app-test-suite with dats.sh wrapper"
       command: |
         set -x
 

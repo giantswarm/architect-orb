@@ -26,7 +26,7 @@ workflows:
 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [test-dir](#attach_workspace) (required string)
-- [apptestctl-version](#apptestctl-version) (optional string, default="v0.13.1")
+- [apptestctl-version](#apptestctl-version) (optional string, default="v0.17.0")
 - [env-file](#env-file) (optional string, default="")
 - [helm-version](#helm-version) (optional string, default="v3.6.3")
 - [install-app-platform](#install-app-platform) (optional boolean, default=false)

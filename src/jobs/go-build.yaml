@@ -15,6 +15,11 @@ parameters:
     description: "The target Operating System for the binary. Must be one of \"linux\", \"darwin\"."
     type: enum
     enum: ["linux", "darwin"]
+  pre_test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target before lints and tests. Helpful to generate code in advance.
+    type: string
   resource_class:
     default: "medium"
     description: |
@@ -23,6 +28,11 @@ parameters:
         for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
+  test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target.
+    type: string
   tags:
     default: ""
     description: |
@@ -37,7 +47,9 @@ steps:
   - go-build:
       binary: << parameters.binary >>
       os: << parameters.os >>
+      pre_test_target: <<parameters.pre_test_target>>
       tags: << parameters.tags >>
+      test_target: <<parameters.test_target>>
   - go-cache-save
   - persist_to_workspace:
       root: .

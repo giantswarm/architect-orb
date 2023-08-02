@@ -1,25 +1,85 @@
+parameters:
+  pre_test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target before lints and tests. Helpful to generate code in advance.
+    type: string
+  test_target:
+    default: ""
+    description: |
+      Executes the requested Makefile target.
+    type: string
 steps:
-  - run: |
-      go mod tidy && git diff --exit-code
-  - run: |
-      echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
-  - run: |
-      echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
-  - run: |
-      echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
-  - run: |
-      echo "\"$(cat .ldflags)\""
+  # We set `CGO_ENABLED=0` because the `architect` Docker image does not have a C compiler. Most cases
+  # should work without cgo.
+
+  - when:
+      condition: <<parameters.pre_test_target>>
+      steps:
+      - run:
+          name: Run pre-test Makefile target
+          command: |
+            CGO_ENABLED=0 make <<parameters.pre_test_target>>
+  - run:
+      name: Check if go.mod and go.sum are clean
+      command: |
+        go mod tidy && git diff --exit-code
+  - run:
+      name: Create .ldflags
+      command: |
+        echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
+  - run:
+      name: Write build date to .ldflags
+      command: |
+        echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+  - run:
+      name: Write commit SHA to .ldflags
+      command: |
+        echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+  - run:
+      name: Print .ldflags content
+      command: |
+        echo "\"$(cat .ldflags)\""
   - run:
       name: Check if imports are properly sorted
       command: |
         go install golang.org/x/tools/cmd/goimports@latest && if [[ -n $(goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -l .) ]]; then goimports -local github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} -d . && exit 1; fi
-  - run: |
-      test -z $(gofmt -l .) || gofmt -d .
-  - run: |
-      CGO_ENABLED=0 go vet ./...
-  - run: |
-      CGO_ENABLED=0 golangci-lint run -E gosec -E goconst
-  - run: |
-      CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet --exclude-vulnerability-file ./.nancy-ignore --additional-exclude-vulnerability-files ./.nancy-ignore.generated
-  - run: |
-      CGO_ENABLED=0 go test -ldflags "$(cat .ldflags)" ./...
+  - run:
+      name: Check if code structure differs from gofmt's
+      command: |
+        test -z $(gofmt -l .) || gofmt -d .
+  - run:
+      name: Check if go vet has any complaints
+      command: |
+        CGO_ENABLED=0 go vet ./...
+  - run:
+      name: Check if golangci-lint has any complaints
+      command: |
+        CGO_ENABLED=0 golangci-lint run -E gosec -E goconst --timeout 10m
+  - run:
+      name: Check if dependencies have known security vulnerabilities
+      command: |
+        set +e
+        CGO_ENABLED=0 go list -json -m all | nancy sleuth --skip-update-check --quiet --exclude-vulnerability-file ./.nancy-ignore --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 | tee ./nancy-results.txt ; nancy_result=(${PIPESTATUS[1]})
+        grep -q 'error accessing OSS Index' nancy-results.txt; grep_result=$?
+        set -e
+        # If nancy gave us a bad exit code AND grep found an OSS index error in the output, then we don't fail the build.
+        if [[ $nancy_result -ne 0 && $grep_result -eq 0 ]]; then
+          echo Ignoring failed scan due to problem with the external scanner.
+          exit 0
+        fi
+        exit $nancy_result
+  - when:
+      condition: <<parameters.test_target>>
+      steps:
+      - run:
+          name: Run unit tests via Makefile target
+          command: |
+            CGO_ENABLED=0 make <<parameters.test_target>>
+  - unless:
+      condition: <<parameters.test_target>>
+      steps:
+      - run:
+          name: Run unit tests
+          command: |
+            CGO_ENABLED=0 go test -ldflags "$(cat .ldflags)" ./...

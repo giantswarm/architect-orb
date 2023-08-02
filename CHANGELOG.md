@@ -7,11 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 ## [4.31.0] - 2023-08-02
+
+### Changed
+
+- Update `apptestctl` to v0.17.0, which installs ServiceMonitor and PodMonitor CRDs to test clusters and makes it compatible with Kubernetes 1.25 and above.
+
+## [4.30.1] - 2023-07-20
+
+### Changed
+
+- Bump architect image to v6.12.1 which includes latest golangci-lint
+
+## [4.30.0] - 2023-07-20
+
+### Changed
+
+- Bump architect image to v6.12.0 which includes bump of Go to v1.20
+
+## [4.29.0] - 2023-04-28
+
+### Changed
+
+- Update `apptestctl` to v0.15.0, which installs Cilium Network Policy and Cluster-wide Policy CRDs by default.
+
+## [4.28.1] - 2023-03-09
+
+### Added
+
+- Add `pre_test_target` parameter to `go-build` and `go-test` jobs. This allows a Makefile target to be executed when specified and is helpful for generating code before any linters run.
+
+## [4.28.0] - 2023-02-21
+
+### Added
+
+- Fix `go test` `nancy` external service error ignore logic
+- Add `explicit_allow_chart_name_mismatch` to `push-to-app-catalog` with `app-build-suite` executor.
+- Add `test_target` parameter to `go-test` command. This allows a Makefile target to be executed when specified.
+- Remove deprecated `kubeval` command in favor of `kubeconform`. Add more recent k8s version checks and validation against our giantswarm/json-schema repo
+
+### Changed
+
+- Update `architect` version to [`v6.10.0`](https://github.com/giantswarm/architect/releases/tag/v6.10.0).
+- Update Go version used in `machine-install` command to 1.19.6.
+
+## [4.26.0] - 2022-11-21
+
+- Update `architect` version to [`v6.8.0`](https://github.com/giantswarm/architect/releases/tag/v6.8.0).
+- Update `app-build-suite` version to [`v1.1.3`](https://github.com/giantswarm/app-build-suite/releases/tag/v1.1.3).
+
+## [4.25.3] - 2022-10-26
+
+### Changed
+
+- Don't fail `go test` if the `nancy` back end is down.
+
+## [4.25.2] - 2022-10-26
+
+### Changed
+
+- Increase timeout for `golangci-lint` to 10 minutes.
+
+## [4.25.1] - 2022-10-20
+
+### Added
+
+- Add step names where missing.
+
+## [4.25.0] - 2022-10-05
+
+### Changed
+
+- Update `architect` version to [`v6.7.0`](https://github.com/giantswarm/architect/releases/tag/v6.7.0).
+- Update Go version used in `machine-install` command to 1.19.1.
 
 ## [4.24.0] - 2022-07-12
 
 ### Changed
+
 - Update `architect` version to [`v6.6.0`](https://github.com/giantswarm/architect/releases/tag/v6.6.0).
   - Update `nancy` to `v1.0.37`.
 - Use an additional nancy exclude vulnerabilities file at the root of the repositories: `.nancy-ignore.generated`. If the file does not exist, nancy will ignore it. The standard `.nancy-ignore` file should contain the repository specific excludes and `.nancy-ignore.generated` is a generated one that should contain globally ignored vulnerabilities, if any.
@@ -883,6 +957,17 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 [Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.31.0...HEAD
 [4.31.0]: https://github.com/giantswarm/architect-orb/compare/v4.24.0...v4.31.0
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.30.1...HEAD
+[4.30.1]: https://github.com/giantswarm/architect-orb/compare/v4.30.0...v4.30.1
+[4.30.0]: https://github.com/giantswarm/architect-orb/compare/v4.29.0...v4.30.0
+[4.29.0]: https://github.com/giantswarm/architect-orb/compare/v4.28.1...v4.29.0
+[4.28.1]: https://github.com/giantswarm/architect-orb/compare/v4.28.0...v4.28.1
+[4.28.0]: https://github.com/giantswarm/architect-orb/compare/v4.26.0...v4.28.0
+[4.26.0]: https://github.com/giantswarm/architect-orb/compare/v4.25.3...v4.26.0
+[4.25.3]: https://github.com/giantswarm/architect-orb/compare/v4.25.2...v4.25.3
+[4.25.2]: https://github.com/giantswarm/architect-orb/compare/v4.25.1...v4.25.2
+[4.25.1]: https://github.com/giantswarm/architect-orb/compare/v4.25.0...v4.25.1
+[4.25.0]: https://github.com/giantswarm/architect-orb/compare/v4.24.0...v4.25.0
 [4.24.0]: https://github.com/giantswarm/architect-orb/compare/v4.23.0...v4.24.0
 [4.23.0]: https://github.com/giantswarm/architect-orb/compare/v4.22.0...v4.23.0
 [4.22.0]: https://github.com/giantswarm/architect-orb/compare/v4.21.1...v4.22.0
