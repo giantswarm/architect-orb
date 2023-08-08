@@ -1,5 +1,5 @@
-[![CircleCI](https://circleci.com/gh/giantswarm/architect-orb.svg?style=shield)](https://circleci.com/gh/giantswarm/architect-orb)
-[![CircleCI Orb Version](https://img.shields.io/badge/endpoint.svg?url=https://badges.circleci.io/orb/giantswarm/architect)](https://circleci.com/orbs/registry/orb/giantswarm/architect)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/architect-orb/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/architect-orb/tree/master)
+[![Orb Version Badge](https://badges.circleci.com/orbs/giantswarm/architect.svg)](https://circleci.com/developer/orbs/orb/giantswarm/architect)
 
 # architect-orb
 
