@@ -29,7 +29,7 @@ steps:
       name: Create ldflags file
       command: |
         echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
-        
+
         # buildTimestamp
         echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
 
@@ -38,7 +38,7 @@ steps:
 
         # Print content
         echo "\"$(cat .ldflags)\""
-        
+
   - run:
       name: Check if imports are properly sorted
       command: |
