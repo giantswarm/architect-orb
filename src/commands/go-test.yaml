@@ -24,22 +24,21 @@ steps:
       name: Check if go.mod and go.sum are clean
       command: |
         go mod tidy && git diff --exit-code
+
   - run:
-      name: Create .ldflags
+      name: Create ldflags file
       command: |
         echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
-  - run:
-      name: Write build date to .ldflags
-      command: |
+
+        # buildTimestamp
         echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
-  - run:
-      name: Write commit SHA to .ldflags
-      command: |
+
+        # Commit SHA
         echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
-  - run:
-      name: Print .ldflags content
-      command: |
+
+        # Print content
         echo "\"$(cat .ldflags)\""
+
   - run:
       name: Check if imports are properly sorted
       command: |
