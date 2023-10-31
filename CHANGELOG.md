@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.33.1] - 2023-10-31
+
 ### Fixed
 
 - Prevent false positives in nancy's vulnerability reports by using `go list` with `-deps ./...`
@@ -971,7 +973,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.33.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.33.1...HEAD
+[4.33.1]: https://github.com/giantswarm/architect-orb/compare/v4.33.0...v4.33.1
 [4.33.0]: https://github.com/giantswarm/architect-orb/compare/v4.32.0...v4.33.0
 [4.32.0]: https://github.com/giantswarm/architect-orb/compare/v4.31.0...v4.32.0
 [4.31.0]: https://github.com/giantswarm/architect-orb/compare/v4.24.0...v4.31.0
