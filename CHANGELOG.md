@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update `architect` version to [`v6.13.0`](https://github.com/giantswarm/architect/releases/tag/v6.13.0) (includes Go v1.21.3)
+
 ## [4.33.1] - 2023-10-31
 
 ### Fixed
@@ -17,13 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update `app-test-suite` to v0.5.0. 
+- Update `app-test-suite` to v0.5.0.
 
 ## [4.32.0] - 2023-10-10
 
 ### Changed
 
-- Update `app-test-suite` to v0.4.1. 
+- Update `app-test-suite` to v0.4.1.
 - Update `apptestctl` to v0.18.0, which installs VerticalPodAutoscaler and PolicyException CRDs to test clusters.
 
 ## [4.31.0] - 2023-08-02
