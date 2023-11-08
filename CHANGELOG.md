@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.34.0] - 2023-11-08
+
 ### Changed
 
 - Update `architect` version to [`v6.13.0`](https://github.com/giantswarm/architect/releases/tag/v6.13.0) (includes Go v1.21.3)
@@ -977,7 +979,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.33.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.34.0...HEAD
+[4.34.0]: https://github.com/giantswarm/architect-orb/compare/v4.33.1...v4.34.0
 [4.33.1]: https://github.com/giantswarm/architect-orb/compare/v4.33.0...v4.33.1
 [4.33.0]: https://github.com/giantswarm/architect-orb/compare/v4.32.0...v4.33.0
 [4.32.0]: https://github.com/giantswarm/architect-orb/compare/v4.31.0...v4.32.0
