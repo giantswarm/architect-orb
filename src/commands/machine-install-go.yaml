@@ -4,7 +4,7 @@ parameters:
     default: "1.21.3"
   archive_sha:
     type: "string"
-    default: "c2ccd27ca7a5bf8260102b6f5905e39d64bfe41aabedbf61864d2b44fb2b5286"
+    default: "1241381b2843fae5a9707eec1f8fb2ef94d827990582c7c7c32f5bdfbfd420c8"
 steps:
   - run:
       name: "architect/machine-install-go: Remove old Go"
