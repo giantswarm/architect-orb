@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix Go checksum for `machine-install-go` command
+
 ## [4.34.0] - 2023-11-08
 
 ### Changed
