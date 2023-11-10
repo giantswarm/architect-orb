@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.34.1] - 2023-11-10
+
 ### Fixed
 
 - Fix Go checksum for `machine-install-go` command
@@ -983,7 +985,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.34.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.34.1...HEAD
+[4.34.1]: https://github.com/giantswarm/architect-orb/compare/v4.34.0...v4.34.1
 [4.34.0]: https://github.com/giantswarm/architect-orb/compare/v4.33.1...v4.34.0
 [4.33.1]: https://github.com/giantswarm/architect-orb/compare/v4.33.0...v4.33.1
 [4.33.0]: https://github.com/giantswarm/architect-orb/compare/v4.32.0...v4.33.0
