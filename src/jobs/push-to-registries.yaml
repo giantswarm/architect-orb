@@ -1,23 +1,15 @@
 parameters:
   image:
-    description: 'Name of the docker image, without tag. e.g. "quay.io/my-org/my-repo".'
+    description: 'Name of the  container repository and image, without tag. e.g. "my-org/my-image".'
     type: "string"
-  password_envar:
-    default: "ARCHITECT_DOCKER_REGISTRY_PASSWORD"
-    description: "Environment variable name holding docker registry password."
-    type: "env_var_name"
-  username_envar:
-    default: "ARCHITECT_DOCKER_REGISTRY_USERNAME"
-    description: "Environment variable name holding registry username."
-    type: "env_var_name"
   tag-latest-branch:
     description: 'Name of the branch on which the image will be additionally tagged as "latest".'
     type: "string"
-    default: "master"
+    default: "main"
   resource_class:
     default: "small"
     description: |
-      Configures amount CPU and RAM for the job. See
+      Configures the amount of CPU and RAM for the job. See
       https://circleci.com/docs/2.0/configuration-reference/#docker-executor
       for details.
     type: "enum"
@@ -36,14 +28,27 @@ resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - setup_remote_docker:
-      version: 20.10.11
+      version: default
   - attach_workspace:
       at: .
-  - push-to-docker:
-      image: <<parameters.image>>
+  - image-prepare-tag:
+      tag-suffix: <<parameters.tag-suffix>>
+  - image_build_with_docker:
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+  - image-push-to-registry:
+      image: quay.io/<<parameters.image>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
-      password_envar: <<parameters.password_envar>>
-      username_envar: <<parameters.username_envar>>
+      username_envar: QUAY_USERNAME
+      password_envar: QUAY_PASSWORD
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      tag-suffix: <<parameters.tag-suffix>>
+  - push-image-to-aliyun:
+      image: giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      username_envar: ALIYUN_USERNAME
+      password_envar: ALIYUN_PASSWORD
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
       tag-suffix: <<parameters.tag-suffix>>
