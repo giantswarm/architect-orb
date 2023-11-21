@@ -1,13 +1,18 @@
 # push-to-registries
 
-This job builds a docker image and pushes it to a registry.
-It uses the Dockerfile at the root of the workspace directory and the root directory as build context by default.
+This job builds a docker image and pushes it to a set of registries configured within the job itself.
+This way this job centralizes the management over image uploads and build process.
+It uses the `dockerfile` at the root of the workspace directory and the root directory as 
+build context by default.
 Otherwise, it is possible to specify the Dockerfile and build context to use with `dockerfile` and `build-context` arguments respectively.
 
-**NOTE**: docker registry username and password are read from environment variables which default to `ARCHITECT_DOCKER_REGISTRY_USERNAME` and `ARCHITECT_DOCKER_REGISTRY_PASSWORD` respectively. This can be changed via `username_var` and `password_var` arguments.
 **NOTE**: The docker image will be tagged with the version found by `architect project version` command.
 
+**NOTE:** The registry domain is configured by the job itself. In the `image` argument, please only specify `repository/image`
+
 Argument `tag-suffix` allows to specify a special suffix to be added after the generated container tag.
+
+
 
 Example usage
 
@@ -19,14 +24,10 @@ orbs:
 workflows:
   my-workflow:
     jobs:
-      - architect/push-to-docker:
+      - architect/push-to-registries:
           context: "architect"
-          name: "push-REPOSITORY-to-quay"
-          image: "quay.io/giantswarm/REPOSITORY"
-          username_envar: "QUAY_USERNAME"
-          password_envar: "QUAY_PASSWORD"
-          build-context: "."
-          dockerfile: "./Dockerfile"
+          name: "push-image-to-registries"
+          image: "giantswarm/REPOSITORY"
           tag-suffix: ""
           requires:
             # Make sure binary is built.
@@ -45,7 +46,7 @@ You can do it like this:
 workflows:
   my-workflow:
     jobs:
-      - architect/push-to-docker:
+      - architect/push-to-registries:
           ...
           filters:
             # Trigger job also on git tag.
