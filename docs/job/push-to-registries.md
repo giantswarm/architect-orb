@@ -1,14 +1,14 @@
 # push-to-registries
 
-This job builds a docker image and pushes it to a set of registries configured within the job itself.
+This job builds a container image and pushes it to a set of registries configured within the job itself.
 This way this job centralizes the management over image uploads and build process.
-It uses the `dockerfile` at the root of the workspace directory and the root directory as 
+It uses the `Dockerfile` found at the root of the workspace directory and the root directory as 
 build context by default.
 Otherwise, it is possible to specify the Dockerfile and build context to use with `dockerfile` and `build-context` arguments respectively.
 
-**NOTE**: The docker image will be tagged with the version found by `architect project version` command.
+**NOTE**: The container image will be tagged with the version found by the `architect project version` command.
 
-**NOTE:** The registry domain is configured by the job itself. In the `image` argument, please only specify `repository/image`
+**NOTE:** The registry domain is configured by the job itself. In the `image` argument, please only specify `repository/image`.
 
 Argument `tag-suffix` allows to specify a special suffix to be added after the generated container tag.
 
@@ -25,9 +25,9 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-registries:
-          context: "architect"
-          name: "push-image-to-registries"
-          image: "giantswarm/REPOSITORY"
+          context: architect
+          name: push-image-to-registries
+          image: giantswarm/REPOSITORY
           tag-suffix: ""
           requires:
             # Make sure binary is built.
