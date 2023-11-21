@@ -7,19 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job that pushes charts to multiple registries at once.
+
+## [4.34.1] - 2023-11-10
+
+### Fixed
+
+- Fix Go checksum for `machine-install-go` command
+
+## [4.34.0] - 2023-11-08
+
+### Changed
+
+- Update `architect` version to [`v6.13.0`](https://github.com/giantswarm/architect/releases/tag/v6.13.0) (includes Go v1.21.3)
+
+## [4.33.1] - 2023-10-31
+
+### Fixed
+
+- Prevent false positives in nancy's vulnerability reports by using `go list` with `-deps ./...`
 
 ## [4.33.0] - 2023-10-10
 
 ### Changed
 
-- Update `app-test-suite` to v0.5.0. 
+- Update `app-test-suite` to v0.5.0.
 
 ## [4.32.0] - 2023-10-10
 
 ### Changed
 
-- Update `app-test-suite` to v0.4.1. 
+- Update `app-test-suite` to v0.4.1.
 - Update `apptestctl` to v0.18.0, which installs VerticalPodAutoscaler and PolicyException CRDs to test clusters.
 
 ## [4.31.0] - 2023-08-02
@@ -969,7 +988,10 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.33.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.34.1...HEAD
+[4.34.1]: https://github.com/giantswarm/architect-orb/compare/v4.34.0...v4.34.1
+[4.34.0]: https://github.com/giantswarm/architect-orb/compare/v4.33.1...v4.34.0
+[4.33.1]: https://github.com/giantswarm/architect-orb/compare/v4.33.0...v4.33.1
 [4.33.0]: https://github.com/giantswarm/architect-orb/compare/v4.32.0...v4.33.0
 [4.32.0]: https://github.com/giantswarm/architect-orb/compare/v4.31.0...v4.32.0
 [4.31.0]: https://github.com/giantswarm/architect-orb/compare/v4.24.0...v4.31.0
