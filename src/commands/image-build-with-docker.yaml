@@ -1,0 +1,16 @@
+parameters:
+  build-context:
+    type: "string"
+    default: "."
+  dockerfile:
+    type: "string"
+    default: "./Dockerfile"
+steps:
+  - run:
+      name: Build the container image using 'docker build'
+      command: |
+        docker build -f "<<parameters.dockerfile>>" "<<parameters.build-context>>" --progress plain 2>&1 | tee .docker.log
+  - run:
+      name: Save container image SHA256 to temp file
+      command: |
+        awk -F" " '/^#[0-9]+ writing image sha256:[0-9a-f]{40}/ {print $4}' .docker.log | tee .image_sha256

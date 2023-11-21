@@ -1,25 +1,25 @@
 parameters:
   image:
-    description: "Name of the docker image, without tag. e.g. \"quay.io/my-org/my-repo\"."
+    description: 'Name of the docker image, without tag. e.g. "quay.io/my-org/my-repo".'
     type: "string"
   password_envar:
     default: "ARCHITECT_DOCKER_REGISTRY_PASSWORD"
     description: "Environment variable name holding docker registry password."
-    type: "string"
+    type: "env_var_name"
   username_envar:
     default: "ARCHITECT_DOCKER_REGISTRY_USERNAME"
     description: "Environment variable name holding registry username."
-    type: "string"
+    type: "env_var_name"
   tag-latest-branch:
-    description: "Name of the branch on which the image will be additionally tagged as \"latest\"."
+    description: 'Name of the branch on which the image will be additionally tagged as "latest".'
     type: "string"
     default: "master"
   resource_class:
     default: "small"
     description: |
-        Configures amount CPU and RAM for the job. See
-        https://circleci.com/docs/2.0/configuration-reference/#docker-executor
-        for details.
+      Configures amount CPU and RAM for the job. See
+      https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+      for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
   build-context:

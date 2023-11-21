@@ -1,0 +1,9 @@
+parameters:
+  tag-suffix:
+    type: "string"
+    default: ""
+steps:
+  - run:
+      name: Generate container tag from 'architect project version' and tag-suffix parameter
+      command: |
+        echo -n "$(architect project version)<<parameters.tag-suffix>>" | tee .docker_image_tag

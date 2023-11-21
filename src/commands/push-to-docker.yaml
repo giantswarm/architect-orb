@@ -2,9 +2,9 @@ parameters:
   image:
     type: "string"
   password_envar:
-    type: "string"
+    type: "env_var_name"
   username_envar:
-    type: "string"
+    type: "env_var_name"
   tag-latest-branch:
     type: "string"
   build-context:
