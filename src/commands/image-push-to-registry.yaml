@@ -24,18 +24,18 @@ parameters:
     default: "./Dockerfile"
 steps:
   - run:
-      name: Authenticate to the container registry
+      name: Authenticate to the registry <<parameters.registry>>
       command: |
         echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "<<parameters.registry>>"
   - run:
-      name: Tag the image
+      name: Tag the image for <<parameters.registry>>
       command: |
         docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
   - run:
-      name: Print image push info
+      name: Print image push info for <<parameters.registry>>
       command: echo "Pushing image with SHA256 <<parameters.image_sha256>> as <<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
   - run:
-      name: Push the container image to <<parameters.registry>> using 'docker push'
+      name: Push the image to <<parameters.registry>>
       command: |
         docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
   - when:
