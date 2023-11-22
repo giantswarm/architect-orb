@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [4.35.0] - 2023-11-21
+### Changed
 
+- UX improvements on `push-to-registries` job.
+
+## [4.35.0] - 2023-11-21
 
 Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job that pushes charts to multiple registries at once.
 
