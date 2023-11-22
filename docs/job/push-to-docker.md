@@ -1,5 +1,7 @@
 # push-to-docker
 
+**This job is DEPRECATED since 21 Nov 2023. Please use [push-to-registries](push-to-registries.md) instead.**
+
 This job builds a docker image and pushes it to a registry.
 It uses the Dockerfile at the root of the workspace directory and the root directory as build context by default.
 Otherwise, it is possible to specify the Dockerfile and build context to use with `dockerfile` and `build-context` arguments respectively.
