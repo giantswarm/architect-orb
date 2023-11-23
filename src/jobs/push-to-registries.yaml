@@ -70,7 +70,7 @@ steps:
   - image-build-with-docker:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
-  
+
   # gsoci
   - when:
       condition:
