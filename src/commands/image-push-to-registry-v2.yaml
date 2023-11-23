@@ -1,5 +1,6 @@
 # This command checks whether the tag represents a dev or release build
-# and then decides whether 
+# and then decides whether a push should happen.
+# The :latest tag is also pushed if conditions match.
 
 parameters:
   image_sha256:
