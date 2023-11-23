@@ -76,16 +76,16 @@ steps:
       condition:
         or:
           - and:
-            - equal: [true, <<parameters.push-to-gsoci>>]
-            - matches:
-                pattern: "^(main|master)$"
-                value: <<pipeline.git.branch>>
-          - and:
-            - equal: [true, <<parameters.push-dev-to-gsoci>>]
-            - not:
+              - equal: [true, <<parameters.push-to-gsoci>>]
               - matches:
                   pattern: "^(main|master)$"
                   value: <<pipeline.git.branch>>
+          - and:
+              - equal: [true, <<parameters.push-dev-to-gsoci>>]
+              - not:
+                - matches:
+                    pattern: "^(main|master)$"
+                    value: <<pipeline.git.branch>>
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -103,16 +103,16 @@ steps:
       condition:
         or:
           - and:
-            - equal: [true, <<parameters.push-to-quay>>]
-            - matches:
-                pattern: "^(main|master)$"
-                value: <<pipeline.git.branch>>
-          - and:
-            - equal: [true, <<parameters.push-dev-to-quay>>]
-            - not:
+              - equal: [true, <<parameters.push-to-quay>>]
               - matches:
                   pattern: "^(main|master)$"
                   value: <<pipeline.git.branch>>
+          - and:
+              - equal: [true, <<parameters.push-dev-to-quay>>]
+              - not:
+                - matches:
+                    pattern: "^(main|master)$"
+                    value: <<pipeline.git.branch>>
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -131,16 +131,16 @@ steps:
       condition:
         or:
           - and:
-            - equal: [true, <<parameters.push-to-aliyun>>]
-            - matches:
-                pattern: "^(main|master)$"
-                value: <<pipeline.git.branch>>
-          - and:
-            - equal: [true, <<parameters.push-dev-to-aliyun>>]
-            - not:
+              - equal: [true, <<parameters.push-to-aliyun>>]
               - matches:
                   pattern: "^(main|master)$"
                   value: <<pipeline.git.branch>>
+          - and:
+              - equal: [true, <<parameters.push-dev-to-aliyun>>]
+              - not:
+                - matches:
+                    pattern: "^(main|master)$"
+                    value: <<pipeline.git.branch>>
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -159,16 +159,16 @@ steps:
       condition:
         or:
           - and:
-            - equal: [true, <<parameters.push-to-docker>>]
-            - matches:
-                pattern: "^(main|master)$"
-                value: <<pipeline.git.branch>>
-          - and:
-            - equal: [true, <<parameters.push-dev-to-docker>>]
-            - not:
+              - equal: [true, <<parameters.push-to-docker>>]
               - matches:
                   pattern: "^(main|master)$"
                   value: <<pipeline.git.branch>>
+          - and:
+              - equal: [true, <<parameters.push-dev-to-docker>>]
+              - not:
+                - matches:
+                    pattern: "^(main|master)$"
+                    value: <<pipeline.git.branch>>
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
