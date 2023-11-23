@@ -72,112 +72,56 @@ steps:
       dockerfile: <<parameters.dockerfile>>
 
   # gsoci
-  - when:
-      condition:
-        or:
-          - and:
-            - equal: [true, <<parameters.push-to-gsoci>>]
-            - matches:
-                pattern: "^(main|master)$"
-                value: <<pipeline.git.branch>>
-          - and:
-            - equal: [true, <<parameters.push-dev-to-gsoci>>]
-            - not:
-                matches:
-                  pattern: "^(main|master)$"
-                  value: <<pipeline.git.branch>>
-      steps:
-        - image-push-to-registry:
-            image_sha256: $(cat .image_sha256)
-            registry: gsoci.azurecr.io
-            image: <<parameters.image>>
-            tag: $(cat .docker_image_tag)
-            username_envar: ACR_GSOCI_USERNAME
-            password_envar: ACR_GSOCI_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
+  - image-push-to-registry-v2:
+      image_sha256: $(cat .image_sha256)
+      registry: gsoci.azurecr.io
+      image: <<parameters.image>>
+      tag: $(cat .docker_image_tag)
+      username_envar: ACR_GSOCI_USERNAME
+      password_envar: ACR_GSOCI_PASSWORD
+      push_dev_builds: <<parameters.push-to-gsoci>>
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      tag-suffix: <<parameters.tag-suffix>>
   # quay
-  - when:
-      condition:
-        or:
-          - and:
-              - equal: [true, <<parameters.push-to-quay>>]
-              - matches:
-                  pattern: "^(main|master)$"
-                  value: <<pipeline.git.branch>>
-          - and:
-              - equal: [true, <<parameters.push-dev-to-quay>>]
-              - not:
-                  matches:
-                    pattern: "^(main|master)$"
-                    value: <<pipeline.git.branch>>
-      steps:
-        - image-push-to-registry:
-            image_sha256: $(cat .image_sha256)
-            registry: quay.io
-            image: <<parameters.image>>
-            tag: $(cat .docker_image_tag)
-            username_envar: QUAY_USERNAME
-            password_envar: QUAY_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
+  - image-push-to-registry-v2:
+      image_sha256: $(cat .image_sha256)
+      registry: quay.io
+      image: <<parameters.image>>
+      tag: $(cat .docker_image_tag)
+      username_envar: QUAY_USERNAME
+      password_envar: QUAY_PASSWORD
+      push_dev_builds: <<parameters.push-to-quay>>
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      tag-suffix: <<parameters.tag-suffix>>
 
   # aliyun
-  - when:
-      condition:
-        or:
-          - and:
-              - equal: [true, <<parameters.push-to-aliyun>>]
-              - matches:
-                  pattern: "^(main|master)$"
-                  value: <<pipeline.git.branch>>
-          - and:
-              - equal: [true, <<parameters.push-dev-to-aliyun>>]
-              - not:
-                  matches:
-                    pattern: "^(main|master)$"
-                    value: <<pipeline.git.branch>>
-      steps:
-        - image-push-to-registry:
-            image_sha256: $(cat .image_sha256)
-            registry: giantswarm-registry.cn-shanghai.cr.aliyuncs.com
-            image: <<parameters.image>>
-            tag: $(cat .docker_image_tag)
-            username_envar: ALIYUN_USERNAME
-            password_envar: ALIYUN_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
+  - image-push-to-registry-v2:
+      image_sha256: $(cat .image_sha256)
+      registry: giantswarm-registry.cn-shanghai.cr.aliyuncs.com
+      image: <<parameters.image>>
+      tag: $(cat .docker_image_tag)
+      username_envar: ALIYUN_USERNAME
+      password_envar: ALIYUN_PASSWORD
+      push_dev_builds: <<parameters.push-to-aliyun>>
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      tag-suffix: <<parameters.tag-suffix>>
 
   # docker
-  - when:
-      condition:
-        or:
-          - and:
-              - equal: [true, <<parameters.push-to-docker>>]
-              - matches:
-                  pattern: "^(main|master)$"
-                  value: <<pipeline.git.branch>>
-          - and:
-              - equal: [true, <<parameters.push-dev-to-docker>>]
-              - not:
-                  matches:
-                    pattern: "^(main|master)$"
-                    value: <<pipeline.git.branch>>
-      steps:
-        - image-push-to-registry:
-            image_sha256: $(cat .image_sha256)
-            registry: docker.io
-            image: <<parameters.image>>
-            tag: $(cat .docker_image_tag)
-            username_envar: DOCKER_USERNAME
-            password_envar: DOCKER_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
+  - image-push-to-registry-v2:
+      image_sha256: $(cat .image_sha256)
+      registry: docker.io
+      image: <<parameters.image>>
+      tag: $(cat .docker_image_tag)
+      username_envar: DOCKER_USERNAME
+      password_envar: DOCKER_PASSWORD
+      push_dev_builds: <<parameters.push-to-docker>>
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      tag-suffix: <<parameters.tag-suffix>>
