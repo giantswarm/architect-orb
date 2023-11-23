@@ -1,39 +1,59 @@
 parameters:
   image:
     description: 'Name of the  container repository and image, without tag. e.g. "my-org/my-image".'
-    type: "string"
+    type: string
   tag-latest-branch:
     description: 'Name of the branch on which the image will be additionally tagged as "latest".'
-    type: "string"
-    default: "main"
+    type: string
+    default: main
   resource_class:
-    default: "small"
+    default: small
     description: |
       Configures the amount of CPU and RAM for the job. See
       https://circleci.com/docs/2.0/configuration-reference/#docker-executor
       for details.
-    type: "enum"
+    type: enum
     enum: ["small", "medium", "medium+", "large", "xlarge"]
   build-context:
-    type: "string"
+    type: string
     default: "."
   dockerfile:
-    type: "string"
+    type: string
     default: "./Dockerfile"
   tag-suffix:
-    type: "string"
+    type: string
     default: ""
   push-to-aliyun:
-    type: "boolean"
+    description: Whether a release image should be pushed to the Aliyun registry (used only for AWS china).
+    type: boolean
     default: true
-  push-to-acr-gsoci:
-    type: "boolean"
+  push-to-gsoci:
+    description: Whether a release image should be pushed to gsoci.azureacr.io (recommended!).
+    type: boolean
     default: true
   push-to-quay:
-    type: "boolean"
+    description: Whether a release image should be pushed to quay.io.
+    type: boolean
     default: true
   push-to-docker:
-    type: "boolean"
+    description: Whether a release image should be pushed to Docker Hub (docker.io).
+    type: boolean
+    default: false
+  push-dev-to-aliyun:
+    description: Whether a dev image should be pushed to the Aliyun registry (used only for AWS china).
+    type: boolean
+    default: false
+  push-dev-to-gsoci:
+    description: Whether a dev image should be pushed to gsoci.azureacr.io.
+    type: boolean
+    default: true
+  push-dev-to-quay:
+    description: Whether a dev image should be pushed to quay.io.
+    type: boolean
+    default: true
+  push-dev-to-docker:
+    description: Whether a dev image should be pushed to Docker Hub (docker.io).
+    type: boolean
     default: false
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
@@ -50,7 +70,18 @@ steps:
       dockerfile: <<parameters.dockerfile>>
   - when:
       condition:
-        equal: [true, <<parameters.push-to-acr-gsoci>>]
+        or:
+          - and:
+            - equal: [true, <<parameters.push-to-gsoci>>]
+            - matches:
+                pattern: "^(main|master)$"
+                value: <<pipeline.git.branch>>
+          - and:
+            - equal: [true, <<parameters.push-dev-to-gsoci>>]
+            - not:
+              - matches:
+                  pattern: "^(main|master)$"
+                  value: <<pipeline.git.branch>>
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -65,7 +96,18 @@ steps:
             tag-suffix: <<parameters.tag-suffix>>
   - when:
       condition:
-        equal: [true, <<parameters.push-to-quay>>]
+        or:
+          - and:
+            - equal: [true, <<parameters.push-to-quay>>]
+            - matches:
+                pattern: "^(main|master)$"
+                value: <<pipeline.git.branch>>
+          - and:
+            - equal: [true, <<parameters.push-dev-to-quay>>]
+            - not:
+              - matches:
+                  pattern: "^(main|master)$"
+                  value: <<pipeline.git.branch>>
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -80,7 +122,18 @@ steps:
             tag-suffix: <<parameters.tag-suffix>>
   - when:
       condition:
-        equal: [true, <<parameters.push-to-aliyun>>]
+        or:
+          - and:
+            - equal: [true, <<parameters.push-to-aliyun>>]
+            - matches:
+                pattern: "^(main|master)$"
+                value: <<pipeline.git.branch>>
+          - and:
+            - equal: [true, <<parameters.push-dev-to-aliyun>>]
+            - not:
+              - matches:
+                  pattern: "^(main|master)$"
+                  value: <<pipeline.git.branch>>
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -95,7 +148,18 @@ steps:
             tag-suffix: <<parameters.tag-suffix>>
   - when:
       condition:
-        equal: [true, <<parameters.push-to-docker>>]
+        or:
+          - and:
+            - equal: [true, <<parameters.push-to-docker>>]
+            - matches:
+                pattern: "^(main|master)$"
+                value: <<pipeline.git.branch>>
+          - and:
+            - equal: [true, <<parameters.push-dev-to-docker>>]
+            - not:
+              - matches:
+                  pattern: "^(main|master)$"
+                  value: <<pipeline.git.branch>>
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
