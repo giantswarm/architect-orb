@@ -41,8 +41,8 @@ steps:
             BUILD_TYPE=release
           fi
 
-          if [ "$BUILD_TYPE" -eq "dev" ]; then
-            if [ "<<parameters.push_dev_builds>>" -eq "false" ]; then
+          if [ "$BUILD_TYPE" = "dev" ]; then
+            if [ "<<parameters.push_dev_builds>>" = "false" ]; then
               echo "This is a dev build, but dev builds are not wanted for this step based on the 'push_dev_builds' parameter. Doing nothing."
               # Exit without failing
               circleci-agent step halt
@@ -58,7 +58,7 @@ steps:
           echo "Pushing the image"
           docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
 
-          if [ "$CIRCLE_BRANCH" -eq "<<parameters.tag-latest-branch>>" ]; then
+          if [ "$CIRCLE_BRANCH" = "<<parameters.tag-latest-branch>>" ]; then
             echo "Also push the image with :latest<<parameters.tag-suffix>> tag (only for branch <<parameters.tag-latest-branch>>)"
             docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:latest"
             docker push "<<parameters.image>>:latest<<parameters.tag-suffix>>"
