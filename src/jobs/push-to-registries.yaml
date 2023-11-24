@@ -82,34 +82,34 @@ steps:
         equal: [true, <<parameters.push-to-gsoci>>]
       steps:
         - image-push-to-registry-v2:
-          image_sha256: $(cat .image_sha256)
-          registry: gsoci.azurecr.io
-          image: <<parameters.image>>
-          tag: $(cat .docker_image_tag)
-          username_envar: ACR_GSOCI_USERNAME
-          password_envar: ACR_GSOCI_PASSWORD
-          push_dev_builds: <<parameters.push-dev-to-gsoci>>
-          build-context: <<parameters.build-context>>
-          dockerfile: <<parameters.dockerfile>>
-          tag-latest-branch: <<parameters.tag-latest-branch>>
-          tag-suffix: <<parameters.tag-suffix>>
+            image_sha256: $(cat .image_sha256)
+            registry: gsoci.azurecr.io
+            image: <<parameters.image>>
+            tag: $(cat .docker_image_tag)
+            username_envar: ACR_GSOCI_USERNAME
+            password_envar: ACR_GSOCI_PASSWORD
+            push_dev_builds: <<parameters.push-dev-to-gsoci>>
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
   # quay
   - when:
       condition:
         equal: [true, <<parameters.push-to-quay>>]
       steps:
         - image-push-to-registry-v2:
-          image_sha256: $(cat .image_sha256)
-          registry: quay.io
-          image: <<parameters.image>>
-          tag: $(cat .docker_image_tag)
-          username_envar: QUAY_USERNAME
-          password_envar: QUAY_PASSWORD
-          push_dev_builds: <<parameters.push-dev-to-quay>>
-          build-context: <<parameters.build-context>>
-          dockerfile: <<parameters.dockerfile>>
-          tag-latest-branch: <<parameters.tag-latest-branch>>
-          tag-suffix: <<parameters.tag-suffix>>
+            image_sha256: $(cat .image_sha256)
+            registry: quay.io
+            image: <<parameters.image>>
+            tag: $(cat .docker_image_tag)
+            username_envar: QUAY_USERNAME
+            password_envar: QUAY_PASSWORD
+            push_dev_builds: <<parameters.push-dev-to-quay>>
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
 
   # aliyun
   - when:
@@ -117,17 +117,17 @@ steps:
         equal: [true, <<parameters.push-to-aliyun>>]
       steps:
         - image-push-to-registry-v2:
-          image_sha256: $(cat .image_sha256)
-          registry: giantswarm-registry.cn-shanghai.cr.aliyuncs.com
-          image: <<parameters.image>>
-          tag: $(cat .docker_image_tag)
-          username_envar: ALIYUN_USERNAME
-          password_envar: ALIYUN_PASSWORD
-          push_dev_builds: <<parameters.push-dev-to-aliyun>>
-          build-context: <<parameters.build-context>>
-          dockerfile: <<parameters.dockerfile>>
-          tag-latest-branch: <<parameters.tag-latest-branch>>
-          tag-suffix: <<parameters.tag-suffix>>
+            image_sha256: $(cat .image_sha256)
+            registry: giantswarm-registry.cn-shanghai.cr.aliyuncs.com
+            image: <<parameters.image>>
+            tag: $(cat .docker_image_tag)
+            username_envar: ALIYUN_USERNAME
+            password_envar: ALIYUN_PASSWORD
+            push_dev_builds: <<parameters.push-dev-to-aliyun>>
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
 
   # docker
   - when:
@@ -135,14 +135,14 @@ steps:
         equal: [true, <<parameters.push-to-docker>>]
       steps:
         - image-push-to-registry-v2:
-          image_sha256: $(cat .image_sha256)
-          registry: docker.io
-          image: <<parameters.image>>
-          tag: $(cat .docker_image_tag)
-          username_envar: DOCKER_USERNAME
-          password_envar: DOCKER_PASSWORD
-          push_dev_builds: <<parameters.push-dev-to-docker>>
-          build-context: <<parameters.build-context>>
-          dockerfile: <<parameters.dockerfile>>
-          tag-latest-branch: <<parameters.tag-latest-branch>>
-          tag-suffix: <<parameters.tag-suffix>>
+            image_sha256: $(cat .image_sha256)
+            registry: docker.io
+            image: <<parameters.image>>
+            tag: $(cat .docker_image_tag)
+            username_envar: DOCKER_USERNAME
+            password_envar: DOCKER_PASSWORD
+            push_dev_builds: <<parameters.push-dev-to-docker>>
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
