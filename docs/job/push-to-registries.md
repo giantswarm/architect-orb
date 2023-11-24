@@ -25,7 +25,6 @@ workflows:
       - architect/push-to-registries:
           context: architect
           name: push-to-registries
-          image: giantswarm/my-repo
           requires:
             # Make sure binary is built.
             - go-build
