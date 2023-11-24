@@ -47,7 +47,7 @@ steps:
           if [ "$BUILD_TYPE" = "dev" ]; then
             if [ "<<parameters.push_dev_builds>>" = "false" ]; then
               echo "As this is a dev build, and dev builds should not be pushed to this registry, ending here."
-              circleci-agent step halt
+              exit 0
             fi
           fi
 
