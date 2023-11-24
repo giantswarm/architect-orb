@@ -35,13 +35,13 @@ steps:
         name: Push to registry <<parameters.registry>>
         command: |
           BUILD_TYPE=dev
-          if [[ -z $(echo "<< parameters.tag >>" | grep -E "[a-h0-9]{40}")]]; then
+          if [[ -z $(echo "<< parameters.tag >>" | grep -E "[a-h0-9]{40}") ]]; then
             # Release build
             BUILD_TYPE=release
           fi
 
-          if [ "$BUILD_TYPE" -eq "dev"]; then
-            if [ "<<parameters.push_dev_builds>>" -eq "false"]; then
+          if [ "$BUILD_TYPE" -eq "dev" ]; then
+            if [ "<<parameters.push_dev_builds>>" -eq "false" ]; then
               echo "This is a dev build, but dev builds are not wanted for this step based on the 'push_dev_builds' parameter. Doing nothing."
               # Exit without failing
               circleci-agent step halt
