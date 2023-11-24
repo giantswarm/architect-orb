@@ -33,7 +33,7 @@ parameters:
 steps:
     - run:
         name: Push to registry <<parameters.registry>>
-        command: |          
+        command: |
           BUILD_TYPE=dev
           MATCH=$(echo "<< parameters.tag >>" | grep -E "[a-h0-9]{40}")
           if [[ -z "$MATCH" ]]; then
