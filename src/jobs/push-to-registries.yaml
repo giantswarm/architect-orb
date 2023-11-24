@@ -1,42 +1,70 @@
+environment:
+  DOCKER_BUILDKIT: "1"
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
 parameters:
   image:
-    description: 'Name of the  container repository and image, without tag. e.g. "my-org/my-image".'
-    type: "string"
+    description: Name of the  container repository and image. Defaults to org-name/repo-name. Must not contain registry host name!
+    type: string
+    default: ""
   tag-latest-branch:
     description: 'Name of the branch on which the image will be additionally tagged as "latest".'
-    type: "string"
-    default: "main"
+    type: string
+    default: main
   resource_class:
-    default: "small"
+    default: small
     description: |
       Configures the amount of CPU and RAM for the job. See
       https://circleci.com/docs/2.0/configuration-reference/#docker-executor
       for details.
-    type: "enum"
+    type: enum
     enum: ["small", "medium", "medium+", "large", "xlarge"]
   build-context:
-    type: "string"
+    type: string
     default: "."
   dockerfile:
-    type: "string"
+    type: string
     default: "./Dockerfile"
   tag-suffix:
-    type: "string"
+    type: string
     default: ""
-  push-to-aliyun:
-    type: "boolean"
+  push-to-gsoci:
+    description: |
+      Whether images should be pushed to gsoci.azureacr.io (recommended!).
+    type: boolean
     default: true
-  push-to-acr-gsoci:
-    type: "boolean"
+  push-dev-to-gsoci:
+    description: Whether a dev image should be pushed to gsoci.azureacr.io.
+    type: boolean
     default: true
   push-to-quay:
-    type: "boolean"
+    description: Whether images should be pushed to quay.io.
+    type: boolean
     default: true
-  push-to-docker:
-    type: "boolean"
+  push-dev-to-quay:
+    description: Whether a dev image should be pushed to quay.io.
+    type: boolean
+    default: true
+  push-to-aliyun:
+    description: |
+      Whether images should be pushed to the Aliyun registry (used only for AWS china).
+      For dev images, also set `push-dev-to-aliyun` to true.
+    type: boolean
+    default: true
+  push-dev-to-aliyun:
+    description: Whether a dev image should be pushed to the Aliyun registry (used only for AWS china).
+    type: boolean
     default: false
-executor: "architect"
-resource_class: "<< parameters.resource_class >>"
+  push-to-docker:
+    description: |
+      Whether images image should be pushed to Docker Hub (docker.io).
+      For dev images, also set `push-dev-to-docker` to true.
+    type: boolean
+    default: false
+  push-dev-to-docker:
+    description: Whether a dev image should be pushed to Docker Hub (docker.io).
+    type: boolean
+    default: false
 steps:
   - checkout
   - setup_remote_docker:
@@ -48,65 +76,74 @@ steps:
   - image-build-with-docker:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
+
+  # gsoci
   - when:
       condition:
-        equal: [true, <<parameters.push-to-acr-gsoci>>]
+        equal: [true, <<parameters.push-to-gsoci>>]
       steps:
-        - image-push-to-registry:
+        - image-push-to-registry-v2:
             image_sha256: $(cat .image_sha256)
             registry: gsoci.azurecr.io
             image: <<parameters.image>>
             tag: $(cat .docker_image_tag)
             username_envar: ACR_GSOCI_USERNAME
             password_envar: ACR_GSOCI_PASSWORD
+            push_dev_builds: <<parameters.push-dev-to-gsoci>>
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+  # quay
   - when:
       condition:
         equal: [true, <<parameters.push-to-quay>>]
       steps:
-        - image-push-to-registry:
+        - image-push-to-registry-v2:
             image_sha256: $(cat .image_sha256)
             registry: quay.io
             image: <<parameters.image>>
             tag: $(cat .docker_image_tag)
             username_envar: QUAY_USERNAME
             password_envar: QUAY_PASSWORD
+            push_dev_builds: <<parameters.push-dev-to-quay>>
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+
+  # aliyun
   - when:
       condition:
         equal: [true, <<parameters.push-to-aliyun>>]
       steps:
-        - image-push-to-registry:
+        - image-push-to-registry-v2:
             image_sha256: $(cat .image_sha256)
             registry: giantswarm-registry.cn-shanghai.cr.aliyuncs.com
             image: <<parameters.image>>
             tag: $(cat .docker_image_tag)
             username_envar: ALIYUN_USERNAME
             password_envar: ALIYUN_PASSWORD
+            push_dev_builds: <<parameters.push-dev-to-aliyun>>
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+
+  # docker
   - when:
       condition:
         equal: [true, <<parameters.push-to-docker>>]
       steps:
-        - image-push-to-registry:
+        - image-push-to-registry-v2:
             image_sha256: $(cat .image_sha256)
             registry: docker.io
             image: <<parameters.image>>
             tag: $(cat .docker_image_tag)
             username_envar: DOCKER_USERNAME
             password_envar: DOCKER_PASSWORD
+            push_dev_builds: <<parameters.push-dev-to-docker>>
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
-environment:
-  DOCKER_BUILDKIT: "1"

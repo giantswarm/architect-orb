@@ -2,7 +2,7 @@
 
 This job builds a container image and pushes it to a set of registries configured within the job itself.
 This way this job centralizes the management over image uploads and build process.
-It uses the `Dockerfile` found at the root of the workspace directory and the root directory as 
+It uses the `Dockerfile` found at the root of the workspace directory and the root directory as
 build context by default.
 Otherwise, it is possible to specify the Dockerfile and build context to use with `dockerfile` and `build-context` arguments respectively.
 
@@ -11,8 +11,6 @@ Otherwise, it is possible to specify the Dockerfile and build context to use wit
 **NOTE:** The registry domain is configured by the job itself. In the `image` argument, please only specify `repository/image`.
 
 Argument `tag-suffix` allows to specify a special suffix to be added after the generated container tag.
-
-
 
 Example usage
 
@@ -26,12 +24,11 @@ workflows:
     jobs:
       - architect/push-to-registries:
           context: architect
-          name: push-image-to-registries
-          image: giantswarm/REPOSITORY
-          tag-suffix: ""
+          name: push-to-registries
+          image: giantswarm/my-repo
           requires:
             # Make sure binary is built.
-            - go-build-REPOSITORY
+            - go-build
           filters:
             # Trigger job also on git tag.
             tags:
@@ -53,3 +50,23 @@ workflows:
             tags:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+)?$/
 ```
+
+## Selecting target registries
+
+The default configuration enables pushing to all registries we care about. Sticking with the defaults is recommended here. However, if you want to override pushing to any of the target registries, you have the following config parameters available:
+
+- `push-to-gsoci` (boolean): Whether or not to push to `gsoci.azurecr.io`
+- `push-to-quay` (boolean): Whether or not to push to `quay.io`
+- `push-to-aliyun` (boolean): Whether or not to push to Aliyun (for AWS China)
+- `push-to-docker` (boolean): Whether or not to push to `docker.io`
+
+## Pushing dev vs. release images
+
+The job distinguishes between release and dev builds. Builds for commits in a branch (other than the default branch) are considered **dev** builds, all others are **release** builds.
+
+By default, images from dev builds are only pushed to `gsoci` and `quay.io`, but not to Aliyun and `docker.io`.
+
+- `push-dev-to-gsoci` (boolean): Whether or not to push to `gsoci.azurecr.io`. Also requires `push-to-gsoci` to be true.
+- `push-dev-to-quay` (boolean): Whether or not to push to `quay.io`. Also requires `push-to-quay` to be true.
+- `push-dev-to-aliyun` (boolean): Whether or not to push to Aliyun (for AWS China). Also requires `push-to-aliyun` to be true.
+- `push-dev-to-docker` (boolean): Whether or not to push to `docker.io`. Also requires `push-to-docker` to be true.
