@@ -53,7 +53,7 @@ steps:
           docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
 
           echo "Authenticating for registry <<parameters.registry>> as user ${<<parameters.username_envar>>}"
-          echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "<<parameters.registry>>"
+          docker login <<parameters.registry>> --username "${<<parameters.username_envar>>}" --password "${<<parameters.password_envar>>}"
 
           echo "Pushing the image"
           docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
