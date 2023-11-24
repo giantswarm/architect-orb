@@ -79,7 +79,7 @@ steps:
       tag: $(cat .docker_image_tag)
       username_envar: ACR_GSOCI_USERNAME
       password_envar: ACR_GSOCI_PASSWORD
-      push_dev_builds: <<parameters.push-to-gsoci>>
+      push_dev_builds: <<parameters.push-dev-to-gsoci>>
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
@@ -92,7 +92,7 @@ steps:
       tag: $(cat .docker_image_tag)
       username_envar: QUAY_USERNAME
       password_envar: QUAY_PASSWORD
-      push_dev_builds: <<parameters.push-to-quay>>
+      push_dev_builds: <<parameters.push-dev-to-quay>>
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
@@ -106,7 +106,7 @@ steps:
       tag: $(cat .docker_image_tag)
       username_envar: ALIYUN_USERNAME
       password_envar: ALIYUN_PASSWORD
-      push_dev_builds: <<parameters.push-to-aliyun>>
+      push_dev_builds: <<parameters.push-dev-to-aliyun>>
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
@@ -120,7 +120,7 @@ steps:
       tag: $(cat .docker_image_tag)
       username_envar: DOCKER_USERNAME
       password_envar: DOCKER_PASSWORD
-      push_dev_builds: <<parameters.push-to-docker>>
+      push_dev_builds: <<parameters.push-dev-to-docker>>
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
       tag-latest-branch: <<parameters.tag-latest-branch>>

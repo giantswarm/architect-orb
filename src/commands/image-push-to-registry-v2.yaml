@@ -33,7 +33,7 @@ parameters:
 steps:
     - run:
         name: Push to registry <<parameters.registry>>
-        command: |
+        command: |          
           BUILD_TYPE=dev
           MATCH=$(echo "<< parameters.tag >>" | grep -E "[a-h0-9]{40}")
           if [[ -z "$MATCH" ]]; then
@@ -41,10 +41,12 @@ steps:
             BUILD_TYPE=release
           fi
 
+          echo "Pushing dev builds (push_dev_builds) for this registry is set to: <<parameters.push_dev_builds>>"
+          echo "The type of this build is: $BUILD_TYPE"
+
           if [ "$BUILD_TYPE" = "dev" ]; then
             if [ "<<parameters.push_dev_builds>>" = "false" ]; then
-              echo "This is a dev build, but dev builds are not wanted for this step based on the 'push_dev_builds' parameter. Doing nothing."
-              # Exit without failing
+              echo "As this is a dev build, and dev builds should not be pushed to this registry, ending here."
               circleci-agent step halt
             fi
           fi
@@ -52,11 +54,11 @@ steps:
           echo "Tagging image with SHA256 <<parameters.image_sha256>> as <<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
           docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
 
-          echo "Authenticating for registry <<parameters.registry>> as user ${<<parameters.username_envar>>}"
+          echo "Authenticating for registry <<parameters.registry>>"
           docker login <<parameters.registry>> --username "${<<parameters.username_envar>>}" --password "${<<parameters.password_envar>>}"
 
           echo "Pushing the image"
-          docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
+          docker push -q "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push -q "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push -q "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
 
           if [ "$CIRCLE_BRANCH" = "<<parameters.tag-latest-branch>>" ]; then
             echo "Also push the image with :latest<<parameters.tag-suffix>> tag (only for branch <<parameters.tag-latest-branch>>)"
