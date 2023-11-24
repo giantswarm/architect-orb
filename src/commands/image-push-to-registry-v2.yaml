@@ -35,7 +35,8 @@ steps:
         name: Push to registry <<parameters.registry>>
         command: |
           BUILD_TYPE=dev
-          if [[ -z $(echo "<< parameters.tag >>" | grep -E "[a-h0-9]{40}") ]]; then
+          MATCH=$(echo "<< parameters.tag >>" | grep -E "[a-h0-9]{40}")
+          if [[ -z "$MATCH" ]]; then
             # Release build
             BUILD_TYPE=release
           fi
