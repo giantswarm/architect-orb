@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.35.2] - 2023-11-24
+
 - More improvements to the [`push-to-registries`](./docs/job/push-to-registries.md) job:
   - It is possible now to configure which target registry should receive images for dev builds. This defaults to gsoci (new ACR) and quay.io only. Check the docs for details.
   - The `image` parameter is now optional. The default is to create the name from the GitHub organization and repository name.
@@ -999,7 +1001,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.35.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.35.2...HEAD
+[4.35.2]: https://github.com/giantswarm/architect-orb/compare/v4.35.1...v4.35.2
 [4.35.1]: https://github.com/giantswarm/architect-orb/compare/v4.35.0...v4.35.1
 [4.35.0]: https://github.com/giantswarm/architect-orb/compare/v4.34.1...v4.35.0
 [4.34.1]: https://github.com/giantswarm/architect-orb/compare/v4.34.0...v4.34.1
