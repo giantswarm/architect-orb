@@ -13,4 +13,4 @@ steps:
   - run:
       name: Save container image SHA256 to temp file
       command: |
-        awk -F" " '/^#[0-9]+ writing image sha256:[0-9a-f]{40}/ {print $4}' .docker.log | tee .image_sha256
+        awk -F" " '/^#[0-9]+ writing image sha256:[0-9a-f]{40}/ {print $4;exit}' .docker.log | tee .image_sha256

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Made the `image-build-with-docker` command work in a situation where the `docker build` command would output the image SHA more than once.
+
 ## [4.35.2] - 2023-11-24
 
 - More improvements to the [`push-to-registries`](./docs/job/push-to-registries.md) job:
