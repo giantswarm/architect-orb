@@ -8,6 +8,7 @@ parameters:
   registry:
     type: string
   image:
+    description: Name of the repository and image, e. g. giantswarm/my-project. Defaults to the org and repo name separated with a slash.
     type: string
   tag:
     type: string
@@ -51,17 +52,23 @@ steps:
             fi
           fi
 
-          echo "Tagging image with SHA256 <<parameters.image_sha256>> as <<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
-          docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
+          # Default the image name
+          IMAGE="<<parameters.image>>"
+          if [[ -z "$IMAGE" ]]; then
+            IMAGE="$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+          fi
+
+          echo "Tagging image with SHA256 <<parameters.image_sha256>> as <<parameters.registry>>/${IMAGE}:<<parameters.tag>>"
+          docker tag <<parameters.image_sha256>> "<<parameters.registry>>/${IMAGE}:<<parameters.tag>>"
 
           echo "Authenticating for registry <<parameters.registry>>"
           docker login <<parameters.registry>> --username "${<<parameters.username_envar>>}" --password "${<<parameters.password_envar>>}"
 
           echo "Pushing the image"
-          docker push -q "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push -q "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push -q "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
+          docker push -q "<<parameters.registry>>/${IMAGE}:<<parameters.tag>>" || docker push -q "<<parameters.registry>>/${IMAGE}:<<parameters.tag>>" || docker push -q "<<parameters.registry>>/${IMAGE}:<<parameters.tag>>"
 
           if [ "$CIRCLE_BRANCH" = "<<parameters.tag-latest-branch>>" ]; then
             echo "Also push the image with :latest<<parameters.tag-suffix>> tag (only for branch <<parameters.tag-latest-branch>>)"
-            docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:latest"
-            docker push "<<parameters.image>>:latest<<parameters.tag-suffix>>"
+            docker tag <<parameters.image_sha256>> "<<parameters.registry>>/${IMAGE}:latest"
+            docker push "${IMAGE}:latest<<parameters.tag-suffix>>"
           fi
