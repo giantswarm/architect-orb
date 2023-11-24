@@ -2,7 +2,7 @@
 
 This job builds a container image and pushes it to a set of registries configured within the job itself.
 This way this job centralizes the management over image uploads and build process.
-It uses the `Dockerfile` found at the root of the workspace directory and the root directory as 
+It uses the `Dockerfile` found at the root of the workspace directory and the root directory as
 build context by default.
 Otherwise, it is possible to specify the Dockerfile and build context to use with `dockerfile` and `build-context` arguments respectively.
 

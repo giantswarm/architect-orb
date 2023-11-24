@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- More improvements to the [`push-to-registries`](./docs/job/push-to-registries.md) job:
+  - It is possible now to configure which target registry should receive images for dev builds. This defaults to gsoci (new ACR) and quay.io only. Check the docs for details.
+  - The `image` parameter is now optional. The default is to create the name from the GitHub organization and repository name.
+
 ## [4.35.1] - 2023-11-22
 
 ### Changed
