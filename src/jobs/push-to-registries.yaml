@@ -86,7 +86,7 @@ steps:
               - not:
                   matches:
                     pattern: "[a-f0-9]{40}"
-                    string: $(cat .docker_image_tag)
+                    value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -110,7 +110,7 @@ steps:
               - not:
                   matches:
                     pattern: "[a-f0-9]{40}"
-                    string: $(cat .docker_image_tag)
+                    value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -134,7 +134,7 @@ steps:
               - not:
                   matches:
                     pattern: "[a-f0-9]{40}"
-                    string: $(cat .docker_image_tag)
+                    value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -158,7 +158,7 @@ steps:
               - not:
                   matches:
                     pattern: "[a-f0-9]{40}"
-                    string: $(cat .docker_image_tag)
+                    value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
