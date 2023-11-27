@@ -76,21 +76,6 @@ steps:
   - image-build-with-docker:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
-  #DEBUG
-  - run:
-      name: "DEBUG 3"
-      command: |
-        echo -n "$(cat .docker_image_tag)"
-  - when:
-      condition:
-        not:
-          matches:
-            pattern: "^.*-[a-f0-9]{40}.*$"
-            value: $(cat .docker_image_tag)
-      steps:
-        - run:
-            command: |
-              echo "No dev image tag found."
 
   # gsoci
   - when:
