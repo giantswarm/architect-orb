@@ -78,17 +78,15 @@ steps:
       dockerfile: <<parameters.dockerfile>>
   #DEBUG
   - run:
-      name: "DEBUG 6"
-      environment:
-        TAGG: $(cat .docker_image_tag)
+      name: "DEBUG 7"
       command: |
-        echo -n "${TAGG}"
+        echo -n "${DOCKER_IMAGE_TAG}"
   - when:
       condition:
         not:
           matches:
             pattern: "^.*-[0-9a-f]{40}.*$"
-            value: $(cat .docker_image_tag)
+            value: ${DOCKER_IMAGE_TAG}
       steps:
         - run:
             command: |

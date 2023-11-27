@@ -7,3 +7,4 @@ steps:
       name: Generate container tag from 'architect project version' and tag-suffix parameter
       command: |
         echo -n "$(architect project version)<<parameters.tag-suffix>>" | tee .docker_image_tag
+        echo 'export DOCKER_IMAGE_TAG=$(cat .docker_image_tag)' >> $BASH_ENV
