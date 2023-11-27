@@ -76,37 +76,16 @@ steps:
   - image-build-with-docker:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
-  #DEBUG
-  - run:
-      name: "DEBUG 7"
-      command: |
-        echo -n "${DOCKER_IMAGE_TAG}"
-  - when:
-      condition:
-        not:
-          matches:
-            pattern: "^.*-[0-9a-f]{40}.*$"
-            value: "${DOCKER_IMAGE_TAG}"
-      steps:
-        - run:
-            command: |
-              echo "No dev image tag found."
 
   # gsoci
   - when:
       condition:
-        and:
-          - equal: [true, <<parameters.push-to-gsoci>>]
-          - or:
-              - equal: [true, <<parameters.push-dev-to-gsoci>>]
-              - not:
-                  matches:
-                    pattern: "^.*-[a-f0-9]{40}.*$"
-                    value: $(cat .docker_image_tag)
+        equal: [true, <<parameters.push-to-gsoci>>]
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
             registry: gsoci.azurecr.io
+            push-dev: <<parameters.push-dev-to-gsoci>>
             image: <<parameters.image>>
             tag: $(cat .docker_image_tag)
             username_envar: ACR_GSOCI_USERNAME
