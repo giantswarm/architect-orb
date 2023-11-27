@@ -23,7 +23,6 @@ parameters:
     type: "string"
     default: "./Dockerfile"
   push-dev:
-    description: Whether a dev image should be pushed (push all the images) or push release images only.
     type: boolean
     default: false
 steps:
@@ -36,6 +35,10 @@ steps:
                 pattern: "^.*-[a-f0-9]{40}.*$"
                 value: "<<parameters.tag>>"
       steps:
+        - run:
+            name: DEBUG CMD
+            command: |
+              echo "<<parameters.tag>>"
         - run:
             name: Push image to <<parameters.registry>>
             command: |
