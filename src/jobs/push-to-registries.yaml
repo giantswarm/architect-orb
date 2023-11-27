@@ -80,7 +80,7 @@ steps:
   - run:
       name: "DEBUG 6"
       environment:
-        TAGG: "$(cat .docker_image_tag)"
+        TAGG: $(cat .docker_image_tag)
       command: |
         echo -n "${TAGG}"
   - when:
@@ -88,7 +88,7 @@ steps:
         not:
           matches:
             pattern: "^.*-[0-9a-f]{40}.*$"
-            value: "3.1.0-daf37edda699ecee9db7c110d9a6a68706d49575"
+            value: $(cat .docker_image_tag)
       steps:
         - run:
             command: |
