@@ -86,7 +86,7 @@ steps:
               - equal: [true, <<parameters.push-dev-to-gsoci>>]
               - not:
                   matches:
-                    pattern: "[a-f0-9]{40}"
+                    pattern: ".*-[a-f0-9]{40}.*"
                     value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
@@ -110,7 +110,7 @@ steps:
               - equal: [true, <<parameters.push-dev-to-quay>>]
               - not:
                   matches:
-                    pattern: "[a-f0-9]{40}"
+                    pattern: ".*-[a-f0-9]{40}.*"
                     value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
@@ -134,7 +134,7 @@ steps:
               - equal: [true, <<parameters.push-dev-to-aliyun>>]
               - not:
                   matches:
-                    pattern: "[a-f0-9]{40}"
+                    pattern: ".*-[a-f0-9]{40}.*"
                     value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
@@ -158,7 +158,7 @@ steps:
               - equal: [true, <<parameters.push-dev-to-docker>>]
               - not:
                   matches:
-                    pattern: "[a-f0-9]{40}"
+                    pattern: ".*-[a-f0-9]{40}.*"
                     value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
