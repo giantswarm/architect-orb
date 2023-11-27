@@ -86,7 +86,7 @@ steps:
         not:
           matches:
             pattern: "^.*-[0-9a-f]{40}.*$"
-            value: ${DOCKER_IMAGE_TAG}
+            value: "${DOCKER_IMAGE_TAG}"
       steps:
         - run:
             command: |
