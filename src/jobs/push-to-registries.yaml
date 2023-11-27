@@ -78,14 +78,14 @@ steps:
       dockerfile: <<parameters.dockerfile>>
   #DEBUG
   - run:
-      name: "DEBUG 2"
+      name: "DEBUG 3"
       command: |
-        echo -n "DEBUG"
+        echo -n "$(cat .docker_image_tag)"
   - when:
       condition:
         not:
           matches:
-            pattern: ".*-[a-f0-9]{40}.*"
+            pattern: "^.*-[a-f0-9]{40}.*$"
             value: $(cat .docker_image_tag)
       steps:
         - run:
@@ -101,7 +101,7 @@ steps:
               - equal: [true, <<parameters.push-dev-to-gsoci>>]
               - not:
                   matches:
-                    pattern: ".*-[a-f0-9]{40}.*"
+                    pattern: "^.*-[a-f0-9]{40}.*$"
                     value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
@@ -125,7 +125,7 @@ steps:
               - equal: [true, <<parameters.push-dev-to-quay>>]
               - not:
                   matches:
-                    pattern: ".*-[a-f0-9]{40}.*"
+                    pattern: "^.*-[a-f0-9]{40}.*$"
                     value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
@@ -149,7 +149,7 @@ steps:
               - equal: [true, <<parameters.push-dev-to-aliyun>>]
               - not:
                   matches:
-                    pattern: ".*-[a-f0-9]{40}.*"
+                    pattern: "^.*-[a-f0-9]{40}.*$"
                     value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
@@ -173,7 +173,7 @@ steps:
               - equal: [true, <<parameters.push-dev-to-docker>>]
               - not:
                   matches:
-                    pattern: ".*-[a-f0-9]{40}.*"
+                    pattern: "^.*-[a-f0-9]{40}.*$"
                     value: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
