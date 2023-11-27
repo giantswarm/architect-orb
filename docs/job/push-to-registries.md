@@ -12,7 +12,7 @@ Otherwise, it is possible to specify the Dockerfile and build context to use wit
 
 Argument `tag-suffix` allows to specify a special suffix to be added after the generated container tag.
 
-Example usage
+Example usage:
 
 ```yaml
 version: 2.1
@@ -25,6 +25,7 @@ workflows:
       - architect/push-to-registries:
           context: architect
           name: push-to-registries
+          image: giantswarm/IMAGE_NAME
           requires:
             # Make sure binary is built.
             - go-build
