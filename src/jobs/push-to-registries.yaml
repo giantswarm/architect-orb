@@ -85,8 +85,8 @@ steps:
               - equal: [true, <<parameters.push-dev-to-gsoci>>]
               - not:
                   matches:
-                    pattern: "[a-h0-9]{40}"
-                    string: "$(cat .docker_image_tag)"
+                    pattern: "[a-f0-9]{40}"
+                    string: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -109,8 +109,8 @@ steps:
               - equal: [true, <<parameters.push-dev-to-quay>>]
               - not:
                   matches:
-                    pattern: "[a-h0-9]{40}"
-                    string: "$(cat .docker_image_tag)"
+                    pattern: "[a-f0-9]{40}"
+                    string: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -133,8 +133,8 @@ steps:
               - equal: [true, <<parameters.push-dev-to-aliyun>>]
               - not:
                   matches:
-                    pattern: "[a-h0-9]{40}"
-                    string: "$(cat .docker_image_tag)"
+                    pattern: "[a-f0-9]{40}"
+                    string: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
@@ -157,8 +157,8 @@ steps:
               - equal: [true, <<parameters.push-dev-to-docker>>]
               - not:
                   matches:
-                    pattern: "[a-h0-9]{40}"
-                    string: "$(cat .docker_image_tag)"
+                    pattern: "[a-f0-9]{40}"
+                    string: $(cat .docker_image_tag)
       steps:
         - image-push-to-registry:
             image_sha256: $(cat .image_sha256)
