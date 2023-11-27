@@ -34,7 +34,7 @@ steps:
           - not:
               matches:
                 pattern: "^.*-[a-f0-9]{40}.*$"
-                value: <<parameters.tag>>
+                value: "<<parameters.tag>>"
       steps:
         - run:
             name: Push image to <<parameters.registry>>
