@@ -76,6 +76,10 @@ steps:
   - image-build-with-docker:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
+  - run:
+      name: "DEBUG 1"
+      command: |
+        echo -n "DEBUG 1"
 
   # gsoci
   - when:
