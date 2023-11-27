@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Improvements to the `push-to-registries` job.
+
 ## [4.35.3] - 2023-11-24
 
 ### Fixed
