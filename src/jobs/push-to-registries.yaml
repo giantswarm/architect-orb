@@ -4,8 +4,9 @@ executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 parameters:
   image:
-    description: Name of the  container repository and image. Must not contain registry host name!
+    description: Name of the  container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
     type: string
+    default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
   tag-latest-branch:
     description: 'Name of the branch on which the image will be additionally tagged as "latest".'
     type: string
