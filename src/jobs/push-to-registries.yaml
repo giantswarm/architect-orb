@@ -83,86 +83,68 @@ steps:
         equal: [true, <<parameters.push-to-gsoci>>]
       steps:
         - image-push-to-registry:
-            image_sha256: $(cat .image_sha256)
+            image-sha256_envvar: DOCKER_IMAGE_SHA256
             registry: gsoci.azurecr.io
-            push-dev: <<parameters.push-dev-to-gsoci>>
             image: <<parameters.image>>
-            tag: $(cat .docker_image_tag)
-            username_envar: ACR_GSOCI_USERNAME
-            password_envar: ACR_GSOCI_PASSWORD
+            tag_envvar: DOCKER_IMAGE_TAG
+            username_envvar: ACR_GSOCI_USERNAME
+            password_envvar: ACR_GSOCI_PASSWORD
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
+            push-dev: <<parameters.push-dev-to-gsoci>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
 
   # quay
   - when:
       condition:
-        and:
-          - equal: [true, <<parameters.push-to-quay>>]
-          - or:
-              - equal: [true, <<parameters.push-dev-to-quay>>]
-              - not:
-                  matches:
-                    pattern: "^.*-[a-f0-9]{40}.*$"
-                    value: $(cat .docker_image_tag)
+        equal: [true, <<parameters.push-to-quay>>]
       steps:
         - image-push-to-registry:
-            image_sha256: $(cat .image_sha256)
+            image-sha256_envvar: DOCKER_IMAGE_SHA256
             registry: quay.io
             image: <<parameters.image>>
-            tag: $(cat .docker_image_tag)
-            username_envar: QUAY_USERNAME
-            password_envar: QUAY_PASSWORD
+            tag_envvar: DOCKER_IMAGE_TAG
+            username_envvar: QUAY_USERNAME
+            password_envvar: QUAY_PASSWORD
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
+            push-dev: <<parameters.push-dev-to-quay>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
 
   # aliyun
   - when:
       condition:
-        and:
-          - equal: [true, <<parameters.push-to-aliyun>>]
-          - or:
-              - equal: [true, <<parameters.push-dev-to-aliyun>>]
-              - not:
-                  matches:
-                    pattern: "^.*-[a-f0-9]{40}.*$"
-                    value: $(cat .docker_image_tag)
+        equal: [true, <<parameters.push-to-aliyun>>]
       steps:
         - image-push-to-registry:
-            image_sha256: $(cat .image_sha256)
+            image-sha256_envvar: DOCKER_IMAGE_SHA256
             registry: giantswarm-registry.cn-shanghai.cr.aliyuncs.com
             image: <<parameters.image>>
-            tag: $(cat .docker_image_tag)
-            username_envar: ALIYUN_USERNAME
-            password_envar: ALIYUN_PASSWORD
+            tag_envvar: DOCKER_IMAGE_TAG
+            username_envvar: ALIYUN_USERNAME
+            password_envvar: ALIYUN_PASSWORD
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
+            push-dev: <<parameters.push-dev-to-aliyun>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
 
   # docker
   - when:
       condition:
-        and:
-          - equal: [true, <<parameters.push-to-docker>>]
-          - or:
-              - equal: [true, <<parameters.push-dev-to-docker>>]
-              - not:
-                  matches:
-                    pattern: "^.*-[a-f0-9]{40}.*$"
-                    value: $(cat .docker_image_tag)
+        equal: [true, <<parameters.push-to-docker>>]
       steps:
         - image-push-to-registry:
-            image_sha256: $(cat .image_sha256)
+            image-sha256_envvar: DOCKER_IMAGE_SHA256
             registry: docker.io
             image: <<parameters.image>>
-            tag: $(cat .docker_image_tag)
-            username_envar: DOCKER_USERNAME
-            password_envar: DOCKER_PASSWORD
+            tag_envvar: DOCKER_IMAGE_TAG
+            username_envvar: DOCKER_USERNAME
+            password_envvar: DOCKER_PASSWORD
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
+            push-dev: <<parameters.push-dev-to-docker>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
