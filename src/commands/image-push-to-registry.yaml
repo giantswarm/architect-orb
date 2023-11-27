@@ -41,13 +41,13 @@ steps:
             command: |
               echo "Authenticate"
               echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "<<parameters.registry>>"
-      
+
               echo "Tag the image for <<parameters.registry>>"
               docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
-      
+
               echo "Pushing image with SHA256 <<parameters.image_sha256>> as <<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
               docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
-      
+
         - when:
             condition:
               equal: [<<parameters.tag-latest-branch>>, "${CIRCLE_BRANCH}"]
@@ -60,4 +60,3 @@ steps:
                   name: "When parameter 'tag-latest-branch' matches this branch: Push the 'latest' image to the container registry"
                   command: |
                     docker push "<<parameters.image>>:latest<<parameters.tag-suffix>>"
-      
