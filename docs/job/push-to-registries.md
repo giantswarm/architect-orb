@@ -12,7 +12,7 @@ Otherwise, it is possible to specify the Dockerfile and build context to use wit
 
 Argument `tag-suffix` allows to specify a special suffix to be added after the generated container tag.
 
-Example usage
+Example usage:
 
 ```yaml
 version: 2.1

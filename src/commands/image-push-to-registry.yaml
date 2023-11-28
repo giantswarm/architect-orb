@@ -1,15 +1,15 @@
 parameters:
-  image_sha256:
-    type: "string"
+  image-sha256_envvar:
+    type: "env_var_name"
   registry:
     type: string
   image:
     type: "string"
-  tag:
-    type: "string"
-  password_envar:
+  tag_envvar:
     type: "env_var_name"
-  username_envar:
+  password_envvar:
+    type: "env_var_name"
+  username_envvar:
     type: "env_var_name"
   tag-latest-branch:
     type: "string"
@@ -22,31 +22,28 @@ parameters:
   dockerfile:
     type: "string"
     default: "./Dockerfile"
+  push-dev:
+    type: boolean
+    default: false
 steps:
   - run:
-      name: Authenticate to the registry <<parameters.registry>>
+      name: Push image to <<parameters.registry>>
       command: |
-        echo -n "${<<parameters.password_envar>>}" | docker login --username "${<<parameters.username_envar>>}" --password-stdin "<<parameters.registry>>"
-  - run:
-      name: Tag the image for <<parameters.registry>>
-      command: |
-        docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
-  - run:
-      name: Print image push info for <<parameters.registry>>
-      command: echo "Pushing image with SHA256 <<parameters.image_sha256>> as <<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
-  - run:
-      name: Push the image to <<parameters.registry>>
-      command: |
-        docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>" || docker push "<<parameters.registry>>/<<parameters.image>>:<<parameters.tag>>"
-  - when:
-      condition:
-        equal: [<<parameters.tag-latest-branch>>, "${CIRCLE_BRANCH}"]
-      steps:
-        - run:
-            name: "When parameter 'tag-latest-branch' matches this branch: Retag the image as 'latest'"
-            command: |
-              docker tag <<parameters.image_sha256>> "<<parameters.registry>>/<<parameters.image>>:latest"
-        - run:
-            name: "When parameter 'tag-latest-branch' matches this branch: Push the 'latest' image to the container registry"
-            command: |
-              docker push "<<parameters.image>>:latest<<parameters.tag-suffix>>"
+        if [[ "<<parameters.push-dev>>" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
+          echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
+          exit 0
+        fi
+        echo "Authenticate"
+        echo -n "${<<parameters.password_envvar>>}" | docker login --username "${<<parameters.username_envvar>>}" --password-stdin "<<parameters.registry>>"
+
+        echo "Tag the image for <<parameters.registry>>"
+        docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
+
+        echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as <<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
+        docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}" || docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}" || docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
+
+        if [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]]; then
+          echo "Tagging the image as 'latest'"
+          docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>"
+          docker push "<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>"
+        fi
