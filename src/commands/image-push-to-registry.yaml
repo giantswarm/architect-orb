@@ -33,7 +33,7 @@ steps:
   - run:
       name: Push image to <<parameters.registry>>
       command: |
-        if [[ "${<<parameters.push-dev>>}" == "false"]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
+        if [[ "<<parameters.push-dev>>" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
           echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
           exit 0
         fi
