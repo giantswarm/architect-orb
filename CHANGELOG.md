@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.35.5] - 2023-11-28
+
 In the 'push-to-registries' job, pushing to `docker.io` is now the default as well.
 
 ## [4.35.4] - 2023-11-28
@@ -1013,7 +1015,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.35.4...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.35.5...HEAD
+[4.35.5]: https://github.com/giantswarm/architect-orb/compare/v4.35.4...v4.35.5
 [4.35.4]: https://github.com/giantswarm/architect-orb/compare/v4.35.3...v4.35.4
 [4.35.3]: https://github.com/giantswarm/architect-orb/compare/v4.35.2...v4.35.3
 [4.35.2]: https://github.com/giantswarm/architect-orb/compare/v4.35.1...v4.35.2
