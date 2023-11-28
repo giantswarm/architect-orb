@@ -43,7 +43,7 @@ steps:
         echo "Tag the image for <<parameters.registry>>"
         docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
 
-        echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as <<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar}>>"
+        echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as <<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
         docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}" || docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}" || docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
 
         if [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]]; then
