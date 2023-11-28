@@ -60,7 +60,7 @@ parameters:
       Whether images image should be pushed to Docker Hub (docker.io).
       For dev images, also set `push-dev-to-docker` to true.
     type: boolean
-    default: false
+    default: true
   push-dev-to-docker:
     description: Whether a dev image should be pushed to Docker Hub (docker.io).
     type: boolean

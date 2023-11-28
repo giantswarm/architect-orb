@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+In the 'push-to-registries' job, pushing to `docker.io` is now the default as well.
+
 ## [4.35.4] - 2023-11-28
 
 - Improvements to the `push-to-registries` job.
