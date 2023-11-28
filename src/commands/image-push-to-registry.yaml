@@ -27,10 +27,6 @@ parameters:
     default: false
 steps:
   - run:
-      name: DEBUG CMD
-      command: |
-        echo "${<<parameters.tag_envvar>>}"
-  - run:
       name: Push image to <<parameters.registry>>
       command: |
         if [[ "<<parameters.push-dev>>" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
