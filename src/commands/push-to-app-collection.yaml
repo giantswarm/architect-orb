@@ -33,7 +33,11 @@ steps:
       command: |
         git clone -q --depth=1 --single-branch git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run:
-      name: "architect/push-to-app-collection: Add resources to the collection repo"
+      name: "architect/push-to-app-collection: Fetch current version of the app in the collection"
+      command: |
+        yq eval ".app_version" ".app-collection/flux-manifests/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
+  - run:
+      name: "architect/push-to-app-collection: Add / update resources to the collection repo"
       command: |
         mkdir -p .app-collection/flux-manifests
         mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
@@ -47,10 +51,6 @@ steps:
       name: "architect/push-to-app-collection: install github.com/davidrjonas/semver-cli@1.1.1"
       command: |
         go install github.com/davidrjonas/semver-cli@1.1.1
-  - run:
-      name: "architect/push-to-app-collection: Fetch current version of the app in the collection"
-      command: |
-        yq eval ".app_version" ".app-collection/flux-manifests/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
   - run:
       name: "architect/push-to-app-collection: Push changes to the app collection repo"
       command: |
