@@ -50,7 +50,7 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Fetch current version of the app in the collection"
       command: |
-        yq .app_version .app-collection/flux-manifests/<<parameters.app_name>>.yaml | tee .app_version_in_collection
+        yq eval ".app_version" ".app-collection/flux-manifests/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
   - run:
       name: "architect/push-to-app-collection: Push changes to the app collection repo"
       command: |
@@ -79,6 +79,7 @@ steps:
             echo "Giving up after $tries failures." >&2
             echo "Error pushing changes. See known errors in:" >&2
             echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" >&2
+
 
             exit $ret
           else
