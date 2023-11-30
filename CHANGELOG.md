@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update `push-to-app-collection` command to check if the released version is greater than the one stored in the app collection repository. If so, the update is pushed. Skipped otherwise (for lesser or equal).
+
 ## [4.35.5] - 2023-11-28
 
 In the 'push-to-registries' job, pushing to `docker.io` is now the default as well.
