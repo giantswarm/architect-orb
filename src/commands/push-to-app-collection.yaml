@@ -56,30 +56,30 @@ steps:
       command: |
           if semver-cli greater $(cat .app_version_in_project) $(cat .app_version_in_collection); then
             echo "[UPDATE] The new app version ($(cat .app_version_in_project)) is greater than the one the collection ($(cat .app_version_in_collection)), pushing update to collection repository..."
-        
+
             cd .app-collection
-        
+
             ret=1
             tries=4
             for i in $(seq 1 $tries) ; do
               echo "====> Attempt $i: Running: git pull --rebase"
               git pull --rebase
-            
+
               echo "====> Attempt $i: Running: git push"
               set +e
               git push
               ret=$?
               set -e
-            
+
               [[ $ret -eq 0 ]] && exit $ret
-            
+
               sleep 5
             done
-            
+
             echo "Giving up after $tries failures." >&2
             echo "Error pushing changes. See known errors in:" >&2
             echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" >&2
-            
+
             exit $ret
           else
             echo "[SKIP] The new app version ($(cat .app_version_in_project)) is lesser or equal than the one the collection ($(cat .app_version_in_collection)), skipping update to collection repository..."
