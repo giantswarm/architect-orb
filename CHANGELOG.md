@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Let golangci-lint report more than 3 items of the same type of complaint
+
 ## [4.35.5] - 2023-11-28
 
 In the 'push-to-registries' job, pushing to `docker.io` is now the default as well.
