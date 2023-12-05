@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.35.6] - 2023-12-05
+
 ### Changed
 
 - Update `push-to-app-collection` command to check if the released version is greater than the one stored in the app collection repository. If so, the update is pushed. Skipped otherwise (for lesser or equal).
@@ -1020,7 +1022,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.35.5...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.35.6...HEAD
+[4.35.6]: https://github.com/giantswarm/architect-orb/compare/v4.35.5...v4.35.6
 [4.35.5]: https://github.com/giantswarm/architect-orb/compare/v4.35.4...v4.35.5
 [4.35.4]: https://github.com/giantswarm/architect-orb/compare/v4.35.3...v4.35.4
 [4.35.3]: https://github.com/giantswarm/architect-orb/compare/v4.35.2...v4.35.3
