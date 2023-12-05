@@ -16,14 +16,14 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Generate version"
       command: |
-        architect project version | tee .app_version
+        architect project version | tee .app_version_in_project
   - run:
       name: "architect/push-to-app-collection: Generate Flux Generator"
       command: |
         architect create fluxgenerator \
           --name="<<parameters.app_name>>" \
           --app-name="<<parameters.app_name>>" \
-          --app-version="$(cat .app_version)" \
+          --app-version="$(cat .app_version_in_project)" \
           --app-destination-namespace="<<parameters.app_namespace>>" \
           --app-catalog="<<parameters.app_catalog>>" \
           --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
@@ -33,7 +33,11 @@ steps:
       command: |
         git clone -q --depth=1 --single-branch git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run:
-      name: "architect/push-to-app-collection: Add resources to the collection repo"
+      name: "architect/push-to-app-collection: Fetch current version of the app in the collection"
+      command: |
+        yq eval ".app_version" ".app-collection/flux-manifests/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
+  - run:
+      name: "architect/push-to-app-collection: Add / update resources to the collection repo"
       command: |
         mkdir -p .app-collection/flux-manifests
         mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
@@ -42,35 +46,48 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Commit changes to the app collection repo"
       command: |
-        git -C .app-collection commit -m "update <<parameters.app_name>> to $(cat .app_version)"
+        git -C .app-collection commit -m "update <<parameters.app_name>> to $(cat .app_version_in_project)"
+  - run:
+      name: "architect/push-to-app-collection: install github.com/davidrjonas/semver-cli@1.1.1"
+      command: |
+        go install github.com/davidrjonas/semver-cli@1.1.1
   - run:
       name: "architect/push-to-app-collection: Push changes to the app collection repo"
       command: |
-          cd .app-collection
+          if semver-cli greater $(cat .app_version_in_project) $(cat .app_version_in_collection); then
+            echo "[UPDATE] The new app version ($(cat .app_version_in_project)) is greater than the one the collection ($(cat .app_version_in_collection)), pushing update to collection repository..."
 
-          ret=1
-          tries=4
-          for i in $(seq 1 $tries) ; do
-            echo "====> Attempt $i: Running: git pull --rebase"
-            git pull --rebase
+            cd .app-collection
 
-            echo "====> Attempt $i: Running: git push"
-            set +e
-            git push
-            ret=$?
-            set -e
+            ret=1
+            tries=4
+            for i in $(seq 1 $tries) ; do
+              echo "====> Attempt $i: Running: git pull --rebase"
+              git pull --rebase
 
-            [[ $ret -eq 0 ]] && exit $ret
+              echo "====> Attempt $i: Running: git push"
+              set +e
+              git push
+              ret=$?
+              set -e
 
-            sleep 5
-          done
+              [[ $ret -eq 0 ]] && exit $ret
 
-          echo "Giving up after $tries failures." >&2
-          echo "Error pushing changes. See known errors in:" >&2
-          echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" >&2
+              sleep 5
+            done
 
-          exit $ret
+            echo "Giving up after $tries failures." >&2
+            echo "Error pushing changes. See known errors in:" >&2
+            echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-collection" >&2
+
+
+            exit $ret
+          else
+            echo "[SKIP] The new app version ($(cat .app_version_in_project)) is lesser or equal than the one the collection ($(cat .app_version_in_collection)), skipping update to collection repository..."
+            exit 0
+          fi
   - run:
       name: "architect/push-to-app-collection: Cleanup"
       command: |
-        rm .app_version
+        rm .app_version_in_project
+        rm .app_version_in_collection
