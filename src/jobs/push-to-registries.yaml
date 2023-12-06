@@ -77,13 +77,13 @@ steps:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
   # determine if the image is private
-  - run:
-      name: Fetch public repository info from github
-      command: |
-        curl -sL \
-        -H "Accept: application/vnd.github+json" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
-        $CIRCLE_REPOSITORY_URL > .repo.txt
+  #  - run:
+  #      name: Fetch public repository info from github
+  #      command: |
+  #        apk update && apk add jq
+  #        if [ "$(curl -sL -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME} | jq -r '.message')" = "Not Found" ]; then echo 1 > $CIRCLE_SHA1.image.private; fi
+  #        # -- Mock the private repo
+  #        echo 1 > $CIRCLE_SHA1.image.private;
   # just an idea to check - maybe this will help stop a task when it shouldn't be run
   # - run: |
   #     if [ "$CIRCLE_BRANCH" = "develop" ]; then
@@ -107,11 +107,10 @@ steps:
             push-dev: <<parameters.push-dev-to-gsoci>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
-
   # quay
   - when:
       condition:
-        equal: [true, <<parameters.push-to-quay>>]
+        equal: [true, << parameters.push-to-quay >>]
       steps:
         - image-push-to-registry:
             image-sha256_envvar: DOCKER_IMAGE_SHA256
@@ -125,7 +124,6 @@ steps:
             push-dev: <<parameters.push-dev-to-quay>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
-
   # aliyun
   - when:
       condition:
@@ -143,7 +141,6 @@ steps:
             push-dev: <<parameters.push-dev-to-aliyun>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
-
   # docker
   - when:
       condition:

@@ -25,10 +25,40 @@ parameters:
   push-dev:
     type: boolean
     default: false
+  private-registries:
+    description: |
+      A list of registries that can be used for storing
+      private container images.
+      Use whitespaces to separate
+      `quay.io docker.io ...`
+    type: string
+    default: quay.io
+  force-public:
+    type: boolean
+    default: false
 steps:
   - run:
       name: Push image to <<parameters.registry>>
       command: |
+        # -- TODO(@allanger) jq should be pre-installed in the base image
+        apk update && apk add jq
+
+        # If image is forced to be pushed as a public one,
+        # we shouldn't check whether the source is public
+        if [[ "<< parameters.force-public >>" == "false" ]]; then
+          # If repo with the source code is private,
+          # image is supposed to be pushed as private
+          GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          GITHUB_MESSAGE=$(curl -sL -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}" | jq -r '.message')
+          if [ "${GITHUB_MESSAGE}" = "Not Found" ]; then
+            echo "Repo is not public, pushing the image as private"
+            if ! [[ "<< parameters.private-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
+              echo "The registry << parameters.registry >> is not used for storing private images"
+              exit 0
+            fi
+          fi
+        fi
+
         if [[ "<<parameters.push-dev>>" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
           echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
           exit 0
