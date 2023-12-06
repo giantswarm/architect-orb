@@ -76,6 +76,19 @@ steps:
   - image-build-with-docker:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
+  # determine if the image is private
+  - run:
+      name: Fetch public repository info from github
+      command: |
+        curl -sL \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        $CIRCLE_REPOSITORY_URL > .repo.txt
+  # just an idea to check - maybe this will help stop a task when it shouldn't be run
+  # - run: |
+  #     if [ "$CIRCLE_BRANCH" = "develop" ]; then
+  #         circleci-agent step halt
+  #     fi
 
   # gsoci
   - when:
