@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- add retries to all remote commands in `push-to-registries`
+
 ## [4.35.6] - 2023-12-05
 
 ### Changed

@@ -34,16 +34,19 @@ steps:
           exit 0
         fi
         echo "Authenticate"
-        echo -n "${<<parameters.password_envvar>>}" | docker login --username "${<<parameters.username_envvar>>}" --password-stdin "<<parameters.registry>>"
+        CMD="echo -n \"${<<parameters.password_envvar>>}\" | docker login --username \"${<<parameters.username_envvar>>}\" --password-stdin \"<<parameters.registry>>\""
+        for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
 
         echo "Tag the image for <<parameters.registry>>"
         docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
 
         echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as <<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
-        docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}" || docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}" || docker push "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
+        CMD="docker push \"<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}\""
+        for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
 
         if [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]]; then
           echo "Tagging the image as 'latest'"
           docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>"
-          docker push "<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>"
+          CMD="docker push \"<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>\""
+          for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
         fi
