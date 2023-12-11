@@ -69,3 +69,10 @@ By default, images from dev builds are only pushed to `gsoci` and `quay.io`, but
 - `push-dev-to-quay` (boolean): Whether or not to push to `quay.io`. Also requires `push-to-quay` to be true.
 - `push-dev-to-aliyun` (boolean): Whether or not to push to Aliyun (for AWS China). Also requires `push-to-aliyun` to be true.
 - `push-dev-to-docker` (boolean): Whether or not to push to `docker.io`. Also requires `push-to-docker` to be true.
+
+## Private vs Public images, how does the job handle it?
+
+By default, the job is trying to detect whether the repo with the source code is public or private (it only works with github), and if private, it's checking if the target registry is configured for storing private images.
+The list of private registries is set as a parameter in the `image-push-to-registry` job. If a registry is not "private-friendly" and the source is not public, the job will exit after the check.
+
+If it's required to push an image that uses a private code to public registries, one can set the parameter `force-public` to true, then the whole check will be skipped and the image will be pushed to any registry.
