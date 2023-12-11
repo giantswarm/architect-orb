@@ -53,7 +53,7 @@ steps:
           if [ "${GITHUB_MESSAGE}" = "Not Found" ]; then
             echo "Repo is not public, pushing the image as private"
             if ! [[ "<< parameters.private-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
-              echo "The registry << parameters.registry >> is not used for storing private images"
+              echo "The registry << parameters.registry >> is not configured for storing private images. Exiting."
               exit 0
             fi
           fi
