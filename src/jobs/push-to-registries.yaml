@@ -30,11 +30,23 @@ parameters:
     default: ""
   push-to-gsoci:
     description: |
-      Whether images should be pushed to gsoci.azureacr.io (recommended!).
+      Whether images should be pushed to gsoci.azurecr.io (recommended!).
     type: boolean
     default: true
   push-dev-to-gsoci:
-    description: Whether a dev image should be pushed to gsoci.azureacr.io.
+    description: Whether a dev image should be pushed to gsoci.azurecr.io.
+    type: boolean
+    default: true
+  push-to-gsociprivate:
+    description: |
+      Whether images should be pushed to gsociprivate.azurecr.io. This will work only
+      if hte source GitHub repository is detected as private as well.
+    type: boolean
+    default: true
+  push-dev-to-gsociprivate:
+    description: |
+      Whether dev images should be pushed to gsociprivate.azurecr.io. This will work only
+      if hte source GitHub repository is detected as private as well.
     type: boolean
     default: true
   push-to-quay:
@@ -81,6 +93,26 @@ steps:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
 
+  # gsociprivate
+  - when:
+      condition:
+        equal: [true, <<parameters.push-to-gsoci>>]
+      steps:
+        - image-push-to-registry:
+            image-sha256_envvar: DOCKER_IMAGE_SHA256
+            registry: gsociprivate.azurecr.io
+            image: <<parameters.image>>
+            tag_envvar: DOCKER_IMAGE_TAG
+            username_envvar: ACR_GSOCIPRIVATE_USERNAME
+            password_envvar: ACR_GSOCIPRIVATE_PASSWORD
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+            push-dev: <<parameters.push-dev-to-gsoci>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
+            private-registries: "quay.io"
+            private-only-registries: gsociprivate.azurecr.io
+
   # gsoci
   - when:
       condition:
@@ -99,6 +131,8 @@ steps:
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
             force-public: <<parameters.force-public>>
+            private-registries: "quay.io"
+            private-only-registries: gsociprivate.azurecr.io
 
   # quay
   - when:
@@ -118,6 +152,8 @@ steps:
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
             force-public: <<parameters.force-public>>
+            private-registries: "quay.io"
+            private-only-registries: gsociprivate.azurecr.io
 
   # aliyun
   - when:
@@ -137,6 +173,8 @@ steps:
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
             force-public: <<parameters.force-public>>
+            private-registries: "quay.io"
+            private-only-registries: gsociprivate.azurecr.io
 
   # docker
   - when:
@@ -156,3 +194,5 @@ steps:
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
             force-public: <<parameters.force-public>>
+            private-registries: "quay.io"
+            private-only-registries: gsociprivate.azurecr.io

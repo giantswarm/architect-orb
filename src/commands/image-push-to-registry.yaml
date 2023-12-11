@@ -28,11 +28,17 @@ parameters:
   private-registries:
     description: |
       A list of registries that can be used for storing
-      private container images.
+      private (as well as public) container images.
       Use whitespaces to separate
       `quay.io docker.io ...`
     type: string
-    default: quay.io
+  private-only-registries:
+    description: |
+      A list of registries that can be used for storing
+      only private container images. Public images will not be uploaded there.
+      Use whitespaces to separate
+      `quay.io docker.io ...`
+    type: string
   force-public:
     type: boolean
     default: false
@@ -47,15 +53,27 @@ steps:
           # image is supposed to be pushed as private
           GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
           GITHUB_MESSAGE=$(curl -sL -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}" | jq -r '.message')
-          if [ "${GITHUB_MESSAGE}" = "Not Found" ]; then
-            echo "Repo is not public, pushing the image as private"
-            if ! [[ "<< parameters.private-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
+          if [[ "${GITHUB_MESSAGE}" = "Not Found" ]]; then
+            echo "The GitHub repository is not detected as public, treating the image as a private one."
+            if ! [[ "<< parameters.private-registries >>" =~ .*"<< parameters.registry>>".* \
+              || "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
               echo "The registry << parameters.registry >> is not configured for storing private images. Exiting."
+              exit 0
+            fi
+          else
+            echo "The source GitHub repo was detected as public, treating the image as public one."
+            if [[ "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
+              echo "The current repository is private images only. Skipping upload of a public image."
               exit 0
             fi
           fi
         else
-            echo "'force-public' flag is set to 'true', not detecting GitHub repo access permissions and pushing the image as  'public'."
+            if ! [[ "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
+              echo "The 'force-public' flag doesn't make sense, as this repo URL is configured as a private one."
+              exit 1
+            else
+              echo "'force-public' flag is set to 'true', not detecting GitHub repo access permissions and pushing the image as 'public'."
+            fi
         fi
 
         if [[ "<<parameters.push-dev>>" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
