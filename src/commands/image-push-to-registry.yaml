@@ -57,6 +57,8 @@ steps:
               exit 0
             fi
           fi
+        else
+            echo "'force-public' flag is set to 'true', not detecting GitHub repo access permissions and pushing the image as  'public'."
         fi
 
         if [[ "<<parameters.push-dev>>" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
