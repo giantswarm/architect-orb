@@ -65,6 +65,10 @@ parameters:
     description: Whether a dev image should be pushed to Docker Hub (docker.io).
     type: boolean
     default: false
+  force-public:
+    description: Skip the repo visibility check and push the the image to public registries
+    type: boolean
+    default: false
 steps:
   - checkout
   - setup_remote_docker:
@@ -94,6 +98,7 @@ steps:
             push-dev: <<parameters.push-dev-to-gsoci>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+            force-public: <<parameters.force-public>>
 
   # quay
   - when:
@@ -112,6 +117,7 @@ steps:
             push-dev: <<parameters.push-dev-to-quay>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+            force-public: <<parameters.force-public>>
 
   # aliyun
   - when:
@@ -130,6 +136,7 @@ steps:
             push-dev: <<parameters.push-dev-to-aliyun>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+            force-public: <<parameters.force-public>>
 
   # docker
   - when:
@@ -148,3 +155,4 @@ steps:
             push-dev: <<parameters.push-dev-to-docker>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+            force-public: <<parameters.force-public>>
