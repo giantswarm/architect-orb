@@ -40,9 +40,6 @@ steps:
   - run:
       name: Push image to <<parameters.registry>>
       command: |
-        # -- TODO(@allanger) jq should be pre-installed in the base image
-        apk update && apk add jq
-
         # If image is forced to be pushed as a public one,
         # we shouldn't check whether the source is public
         if [[ "<< parameters.force-public >>" == "false" ]]; then
