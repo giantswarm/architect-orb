@@ -40,7 +40,7 @@ steps:
       name: Login to registries
       command: |
         echo "<<parameters.registries-auth-data>>" | while read -r reg username password; do
-          docker login \$$reg --username \$$username --password \$$password
+          docker login $reg --username \$$username --password \$$password
         done
 
   #- run:
