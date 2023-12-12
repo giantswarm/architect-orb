@@ -93,106 +93,123 @@ steps:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
 
-  # gsociprivate
-  - when:
-      condition:
-        equal: [true, <<parameters.push-to-gsoci>>]
-      steps:
-        - image-push-to-registry:
-            image-sha256_envvar: DOCKER_IMAGE_SHA256
-            registry: gsociprivate.azurecr.io
-            image: <<parameters.image>>
-            tag_envvar: DOCKER_IMAGE_TAG
-            username_envvar: ACR_GSOCIPRIVATE_USERNAME
-            password_envvar: ACR_GSOCIPRIVATE_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            push-dev: <<parameters.push-dev-to-gsoci>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
-            private-registries: "quay.io"
-            private-only-registries: gsociprivate.azurecr.io
+  - image-push-to-registries:
+      image-sha256_envvar: DOCKER_IMAGE_SHA256
+      image: <<parameters.image>>
+      tag_envvar: DOCKER_IMAGE_TAG
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      # push-dev: <<parameters.push-dev-to-gsoci>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      tag-suffix: <<parameters.tag-suffix>>
+      public-registries: "gsoci.azurecr.io quay.io docker.io giantswarm-registry.cn-shanghai.cr.aliyuncs.com"
+      private-registries: "quay.io gsociprivate.azurecr.io"
+      registries-auth-data: |
+        gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD
+        gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD
+        quay.io QUAY_USERNAME QUAY_PASSWORD
+        giantswarm-registry.cn-shanghai.cr.aliyuncs.com ALIYUN_USERNAME ALIYUN_PASSWORD
 
-  # gsoci
-  - when:
-      condition:
-        equal: [true, <<parameters.push-to-gsoci>>]
-      steps:
-        - image-push-to-registry:
-            image-sha256_envvar: DOCKER_IMAGE_SHA256
-            registry: gsoci.azurecr.io
-            image: <<parameters.image>>
-            tag_envvar: DOCKER_IMAGE_TAG
-            username_envvar: ACR_GSOCI_USERNAME
-            password_envvar: ACR_GSOCI_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            push-dev: <<parameters.push-dev-to-gsoci>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
-            force-public: <<parameters.force-public>>
-            private-registries: "quay.io"
-            private-only-registries: gsociprivate.azurecr.io
-
-  # quay
-  - when:
-      condition:
-        equal: [true, <<parameters.push-to-quay>>]
-      steps:
-        - image-push-to-registry:
-            image-sha256_envvar: DOCKER_IMAGE_SHA256
-            registry: quay.io
-            image: <<parameters.image>>
-            tag_envvar: DOCKER_IMAGE_TAG
-            username_envvar: QUAY_USERNAME
-            password_envvar: QUAY_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            push-dev: <<parameters.push-dev-to-quay>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
-            force-public: <<parameters.force-public>>
-            private-registries: "quay.io"
-            private-only-registries: gsociprivate.azurecr.io
-
-  # aliyun
-  - when:
-      condition:
-        equal: [true, <<parameters.push-to-aliyun>>]
-      steps:
-        - image-push-to-registry:
-            image-sha256_envvar: DOCKER_IMAGE_SHA256
-            registry: giantswarm-registry.cn-shanghai.cr.aliyuncs.com
-            image: <<parameters.image>>
-            tag_envvar: DOCKER_IMAGE_TAG
-            username_envvar: ALIYUN_USERNAME
-            password_envvar: ALIYUN_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            push-dev: <<parameters.push-dev-to-aliyun>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
-            force-public: <<parameters.force-public>>
-            private-registries: "quay.io"
-            private-only-registries: gsociprivate.azurecr.io
-
-  # docker
-  - when:
-      condition:
-        equal: [true, <<parameters.push-to-docker>>]
-      steps:
-        - image-push-to-registry:
-            image-sha256_envvar: DOCKER_IMAGE_SHA256
-            registry: docker.io
-            image: <<parameters.image>>
-            tag_envvar: DOCKER_IMAGE_TAG
-            username_envvar: DOCKER_USERNAME
-            password_envvar: DOCKER_PASSWORD
-            build-context: <<parameters.build-context>>
-            dockerfile: <<parameters.dockerfile>>
-            push-dev: <<parameters.push-dev-to-docker>>
-            tag-latest-branch: <<parameters.tag-latest-branch>>
-            tag-suffix: <<parameters.tag-suffix>>
-            force-public: <<parameters.force-public>>
-            private-registries: "quay.io"
-            private-only-registries: gsociprivate.azurecr.io
+    #  # gsociprivate
+    #  - when:
+    #      condition:
+    #        equal: [true, <<parameters.push-to-gsoci>>]
+    #      steps:
+    #        - image-push-to-registry:
+    #            image-sha256_envvar: DOCKER_IMAGE_SHA256
+    #            registry: gsociprivate.azurecr.io
+    #            image: <<parameters.image>>
+    #            tag_envvar: DOCKER_IMAGE_TAG
+    #            username_envvar: ACR_GSOCIPRIVATE_USERNAME
+    #            password_envvar: ACR_GSOCIPRIVATE_PASSWORD
+    #            build-context: <<parameters.build-context>>
+    #            dockerfile: <<parameters.dockerfile>>
+    #            push-dev: <<parameters.push-dev-to-gsoci>>
+    #            tag-latest-branch: <<parameters.tag-latest-branch>>
+    #            tag-suffix: <<parameters.tag-suffix>>
+    #            private-registries: "quay.io"
+    #            private-only-registries: gsociprivate.azurecr.io
+    #
+    #  # gsoci
+    #  - when:
+    #      condition:
+    #        equal: [true, <<parameters.push-to-gsoci>>]
+    #      steps:
+    #        - image-push-to-registry:
+    #            image-sha256_envvar: DOCKER_IMAGE_SHA256
+    #            registry: gsoci.azurecr.io
+    #            image: <<parameters.image>>
+    #            tag_envvar: DOCKER_IMAGE_TAG
+    #            username_envvar: ACR_GSOCI_USERNAME
+    #            password_envvar: ACR_GSOCI_PASSWORD
+    #            build-context: <<parameters.build-context>>
+    #            dockerfile: <<parameters.dockerfile>>
+    #            push-dev: <<parameters.push-dev-to-gsoci>>
+    #            tag-latest-branch: <<parameters.tag-latest-branch>>
+    #            tag-suffix: <<parameters.tag-suffix>>
+    #            force-public: <<parameters.force-public>>
+    #            private-registries: "quay.io"
+    #            private-only-registries: gsociprivate.azurecr.io
+    #
+    #  # quay
+    #  - when:
+    #      condition:
+    #        equal: [true, <<parameters.push-to-quay>>]
+    #      steps:
+    #        - image-push-to-registry:
+    #            image-sha256_envvar: DOCKER_IMAGE_SHA256
+    #            registry: quay.io
+    #            image: <<parameters.image>>
+    #            tag_envvar: DOCKER_IMAGE_TAG
+    #            username_envvar: QUAY_USERNAME
+    #            password_envvar: QUAY_PASSWORD
+    #            build-context: <<parameters.build-context>>
+    #            dockerfile: <<parameters.dockerfile>>
+    #            push-dev: <<parameters.push-dev-to-quay>>
+    #            tag-latest-branch: <<parameters.tag-latest-branch>>
+    #            tag-suffix: <<parameters.tag-suffix>>
+    #            force-public: <<parameters.force-public>>
+    #            private-registries: "quay.io"
+    #            private-only-registries: gsociprivate.azurecr.io
+    #
+    #  # aliyun
+    #  - when:
+    #      condition:
+    #        equal: [true, <<parameters.push-to-aliyun>>]
+    #      steps:
+    #        - image-push-to-registry:
+    #            image-sha256_envvar: DOCKER_IMAGE_SHA256
+    #            registry: giantswarm-registry.cn-shanghai.cr.aliyuncs.com
+    #            image: <<parameters.image>>
+    #            tag_envvar: DOCKER_IMAGE_TAG
+    #            username_envvar: ALIYUN_USERNAME
+    #            password_envvar: ALIYUN_PASSWORD
+    #            build-context: <<parameters.build-context>>
+    #            dockerfile: <<parameters.dockerfile>>
+    #            push-dev: <<parameters.push-dev-to-aliyun>>
+    #            tag-latest-branch: <<parameters.tag-latest-branch>>
+    #            tag-suffix: <<parameters.tag-suffix>>
+    #            force-public: <<parameters.force-public>>
+    #            private-registries: "quay.io"
+    #            private-only-registries: gsociprivate.azurecr.io
+    #
+    #  # docker
+    #  - when:
+    #      condition:
+    #        equal: [true, <<parameters.push-to-docker>>]
+    #      steps:
+    #        - image-push-to-registry:
+    #            image-sha256_envvar: DOCKER_IMAGE_SHA256
+    #            registry: docker.io
+    #            image: <<parameters.image>>
+    #            tag_envvar: DOCKER_IMAGE_TAG
+    #            username_envvar: DOCKER_USERNAME
+    #            password_envvar: DOCKER_PASSWORD
+    #            build-context: <<parameters.build-context>>
+    #            dockerfile: <<parameters.dockerfile>>
+    #            push-dev: <<parameters.push-dev-to-docker>>
+    #            tag-latest-branch: <<parameters.tag-latest-branch>>
+    #            tag-suffix: <<parameters.tag-suffix>>
+    #            force-public: <<parameters.force-public>>
+    #            private-registries: "quay.io"
+    #            private-only-registries: gsociprivate.azurecr.io

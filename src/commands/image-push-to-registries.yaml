@@ -1,0 +1,101 @@
+parameters:
+  image-sha256_envvar:
+    type: "env_var_name"
+  registry:
+    type: string
+  image:
+    type: "string"
+  tag_envvar:
+    type: "env_var_name"
+  tag-latest-branch:
+    type: "string"
+  tag-suffix:
+    type: "string"
+    default: ""
+  build-context:
+    type: "string"
+    default: "."
+  dockerfile:
+    type: "string"
+    default: "./Dockerfile"
+  private-registries:
+    description: |
+      A list of registries that can be used for storing
+      private (as well as public) container images.
+      Use whitespaces to separate
+      `quay.io docker.io ...`
+    type: string
+  public-registries:
+    description: |
+      A list of registries that can be used for storing
+      only private container images. Public images will not be uploaded there.
+      Use whitespaces to separate
+      `quay.io docker.io ...`
+    type: string
+  registries-auth-data:
+    type: string
+  force-public:
+    type: boolean
+    default: false
+steps:
+  - run:
+      name: Login to registries
+      command: |
+        echo "<<parameters.registries-auth-data>>" | while read -r reg username password; do
+          docker login \$$reg --username \$$username --password \$$password
+        done
+
+  #- run:
+  #    name: Push image to <<parameters.registry>>
+  #    command: |
+  #      # If image is forced to be pushed as a public one,
+  #      # we shouldn't check whether the source is public
+  #      if [[ "<< parameters.force-public >>" == "false" ]]; then
+  #        # If repo with the source code is private,
+  #        # image is supposed to be pushed as private
+  #        GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+  #        GITHUB_MESSAGE=$(curl -sL -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}" | jq -r '.message')
+  #        if [[ "${GITHUB_MESSAGE}" = "Not Found" ]]; then
+  #          echo "The GitHub repository is not detected as public, treating the image as a private one."
+  #          if ! [[ "<< parameters.private-registries >>" =~ .*"<< parameters.registry>>".* \
+  #            || "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
+  #            echo "The registry << parameters.registry >> is not configured for storing private images. Exiting."
+  #            exit 0
+  #          fi
+  #        else
+  #          echo "The source GitHub repo was detected as public, treating the image as public one."
+  #          if [[ "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
+  #            echo "The current repository is private images only. Skipping upload of a public image."
+  #            exit 0
+  #          fi
+  #        fi
+  #      else
+  #          if ! [[ "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
+  #            echo "The 'force-public' flag doesn't make sense, as this repo URL is configured as a private one."
+  #            exit 1
+  #          else
+  #            echo "'force-public' flag is set to 'true', not detecting GitHub repo access permissions and pushing the image as 'public'."
+  #          fi
+  #      fi
+
+  #      if [[ "<<parameters.push-dev>>" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
+  #        echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
+  #        exit 0
+  #      fi
+  #      echo "Authenticate"
+  #      CMD="echo -n \"${<<parameters.password_envvar>>}\" | docker login --username \"${<<parameters.username_envvar>>}\" --password-stdin \"<<parameters.registry>>\""
+  #      for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+
+  #      echo "Tag the image for <<parameters.registry>>"
+  #      docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
+
+  #      echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as <<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
+  #      CMD="docker push \"<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}\""
+  #      for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+
+  #      if [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]]; then
+  #        echo "Tagging the image as 'latest'"
+  #        docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>"
+  #        CMD="docker push \"<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>\""
+  #        for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+  #      fi
