@@ -16,21 +16,20 @@ parameters:
   dockerfile:
     type: "string"
     default: "./Dockerfile"
-  private-registries:
+  registries-data:
     description: |
-      A list of registries that can be used for storing
-      private (as well as public) container images.
-      Use whitespaces to separate
-      `quay.io docker.io ...`
-    type: string
-  public-registries:
-    description: |
-      A list of registries that can be used for storing
-      only private container images. Public images will not be uploaded there.
-      Use whitespaces to separate
-      `quay.io docker.io ...`
-    type: string
-  registries-auth-data:
+      A string that defines configuration for registries
+      Each line describes one registry using the following format
+
+      visibility registry username_envvar password_envvar push_dev_image
+
+      where
+
+      access is one of ("public" "private" "public/private")
+      regisrty is a string containing registry url
+      username_envvar is a string containing the name of an env var with a username
+      password_envvar is as string containing the name of an env var with a password
+      push_dev is boolean, when true, dev images are uploaded to registries
     type: string
   force-public:
     type: boolean
@@ -40,61 +39,82 @@ steps:
       name: Login to registries
       command: |
         set -x
-        echo "<<parameters.registries-auth-data>>" | while read -r reg username password; do
-          docker login $reg --username ${!username} --password ${!password}
+        echo "<<parameters.registries-data>>" | while read -r _ reg username password _; do
+          CMD="docker login $reg --username '${!username}' --password '${!password}'"
+          for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  bash -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
         done
+  - run:
+      name: Push image to registries
+      command: |
+        # If image is forced to be pushed as a public one,
+        # we shouldn't check whether the source is public
+        # if repo is private, push to private only
+        # if repo is public or force-public is set push to public only
+        if [[ "<< parameters.force-public >>" = "true" ]]; then
+          IMAGE_ACCESS=public
+        else
+          GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          GITHUB_MESSAGE=$(curl -sL -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}" | jq -r '.message')
+          if [[ "${GITHUB_MESSAGE}" = "Not Found" ]]; then
+            echo "The GitHub repository is not detected as public, treating the image as a private one."
+            IMAGE_ACCESS=private
+          else
+            echo "The GitHub repository is not detected as public, treating the image as a private one."
+            IMAGE_ACCESS=public
+          fi
+        fi
 
-  #- run:
-  #    name: Push image to <<parameters.registry>>
-  #    command: |
-  #      # If image is forced to be pushed as a public one,
-  #      # we shouldn't check whether the source is public
-  #      if [[ "<< parameters.force-public >>" == "false" ]]; then
-  #        # If repo with the source code is private,
-  #        # image is supposed to be pushed as private
-  #        GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-  #        GITHUB_MESSAGE=$(curl -sL -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}" | jq -r '.message')
-  #        if [[ "${GITHUB_MESSAGE}" = "Not Found" ]]; then
-  #          echo "The GitHub repository is not detected as public, treating the image as a private one."
-  #          if ! [[ "<< parameters.private-registries >>" =~ .*"<< parameters.registry>>".* \
-  #            || "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
-  #            echo "The registry << parameters.registry >> is not configured for storing private images. Exiting."
-  #            exit 0
-  #          fi
-  #        else
-  #          echo "The source GitHub repo was detected as public, treating the image as public one."
-  #          if [[ "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
-  #            echo "The current repository is private images only. Skipping upload of a public image."
-  #            exit 0
-  #          fi
-  #        fi
-  #      else
-  #          if ! [[ "<< parameters.private-only-registries >>" =~ .*"<< parameters.registry>>".* ]]; then
-  #            echo "The 'force-public' flag doesn't make sense, as this repo URL is configured as a private one."
-  #            exit 1
-  #          else
-  #            echo "'force-public' flag is set to 'true', not detecting GitHub repo access permissions and pushing the image as 'public'."
-  #          fi
-  #      fi
-
-  #      if [[ "<<parameters.push-dev>>" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
-  #        echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
-  #        exit 0
-  #      fi
-  #      echo "Authenticate"
-  #      CMD="echo -n \"${<<parameters.password_envvar>>}\" | docker login --username \"${<<parameters.username_envvar>>}\" --password-stdin \"<<parameters.registry>>\""
-  #      for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
-
-  #      echo "Tag the image for <<parameters.registry>>"
-  #      docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
-
-  #      echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as <<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}"
-  #      CMD="docker push \"<<parameters.registry>>/<<parameters.image>>:${<<parameters.tag_envvar>>}\""
-  #      for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
-
-  #      if [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]]; then
-  #        echo "Tagging the image as 'latest'"
-  #        docker tag "${<<parameters.image-sha256_envvar>>}" "<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>"
-  #        CMD="docker push \"<<parameters.registry>>/<<parameters.image>>:latest<<parameters.tag-suffix>>\""
-  #        for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || s=$?; done; (exit $s)
-  #      fi
+        echo "<<parameters.registries-data>>" | while read -r access reg _ _ push_dev; do
+          if [[ "${push_dev}" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
+            echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
+            continue
+          fi
+          if [[ "${access}" == *"${IMAGE_ACCESS}"* ]]; then
+            echo "Tag the image for ${reg}"
+            docker tag "${<<parameters.image-sha256_envvar>>}" "${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
+            echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as ${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
+            CMD="docker push \"${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}\""
+            #for i in {1..3}; do
+            #eval "${CMD}" && s=0 && break || IMAGES_FAILED="${reg}-${REGISTRIES_FAILED}";
+            SUCCESS=false
+            for x in $(seq 1 4); do
+              echo "attempt: ${x}"
+              if bash -c "${CMD}"; then
+                echo "Image is pushed to the registry."
+                SUCCESS=true
+                break
+              fi
+              echo "Waiting 5 seconds before the next attempt."
+              sleep 5
+            done
+            if [[ "${SUCCESS}" == "false" ]]; then
+              echo "${reg}:${<< parameters.tag_envvar >>}" >> .failed_images
+            fi
+            if [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]]; then
+              echo "Tagging the image as 'latest'"
+              docker tag "${<<parameters.image-sha256_envvar>>}" "${reg}/<<parameters.image>>:latest<<parameters.tag-suffix>>"
+              CMD="docker push \"${reg}/<<parameters.image>>:latest<<parameters.tag-suffix>>\""
+              #for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || IMAGES_FAILED="${reg} ${REGISTRIES_FAILED}"; done;
+              SUCCESS=false
+              for x in $(seq 1 10); do
+                echo "attempt: ${x}"
+                if bash -c "${CMD}"; then
+                  echo "Image is pushed to the registry."
+                  SUCCESS=true
+                  break
+                fi
+                echo "Waiting 5 seconds before the next attempt."
+                sleep 5
+              done
+              if [[ "${SUCCESS}" == "false" ]]; then
+                echo "${reg}:latest<< parameters.tag-suffix >>" >> .failed_images
+              fi
+            fi
+          else
+            echo "Registry ${reg} is not configured for ${IMAGE_ACCESS} images, skipping"
+          fi
+        done
+        if [ -f .failed_images ]; then
+          echo "Some images couldn't be pushed, check: $(cat .failed_images)"
+          exit 1
+        fi

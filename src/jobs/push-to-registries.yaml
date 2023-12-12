@@ -102,14 +102,11 @@ steps:
       # push-dev: <<parameters.push-dev-to-gsoci>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
       tag-suffix: <<parameters.tag-suffix>>
-      public-registries: "gsoci.azurecr.io quay.io docker.io giantswarm-registry.cn-shanghai.cr.aliyuncs.com"
-      private-registries: "quay.io gsociprivate.azurecr.io"
-      registries-auth-data: |
-        gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD
-        gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD
-        quay.io QUAY_USERNAME QUAY_PASSWORD
-        giantswarm-registry.cn-shanghai.cr.aliyuncs.com ALIYUN_USERNAME ALIYUN_PASSWORD
-
+      registries-data: |-
+        private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD false
+        public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD false
+        private/public quay.io QUAY_USERNAME QUAY_PASSWORD true
+        public giantswarm-registry.cn-shanghai.cr.aliyuncs.com ALIYUN_USERNAME ALIYUN_PASSWORD false
     #  # gsociprivate
     #  - when:
     #      condition:
