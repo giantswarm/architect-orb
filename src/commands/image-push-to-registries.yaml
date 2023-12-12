@@ -1,8 +1,6 @@
 parameters:
   image-sha256_envvar:
     type: "env_var_name"
-  registry:
-    type: string
   image:
     type: "string"
   tag_envvar:
