@@ -26,7 +26,7 @@ parameters:
       where
 
       access is one of ("public" "private" "public/private")
-      regisrty is a string containing registry url
+      registry is a string containing registry url
       username_envvar is a string containing the name of an env var with a username
       password_envvar is as string containing the name of an env var with a password
       push_dev is boolean, when true, dev images are uploaded to registries
@@ -59,7 +59,7 @@ steps:
             echo "The GitHub repository is not detected as public, treating the image as a private one."
             IMAGE_ACCESS=private
           else
-            echo "The GitHub repository is not detected as public, treating the image as a private one."
+            echo "The GitHub repository is detected as public, treating the image as a public one."
             IMAGE_ACCESS=public
           fi
         fi
@@ -77,8 +77,8 @@ steps:
             #for i in {1..3}; do
             #eval "${CMD}" && s=0 && break || IMAGES_FAILED="${reg}-${REGISTRIES_FAILED}";
             SUCCESS=false
-            for x in $(seq 1 4); do
-              echo "attempt: ${x}"
+            for i in $(seq 1 4); do
+              echo "attempt: ${i}"
               if bash -c "${CMD}"; then
                 echo "Image is pushed to the registry."
                 SUCCESS=true
