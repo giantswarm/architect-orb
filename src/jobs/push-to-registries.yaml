@@ -129,6 +129,6 @@ steps:
       tag-suffix: <<parameters.tag-suffix>>
       registries-data: |-
         private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD false
-        public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD false
+        public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD true
         private/public quay.io QUAY_USERNAME QUAY_PASSWORD true
         public giantswarm-registry.cn-shanghai.cr.aliyuncs.com ALIYUN_USERNAME ALIYUN_PASSWORD false
