@@ -52,23 +52,25 @@ workflows:
 
 ## Selecting target registries
 
-The default configuration enables pushing to all registries we care about. Sticking with the defaults is recommended here. However, if you want to override pushing to any of the target registries, you have the following config parameters available:
+If you're not happy with default values, you will have to pass the argumet `registries-data`, that should look like that
+```yaml
+registries-data: |-
+  private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD false
+  public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD false
+  private/public quay.io QUAY_USERNAME QUAY_PASSWORD true
+```
 
-- `push-to-gsoci` (boolean): Whether or not to push to `gsoci.azurecr.io`
-- `push-to-quay` (boolean): Whether or not to push to `quay.io`
-- `push-to-aliyun` (boolean): Whether or not to push to Aliyun (for AWS China)
-- `push-to-docker` (boolean): Whether or not to push to `docker.io`
+Every line will be split to 5 variables by the whitespace, where
 
-## Pushing dev vs. release images
+1. Visibility of the image "private" "public" "private/public"
+2. A Registry URL
+3. An environment variable to get the username from
+4. An environment variable to get the password from
+5. Push dev image or not, if `true` dev images are going to be pushed to registry
 
 The job distinguishes between release and dev builds. Builds for commits in a branch (other than the default branch) are considered **dev** builds, all others are **release** builds.
 
 By default, images from dev builds are only pushed to `gsoci` and `quay.io`, but not to Aliyun and `docker.io`.
-
-- `push-dev-to-gsoci` (boolean): Whether or not to push to `gsoci.azurecr.io`. Also requires `push-to-gsoci` to be true.
-- `push-dev-to-quay` (boolean): Whether or not to push to `quay.io`. Also requires `push-to-quay` to be true.
-- `push-dev-to-aliyun` (boolean): Whether or not to push to Aliyun (for AWS China). Also requires `push-to-aliyun` to be true.
-- `push-dev-to-docker` (boolean): Whether or not to push to `docker.io`. Also requires `push-to-docker` to be true.
 
 ## Private vs Public images, how does the job handle it?
 
