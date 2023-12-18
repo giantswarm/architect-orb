@@ -45,10 +45,11 @@ steps:
           REGISTRIES_DATA="<<parameters.registries-data>>";
         else
           echo "Using registries data from the environment";
-          if [ -z "${REGISTRIES_DATA}" ]; then
+          if [ -z "${REGISTRIES_DATA_BASE64}" ]; then
             echo "Environment variable REGISTRIES_DATA is not set"
             exit 1
           fi
+          REGISTRIES_DATA=$(echo REGISTRIES_DATA_BASE64 | base64 -d)
         fi
 
         echo $REGISTRIES_DATA > .registries_data
