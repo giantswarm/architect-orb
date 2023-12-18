@@ -52,7 +52,7 @@ steps:
           REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
         fi
 
-        echo $REGISTRIES_DATA > .registries_data
+        echo "${REGISTRIES_DATA}" > .registries_data
 
         cat .registries_data | while read -r _ reg username password _; do
           CMD="docker login $reg --username '${!username}' --password '${!password}'"
