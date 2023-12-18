@@ -49,7 +49,7 @@ steps:
             echo "Environment variable REGISTRIES_DATA is not set"
             exit 1
           fi
-          REGISTRIES_DATA=$(echo REGISTRIES_DATA_BASE64 | base64 -d)
+          REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
         fi
 
         echo $REGISTRIES_DATA > .registries_data
