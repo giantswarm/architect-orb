@@ -65,7 +65,17 @@ steps:
           fi
         fi
 
-        echo "<<parameters.registries-data>>" | while read -r access reg _ _ push_dev; do
+        if ! [ -z "<<parameters.registries-data>>" ]; then
+          REGISTRIES_DATA="<<parameters.registries-data>>";
+        else
+          echo "Using registries data from the environment";
+          if [ -z "${REGISTRIES_DATA}"]; then
+            echo "Environment variable REGISTRIES_DATA is not set"
+            exit 1
+          fi
+        fi
+
+        echo "${REGISTRIES_DATA}" | while read -r access reg _ _ push_dev; do
           echo -e "\nProcessing image push config for registry ${reg}."
           if [[ "${push_dev}" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
             echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
