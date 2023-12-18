@@ -46,7 +46,7 @@ steps:
         else
           echo "Using registries data from the environment";
           if [ -z "${REGISTRIES_DATA_BASE64}" ]; then
-            echo "Environment variable REGISTRIES_DATA is not set"
+            echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
             exit 1
           fi
           REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
