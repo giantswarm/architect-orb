@@ -45,7 +45,7 @@ steps:
           REGISTRIES_DATA="<<parameters.registries-data>>";
         else
           echo "Using registries data from the environment";
-          if [ -z "${REGISTRIES_DATA}"]; then
+          if [ -z "${REGISTRIES_DATA}" ]; then
             echo "Environment variable REGISTRIES_DATA is not set"
             exit 1
           fi
@@ -75,16 +75,6 @@ steps:
           else
             echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"
             IMAGE_ACCESS=public
-          fi
-        fi
-
-        if ! [ -z "<<parameters.registries-data>>" ]; then
-          REGISTRIES_DATA="<<parameters.registries-data>>";
-        else
-          echo "Using registries data from the environment";
-          if [ -z "${REGISTRIES_DATA}"]; then
-            echo "Environment variable REGISTRIES_DATA is not set"
-            exit 1
           fi
         fi
 
