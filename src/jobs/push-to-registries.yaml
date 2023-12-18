@@ -85,7 +85,8 @@ parameters:
 steps:
   # TODO: Remove this step when push-to-* parameters are removed
   # I've tried not going this way, but I have absolutely no idea how to avoid it
-  - run: |
+  - name: Check for deprecated parameters
+    run: |
       echo "Detecting deprecated paramameters, please check this PR for explanations: https://github.com/giantswarm/architect-orb/pull/481"
       [[ "<< parameters.push-to-docker >>" = "true" ]] && \
         echo "WARNING: Parameter push-to-docker is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
