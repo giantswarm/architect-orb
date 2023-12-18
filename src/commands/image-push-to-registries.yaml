@@ -41,7 +41,7 @@ steps:
       command: |
         set -x
 
-        if ! [[ "<<parameters.registries-data>>" ]]; then
+        if [[ "<<parameters.registries-data>>" ]]; then
           REGISTRIES_DATA="<<parameters.registries-data>>";
         else
           echo "Using registries data from the circle.ci environment settings.";
