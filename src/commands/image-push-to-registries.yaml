@@ -41,11 +41,11 @@ steps:
       command: |
         set -x
 
-        if ! [ -z "<<parameters.registries-data>>" ]; then
+        if ! [[ "<<parameters.registries-data>>" ]]; then
           REGISTRIES_DATA="<<parameters.registries-data>>";
         else
           echo "Using registries data from the circle.ci environment settings.";
-          if [ -z "${REGISTRIES_DATA_BASE64}" ]; then
+          if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
             echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
             exit 1
           fi
