@@ -32,6 +32,9 @@ parameters:
     description: Skip the repo visibility check and push the the image to public registries
     type: boolean
     default: false
+  registries-data:
+    default: ""
+    type: string
   # -- Deprecated parameters
   push-to-gsoci:
     description: |
@@ -128,7 +131,7 @@ steps:
       dockerfile: <<parameters.dockerfile>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
       tag-suffix: <<parameters.tag-suffix>>
-        # registries-data: |-
+      registries-data: registries-data
         #        private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD true
         #        public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD true
         #        private/public quay.io QUAY_USERNAME QUAY_PASSWORD true
