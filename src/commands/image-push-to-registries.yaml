@@ -17,6 +17,7 @@ parameters:
     type: "string"
     default: "./Dockerfile"
   registries-data:
+    default: ""
     description: |
       A string that defines configuration for registries
       Each line describes one registry using the following format
