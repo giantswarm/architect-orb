@@ -38,6 +38,7 @@ steps:
   - run:
       name: Login to registries
       command: |
+        echo $TEST
         set -x
         echo "<<parameters.registries-data>>" | while read -r _ reg username password _; do
           CMD="docker login $reg --username '${!username}' --password '${!password}'"
