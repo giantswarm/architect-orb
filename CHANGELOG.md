@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- add retries to all remote commands in `push-to-registries`
-- add a check for a visibility of the source code in the job that pushes images to registry. If repo is private, an image should only be pushed to registries that are configured as private ones.
+- `push-to-registries` job changes:
+  - Add retries to all remote commands
+  - Add a check for a visibility of the source code in the job that pushes images to registry. If repo is private, an image should only be pushed to registries that are configured as private ones.
+  - Add repos configuration that is parsed from an enviroment variable. This allows to configure the job to push to different registries based on the configuration only.
 
 ## [4.35.6] - 2023-12-05
 
