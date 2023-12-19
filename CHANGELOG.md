@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.36.0] - 2023-12-19
+
 - `push-to-registries` job changes:
   - Add retries to all remote commands
   - Add a check for a visibility of the source code in the job that pushes images to registry. If repo is private, an image should only be pushed to registries that are configured as private ones.
@@ -1027,7 +1029,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.35.6...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.36.0...HEAD
+[4.36.0]: https://github.com/giantswarm/architect-orb/compare/v4.35.6...v4.36.0
 [4.35.6]: https://github.com/giantswarm/architect-orb/compare/v4.35.5...v4.35.6
 [4.35.5]: https://github.com/giantswarm/architect-orb/compare/v4.35.4...v4.35.5
 [4.35.4]: https://github.com/giantswarm/architect-orb/compare/v4.35.3...v4.35.4
