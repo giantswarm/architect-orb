@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.37.0] - 2023-12-20
+
 - `push-to-registries` job changes:
   - remove deprecated `push-to-*` config options
   - login to registries before an image is built, so it's possible to use private base images
@@ -1034,7 +1036,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.36.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.37.0...HEAD
+[4.37.0]: https://github.com/giantswarm/architect-orb/compare/v4.36.0...v4.37.0
 [4.36.0]: https://github.com/giantswarm/architect-orb/compare/v4.35.6...v4.36.0
 [4.35.6]: https://github.com/giantswarm/architect-orb/compare/v4.35.5...v4.35.6
 [4.35.5]: https://github.com/giantswarm/architect-orb/compare/v4.35.4...v4.35.5
