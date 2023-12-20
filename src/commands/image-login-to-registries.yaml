@@ -1,0 +1,40 @@
+parameters:
+  registries-data:
+    default: ""
+    description: |
+      A string that defines configuration for registries
+      Each line describes one registry using the following format
+
+      visibility registry username_envvar password_envvar push_dev_image
+
+      where
+
+      access is one of ("public" "private" "public/private")
+      registry is a string containing registry url
+      username_envvar is a string containing the name of an env var with a username
+      password_envvar is as string containing the name of an env var with a password
+      push_dev is boolean, when true, dev images are uploaded to registries
+    type: string
+steps:
+  - run:
+      name: Login to registries
+      command: |
+        set -x
+
+        if [[ "<<parameters.registries-data>>" ]]; then
+          REGISTRIES_DATA="<<parameters.registries-data>>";
+        else
+          echo "Using registries data from the circle.ci environment settings.";
+          if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
+            echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
+            exit 1
+          fi
+          REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
+        fi
+
+        echo "${REGISTRIES_DATA}" > .registries_data
+
+        cat .registries_data | while read -r _ reg username password _; do
+          CMD="docker login $reg --username '${!username}' --password '${!password}'"
+          for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  bash -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+        done
