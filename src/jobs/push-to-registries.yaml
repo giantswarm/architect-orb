@@ -35,83 +35,7 @@ parameters:
   registries-data:
     default: ""
     type: string
-  # -- Deprecated parameters
-  push-to-gsoci:
-    description: |
-      Whether images should be pushed to gsoci.azurecr.io (recommended!).
-    type: boolean
-    default: false
-  push-dev-to-gsoci:
-    description: Whether a dev image should be pushed to gsoci.azurecr.io.
-    type: boolean
-    default: false
-  push-to-gsociprivate:
-    description: |
-      Whether images should be pushed to gsociprivate.azurecr.io. This will work only
-      if hte source GitHub repository is detected as private as well.
-    type: boolean
-    default: false
-  push-dev-to-gsociprivate:
-    description: |
-      Whether dev images should be pushed to gsociprivate.azurecr.io. This will work only
-      if hte source GitHub repository is detected as private as well.
-    type: boolean
-    default: false
-  push-to-quay:
-    description: Whether images should be pushed to quay.io.
-    type: boolean
-    default: false
-  push-dev-to-quay:
-    description: Whether a dev image should be pushed to quay.io.
-    type: boolean
-    default: false
-  push-to-aliyun:
-    description: |
-      Whether images should be pushed to the Aliyun registry (used only for AWS china).
-      For dev images, also set `push-dev-to-aliyun` to true.
-    type: boolean
-    default: false
-  push-dev-to-aliyun:
-    description: Whether a dev image should be pushed to the Aliyun registry (used only for AWS china).
-    type: boolean
-    default: false
-  push-to-docker:
-    description: |
-      Whether images image should be pushed to Docker Hub (docker.io).
-      For dev images, also set `push-dev-to-docker` to true.
-    type: boolean
-    default: false
-  push-dev-to-docker:
-    description: Whether a dev image should be pushed to Docker Hub (docker.io).
-    type: boolean
-    default: false
 steps:
-  # TODO: Remove this step when push-to-* parameters are removed
-  # I've tried not going this way, but I have absolutely no idea how to avoid it
-  - run:
-      name: Check for deprecated parameters
-      command: |
-        echo "Detecting deprecated paramameters, please check this PR for explanations: https://github.com/giantswarm/architect-orb/pull/481"
-        [[ "<< parameters.push-to-docker >>" = "true" ]] && \
-          echo "WARNING: Parameter push-to-docker is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-dev-to-docker >>" = "true" ]] && \
-          echo "WARNING: Parameter push-dev-to-docker is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-to-quay>>" = "true" ]] && \
-          echo "WARNING: Parameter push-to-quay is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-dev-to-quay >>" = "true" ]] && \
-          echo "WARNING: Parameter push-dev-to-quay is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-to-aliyun >>" = "true" ]] && \
-          echo "WARNING: Parameter push-to-aliyun is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-dev-to-aliyun >>" = "true" ]] && \
-          echo "WARNING: Parameter push-dev-to-aliyun is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-to-gsoci >>" = "true" ]] && \
-          echo "WARNING: Parameter push-to-gsoci is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-dev-to-gsoci >>" = "true" ]] && \
-          echo "WARNING: Parameter push-dev-to-gsoci is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-to-gsociprivate >>" = "true" ]] && \
-          echo "WARNING: Parameter push-to-gsociprivate is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
-        [[ "<< parameters.push-dev-to-gsociprivate >>" = "true" ]] && \
-          echo "WARNING: Parameter push-dev-to-gsociprivate is deprecated and will be removed soon, please consider using 'registries-data' instead" || true
   - checkout
   - setup_remote_docker:
       version: default
@@ -119,10 +43,11 @@ steps:
       at: .
   - image-prepare-tag:
       tag-suffix: <<parameters.tag-suffix>>
+  - image-login-to-registries:
+      registries-data: <<parameters.registries-data>>
   - image-build-with-docker:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
-
   - image-push-to-registries:
       image-sha256_envvar: DOCKER_IMAGE_SHA256
       image: <<parameters.image>>
@@ -131,7 +56,9 @@ steps:
       dockerfile: <<parameters.dockerfile>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
       tag-suffix: <<parameters.tag-suffix>>
-      registries-data: <<parameters.registries-data>>
+      registries-data:
+        <<parameters.registries-data>>
+        # 2023.12.20 Current config in the env var
         #        private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD true
         #        public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD true
         #        private/public quay.io QUAY_USERNAME QUAY_PASSWORD true
