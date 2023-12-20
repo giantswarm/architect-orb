@@ -43,10 +43,11 @@ steps:
       at: .
   - image-prepare-tag:
       tag-suffix: <<parameters.tag-suffix>>
+  - image-login-to-registries:
+      registries-data: <<parameters.registries-data>>
   - image-build-with-docker:
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
-
   - image-push-to-registries:
       image-sha256_envvar: DOCKER_IMAGE_SHA256
       image: <<parameters.image>>
