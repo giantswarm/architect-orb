@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added job `go-dependencies` for executing [nancy](https://github.com/sonatype-nexus-community/nancy) separately.
+
 ## [4.37.0] - 2023-12-20
 
 - `push-to-registries` job changes:
