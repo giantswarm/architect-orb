@@ -1,0 +1,9 @@
+description: |
+  Informs about security vulnerabilities in Go dependencies of the project.
+  Uses [nancy](https://github.com/sonatype-nexus-community/nancy) by Sonatype.
+executor: architect
+steps:
+  - checkout
+  - tools-info
+  - go-cache-restore
+  - go-nancy
