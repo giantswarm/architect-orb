@@ -26,7 +26,7 @@ steps:
         for i in $(seq 1 $tries) ; do
           echo "====> Attempt $i: Creating kind cluster"
           set +e
-          kind create cluster --config kind-config --image quay.io/giantswarm/kind-node:<< parameters.kubernetes-version >>
+          kind create cluster --config kind-config --image gsoci.azurecr.io/giantswarm/kind-node:<< parameters.kubernetes-version >>
           ret=$?
           set -e
           [[ $ret -eq 0 ]] && exit $ret

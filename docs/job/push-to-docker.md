@@ -24,7 +24,7 @@ workflows:
       - architect/push-to-docker:
           context: "architect"
           name: "push-REPOSITORY-to-quay"
-          image: "quay.io/giantswarm/REPOSITORY"
+          image: "gsoci.azurecr.io/giantswarm/REPOSITORY"
           username_envar: "QUAY_USERNAME"
           password_envar: "QUAY_PASSWORD"
           build-context: "."

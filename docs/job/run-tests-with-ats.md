@@ -62,7 +62,7 @@ This can be circumvented by also setting the parameter [`app-test-suite_containe
 
 ### app-test-suite_container_tag
 
-Container tag of app-test-suite to use (check [quay.io/giantswarm/app-test-suite](https://quay.io/giantswarm/app-test-suite)).
+Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite).
 This parameter allows to specify the used container tag of app-test-suite.
 
 (Default: "0.2.2")
