@@ -7,7 +7,7 @@ parameters:
     description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit)"
     type: string
   app-test-suite_container_tag:
-    description: "Container tag of app-test-suite to use (check quay.io/giantswarm/app-test-suite)"
+    description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
     type: string
   additional_app-test-suite_flags:
     description: "Additional app-test-suite flags to use"

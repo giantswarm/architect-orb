@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update `app-build-suite` version to [`v1.2.2`](https://github.com/giantswarm/app-build-suite/releases/tag/v1.2.2).
+- Switch images to be pulled from `gsoci.azurecr.io` instead of `quay.io`
+
 ## [4.37.0] - 2023-12-20
 
 - `push-to-registries` job changes:

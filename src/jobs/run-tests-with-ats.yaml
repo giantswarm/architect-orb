@@ -8,7 +8,7 @@ parameters:
     type: string
     default: "v0.5.0"
   app-test-suite_container_tag:
-    description: "Container tag of app-test-suite to use (check quay.io/giantswarm/app-test-suite)"
+    description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
     type: string
     default: "0.5.0"
   additional_app-test-suite_flags:

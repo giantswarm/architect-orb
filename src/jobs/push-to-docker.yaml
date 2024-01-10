@@ -1,6 +1,6 @@
 parameters:
   image:
-    description: 'Name of the docker image, without tag. e.g. "quay.io/my-org/my-repo".'
+    description: 'Name of the docker image, without tag. e.g. "gsoci.azurecr.io/my-org/my-repo".'
     type: "string"
   password_envar:
     default: "ARCHITECT_DOCKER_REGISTRY_PASSWORD"
