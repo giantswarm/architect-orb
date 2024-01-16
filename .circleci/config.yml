@@ -16,10 +16,8 @@ workflows:
 
       - orb-tools/pack:
           source-dir: src
-          destination-orb-path: packed/orb.yml
-          workspace-path: packed/orb.yml
-          artifact-path: packed/orb.yml
-          requires: [orb-tools/lint]
+          requires:
+            - "orb-tools/lint"
           filters:
             tags:
               only: /.*/
@@ -30,7 +28,8 @@ workflows:
           orb-path: workspace/packed/orb.yml
           orb-ref: giantswarm/architect@dev:${CIRCLE_BRANCH}
           publish-token-variable: CIRCLECI_DEV_API_TOKEN
-          requires: [orb-tools/pack]
+          requires:
+            - "orb-tools/pack"
           filters:
             branches:
               only: /.*/
@@ -43,7 +42,8 @@ workflows:
           orb-path: workspace/packed/orb.yml
           orb-ref: giantswarm/architect@${CIRCLE_TAG##v}
           publish-token-variable: CIRCLECI_DEV_API_TOKEN
-          requires: [orb-tools/pack]
+          requires:
+            - "orb-tools/pack"
           filters:
             branches:
               ignore: /.*/
