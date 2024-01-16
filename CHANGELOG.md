@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed `push-to-docker` job. Please migrate to [`push-to-registries`](https://github.com/giantswarm/architect-orb/blob/main/docs/job/push-to-registries.md).
+
 ## [4.38.0] - 2024-01-10
 
 ### Changed
