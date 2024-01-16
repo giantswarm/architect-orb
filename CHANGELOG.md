@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0] - 2024-01-16
+
 ### Removed
 
 - Removed `push-to-docker` job. Please migrate to [`push-to-registries`](https://github.com/giantswarm/architect-orb/blob/main/docs/job/push-to-registries.md).
@@ -1047,7 +1049,8 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v4.38.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/giantswarm/architect-orb/compare/v4.38.0...v5.0.0
 [4.38.0]: https://github.com/giantswarm/architect-orb/compare/v4.37.0...v4.38.0
 [4.37.0]: https://github.com/giantswarm/architect-orb/compare/v4.36.0...v4.37.0
 [4.36.0]: https://github.com/giantswarm/architect-orb/compare/v4.35.6...v4.36.0
