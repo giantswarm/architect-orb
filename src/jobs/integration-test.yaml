@@ -62,14 +62,14 @@ steps:
       at: .
   - machine-install-go
   - integration-test-install-tools:
-      apptestctl-version:  << parameters.apptestctl-version >>
-      helm-version:  << parameters.helm-version >>
-      kubernetes-version:  << parameters.kubernetes-version >>
+      apptestctl-version: << parameters.apptestctl-version >>
+      helm-version: << parameters.helm-version >>
+      kubernetes-version: << parameters.kubernetes-version >>
   - integration-test-create-cluster:
       kind-config: << parameters.kind-config >>
-      kubernetes-version:  << parameters.kubernetes-version >>
+      kubernetes-version: << parameters.kubernetes-version >>
   - integration-test-install-app-platform:
-      install-app-platform:  << parameters.install-app-platform >>
+      install-app-platform: << parameters.install-app-platform >>
   - integration-test-setup:
       setup-script: << parameters.setup-script >>
   - integration-test-go-test:
