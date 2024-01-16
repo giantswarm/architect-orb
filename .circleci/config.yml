@@ -24,12 +24,8 @@ workflows:
 
       - orb-tools/publish:
           name: publish-branch
-          attach-workspace: true
           orb-name: giantswarm/architect
-          orb-path: workspace/packed/orb.yml
-          orb-ref: giantswarm/architect@dev:${CIRCLE_BRANCH}
           vcs-type: github
-          publish-token-variable: CIRCLECI_DEV_API_TOKEN
           requires:
             - "orb-tools/pack"
           filters:
@@ -40,12 +36,8 @@ workflows:
 
       - orb-tools/publish:
           name: publish-tag
-          attach-workspace: true
           orb-name: giantswarm/architect
-          orb-path: workspace/packed/orb.yml
-          orb-ref: giantswarm/architect@${CIRCLE_TAG##v}
           vcs-type: github
-          publish-token-variable: CIRCLECI_DEV_API_TOKEN
           requires:
             - "orb-tools/pack"
           filters:
