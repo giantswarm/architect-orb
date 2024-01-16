@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update orb-tools
+- Update CircleCI orb-tools to v12
 
 ## [5.0.0] - 2024-01-16
 
