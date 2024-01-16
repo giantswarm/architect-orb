@@ -23,9 +23,9 @@ workflows:
 
       - orb-tools/publish:
           name: publish-branch
-          orb-name: giantswarm/architect
-          vcs-type: github
-          circleci-token: CIRCLECI_DEV_API_TOKEN
+          orb_name: giantswarm/architect
+          vcs_type: github
+          circleci_token: CIRCLECI_DEV_API_TOKEN
           requires:
             - "orb-tools/pack"
           filters:
@@ -36,9 +36,9 @@ workflows:
 
       - orb-tools/publish:
           name: publish-tag
-          orb-name: giantswarm/architect
-          vcs-type: github
-          circleci-token: CIRCLECI_DEV_API_TOKEN
+          orb_name: giantswarm/architect
+          vcs_type: github
+          circleci_token: CIRCLECI_DEV_API_TOKEN
           requires:
             - "orb-tools/pack"
           filters:
