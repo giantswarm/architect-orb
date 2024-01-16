@@ -15,7 +15,6 @@ workflows:
               only: /.*/
 
       - orb-tools/pack:
-          source-dir: src
           requires:
             - "orb-tools/lint"
           filters:
