@@ -67,8 +67,8 @@ steps:
   - unless:
       condition: << parameters.skip_conftest_deprek8ion >>
       steps:
-      - helm-conftest:
-          chart: "<< parameters.chart >>"
+        - helm-conftest:
+            chart: "<< parameters.chart >>"
   - run:
       name: Clone app catalog repo
       command: |

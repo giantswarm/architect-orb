@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   architect: giantswarm/architect@5.0.0
-  orb-tools: circleci/orb-tools@8.27.6
+  orb-tools: circleci/orb-tools@12.0.4
 
 workflows:
   catalog_build:
@@ -15,22 +15,19 @@ workflows:
               only: /.*/
 
       - orb-tools/pack:
-          source-dir: src
-          destination-orb-path: packed/orb.yml
-          workspace-path: packed/orb.yml
-          artifact-path: packed/orb.yml
-          requires: [orb-tools/lint]
+          requires:
+            - "orb-tools/lint"
           filters:
             tags:
               only: /.*/
 
       - orb-tools/publish:
           name: publish-branch
-          attach-workspace: true
-          orb-path: workspace/packed/orb.yml
-          orb-ref: giantswarm/architect@dev:${CIRCLE_BRANCH}
-          publish-token-variable: CIRCLECI_DEV_API_TOKEN
-          requires: [orb-tools/pack]
+          orb_name: giantswarm/architect
+          vcs_type: github
+          circleci_token: CIRCLECI_DEV_API_TOKEN
+          requires:
+            - "orb-tools/pack"
           filters:
             branches:
               only: /.*/
@@ -39,11 +36,11 @@ workflows:
 
       - orb-tools/publish:
           name: publish-tag
-          attach-workspace: true
-          orb-path: workspace/packed/orb.yml
-          orb-ref: giantswarm/architect@${CIRCLE_TAG##v}
-          publish-token-variable: CIRCLECI_DEV_API_TOKEN
-          requires: [orb-tools/pack]
+          orb_name: giantswarm/architect
+          vcs_type: github
+          circleci_token: CIRCLECI_DEV_API_TOKEN
+          requires:
+            - "orb-tools/pack"
           filters:
             branches:
               ignore: /.*/

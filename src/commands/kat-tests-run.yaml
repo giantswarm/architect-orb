@@ -1,14 +1,14 @@
 parameters:
-    chart:
-        type: string
-    ct_config:
-        type: string
-        default: ""
-    cluster_type:
-        type: string
-    additional_kube-app-testing_flags:
-        type: string
-        default: ""
+  chart:
+    type: string
+  ct_config:
+    type: string
+    default: ""
+  cluster_type:
+    type: string
+  additional_kube-app-testing_flags:
+    type: string
+    default: ""
 steps:
   - run:
       name: "start kube-app-testing tool"
@@ -21,11 +21,11 @@ steps:
       command: |
         if [[ -d /tmp/kat ]]; then sudo chown -R circleci.circleci /tmp/kat; fi
   - save_cache:
-        key: v2-python-cache-{{ checksum "test/kat/Pipfile.lock" }}
-        paths:
-            - /tmp/kat/.local
-            - /tmp/kat/.cache
+      key: v2-python-cache-{{ checksum "test/kat/Pipfile.lock" }}
+      paths:
+        - /tmp/kat/.local
+        - /tmp/kat/.cache
   - store_test_results:
-        path: test-results
+      path: test-results
   - store_artifacts:
-        path: test-results
+      path: test-results
