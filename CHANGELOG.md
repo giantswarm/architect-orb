@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.0.1] - 2024-02-05
 
+## [5.0.1] - 2024-02-05
+
 - fix: `push-to-registries` correctly handles the `force-public` flag
 
 ### Changed
@@ -1004,6 +1006,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 - Add push-to-app-catalog job.
 
 [Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...HEAD
+[5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.0.1
 [5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/giantswarm/architect-orb/compare/v4.38.0...v5.0.0
 [4.38.0]: https://github.com/giantswarm/architect-orb/compare/v4.37.0...v4.38.0
