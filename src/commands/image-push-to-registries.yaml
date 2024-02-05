@@ -39,7 +39,6 @@ steps:
   - run:
       name: Push image to registries
       command: |
-        set -x
         # If image is forced to be pushed as a public one,
         # we shouldn't check whether the source is public
         # if repo is private, push to private only
