@@ -54,6 +54,7 @@ steps:
       tag_envvar: DOCKER_IMAGE_TAG
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
+      force-public: <<parameters.force-public>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
       tag-suffix: <<parameters.tag-suffix>>
       registries-data:
