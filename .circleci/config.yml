@@ -39,6 +39,7 @@ workflows:
           orb_name: giantswarm/architect
           vcs_type: github
           circleci_token: CIRCLECI_DEV_API_TOKEN
+          pub_type: production
           requires:
             - "orb-tools/pack"
           filters:
