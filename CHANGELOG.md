@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix: `push-to-registries` correctly handles the `force-public` flag
+
 ### Changed
 
 - Update CircleCI orb-tools to v12
@@ -29,7 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `push-to-registries` job changes:
   - remove deprecated `push-to-*` config options
   - login to registries before an image is built, so it's possible to use private base images
-
 
 ## [4.36.0] - 2023-12-19
 
@@ -462,7 +463,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 ### Added
 
-- Create Argo CD Application CR alongside Giant Swarm App CR  in `push-to-app-collection` job. They are pushed to separate _/manifests_ directory.
+- Create Argo CD Application CR alongside Giant Swarm App CR in `push-to-app-collection` job. They are pushed to separate _/manifests_ directory.
 
 ## [2.8.0] - 2021-05-13
 
@@ -574,7 +575,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 ### Changed
 
 - Allow `chart` parameter value of job `push-to-app-catalog` to be
-"name of repository with optional -app suffix".
+  "name of repository with optional -app suffix".
 
 ## [1.0.0] - 2020-12-04
 
@@ -593,7 +594,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 ### Added
 
 - Use apptestctl v0.5.1 in `integration-test` job to add printer columns for
-app and chart CRDs.
+  app and chart CRDs.
 
 ### Fixed
 
@@ -624,7 +625,7 @@ app and chart CRDs.
 ### Added
 
 - Add `install-app-platform` param to integration-test job that runs
-`apptestctl bootstrap` to add support for using app CRs in tests.
+  `apptestctl bootstrap` to add support for using app CRs in tests.
 - Update kubernetes in integration-test job to v1.17.11.
 - Update kind in integration-test job to v0.9.0.
 - Update helm CLI in integration-test job to v3.4.0.
@@ -632,7 +633,7 @@ app and chart CRDs.
 ### Fixed
 
 - Remove copying code to GOPATH in integration-test job since migration to
-Go modules is complete.
+  Go modules is complete.
 
 ## [0.16.0] - 2020-10-27
 
@@ -764,7 +765,6 @@ Go modules is complete.
   configuring App CR annotation `chart-operator.giantswarm.io/force-helm-upgrade`.
   This annotation defines whether `chart-operator` forces helm chart upgrade on failure.
 
-
 ## [0.8.11] - 2020-04-21
 
 ### Changed
@@ -789,7 +789,6 @@ Go modules is complete.
 - `push-to-app-catalog` doesn't lint helm charts anymore, as that is now part
   of tests run by `kube-app-testing`
 
-
 ## [0.8.8] - 2020-04-09
 
 ### Added
@@ -800,7 +799,6 @@ Go modules is complete.
 
 - Update Go version used in integration tests to 1.14.1.
 
-
 ## [0.8.7] - 2020-04-08
 
 ### Added
@@ -808,15 +806,11 @@ Go modules is complete.
 - Add new parameter `namespace` to `push-to-app-collection` job which allows
   configuring namespace where chart should be installed.
 
-
-
 ## [0.8.6] - 2020-03-30
 
 ### Added
 
 - Use `conftest` to validate helm template using `rego` policies in `push-to-app-catalog` job.
-
-
 
 ## [0.8.5] - 2020-03-30
 
@@ -824,8 +818,6 @@ Go modules is complete.
 
 - Validate templated charts using `architect helm template` in
   `push-to-app-catalog` job.
-
-
 
 ## [0.8.4] - 2020-03-24
 
@@ -840,8 +832,6 @@ Go modules is complete.
 - Don't run cleanup for helm chart template command on non-tagged builds.
 - Drop `unparam` from `golangci-lint`.
 
-
-
 ## [0.8.3] - 2020-03-12
 
 ### Added
@@ -854,8 +844,6 @@ Go modules is complete.
 
 - Don't run cleanup for helm chart template command on non-tagged builds.
 
-
-
 ## [0.8.2] - 2020-03-10
 
 ### Changed
@@ -864,15 +852,11 @@ Go modules is complete.
 - Disable version bump check for Helm lint.
 - Helm lint supports single chart rather than entire directory disabling version bump check.
 
-
-
 ## [0.8.1] - 2020-03-09
 
 ### Added
 
 - Enable linting during go-test command.
-
-
 
 ## [0.8.0] - 2020-03-05
 
@@ -894,8 +878,6 @@ Go modules is complete.
 
 - Remove Docker layer caching from remote docker setup (affects push-to-docker and push-to-docker-legacy)
 
-
-
 ## [0.7.0] - 2020-02-26
 
 ### Added
@@ -903,15 +885,13 @@ Go modules is complete.
 - Introduce `go-lint` for running configurable linting jobs on `Go` code
 - Introduce `gitleaks` for entropy-based checks for secrets in the repository (language-agnostic)
 - Support for modern code analysis tools for dep-based projects using the new
-`go-test-legacy` job. Based on the existing `go-test` job.
+  `go-test-legacy` job. Based on the existing `go-test` job.
 - Support for running arbitrary architect commands inside an architect container
-avoiding the requirement of installing the binary locally using the new
-`go-architect-legacy` job.
+  avoiding the requirement of installing the binary locally using the new
+  `go-architect-legacy` job.
 - New `go-cache-save-legacy` and `go-cache-restore-legacy` commands
-which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doesn't change.
+  which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doesn't change.
 - Names for steps in `tools-info` command.
-
-
 
 ## [0.6.0] - 2020-02-19
 
@@ -923,8 +903,6 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Fix pushing new unique app in push-to-app-collection job. https://github.com/giantswarm/architect-orb/pull/69
 
-
-
 ## [0.5.3] - 2020-02-11
 
 ### Added
@@ -935,15 +913,11 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Fix working files cleanup in push-to-app-collection job.
 
-
-
 ## [0.5.2] - 2020-02-03
 
 ### Fixed
 
 - Do not change CR name when "unique" parameter is set in push-to-app-collection job.
-
-
 
 ## [0.5.1] - 2020-02-03
 
@@ -951,15 +925,11 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Fix push-to-app-collection job broken in v0.5.0 release.
 
-
-
 ## [0.5.0] - 2020-01-31
 
 ### Added
 
 - Add "unique" parameter to push-to-app-collection job.
-
-
 
 ## [0.4.5] - 2019-12-11
 
@@ -967,15 +937,11 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Add "push-to-docker-legacy" command to be able push old style docker image tags.
 
-
-
 ## [0.4.4] - 2019-10-31
 
 ### Added
 
 - Add "tag-latest-branch" parameter to the push-to-docker job.
-
-
 
 ## [0.4.3] - 2019-10-10
 
@@ -983,15 +949,11 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Add go-test job for building libraries.
 
-
-
 ## [0.4.2] - 2019-10-04
 
 ### Added
 
 - Add "os" parameter to the go-build job.
-
-
 
 ## [0.4.1] - 2019-10-02
 
@@ -1003,15 +965,11 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Fail when go modules are not tidy in go-build.
 
-
-
 ## [0.4.0] - 2019-09-17
 
 ### Added
 
 - Add go-build job.
-
-
 
 ## [0.3.0] - 2019-09-06
 
@@ -1019,15 +977,11 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Add push-to-app-collection job.
 
-
-
 ## [0.2.0] - 2019-07-26
 
 ### Added
 
 - Add push-to-docker job.
-
-
 
 ## [0.1.2] - 2019-07-22
 
@@ -1035,23 +989,17 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 
 - Index new package only in package-and-push command.
 
-
-
 ## [0.1.1] - 2019-06-14
 
 ### Fixed
 
 - Fix app catalog name reference in indexing step of package-and-push command.
 
-
-
 ## [0.1.0] - 2019-06-04
 
 ### Added
 
 - Add push-to-app-catalog job.
-
-
 
 [Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.0.0...HEAD
 [5.0.0]: https://github.com/giantswarm/architect-orb/compare/v4.38.0...v5.0.0
@@ -1185,5 +1133,4 @@ which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doe
 [0.2.0]: https://github.com/giantswarm/architect-orb/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/giantswarm/architect-orb/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/giantswarm/architect-orb/compare/v0.1.0...v0.1.1
-
 [0.1.0]: https://github.com/giantswarm/architect-orb/releases/tag/v0.1.0

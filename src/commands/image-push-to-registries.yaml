@@ -44,6 +44,7 @@ steps:
         # if repo is private, push to private only
         # if repo is public or force-public is set push to public only
         if [[ "<< parameters.force-public >>" = "true" ]]; then
+          echo -e "'force-public' flag is set, treating the image as public.\n"
           IMAGE_ACCESS=public
         else
           GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
@@ -59,9 +60,10 @@ steps:
 
         if ! [[ -f .registries_data ]]; then
           if [[ "<<parameters.registries-data>>" ]]; then
+            echo "Using registries data from the circle.ci job parameters.";
             REGISTRIES_DATA="<<parameters.registries-data>>";
           else
-            echo "Using registries data from the circle.ci environment settings.";
+            echo "Using registries data from the circle.ci environment variable settings.";
             if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
               echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
               exit 1
@@ -83,8 +85,6 @@ steps:
             docker tag "${<<parameters.image-sha256_envvar>>}" "${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
             echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as ${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
             CMD="docker push \"${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}\""
-            #for i in {1..3}; do
-            #eval "${CMD}" && s=0 && break || IMAGES_FAILED="${reg}-${REGISTRIES_FAILED}";
             SUCCESS=false
             for i in $(seq 1 4); do
               echo "attempt: ${i}"
@@ -103,7 +103,6 @@ steps:
               echo "Tagging the image as 'latest'"
               docker tag "${<<parameters.image-sha256_envvar>>}" "${reg}/<<parameters.image>>:latest<<parameters.tag-suffix>>"
               CMD="docker push \"${reg}/<<parameters.image>>:latest<<parameters.tag-suffix>>\""
-              #for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  eval "${CMD}" && s=0 && break || IMAGES_FAILED="${reg} ${REGISTRIES_FAILED}"; done;
               SUCCESS=false
               for x in $(seq 1 10); do
                 echo "attempt: ${x}"
@@ -123,7 +122,7 @@ steps:
             echo "Registry ${reg} is not configured for ${IMAGE_ACCESS} images, skipping"
           fi
         done
-        if [ -f .failed_images ]; then
+        if [[ -f .failed_images ]]; then
           echo "Some images couldn't be pushed, check: $(cat .failed_images)"
           exit 1
         fi
