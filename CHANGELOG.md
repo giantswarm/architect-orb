@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.0] - 2024-02-23
+
 ### Changed
 
 - Update machine executor image to `default`.
@@ -1009,7 +1011,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.1.0...HEAD
+[5.1.0]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.1.0
 [5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.0.1
 [5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/giantswarm/architect-orb/compare/v4.38.0...v5.0.0
