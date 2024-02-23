@@ -1,1 +1,6 @@
-machine: true
+# https://circleci.com/docs/linux-vm-support-policy/
+
+description: A ubuntu-based machine executor
+
+machine:
+  image: default
