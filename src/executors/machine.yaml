@@ -1,4 +1,4 @@
 description: A ubuntu-2004-based machine executor
 
 machine:
-  image: ubuntu-2004:202010-01
+  image: ubuntu-2004:202101-01
