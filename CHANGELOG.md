@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Make `image-prepare-tag` command fail when `architect project version` command fails (because CircleCI runs the scripts with `-o pipefail`)
+
 ## [5.1.0] - 2024-02-23
 
 ### Changed
