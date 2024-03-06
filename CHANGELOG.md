@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.1] - 2024-03-06
+
 ### Changed
 
 - Make `image-prepare-tag` command fail when `architect project version` command fails (because CircleCI runs the scripts with `-o pipefail`)
@@ -1015,7 +1017,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.1.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.1.1...HEAD
+[5.1.1]: https://github.com/giantswarm/architect-orb/compare/v5.1.0...v5.1.1
 [5.1.0]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.1.0
 [5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.0.1
 [5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.0...v5.0.1
