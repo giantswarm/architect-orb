@@ -5,22 +5,16 @@ parameters:
   resource_name:
     type: "string"
     default: ""
-    description: "Name of the App CR, defaults to `app_name` parameter if not set."
   app_name:
     type: "string"
-    description: "Name of the App Chart as it is uploaded to the catalogs."
   app_namespace:
     type: "string"
-    description: "Destination namespace for the App CR."
   app_catalog:
     type: "string"
-    description: "Catalog where the App Chart should be fetched from"
   app_collection_repo:
     type: "string"
-    description: "Collection repository under giantswarm organisation where the app should be pushed."
   disable_force_upgrade:
     type: "boolean"
-    description: "Disable helm chart force upgrade."
 steps:
   - run:
       name: "architect/push-to-app-collection: Generate version"
