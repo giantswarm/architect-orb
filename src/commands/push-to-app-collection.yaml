@@ -43,7 +43,7 @@ steps:
         resource_name=`[ -n "<< parameters.resource_name >>" ] && echo "<< parameters.resource_name >>" || echo "<< parameters.app_name >>"`
 
         # Default to 0.0.0 if file does not exist or .app_version is not specified so the new file will be created.
-        app_version_in_collection=$(yq eval ".app_version" ".app-collection/flux-manifests/${resource_name}.yaml")
+        app_version_in_collection=$(yq eval ".app_version" ".app-collection/flux-manifests/${resource_name}.yaml" || true)
         echo ${app_version_in_collection:-"0.0.0"} | tee .app_version_in_collection
   - run:
       name: "architect/push-to-app-collection: Add / update resources to the collection repo"
