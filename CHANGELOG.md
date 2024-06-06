@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update `app-test-suite` to v0.6.1.
+
 ## [5.2.0] - 2024-05-15
 
 ### Changed
