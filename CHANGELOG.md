@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.3.1] - 2024-07-26
 
+### Changed
+
+- Bump `architect` to v6.15.1.
+
 ## [5.3.0] - 2024-07-18
 
 ### Changed
