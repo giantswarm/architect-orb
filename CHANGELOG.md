@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Bump `architect` to v6.16.0.
+
+### Added
+
+- Add `git-tag-prefix` parameter to `push-to-registries` job.
+
 ## [5.3.0] - 2024-07-18
 
 ### Changed
