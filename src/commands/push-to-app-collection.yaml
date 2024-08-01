@@ -2,6 +2,9 @@ description: >
   Generates and adds an App CR to an app-collection.
   Note: version will be detected automatically by architect.
 parameters:
+  resource_name:
+    type: "string"
+    default: ""
   app_name:
     type: "string"
   app_namespace:
@@ -20,8 +23,10 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Generate Flux Generator"
       command: |
+        resource_name=`[ -n "<< parameters.resource_name >>" ] && echo "<< parameters.resource_name >>" || echo "<< parameters.app_name >>"`
+
         architect create fluxgenerator \
-          --name="<<parameters.app_name>>" \
+          --name="${resource_name}" \
           --app-name="<<parameters.app_name>>" \
           --app-version="$(cat .app_version_in_project)" \
           --app-destination-namespace="<<parameters.app_namespace>>" \
@@ -35,18 +40,26 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Fetch current version of the app in the collection"
       command: |
-        yq eval ".app_version" ".app-collection/flux-manifests/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
+        resource_name=`[ -n "<< parameters.resource_name >>" ] && echo "<< parameters.resource_name >>" || echo "<< parameters.app_name >>"`
+
+        # Default to 0.0.0 if file does not exist or .app_version is not specified so the new file will be created.
+        app_version_in_collection=$(yq eval ".app_version" ".app-collection/flux-manifests/${resource_name}.yaml" || true)
+        echo ${app_version_in_collection:-"0.0.0"} | tee .app_version_in_collection
   - run:
       name: "architect/push-to-app-collection: Add / update resources to the collection repo"
       command: |
+        resource_name=`[ -n "<< parameters.resource_name >>" ] && echo "<< parameters.resource_name >>" || echo "<< parameters.app_name >>"`
+
         mkdir -p .app-collection/flux-manifests
-        mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
+        mv -f .fluxgenerator.yaml .app-collection/flux-manifests/${resource_name}.yaml
         architect create kustomization --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
         git -C .app-collection add flux-manifests/
   - run:
       name: "architect/push-to-app-collection: Commit changes to the app collection repo"
       command: |
-        git -C .app-collection commit -m "update <<parameters.app_name>> to $(cat .app_version_in_project)"
+        resource_name=`[ -n "<< parameters.resource_name >>" ] && echo "<< parameters.resource_name >>" || echo "<< parameters.app_name >>"`
+
+        git -C .app-collection commit -m "update ${resource_name} to $(cat .app_version_in_project)"
   - run:
       name: "architect/push-to-app-collection: install github.com/davidrjonas/semver-cli@1.1.1"
       command: |
