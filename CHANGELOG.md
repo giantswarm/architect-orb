@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `git-tag-prefix` parameter to `push-to-registries` job.
 
+## [5.3.1] - 2024-07-26
+
+### Changed
+
+- Bump `architect` to v6.15.1.
+
 ## [5.3.0] - 2024-07-18
 
 ### Changed
@@ -1049,7 +1055,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.3.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.3.1...HEAD
+[5.3.1]: https://github.com/giantswarm/architect-orb/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/giantswarm/architect-orb/compare/v5.2.1...v5.3.0
 [5.2.1]: https://github.com/giantswarm/architect-orb/compare/v5.2.0...v5.2.1
 [5.2.0]: https://github.com/giantswarm/architect-orb/compare/v5.1.2...v5.2.0
