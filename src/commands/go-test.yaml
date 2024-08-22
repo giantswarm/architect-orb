@@ -59,8 +59,7 @@ steps:
           -E goconst \
           --timeout 10m \
           --max-same-issues 0 \
-          --max-issues-per-linter 0 \
-          --print-resources-usage
+          --max-issues-per-linter 0
   - run:
       name: Check if dependencies have known security vulnerabilities
       command: |
