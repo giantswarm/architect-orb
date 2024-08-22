@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- In command `go-test`, remove the step that executes `go vet`, as the same checks are also run by `golangci-lint`.
+
 ## [5.5.1] - 2024-08-22
 
 ### Fixed

@@ -52,10 +52,6 @@ steps:
       command: |
         test -z $(gofmt -l .) || gofmt -d .
   - run:
-      name: Check if go vet has any complaints
-      command: |
-        CGO_ENABLED=0 go vet ./...
-  - run:
       name: Check if golangci-lint has any complaints
       command: |
         CGO_ENABLED=0 GOGC=20 golangci-lint run -E gosec -E goconst --timeout 10m --max-same-issues 0
