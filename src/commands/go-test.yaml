@@ -54,7 +54,13 @@ steps:
   - run:
       name: Check if golangci-lint has any complaints
       command: |
-        CGO_ENABLED=0 GOGC=20 golangci-lint run -E gosec -E goconst --timeout 10m --max-same-issues 0
+        CGO_ENABLED=0 GOGC=20 golangci-lint run \
+          -E gosec \
+          -E goconst \
+          --timeout 10m \
+          --max-same-issues 0 \
+          --max-issues-per-linter 0 \
+          --print-resources-usage
   - run:
       name: Check if dependencies have known security vulnerabilities
       command: |

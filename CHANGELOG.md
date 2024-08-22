@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - In command `go-test`, remove the step that executes `go vet`, as the same checks are also run by `golangci-lint`.
 
+### Added
+
+- In command `go-test`, the `golangci-lint` now prints information on resource usage.
+
+### Changed
+
+- In command `go-test`, the `golangci-lint` call is no longer limited to a certain number of issues per linter (max-issues-per-linter is now 0).
+
 ## [5.5.1] - 2024-08-22
 
 ### Fixed
