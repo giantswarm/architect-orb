@@ -53,6 +53,24 @@ steps:
       name: Check if code structure differs from gofmt's
       command: |
         test -z $(gofmt -l .) || gofmt -d .
+  - when:
+      condition: <<parameters.test_target>>
+      steps:
+        - run:
+            name: Run unit tests via Makefile target
+            environment:
+              CGO_ENABLED: "0"
+            command: |
+              make <<parameters.test_target>>
+  - unless:
+      condition: <<parameters.test_target>>
+      steps:
+        - run:
+            name: Run unit tests
+            environment:
+              CGO_ENABLED: "0"
+            command: |
+              go test -ldflags "$(cat .ldflags)" ./...
   - run:
       name: Check if golangci-lint has any complaints
       environment:
@@ -85,21 +103,3 @@ steps:
           exit 0
         fi
         exit $nancy_result
-  - when:
-      condition: <<parameters.test_target>>
-      steps:
-        - run:
-            name: Run unit tests via Makefile target
-            environment:
-              CGO_ENABLED: "0"
-            command: |
-              make <<parameters.test_target>>
-  - unless:
-      condition: <<parameters.test_target>>
-      steps:
-        - run:
-            name: Run unit tests
-            environment:
-              CGO_ENABLED: "0"
-            command: |
-              go test -ldflags "$(cat .ldflags)" ./...
