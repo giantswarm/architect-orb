@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.1] - 2024-08-22
+
 ### Fixed
 
 - Set `GOGC` when running golangci-lint to help avoid using up all available memory in CircleCI
@@ -1067,7 +1069,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.5.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.5.1...HEAD
+[5.5.1]: https://github.com/giantswarm/architect-orb/compare/v5.5.0...v5.5.1
 [5.5.0]: https://github.com/giantswarm/architect-orb/compare/v5.4.0...v5.5.0
 [5.4.0]: https://github.com/giantswarm/architect-orb/compare/v5.3.1...v5.4.0
 [5.3.1]: https://github.com/giantswarm/architect-orb/compare/v5.3.0...v5.3.1
