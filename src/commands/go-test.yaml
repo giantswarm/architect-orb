@@ -53,8 +53,12 @@ steps:
         test -z $(gofmt -l .) || gofmt -d .
   - run:
       name: Check if golangci-lint has any complaints
+      environment:
+        GOLANGCI_LINT_CACHE: /golancilint-cache
+        GOGC: "20"
+        CGO_ENABLED: "0"
       command: |
-        CGO_ENABLED=0 GOGC=20 golangci-lint run \
+        golangci-lint run \
           -E gosec \
           -E goconst \
           --timeout 10m \

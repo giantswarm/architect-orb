@@ -2,3 +2,6 @@ steps:
   - restore_cache:
       keys:
         - go-build-go-mod-v1-{{ checksum "go.sum" }}
+  - restore_cache:
+      keys:
+        - go-build-golangcilint-v1-{{ checksum "go.sum" }}
