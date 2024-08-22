@@ -18,8 +18,10 @@ steps:
       steps:
         - run:
             name: Run pre-test Makefile target
+            environment:
+              CGO_ENABLED: "0"
             command: |
-              CGO_ENABLED=0 make <<parameters.pre_test_target>>
+              make <<parameters.pre_test_target>>
   - run:
       name: Check if go.mod and go.sum are clean
       command: |
@@ -66,9 +68,11 @@ steps:
           --max-issues-per-linter 0
   - run:
       name: Check if dependencies have known security vulnerabilities
+      environment:
+        CGO_ENABLED: "0"
       command: |
         set +e
-        CGO_ENABLED=0 go list -json -deps ./... \
+        go list -json -deps ./... \
           | nancy sleuth --skip-update-check \
             --quiet --exclude-vulnerability-file ./.nancy-ignore \
             --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
@@ -86,12 +90,16 @@ steps:
       steps:
         - run:
             name: Run unit tests via Makefile target
+            environment:
+              CGO_ENABLED: "0"
             command: |
-              CGO_ENABLED=0 make <<parameters.test_target>>
+              make <<parameters.test_target>>
   - unless:
       condition: <<parameters.test_target>>
       steps:
         - run:
             name: Run unit tests
+            environment:
+              CGO_ENABLED: "0"
             command: |
-              CGO_ENABLED=0 go test -ldflags "$(cat .ldflags)" ./...
+              go test -ldflags "$(cat .ldflags)" ./...
