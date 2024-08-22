@@ -54,7 +54,7 @@ steps:
   - run:
       name: Check if golangci-lint has any complaints
       command: |
-        CGO_ENABLED=0 GOGC=20 golangci-lint run \
+        CGO_ENABLED=0 golangci-lint run \
           -E gosec \
           -E goconst \
           --timeout 10m \
