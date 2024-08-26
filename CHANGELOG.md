@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - In command `go-test`, the `golangci-lint` call is no longer limited to a certain number of issues per linter (max-issues-per-linter is now 0).
+- In command `go-test`, use the `environment` key for setting environment variables.
 
 ## [5.5.1] - 2024-08-22
 
