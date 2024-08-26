@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.2] - 2024-08-26
+
 ### Removed
 
-- In command `go-test`, remove the step that executes `go vet`, as the same checks are also run by `golangci-lint`.
+- In command `go-test`...
+  - remove the step that executes `go vet`, as the same checks are also run by `golangci-lint`
+  - move the `go test` step up to get executed before `golangci-lint`, for reduced runtime.
+  - Add cache for `golangci-lint`
 
 ### Changed
 
@@ -1078,7 +1083,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.5.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.5.2...HEAD
+[5.5.2]: https://github.com/giantswarm/architect-orb/compare/v5.5.1...v5.5.2
 [5.5.1]: https://github.com/giantswarm/architect-orb/compare/v5.5.0...v5.5.1
 [5.5.0]: https://github.com/giantswarm/architect-orb/compare/v5.4.0...v5.5.0
 [5.4.0]: https://github.com/giantswarm/architect-orb/compare/v5.3.1...v5.4.0
