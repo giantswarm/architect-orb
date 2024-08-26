@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `path` parameter to `go-build` and `go-test` jobs to allow for different Go package path.
+
 ## [5.5.1] - 2024-08-22
 
 ### Fixed

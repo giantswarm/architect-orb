@@ -8,6 +8,11 @@ description: |
   - "version" produced by `architect project version` command.
 
 parameters:
+  path:
+    default: "."
+    description: |
+      The path to the Go package to test.
+    type: string
   pre_test_target:
     default: ""
     description: |
@@ -33,6 +38,7 @@ steps:
   - tools-info
   - go-cache-restore
   - go-test:
+      path: << parameters.path >>
       pre_test_target: <<parameters.pre_test_target>>
       test_target: <<parameters.test_target>>
   - go-cache-save

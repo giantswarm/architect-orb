@@ -1,4 +1,9 @@
 parameters:
+  path:
+    default: "."
+    description: |
+      The path to the Go package to test.
+    type: string
   pre_test_target:
     default: ""
     description: |
@@ -31,10 +36,10 @@ steps:
         echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
 
         # buildTimestamp
-        echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+        echo -n " -X '$(go list <<parameters.path>>)pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
 
         # Commit SHA
-        echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+        echo -n " -X '$(go list <<parameters.path>>)pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
 
         # Print content
         echo "\"$(cat .ldflags)\""
