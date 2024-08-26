@@ -11,7 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- In command `go-test`, remove the step that executes `go vet`, as the same checks are also run by `golangci-lint`.
+- In command `go-test`...
+  - remove the step that executes `go vet`, as the same checks are also run by `golangci-lint`
+  - move the `go test` step up to get executed before `golangci-lint`, for reduced runtime.
+  - Add cache for `golangci-lint`
 
 ### Changed
 
