@@ -11,7 +11,7 @@ parameters:
   path:
     default: "."
     description: |
-      The path to the Go package to test.
+      The path where the Go package to test is located.
     type: string
   pre_test_target:
     default: ""
