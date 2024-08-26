@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.6.0] - 2024-08-26
+
 ### Changed
 
 - Bump architect to v6.18.0, which uses Go v1.23.0
@@ -1087,7 +1089,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.5.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.6.0...HEAD
+[5.6.0]: https://github.com/giantswarm/architect-orb/compare/v5.5.2...v5.6.0
 [5.5.2]: https://github.com/giantswarm/architect-orb/compare/v5.5.1...v5.5.2
 [5.5.1]: https://github.com/giantswarm/architect-orb/compare/v5.5.0...v5.5.1
 [5.5.0]: https://github.com/giantswarm/architect-orb/compare/v5.4.0...v5.5.0
