@@ -7,7 +7,7 @@ parameters:
     default: "."
     type: "string"
     description: |
-      The path to the Go package to build.
+      The path where the Go package to build is located.
   pre_test_target:
     default: ""
     description: |
