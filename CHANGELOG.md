@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `path` parameter to `go-build` and `go-test` jobs to allow for different Go package path.
 
+## [5.6.0] - 2024-08-26
+
+### Changed
+
+- Bump architect to v6.18.0, which uses Go v1.23.0
+
+## [5.5.2] - 2024-08-26
+
+### Removed
+
+- In command `go-test`...
+  - remove the step that executes `go vet`, as the same checks are also run by `golangci-lint`
+  - move the `go test` step up to get executed before `golangci-lint`, for reduced runtime.
+  - Add cache for `golangci-lint`
+
+### Changed
+
+- In command `go-test`, the `golangci-lint` call is no longer limited to a certain number of issues per linter (max-issues-per-linter is now 0).
+- In command `go-test`, use the `environment` key for setting environment variables.
+>>>>>>> origin/main
+
 ## [5.5.1] - 2024-08-22
 
 ### Fixed
@@ -1073,7 +1094,9 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.5.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.6.0...HEAD
+[5.6.0]: https://github.com/giantswarm/architect-orb/compare/v5.5.2...v5.6.0
+[5.5.2]: https://github.com/giantswarm/architect-orb/compare/v5.5.1...v5.5.2
 [5.5.1]: https://github.com/giantswarm/architect-orb/compare/v5.5.0...v5.5.1
 [5.5.0]: https://github.com/giantswarm/architect-orb/compare/v5.4.0...v5.5.0
 [5.4.0]: https://github.com/giantswarm/architect-orb/compare/v5.3.1...v5.4.0

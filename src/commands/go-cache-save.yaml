@@ -3,3 +3,7 @@ steps:
       key: go-build-go-mod-v1-{{ checksum "go.sum" }}
       paths:
         - "/go/pkg/mod"
+  - save_cache:
+      key: go-build-golangcilint-v1-{{ checksum "go.sum" }}
+      paths:
+        - "/golancilint-cache"
