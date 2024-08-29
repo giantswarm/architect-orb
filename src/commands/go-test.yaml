@@ -38,10 +38,10 @@ steps:
         echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
 
         # buildTimestamp
-        echo -n " -X '$(go list <<parameters.path>>)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+        echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
 
         # Commit SHA
-        echo -n " -X '$(go list <<parameters.path>>)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+        echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
 
         # Print content
         echo "\"$(cat .ldflags)\""
