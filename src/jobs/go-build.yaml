@@ -15,6 +15,11 @@ parameters:
     description: "The target Operating System for the binary. Must be one of \"linux\", \"darwin\"."
     type: enum
     enum: ["linux", "darwin"]
+  path:
+    default: "."
+    description: |
+      The path where the Go package to build is located.
+    type: string
   pre_test_target:
     default: ""
     description: |
@@ -47,6 +52,7 @@ steps:
   - go-build:
       binary: << parameters.binary >>
       os: << parameters.os >>
+      path: << parameters.path >>
       pre_test_target: <<parameters.pre_test_target>>
       tags: << parameters.tags >>
       test_target: <<parameters.test_target>>

@@ -3,6 +3,11 @@ parameters:
     type: "string"
   os:
     type: "string"
+  path:
+    default: "."
+    type: "string"
+    description: |
+      The path where the Go package to build is located.
   pre_test_target:
     default: ""
     description: |
@@ -18,12 +23,13 @@ parameters:
     type: string
 steps:
   - go-test:
+      path: <<parameters.path>>
       pre_test_target: <<parameters.pre_test_target>>
       test_target: <<parameters.test_target>>
   - run:
       name: Build binaries
       command: |
-        CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -tags "<< parameters.tags >>" -o << parameters.binary >> .
+        CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -tags "<< parameters.tags >>" -o << parameters.binary >> << parameters.path >>
   - run:
       name: Execute version command of built binary (Linux only)
       command: |
