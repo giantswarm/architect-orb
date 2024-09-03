@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Bump `app-test-suite_version` default to v0.7.0
+
 ## [5.7.0] - 2024-08-29
 
 ### Added
