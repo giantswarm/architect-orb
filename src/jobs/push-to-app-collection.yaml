@@ -5,7 +5,7 @@ description: >
 
 parameters:
   app_name:
-    description: "Name of the application."
+    description: "Name of the application in the catalog."
     type: "string"
   app_namespace:
     default: "giantswarm"
@@ -22,6 +22,10 @@ parameters:
     description: "Disable helm chart force upgrade."
     type: "boolean"
     default: false
+  name:
+    description: "Name of the app when deployed."
+    type: "string"
+    default: ""
   resource_class:
     default: "small"
     description: |
@@ -41,3 +45,4 @@ steps:
       app_catalog: <<parameters.app_catalog>>
       app_collection_repo: <<parameters.app_collection_repo>>
       disable_force_upgrade: <<parameters.disable_force_upgrade>>
+      name: <<parameters.name>>

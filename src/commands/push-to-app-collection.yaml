@@ -12,6 +12,8 @@ parameters:
     type: "string"
   disable_force_upgrade:
     type: "boolean"
+  name:
+    type: "string"
 steps:
   - run:
       name: "architect/push-to-app-collection: Generate version"
@@ -20,8 +22,10 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Generate Flux Generator"
       command: |
+        name="<<parameters.name>>"
+        [[ -z "$name" ]] && name="<<parameters.app_name>>"
         architect create fluxgenerator \
-          --name="<<parameters.app_name>>" \
+          --name="$name" \
           --app-name="<<parameters.app_name>>" \
           --app-version="$(cat .app_version_in_project)" \
           --app-destination-namespace="<<parameters.app_namespace>>" \
