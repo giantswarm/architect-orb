@@ -22,8 +22,8 @@ parameters:
     description: "Disable helm chart force upgrade."
     type: "boolean"
     default: false
-  name:
-    description: "Name of the app when deployed."
+  resource_name:
+    description: "Resource name being the name of the app when deployed."
     type: "string"
     default: ""
   resource_class:
@@ -45,4 +45,4 @@ steps:
       app_catalog: <<parameters.app_catalog>>
       app_collection_repo: <<parameters.app_collection_repo>>
       disable_force_upgrade: <<parameters.disable_force_upgrade>>
-      name: <<parameters.name>>
+      resource_name: <<parameters.resource_name>>
