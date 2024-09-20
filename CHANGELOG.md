@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `resource_name` parameter to `push-to-app-collection` job.
+
 ### Changed
 
-Updated Kubernetes versions in kubeconform command.
+- Updated Kubernetes versions in kubeconform command.
 
 ## [5.8.0] - 2024-09-03
 
