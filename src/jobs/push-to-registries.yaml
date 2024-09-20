@@ -25,6 +25,9 @@ parameters:
   dockerfile:
     type: string
     default: "./Dockerfile"
+  git-tag-prefix:
+    type: string
+    default: ""
   tag-suffix:
     type: string
     default: ""
@@ -41,6 +44,9 @@ steps:
       version: default
   - attach_workspace:
       at: .
+  - run:
+      name: Set git tag prefix (empty if not set, only used on mono repos)
+      command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
   - image-prepare-tag:
       tag-suffix: <<parameters.tag-suffix>>
   - image-login-to-registries:

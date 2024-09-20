@@ -7,6 +7,94 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+Updated Kubernetes versions in kubeconform command.
+
+## [5.8.0] - 2024-09-03
+
+### Changed
+
+- Bump `app-test-suite_version` default to v0.7.0
+
+## [5.7.0] - 2024-08-29
+
+### Added
+
+- Add `path` parameter to `go-build` and `go-test` jobs to allow for different Go package path.
+
+## [5.6.0] - 2024-08-26
+
+### Changed
+
+- Bump architect to v6.18.0, which uses Go v1.23.0
+
+## [5.5.2] - 2024-08-26
+
+### Removed
+
+- In command `go-test`...
+  - remove the step that executes `go vet`, as the same checks are also run by `golangci-lint`
+  - move the `go test` step up to get executed before `golangci-lint`, for reduced runtime.
+  - Add cache for `golangci-lint`
+
+### Changed
+
+- In command `go-test`, the `golangci-lint` call is no longer limited to a certain number of issues per linter (max-issues-per-linter is now 0).
+- In command `go-test`, use the `environment` key for setting environment variables.
+
+## [5.5.1] - 2024-08-22
+
+### Fixed
+
+- Set `GOGC` when running golangci-lint to help avoid using up all available memory in CircleCI
+
+## [5.5.0] - 2024-08-20
+
+### Changed
+
+- Bump `architect` to v6.17.0.
+
+## [5.4.0] - 2024-08-01
+
+### Changed
+
+- Bump `architect` to v6.16.0.
+
+### Added
+
+- Add `git-tag-prefix` parameter to `push-to-registries` job.
+
+## [5.3.1] - 2024-07-26
+
+### Changed
+
+- Bump `architect` to v6.15.1.
+
+## [5.3.0] - 2024-07-18
+
+### Changed
+
+- Bump `architect` to v6.15.0.
+
+## [5.2.1] - 2024-06-06
+
+### Changed
+
+- Update `app-test-suite` to v0.6.1.
+
+## [5.2.0] - 2024-05-15
+
+### Changed
+
+- Update `app-test-suite` to v0.6.0.
+
+## [5.1.2] - 2024-05-08
+
+### Changed
+
+- Update `app-test-suite` to v0.5.1.
+
 ## [5.1.1] - 2024-03-06
 
 ### Changed
@@ -1017,7 +1105,19 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.1.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.8.0...HEAD
+[5.8.0]: https://github.com/giantswarm/architect-orb/compare/v5.7.0...v5.8.0
+[5.7.0]: https://github.com/giantswarm/architect-orb/compare/v5.6.0...v5.7.0
+[5.6.0]: https://github.com/giantswarm/architect-orb/compare/v5.5.2...v5.6.0
+[5.5.2]: https://github.com/giantswarm/architect-orb/compare/v5.5.1...v5.5.2
+[5.5.1]: https://github.com/giantswarm/architect-orb/compare/v5.5.0...v5.5.1
+[5.5.0]: https://github.com/giantswarm/architect-orb/compare/v5.4.0...v5.5.0
+[5.4.0]: https://github.com/giantswarm/architect-orb/compare/v5.3.1...v5.4.0
+[5.3.1]: https://github.com/giantswarm/architect-orb/compare/v5.3.0...v5.3.1
+[5.3.0]: https://github.com/giantswarm/architect-orb/compare/v5.2.1...v5.3.0
+[5.2.1]: https://github.com/giantswarm/architect-orb/compare/v5.2.0...v5.2.1
+[5.2.0]: https://github.com/giantswarm/architect-orb/compare/v5.1.2...v5.2.0
+[5.1.2]: https://github.com/giantswarm/architect-orb/compare/v5.1.1...v5.1.2
 [5.1.1]: https://github.com/giantswarm/architect-orb/compare/v5.1.0...v5.1.1
 [5.1.0]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.1.0
 [5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.0.1

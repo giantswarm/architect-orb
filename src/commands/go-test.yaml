@@ -1,4 +1,9 @@
 parameters:
+  path:
+    default: "."
+    description: |
+      The path where the Go package to test is located.
+    type: string
   pre_test_target:
     default: ""
     description: |
@@ -18,8 +23,10 @@ steps:
       steps:
         - run:
             name: Run pre-test Makefile target
+            environment:
+              CGO_ENABLED: "0"
             command: |
-              CGO_ENABLED=0 make <<parameters.pre_test_target>>
+              make <<parameters.pre_test_target>>
   - run:
       name: Check if go.mod and go.sum are clean
       command: |
@@ -31,10 +38,10 @@ steps:
         echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
 
         # buildTimestamp
-        echo -n " -X '$(go list .)/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
+        echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
 
         # Commit SHA
-        echo -n " -X '$(go list .)/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
+        echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
 
         # Print content
         echo "\"$(cat .ldflags)\""
@@ -51,19 +58,44 @@ steps:
       name: Check if code structure differs from gofmt's
       command: |
         test -z $(gofmt -l .) || gofmt -d .
-  - run:
-      name: Check if go vet has any complaints
-      command: |
-        CGO_ENABLED=0 go vet ./...
+  - when:
+      condition: <<parameters.test_target>>
+      steps:
+        - run:
+            name: Run unit tests via Makefile target
+            environment:
+              CGO_ENABLED: "0"
+            command: |
+              make <<parameters.test_target>>
+  - unless:
+      condition: <<parameters.test_target>>
+      steps:
+        - run:
+            name: Run unit tests
+            environment:
+              CGO_ENABLED: "0"
+            command: |
+              go test -ldflags "$(cat .ldflags)" ./...
   - run:
       name: Check if golangci-lint has any complaints
+      environment:
+        GOLANGCI_LINT_CACHE: /golancilint-cache
+        GOGC: "20"
+        CGO_ENABLED: "0"
       command: |
-        CGO_ENABLED=0 golangci-lint run -E gosec -E goconst --timeout 10m --max-same-issues 0
+        golangci-lint run \
+          -E gosec \
+          -E goconst \
+          --timeout 10m \
+          --max-same-issues 0 \
+          --max-issues-per-linter 0
   - run:
       name: Check if dependencies have known security vulnerabilities
+      environment:
+        CGO_ENABLED: "0"
       command: |
         set +e
-        CGO_ENABLED=0 go list -json -deps ./... \
+        go list -json -deps ./... \
           | nancy sleuth --skip-update-check \
             --quiet --exclude-vulnerability-file ./.nancy-ignore \
             --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
@@ -76,17 +108,3 @@ steps:
           exit 0
         fi
         exit $nancy_result
-  - when:
-      condition: <<parameters.test_target>>
-      steps:
-        - run:
-            name: Run unit tests via Makefile target
-            command: |
-              CGO_ENABLED=0 make <<parameters.test_target>>
-  - unless:
-      condition: <<parameters.test_target>>
-      steps:
-        - run:
-            name: Run unit tests
-            command: |
-              CGO_ENABLED=0 go test -ldflags "$(cat .ldflags)" ./...

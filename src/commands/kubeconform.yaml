@@ -8,7 +8,7 @@ steps:
       name: kubeconform
       environment:
         GS_SCHEMA_REPOSITORY: "https://raw.githubusercontent.com/giantswarm/json-schema/main/master"
-        KUBERNETES_VERSIONS: 1.20.0 1.21.0 1.22.0 1.23.0 1.24.0
+        KUBERNETES_VERSIONS: 1.25.0 1.26.0 1.27.0 1.28.0 1.29.0
       command: |
         for v in $KUBERNETES_VERSIONS; do
           echo "Validating against kubernetes version $v"
