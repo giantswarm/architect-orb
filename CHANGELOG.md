@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-Updated Kubernetes versions in kubeconform command.
+- Bump `app-test-suite_version` default to v0.8.0.
+- Updated Kubernetes versions in kubeconform command.
 
 ## [5.8.0] - 2024-09-03
 
