@@ -4,6 +4,10 @@ description: >
 
 
 parameters:
+  resource_name:
+    description: "Name of the App CR and the generator file name in the collection. Defaults to the value of the `app_name` parameter if not set."
+    type: "string"
+    default: ""
   app_name:
     description: "Name of the application."
     type: "string"
@@ -36,6 +40,7 @@ steps:
   - checkout
   - prepare-catalogbot-git-ssh
   - push-to-app-collection:
+      resource_name: <<parameters.resource_name>>
       app_name: <<parameters.app_name>>
       app_namespace: <<parameters.app_namespace>>
       app_catalog: <<parameters.app_catalog>>
