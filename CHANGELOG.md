@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bump `app-test-suite_version` default to v0.8.0.
 - Updated Kubernetes versions in kubeconform command.
-- Bump `app-build-suite` to v1.3.0.
+- Bump `app-build-suite` to v1.2.3.
 
 ## [5.8.0] - 2024-09-03
 
