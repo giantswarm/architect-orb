@@ -111,8 +111,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.0.1] - 2024-02-05
 
-## [5.0.1] - 2024-02-05
-
 - fix: `push-to-registries` correctly handles the `force-public` flag
 
 ### Changed
@@ -1122,7 +1120,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 [5.1.2]: https://github.com/giantswarm/architect-orb/compare/v5.1.1...v5.1.2
 [5.1.1]: https://github.com/giantswarm/architect-orb/compare/v5.1.0...v5.1.1
 [5.1.0]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.1.0
-[5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.0.1
+[5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/giantswarm/architect-orb/compare/v4.38.0...v5.0.0
 [4.38.0]: https://github.com/giantswarm/architect-orb/compare/v4.37.0...v4.38.0
 [4.37.0]: https://github.com/giantswarm/architect-orb/compare/v4.36.0...v4.37.0
@@ -1205,6 +1203,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 [1.1.0]: https://github.com/giantswarm/architect-orb/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/giantswarm/architect-orb/compare/v0.18.1...v1.0.0
 [0.18.1]: https://github.com/giantswarm/architect-orb/compare/v0.18.0...v0.18.1
+[0.18.0]: https://github.com/giantswarm/architect-orb/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/giantswarm/architect-orb/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/giantswarm/architect-orb/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/giantswarm/architect-orb/compare/v0.15.1...v0.16.0
