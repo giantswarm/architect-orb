@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bump `app-test-suite_version` default to v0.8.0.
 - Updated Kubernetes versions in kubeconform command.
+- Bump `app-build-suite` to v1.3.0.
 
 ## [5.8.0] - 2024-09-03
 
@@ -811,7 +812,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 ### Changed
 
 - Recreate broken [0.8.18] release and discontinue 0.8.x line to avoid confusion. For details see:
-  - https://github.com/giantswarm/giantswarm/issues/10423#issuecomment-637398805
+  - <https://github.com/giantswarm/giantswarm/issues/10423#issuecomment-637398805>
 
 ## [0.8.18] - 2020-05-25
 
@@ -1006,7 +1007,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 ### Fixed
 
-- Fix pushing new unique app in push-to-app-collection job. https://github.com/giantswarm/architect-orb/pull/69
+- Fix pushing new unique app in push-to-app-collection job. <https://github.com/giantswarm/architect-orb/pull/69>
 
 ## [0.5.3] - 2020-02-11
 
@@ -1122,7 +1123,6 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 [5.1.1]: https://github.com/giantswarm/architect-orb/compare/v5.1.0...v5.1.1
 [5.1.0]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.1.0
 [5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.1...v5.0.1
-[5.0.1]: https://github.com/giantswarm/architect-orb/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/giantswarm/architect-orb/compare/v4.38.0...v5.0.0
 [4.38.0]: https://github.com/giantswarm/architect-orb/compare/v4.37.0...v4.38.0
 [4.37.0]: https://github.com/giantswarm/architect-orb/compare/v4.36.0...v4.37.0
@@ -1205,7 +1205,6 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 [1.1.0]: https://github.com/giantswarm/architect-orb/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/giantswarm/architect-orb/compare/v0.18.1...v1.0.0
 [0.18.1]: https://github.com/giantswarm/architect-orb/compare/v0.18.0...v0.18.1
-[v0.18.0]: https://github.com/giantswarm/architect-orb/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/giantswarm/architect-orb/compare/v0.17.0...v0.17.1
 [0.17.0]: https://github.com/giantswarm/architect-orb/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/giantswarm/architect-orb/compare/v0.15.1...v0.16.0
