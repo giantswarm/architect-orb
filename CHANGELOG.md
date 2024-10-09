@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update dependency architect to v5.10.1 (#568)
+
 ## [5.10.1] - 2024-10-09
 
 ### Changed
