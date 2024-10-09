@@ -35,7 +35,11 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Fetch current version of the app in the collection"
       command: |
-        yq eval ".app_version" ".app-collection/flux-manifests/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
+        if [ ! -f .app-collection/flux-manifests/<<parameters.app_name>>.yaml ]; then
+          echo "0.0.0" | tee .app_version_in_collection
+        else
+          yq eval ".app_version" ".app-collection/flux-manifests/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
+        fi
   - run:
       name: "architect/push-to-app-collection: Add / update resources to the collection repo"
       command: |
