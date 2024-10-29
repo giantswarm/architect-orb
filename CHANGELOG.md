@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.11.0] - 2024-10-29
+
 ### Changed
 
 - Update Kind, Helm and Kubernetes versions in integration-test jobs (#570).
@@ -1125,7 +1127,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.10.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.11.0...HEAD
+[5.11.0]: https://github.com/giantswarm/architect-orb/compare/v5.10.1...v5.11.0
 [5.10.1]: https://github.com/giantswarm/architect-orb/compare/v5.10.0...v5.10.1
 [5.10.0]: https://github.com/giantswarm/architect-orb/compare/v5.9.0...v5.10.0
 [5.9.0]: https://github.com/giantswarm/architect-orb/compare/v5.8.0...v5.9.0
