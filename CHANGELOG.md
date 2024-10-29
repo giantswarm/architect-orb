@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update dependency app-test-suite to v0.10.1.
+- Update Kind, Helm and Kubernetes versions in integration-test jobs.
+
 ## [5.10.1] - 2024-10-09
 
 ### Changed
