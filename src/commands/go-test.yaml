@@ -47,6 +47,21 @@ steps:
         echo "\"$(cat .ldflags)\""
 
   - run:
+      name: Check for non-ASCII characters in file names
+      command: |
+        checked=0
+        non_ascii=0
+        for entry in $(find -L)
+        do
+          checked=$((checked+1))
+          if [[ "$entry" = *[![:ascii:]]* ]]; then
+            non_ascii=$((non_ascii+1))
+            echo "Found non-ASCII characters in filename: $entry"
+          fi
+        done
+        echo "Found $non_ascii non-ASCII filenames in $checked files."
+        exit $non_ascii
+  - run:
       name: Check if imports are properly sorted
       command: |
         go install golang.org/x/tools/cmd/goimports@latest && \
@@ -86,6 +101,7 @@ steps:
         golangci-lint run \
           -E gosec \
           -E goconst \
+          -E asciicheck \
           --timeout 10m \
           --max-same-issues 0 \
           --max-issues-per-linter 0

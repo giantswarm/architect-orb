@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `go-test` checks for non-ASCII filenames and non-ASCII characters in Go code.
+
 ## [5.11.1] - 2024-10-31
 
 ### Changed
