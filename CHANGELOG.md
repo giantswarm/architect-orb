@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.11.2] - 2024-12-04
+
 ### Added
 
 - Add `go-test` checks for non-ASCII filenames and non-ASCII characters in Go code.
@@ -1138,7 +1140,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.11.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.11.2...HEAD
+[5.11.2]: https://github.com/giantswarm/architect-orb/compare/v5.11.1...v5.11.2
 [5.11.1]: https://github.com/giantswarm/architect-orb/compare/v5.11.0...v5.11.1
 [5.11.0]: https://github.com/giantswarm/architect-orb/compare/v5.10.1...v5.11.0
 [5.10.1]: https://github.com/giantswarm/architect-orb/compare/v5.10.0...v5.10.1
