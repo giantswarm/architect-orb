@@ -86,13 +86,19 @@ executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
-  - tools-info:
-      show_architect_version:
+  - when:
+      condition:
         equal: ["<< parameters.executor >>", "architect"]
-      show_go_version:
-        equal: ["<< parameters.executor >>", "architect"]
-      show_abs_version:
+      steps:
+        - tools-info
+  - when:
+      condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
+      steps:
+        - tools-info:
+            show_architect_version: false
+            show_go_version: false
+            show_abs_version: true
   - prepare-catalogbot-git-ssh
   - when:
       condition: << parameters.attach_workspace >>
