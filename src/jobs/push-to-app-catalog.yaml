@@ -86,17 +86,28 @@ executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
+  - tools-info:
+      show_architect_version:
+        equal: ["<< parameters.executor >>", "architect"]
+      show_go_version:
+        equal: ["<< parameters.executor >>", "architect"]
+      show_abs_version:
+        equal: ["<< parameters.executor >>", "app-build-suite"]
+  - prepare-catalogbot-git-ssh
   - when:
       condition: << parameters.attach_workspace >>
       steps:
         - attach_workspace:
             at: .
+  - unless:
+      condition: << parameters.skip_conftest_deprek8ion >>
+      steps:
+        - helm-conftest:
+            chart: "<< parameters.chart >>"
   - when:
       condition:
         equal: ["<< parameters.executor >>", "architect"]
       steps:
-        - tools-info
-        - prepare-catalogbot-git-ssh
         - helm-chart-template:
             chart: << parameters.chart >>
         - helm-lint:
@@ -104,11 +115,6 @@ steps:
             ct_config: "<< parameters.ct_config >>"
         - kubeconform:
             chart: << parameters.chart >>
-        - unless:
-            condition: << parameters.skip_conftest_deprek8ion >>
-            steps:
-              - helm-conftest:
-                  chart: "<< parameters.chart >>"
         - when:
             condition:
               equal: [<< parameters.push_to_appcatalog >>, true]
@@ -138,11 +144,6 @@ steps:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
       steps:
-        - tools-info:
-            show_architect_version: false
-            show_go_version: false
-            show_abs_version: true
-        - prepare-catalogbot-git-ssh
         - when:
             condition:
               equal: [<< parameters.push_to_appcatalog >>, true]
