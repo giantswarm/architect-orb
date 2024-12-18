@@ -89,7 +89,7 @@ steps:
       condition: << parameters.explicit_allow_chart_name_mismatch >>
       steps:
         - run:
-            name: Verify chart parameters
+            name: "architect/push-to-app-catalog: Verify chart name"
             command: |
               CHART_NAME="<< parameters.chart >>"
               [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
@@ -127,6 +127,11 @@ steps:
             ct_config: "<< parameters.ct_config >>"
         - kubeconform:
             chart: << parameters.chart >>
+        - unless:
+            condition: << parameters.skip_conftest_deprek8ion >>
+            steps:
+              - helm-conftest:
+                  chart: "<< parameters.chart >>"
         - run:
             name: "architect/push-to-app-catalog: Package the chart archive with helm"
             command: |
@@ -135,15 +140,17 @@ steps:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
       steps:
+        - kubeconform:
+            chart: << parameters.chart >>
+        - unless:
+            condition: << parameters.skip_conftest_deprek8ion >>
+            steps:
+              - helm-conftest:
+                  chart: "<< parameters.chart >>"
         - run:
             name: "architect/package-helm-with-abs: Execute App Build Suite"
             command: |
               mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
-  - unless:
-      condition: << parameters.skip_conftest_deprek8ion >>
-      steps:
-        - helm-conftest:
-            chart: "<< parameters.chart >>"
   - push-helm:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>
