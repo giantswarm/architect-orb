@@ -1,0 +1,29 @@
+parameters:
+  app_catalog:
+    type: "string"
+  app_catalog_test:
+    type: "string"
+  on_tag:
+    type: boolean
+    default: true
+    description: |
+      When this is `false`, commits to `master` will be pushed to `app_catalog` instead of `app_catalog_test`.
+      Set this to `false` for deployments that follow a a master branch for production releases rather than
+      using tags (the default).
+steps:
+  - when:
+      condition: << parameters.on_tag >>
+      steps:
+        - run:
+            name: "architect/determine-catalog-name: Determine target app catalog based on presence of tag"
+            command: |
+              [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
+              echo -n ${CIRCLE_TAG} | tee .reference
+  - unless:
+      condition: << parameters.on_tag >>
+      steps:
+        - run:
+            name: "architect/determine-catalog-name: Determine target app catalog based on branch name"
+            command: |
+              [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
+              echo -n ${CIRCLE_SHA1} | tee .reference
