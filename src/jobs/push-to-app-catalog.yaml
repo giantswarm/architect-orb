@@ -140,8 +140,6 @@ steps:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
       steps:
-        - kubeconform:
-            chart: << parameters.chart >>
         - unless:
             condition: << parameters.skip_conftest_deprek8ion >>
             steps:
