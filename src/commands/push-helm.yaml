@@ -1,0 +1,126 @@
+parameters:
+  password_envar:
+    type: "string"
+    default: AZURE_CLIENTSECRET
+  username_envar:
+    type: "string"
+    default: AZURE_CLIENTID
+  registry_url:
+    type: "string"
+    default: "giantswarmpublic.azurecr.io"
+  chart:
+    type: "string"
+  push_to_appcatalog:
+    default: true
+    type: boolean
+  push_to_oci_registry:
+    default: true
+    type: boolean
+steps:
+  - when:
+      condition:
+        equal: [<< parameters.push_to_appcatalog >>, true]
+      steps:
+        - run:
+            name: "architect/push-helm-package: Check environment variables"
+            command: |
+              [ ! -z "${CATALOGBOT_SSH_KEY_PRIVATE_BASE64}" ] && exit 0
+              echo "CATALOGBOT_SSH_KEY_PRIVATE_BASE64 env variable must not be empty"
+              exit 1
+        - run:
+            name: "architect/push-helm-package: Setup SSH key"
+            command: |
+              mkdir -p ~/.ssh
+              echo "${CATALOGBOT_SSH_KEY_PRIVATE_BASE64}" | base64 -d > ~/.ssh/id_rsa
+              chmod 0600 ~/.ssh/id_rsa
+              ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+        - run:
+            name: "architect/push-helm-package: Configure git"
+            command: |
+              git config --global url."ssh://git@github.com".insteadOf "https://github.com"
+              git config --global gc.auto 0
+              git config --global user.email "catalogbot@giantswarm.io"
+              git config --global user.name "CatalogBot"
+        - run:
+            name: "architect/push-helm-package: Clone app catalog repo"
+            command: |
+              git clone -q --depth=1 --single-branch "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
+        - run:
+            name: "architect/push-helm-package: Push chart archive to app catalog repo"
+            command: |
+                readonly app_catalog_name="$(cat .app_catalog_name)"
+
+                cd .app_catalog
+
+                readonly head="$(git rev-parse HEAD)"
+
+                ret=1
+                tries=4
+                for i in $(seq 1 $tries) ; do
+                  echo "====> Attempt $i: Running: git reset --hard \$head"
+                  git reset --hard $head
+
+                  echo "====> Attempt $i: Running: git pull --rebase"
+                  git pull --rebase
+
+                  echo "====> Attempt $i: Running: helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build"
+                  helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build
+
+                  echo "====> Attempt $i: Running: cp ../build/* ."
+                  cp -r ../build/* .
+
+                  echo "====> Attempt $i: Running: git add -A"
+                  git add -A
+
+                  echo "====> Attempt $i: Running: git commit -m \"add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)\""
+                  git commit -m "add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)"
+
+                  echo "====> Attempt $i: Running \"git push\""
+                  set +e
+                  git push
+                  ret=$?
+                  set -e
+
+                  [[ $ret -eq 0 ]] && exit $ret
+
+                  sleep 5
+                done
+
+                echo "Giving up after $tries failures." >&2
+                echo "Error pushing changes. See known errors in:" >&2
+                echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
+
+                exit $ret
+  - when:
+      condition:
+        equal: [<< parameters.push_to_oci_registry >>, true]
+      steps:
+        - run:
+            name: "architect/push-helm-package: Authenticate to the OCI registry"
+            command: |
+              helm registry login << parameters.registry_url >> --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
+        - run:
+            name: "architect/push-helm-package: Push chart archive to OCI registry app catalog"
+            command: |
+              readonly app_catalog_name="oci://<< parameters.registry_url >>/$(cat .app_catalog_name)/"
+              readonly reference="$(cat .reference)"
+
+              ret=1
+              tries=4
+              for i in $(seq 1 $tries) ; do
+                echo "====> Attempt $i: Running: helm push build/*.tgz $app_catalog_name"
+                set +e
+                helm push build/*.tgz $app_catalog_name
+                ret=$?
+                set -e
+
+                [[ $ret -eq 0 ]] && exit $ret
+
+                sleep 5
+              done
+
+              echo "Giving up after $tries failures." >&2
+              echo "Error pushing changes. See known errors in:" >&2
+              echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
+
+              exit $ret

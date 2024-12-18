@@ -1,0 +1,8 @@
+parameters:
+  chart:
+    type: "string"
+steps:
+  - run:
+      name: "architect/package-helm: Package the chart archive"
+      command: |
+        mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
