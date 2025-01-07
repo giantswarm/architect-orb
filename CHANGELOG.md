@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Reorder commands in `push-to-app-catalog` job to prevent duplicated code and duplicated executions of architect and app-build-suite.
+
 ## [5.11.2] - 2024-12-04
 
 ### Added

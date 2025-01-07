@@ -85,7 +85,32 @@ parameters:
 executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:
+  - unless:
+      condition: << parameters.explicit_allow_chart_name_mismatch >>
+      steps:
+        - run:
+            name: "architect/push-to-app-catalog: Verify chart name"
+            command: |
+              CHART_NAME="<< parameters.chart >>"
+              [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
   - checkout
+  - when:
+      condition:
+        equal: ["<< parameters.executor >>", "architect"]
+      steps:
+        - tools-info
+  - when:
+      condition:
+        equal: ["<< parameters.executor >>", "app-build-suite"]
+      steps:
+        - tools-info:
+            show_architect_version: false
+            show_go_version: false
+            show_abs_version: true
+  - determine-catalog-name:
+      app_catalog: << parameters.app_catalog >>
+      app_catalog_test: << parameters.app_catalog_test >>
+      on_tag: << parameters.on_tag >>
   - when:
       condition: << parameters.attach_workspace >>
       steps:
@@ -95,8 +120,6 @@ steps:
       condition:
         equal: ["<< parameters.executor >>", "architect"]
       steps:
-        - tools-info
-        - prepare-catalogbot-git-ssh
         - helm-chart-template:
             chart: << parameters.chart >>
         - helm-lint:
@@ -109,64 +132,34 @@ steps:
             steps:
               - helm-conftest:
                   chart: "<< parameters.chart >>"
-        - when:
-            condition:
-              equal: [<< parameters.push_to_appcatalog >>, true]
-            steps:
-              - package-and-push-git:
-                  app_catalog: << parameters.app_catalog >>
-                  app_catalog_test: << parameters.app_catalog_test >>
-                  chart: << parameters.chart >>
-                  on_tag: << parameters.on_tag >>
-                  explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
-                  persist_chart_archive: << parameters.persist_chart_archive >>
-        - when:
-            condition:
-              equal: [<< parameters.push_to_oci_registry >>, true]
-            steps:
-              - package-and-push-oci:
-                  app_catalog: << parameters.app_catalog >>
-                  app_catalog_test: << parameters.app_catalog_test >>
-                  chart: << parameters.chart >>
-                  on_tag: << parameters.on_tag >>
-                  explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
-                  persist_chart_archive: << parameters.persist_chart_archive >>
-                  password_envar: << parameters.password_envar >>
-                  username_envar: << parameters.username_envar >>
-                  registry_url: << parameters.registry_url>>
+        - run:
+            name: "architect/push-to-app-catalog: Package the chart archive with helm"
+            command: |
+              mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
   - when:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
       steps:
-        - tools-info:
-            show_architect_version: false
-            show_go_version: false
-            show_abs_version: true
-        - prepare-catalogbot-git-ssh
-        - when:
-            condition:
-              equal: [<< parameters.push_to_appcatalog >>, true]
+        - unless:
+            condition: << parameters.skip_conftest_deprek8ion >>
             steps:
-              - package-and-push-git-with-abs:
-                  app_catalog: << parameters.app_catalog >>
-                  app_catalog_test: << parameters.app_catalog_test >>
-                  chart: << parameters.chart >>
-                  on_tag: << parameters.on_tag >>
-                  skip_conftest_deprek8ion: << parameters.skip_conftest_deprek8ion >>
-                  persist_chart_archive: << parameters.persist_chart_archive >>
-                  explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
-        - when:
-            condition:
-              equal: [<< parameters.push_to_oci_registry >>, true]
-            steps:
-              - package-and-push-oci-with-abs:
-                  app_catalog: << parameters.app_catalog >>
-                  app_catalog_test: << parameters.app_catalog_test >>
-                  chart: << parameters.chart >>
-                  on_tag: << parameters.on_tag >>
-                  skip_conftest_deprek8ion: << parameters.skip_conftest_deprek8ion >>
-                  persist_chart_archive: << parameters.persist_chart_archive >>
-                  password_envar: << parameters.password_envar >>
-                  username_envar: << parameters.username_envar >>
-                  registry_url: << parameters.registry_url>>
-                  explicit_allow_chart_name_mismatch: << parameters.explicit_allow_chart_name_mismatch >>
+              - helm-conftest:
+                  chart: "<< parameters.chart >>"
+        - run:
+            name: "architect/package-helm-with-abs: Execute App Build Suite"
+            command: |
+              mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
+  - push-helm:
+      push_to_appcatalog: << parameters.push_to_appcatalog >>
+      push_to_oci_registry: << parameters.push_to_oci_registry >>
+      password_envar: << parameters.password_envar >>
+      username_envar: << parameters.username_envar >>
+      registry_url: << parameters.registry_url>>
+      chart: << parameters.chart >>
+  - when:
+      condition: << parameters.persist_chart_archive >>
+      steps:
+        - persist_to_workspace:
+            root: build
+            paths:
+              - "<< parameters.chart >>*.tgz"
