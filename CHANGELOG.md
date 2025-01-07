@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Run `app-build-suite` before `conftest` in `push-to-app-catalog` job to fix missing subchart issue.
+
 ## [5.11.3] - 2025-01-07
 
 ### Changed
