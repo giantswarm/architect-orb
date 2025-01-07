@@ -140,15 +140,15 @@ steps:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
       steps:
+        - run:
+            name: "architect/package-helm-with-abs: Execute App Build Suite"
+            command: |
+              mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
         - unless:
             condition: << parameters.skip_conftest_deprek8ion >>
             steps:
               - helm-conftest:
                   chart: "<< parameters.chart >>"
-        - run:
-            name: "architect/package-helm-with-abs: Execute App Build Suite"
-            command: |
-              mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
   - push-helm:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>
