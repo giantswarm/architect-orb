@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.11.3] - 2025-01-07
+
 ### Changed
 
 - Reorder commands in `push-to-app-catalog` job to prevent duplicated code and duplicated executions of architect and app-build-suite.
@@ -1144,7 +1146,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.11.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.11.3...HEAD
+[5.11.3]: https://github.com/giantswarm/architect-orb/compare/v5.11.2...v5.11.3
 [5.11.2]: https://github.com/giantswarm/architect-orb/compare/v5.11.1...v5.11.2
 [5.11.1]: https://github.com/giantswarm/architect-orb/compare/v5.11.0...v5.11.1
 [5.11.0]: https://github.com/giantswarm/architect-orb/compare/v5.10.1...v5.11.0
