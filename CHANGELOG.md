@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.11.5] - 2025-02-13
 
+### Changed
+
+- architect version changed to [v6.18.2](https://github.com/giantswarm/architect/releases/tag/v6.18.2), which updates the golangci-lint version used to v1.64.4, which is compatible with Go 1.24.
+
 ## [5.11.4] - 2025-01-07
 
 ### Fixed
