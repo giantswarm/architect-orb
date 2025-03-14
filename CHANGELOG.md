@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.11.6] - 2025-03-14
+
 ### Changed
 
 - architect version changed to [v6.19.1](https://github.com/giantswarm/architect/releases/tag/v6.19.1)
@@ -1162,7 +1164,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.11.5...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.11.6...HEAD
+[5.11.6]: https://github.com/giantswarm/architect-orb/compare/v5.11.5...v5.11.6
 [5.11.5]: https://github.com/giantswarm/architect-orb/compare/v5.11.4...v5.11.5
 [5.11.4]: https://github.com/giantswarm/architect-orb/compare/v5.11.3...v5.11.4
 [5.11.3]: https://github.com/giantswarm/architect-orb/compare/v5.11.2...v5.11.3
