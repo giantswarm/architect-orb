@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- architect version changed to [v6.29.0](https://github.com/giantswarm/architect/releases/tag/v6.19.0)
+- architect version changed to [v6.19.1](https://github.com/giantswarm/architect/releases/tag/v6.19.1)
 
 ## [5.11.5] - 2025-02-13
 
