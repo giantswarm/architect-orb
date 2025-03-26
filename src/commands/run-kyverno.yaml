@@ -22,7 +22,7 @@ steps:
       name: "Template Kyverno policies"
       command: |
         mkdir -p manifests/policies
-      
+
         # template the kyverno policies
         helm template https://giantswarm.github.io/giantswarm-catalog/kyverno-policies-<< parameters.kyverno-policies_version >>.tgz > manifests/policies/kyverno-policies.yaml
   - run:
