@@ -43,11 +43,13 @@ steps:
       command: |
         set +x
 
-        kyverno apply manifests/policies/kyverno-policies.yaml --resource manifests/resources/<<parameters.chart>>.yaml --exceptions-with-resources
-
-        if [ $? -eq 1 ]; then
-            echo "Generating example exceptions"
+        kyverno apply manifests/policies/kyverno-policies.yaml \
+          --resource manifests/resources/<<parameters.chart>>.yaml \
+          --exceptions-with-resources || \
+        {
+            echo "Policies failed, generating exceptions...";
             kyverno apply manifests/policies/kyverno-policies.yaml \
               --resource manifests/resources/<<parameters.chart>>.yaml \
-              --exceptions-with-resources --generate-exceptions
-        fi
+              --exceptions-with-resources --generate-exceptions;
+            exit 1
+        }
