@@ -1,0 +1,26 @@
+parameters:
+  chart:
+    description: "Name of the chart inside helm directory to push to the App Catalog."
+    type: "string"
+  kyverno-policies_version:
+    description: "Version of Kyverno policies to use"
+    type: "string"
+  kyverno_version:
+    description: "Version of Kyverno CLI to use"
+    type: "string"
+  resource_class:
+    default: "medium"
+    description: |
+        Configures amount CPU and RAM for the job. See
+        https://circleci.com/docs/2.0/configuration-reference/#machine-executor-linux
+        for details.
+    type: "enum"
+    enum: ["medium", "large", "xlarge", "2xlarge"]
+executor: "machine"
+resource_class: "<< parameters.resource_class >>"
+steps:
+  - checkout
+  - run-kyverno:
+      chart: << parameters.chart >>
+      kyverno-policies_version: << parameters.kyverno-policies_version >>
+      kyverno_version: << parameters.kyverno_version >>

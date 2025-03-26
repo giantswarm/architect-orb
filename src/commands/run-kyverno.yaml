@@ -1,0 +1,40 @@
+parameters:
+  chart:
+    type: "string"
+  kyverno_version:
+    description: "Version of Kyverno CLI to use"
+    default: "1.13.4"
+    type: string
+  kyverno-policies_version:
+    description: "Version of Kyverno policies to use"
+    default: "0.23.0"
+    type: string
+steps:
+  - attach_workspace:
+      at: build
+  - run:
+      name: "Download Kyverno cli"
+      command: |
+        curl -LO "https://github.com/kyverno/kyverno/releases/download/v<< parameters.kyverno_version >>/kyverno-cli_v<< parameters.kyverno_version >>_linux_x86_64.tar.gz"
+        tar -xvf kyverno-cli_v<< parameters.kyverno_version >>_linux_x86_64.tar.gz
+        sudo cp kyverno /usr/local/bin/
+  - run:
+      name: "Template Kyverno policies"
+      command: |
+        mkdir -p manifests/policies
+      
+        # template the kyverno policies
+        helm template https://giantswarm.github.io/giantswarm-catalog/kyverno-policies-<< parameters.kyverno-policies_version >>.tgz > manifests/policies/kyverno-policies.yaml
+  - run:
+      name: "Template Helm chart"
+      command: |
+        mkdir -p manifests/resources
+
+        # template the helm chart
+        helm template helm/<<parameters.chart>> > manifests/resources/<<parameters.chart>>.yaml
+  - run:
+      name: "Run Kyverno apply"
+      command: |
+        set +x
+
+        kyverno apply manifests/policies/kyverno-policies.yaml --resource manifests/resources/<<parameters.chart>>.yaml --exceptions-with-resources
