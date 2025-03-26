@@ -21,7 +21,7 @@ steps:
   - run:
       name: "Download Kyverno cli"
       command: |
-        curl -LO "https://github.com/kyverno/kyverno/releases/download/v<< parameters.kyverno_version >>/kyverno-cli_v<< parameters.kyverno_version >>_linux_x86_64.tar.gz"
+        curl -sLO "https://github.com/kyverno/kyverno/releases/download/v<< parameters.kyverno_version >>/kyverno-cli_v<< parameters.kyverno_version >>_linux_x86_64.tar.gz"
         tar -xvf kyverno-cli_v<< parameters.kyverno_version >>_linux_x86_64.tar.gz
         sudo cp kyverno /usr/local/bin/
   - run:
@@ -37,7 +37,7 @@ steps:
         mkdir -p manifests/resources
 
         # template the helm chart
-        helm template helm/<<parameters.chart>> > manifests/resources/<<parameters.chart>>.yaml
+        helm template --release-name <<parameters.chart>> helm/<<parameters.chart>> > manifests/resources/<<parameters.chart>>.yaml
   - run:
       name: "Run Kyverno apply"
       command: |
@@ -47,7 +47,7 @@ steps:
           --resource manifests/resources/<<parameters.chart>>.yaml \
           --exceptions-with-resources || \
         {
-            echo "Policies failed, generating exceptions...";
+            echo "\nPolicies failed, generating exceptions...";
             kyverno apply manifests/policies/kyverno-policies.yaml \
               --resource manifests/resources/<<parameters.chart>>.yaml \
               --exceptions-with-resources --generate-exceptions;
