@@ -1,6 +1,4 @@
 parameters:
-  chart:
-    type: "string"
   kyverno_version:
     description: "Version of Kyverno CLI to use"
     type: string
@@ -44,20 +42,23 @@ steps:
       command: |
         mkdir -p manifests/resources
 
+        export CHART="$(find helm -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)"
+        echo "CHART=${CHART}" >> $BASH_ENV
+
         # template the helm chart
-        helm template --release-name <<parameters.chart>> helm/<<parameters.chart>> > manifests/resources/<<parameters.chart>>.yaml
+        helm template --release-name ${CHART} helm/${CHART} > manifests/resources/${CHART}.yaml
   - run:
       name: "Run Kyverno apply"
       command: |
         set +x
 
         kyverno apply manifests/policies/kyverno-policies.yaml \
-          --resource manifests/resources/<<parameters.chart>>.yaml \
+          --resource manifests/resources/${CHART}.yaml \
           --exceptions-with-resources || \
         {
             echo "Policies failed, generating exceptions...";
             kyverno apply manifests/policies/kyverno-policies.yaml \
-              --resource manifests/resources/<<parameters.chart>>.yaml \
+              --resource manifests/resources/${CHART}.yaml \
               --exceptions-with-resources --generate-exceptions | \
               yq '.metadata.labels = {}, .metadata.name = .spec.exceptions[0].policyName';
             exit 1

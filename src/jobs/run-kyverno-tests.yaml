@@ -1,7 +1,4 @@
 parameters:
-  chart:
-    description: "Name of the chart inside helm directory to push to the App Catalog."
-    type: "string"
   kyverno-policies_version:
     description: "Version of Kyverno policies to use"
     default: "0.23.0"
@@ -23,6 +20,5 @@ resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
   - run-kyverno:
-      chart: << parameters.chart >>
       kyverno-policies_version: << parameters.kyverno-policies_version >>
       kyverno_version: << parameters.kyverno_version >>
