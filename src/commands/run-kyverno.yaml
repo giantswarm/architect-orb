@@ -3,11 +3,9 @@ parameters:
     type: "string"
   kyverno_version:
     description: "Version of Kyverno CLI to use"
-    default: "1.13.4"
     type: string
   kyverno-policies_version:
     description: "Version of Kyverno policies to use"
-    default: "0.23.0"
     type: string
 steps:
   - attach_workspace:
@@ -47,7 +45,7 @@ steps:
           --resource manifests/resources/<<parameters.chart>>.yaml \
           --exceptions-with-resources || \
         {
-            echo "\nPolicies failed, generating exceptions...";
+            echo "Policies failed, generating exceptions...";
             kyverno apply manifests/policies/kyverno-policies.yaml \
               --resource manifests/resources/<<parameters.chart>>.yaml \
               --exceptions-with-resources --generate-exceptions;
