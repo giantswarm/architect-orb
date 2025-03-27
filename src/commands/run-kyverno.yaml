@@ -7,6 +7,10 @@ parameters:
   kyverno-policies_version:
     description: "Version of Kyverno policies to use"
     type: string
+  yq_version:
+    description: "Version of yq to use"
+    type: string
+    default: "4.45.1"
 steps:
   - attach_workspace:
       at: build
@@ -22,6 +26,12 @@ steps:
         curl -sLO "https://github.com/kyverno/kyverno/releases/download/v<< parameters.kyverno_version >>/kyverno-cli_v<< parameters.kyverno_version >>_linux_x86_64.tar.gz"
         tar -xvf kyverno-cli_v<< parameters.kyverno_version >>_linux_x86_64.tar.gz
         sudo cp kyverno /usr/local/bin/
+  - run:
+      name: "Install yq"
+      command: |
+        curl -sLO "https://github.com/mikefarah/yq/releases/download/v<< parameters.yq_version >>/yq_linux_amd64.tar.gz"
+        tar -xvf yq_linux_amd64.tar.gz
+        sudo cp yq_linux_amd64 /usr/local/bin/yq
   - run:
       name: "Template Kyverno policies"
       command: |
@@ -48,6 +58,7 @@ steps:
             echo "Policies failed, generating exceptions...";
             kyverno apply manifests/policies/kyverno-policies.yaml \
               --resource manifests/resources/<<parameters.chart>>.yaml \
-              --exceptions-with-resources --generate-exceptions;
+              --exceptions-with-resources --generate-exceptions | \
+              yq '.metadata.labels = {}, .metadata.name = .spec.exceptions[0].policyName';
             exit 1
         }
