@@ -45,6 +45,8 @@ steps:
         export CHART_NAME="$(find helm -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)"
         echo "CHART_NAME=${CHART_NAME}" >> $BASH_ENV
 
+        # install chart dependencies
+        helm dependency update helm/${CHART_NAME}
         # template the helm chart
         helm template --release-name ${CHART_NAME} helm/${CHART_NAME} > manifests/resources/${CHART_NAME}.yaml
   - run:
