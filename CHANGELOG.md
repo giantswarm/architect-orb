@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.12.1] - 2025-04-03
 
+### Changed
+
+- Run `helm dependency update` before trying to template the target chart in `run-kyverno-tests` job.
+
 ## [5.12.0] - 2025-03-28
 
 ### Added
