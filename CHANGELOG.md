@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.12.1] - 2025-04-03
+
 ## [5.12.0] - 2025-03-28
 
 ### Added
@@ -1170,7 +1172,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.12.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.12.1...HEAD
+[5.12.1]: https://github.com/giantswarm/architect-orb/compare/v5.12.0...v5.12.1
 [5.12.0]: https://github.com/giantswarm/architect-orb/compare/v5.11.6...v5.12.0
 [5.11.6]: https://github.com/giantswarm/architect-orb/compare/v5.11.5...v5.11.6
 [5.11.5]: https://github.com/giantswarm/architect-orb/compare/v5.11.4...v5.11.5
