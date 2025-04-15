@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Remove the version command check from go-build job
+
 ## [5.12.1] - 2025-04-03
 
 ### Changed
