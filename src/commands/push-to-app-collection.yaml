@@ -46,7 +46,7 @@ steps:
         # Konfigure generators
         mkdir -p .app-collection/flux-manifests
         mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
-        architect create kustomization --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
+        architect create kustomization --generators=true --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
         git -C .app-collection add flux-manifests/
 
         # Raw App CRs
@@ -86,7 +86,7 @@ steps:
             yq -i 'del(.metadata.annotations."chart-operator.giantswarm.io/force-helm-upgrade")' .app-collection/kustomize/<<parameters.app_name>>.yaml
           fi
         
-          architect create kustomization --dir .app-collection/kustomize | tee .app-collection/kustomize/kustomization.yaml
+          architect create kustomization --generators=false --dir .app-collection/kustomize | tee .app-collection/kustomize/kustomization.yaml
         fi
 
         git -C .app-collection add kustomize/
