@@ -81,9 +81,12 @@ steps:
           namespace: <<parameters.app_namespace>>
           version: $(head -n 1 .app_version_in_project)
         EOF
+        
           if [[ "<<parameters.disable_force_upgrade>>" == "true" ]]; then
             yq -i 'del(.metadata.annotations."chart-operator.giantswarm.io/force-helm-upgrade")' .app-collection/kustomize/<<parameters.app_name>>.yaml
           fi
+        
+          architect create kustomization --dir .app-collection/kustomize | tee .app-collection/kustomize/kustomization.yaml
         fi
 
         git -C .app-collection add kustomize/
