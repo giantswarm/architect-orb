@@ -54,7 +54,6 @@ steps:
 
         if [[ -f .app-collection/kustomize/<<parameters.app_name>>.yaml ]]; then
             yq -i ".spec.version = \"$(head -n 1 .app_version_in_project)\"" .app-collection/kustomize/<<parameters.app_name>>.yaml
-            git -C .app-collection add kustomize/
         else
             cat > .app-collection/kustomize/<<parameters.app_name>>.yaml \<<EOF
         apiVersion: application.giantswarm.io/v1alpha1
