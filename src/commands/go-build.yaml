@@ -30,7 +30,3 @@ steps:
       name: Build binaries
       command: |
         CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -tags "<< parameters.tags >>" -o << parameters.binary >> << parameters.path >>
-  - run:
-      name: Execute version command of built binary (Linux only)
-      command: |
-        [[ "<< parameters.os >>" == "linux" ]] && ./<< parameters.binary >> version || true
