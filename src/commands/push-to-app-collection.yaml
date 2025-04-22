@@ -69,10 +69,10 @@ steps:
           catalog: <<parameters.app_catalog>>
           config:
             configMap:
-              name: <<parameters.app_name>>-konfigure
+              name: <<parameters.app_name>>-konfiguration
               namespace: giantswarm
             secret:
-              name: <<parameters.app_name>>-konfigure
+              name: <<parameters.app_name>>-konfiguration
               namespace: giantswarm
           kubeConfig:
             inCluster: true
