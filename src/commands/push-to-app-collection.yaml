@@ -85,6 +85,8 @@ steps:
             yq -i 'del(.metadata.annotations."chart-operator.giantswarm.io/force-helm-upgrade")' .app-collection/kustomize/<<parameters.app_name>>.yaml
           fi
 
+          yq -i '.spec.configuration.applications.includes.exactMatchers = (.spec.configuration.applications.includes.exactMatchers + "<<parameters.app_name>>" | sort)' ".app-collection/kustomize/konfiguration.yaml"
+
           architect create kustomization --generators=false --dir .app-collection/kustomize | tee .app-collection/kustomize/kustomization.yaml
         fi
 
