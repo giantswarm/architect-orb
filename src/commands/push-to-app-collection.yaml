@@ -49,6 +49,19 @@ steps:
         architect create kustomization --generators=true --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
         git -C .app-collection add flux-manifests/
 
+        # Pre-flight checks for CAPx collections
+        if [[ ! -d ".app-collection/kustomize" ]]; then
+          echo "The kustomize folder does not exist in the collection!"
+          echo "Assuming vintage collection, skipping raw App CR generation / update!"
+          echo ""
+          echo "Terminating..."
+
+          exit 0
+        else
+          echo "The kustomize folder exists in the collection!"
+          echo "Assuming CAPx collection, proceeding with raw App CR generation / update!"
+        fi
+
         # Raw App CRs
         mkdir -p .app-collection/kustomize
 
