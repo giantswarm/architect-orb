@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remove the version command check from go-build job
 
+### Added
+
+- Added support for App CRs in `push-to-app-collection` command.
+
 ## [5.12.1] - 2025-04-03
 
 ### Changed
