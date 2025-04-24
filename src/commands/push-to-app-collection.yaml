@@ -43,10 +43,67 @@ steps:
   - run:
       name: "architect/push-to-app-collection: Add / update resources to the collection repo"
       command: |
+        # Konfigure generators
         mkdir -p .app-collection/flux-manifests
         mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
-        architect create kustomization --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
+        architect create kustomization --generators=true --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
         git -C .app-collection add flux-manifests/
+
+        # Pre-flight checks for CAPx collections
+        if [[ ! -d ".app-collection/kustomize" ]]; then
+          echo "The kustomize folder does not exist in the collection!"
+          echo "Assuming vintage collection, skipping raw App CR generation / update!"
+          echo ""
+          echo "Terminating..."
+
+          exit 0
+        else
+          echo "The kustomize folder exists in the collection!"
+          echo "Assuming CAPx collection, proceeding with raw App CR generation / update!"
+        fi
+
+        # Raw App CRs
+        mkdir -p .app-collection/kustomize
+
+        if [[ -f .app-collection/kustomize/<<parameters.app_name>>.yaml ]]; then
+            yq -i ".spec.version = \"$(head -n 1 .app_version_in_project)\"" .app-collection/kustomize/<<parameters.app_name>>.yaml
+        else
+            cat > .app-collection/kustomize/<<parameters.app_name>>.yaml \<<EOF
+        apiVersion: application.giantswarm.io/v1alpha1
+        kind: App
+        metadata:
+          annotations:
+            chart-operator.giantswarm.io/force-helm-upgrade: "true"
+          labels:
+            app-operator.giantswarm.io/version: 0.0.0
+          name: <<parameters.app_name>>
+          namespace: giantswarm
+        spec:
+          catalog: <<parameters.app_catalog>>
+          config:
+            configMap:
+              name: <<parameters.app_name>>-konfiguration
+              namespace: giantswarm
+            secret:
+              name: <<parameters.app_name>>-konfiguration
+              namespace: giantswarm
+          kubeConfig:
+            inCluster: true
+          name: <<parameters.app_name>>
+          namespace: <<parameters.app_namespace>>
+          version: $(head -n 1 .app_version_in_project)
+        EOF
+
+          if [[ "<<parameters.disable_force_upgrade>>" == "true" ]]; then
+            yq -i 'del(.metadata.annotations."chart-operator.giantswarm.io/force-helm-upgrade")' .app-collection/kustomize/<<parameters.app_name>>.yaml
+          fi
+
+          yq -i '.spec.configuration.applications.includes.exactMatchers = (.spec.configuration.applications.includes.exactMatchers + "<<parameters.app_name>>" | sort)' ".app-collection/kustomize/konfiguration.yaml"
+
+          architect create kustomization --generators=false --dir .app-collection/kustomize | tee .app-collection/kustomize/kustomization.yaml
+        fi
+
+        git -C .app-collection add kustomize/
   - run:
       name: "architect/push-to-app-collection: Commit changes to the app collection repo"
       command: |

@@ -2,6 +2,6 @@
 extends: default
 rules:
   line-length:
-    max: 200
+    max: 256
     level: warning
   document-start: disable
