@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.13.1] - 2025-04-28
+
+### Changed
+
+- Bump architect to v6.20.1, which incluces a downgrade of golangci-lint from v1.64.8 to v1.64.7
+
 ## [5.13.0] - 2025-04-24
 
 ### Changed
@@ -1186,7 +1192,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.13.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.13.1...HEAD
+[5.13.1]: https://github.com/giantswarm/architect-orb/compare/v5.13.0...v5.13.1
 [5.13.0]: https://github.com/giantswarm/architect-orb/compare/v5.12.1...v5.13.0
 [5.12.1]: https://github.com/giantswarm/architect-orb/compare/v5.12.0...v5.12.1
 [5.12.0]: https://github.com/giantswarm/architect-orb/compare/v5.11.6...v5.12.0
