@@ -1,3 +1,3 @@
 docker:
   - entrypoint: /bin/bash
-    image: gsoci.azurecr.io/giantswarm/architect:6.20.0-b643c094874ad7a22aca4d3c13c1a63431da0fa8
+    image: gsoci.azurecr.io/giantswarm/architect:6.20.1
