@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove golangci-lint from go-test and go-build
+
 ## [5.13.1] - 2025-04-28
 
 ### Changed
