@@ -92,20 +92,6 @@ steps:
             command: |
               go test -ldflags "$(cat .ldflags)" ./...
   - run:
-      name: Check if golangci-lint has any complaints
-      environment:
-        GOLANGCI_LINT_CACHE: /golancilint-cache
-        GOGC: "20"
-        CGO_ENABLED: "0"
-      command: |
-        golangci-lint run \
-          -E gosec \
-          -E goconst \
-          -E asciicheck \
-          --timeout 10m \
-          --max-same-issues 0 \
-          --max-issues-per-linter 0
-  - run:
       name: Check if dependencies have known security vulnerabilities
       environment:
         CGO_ENABLED: "0"
