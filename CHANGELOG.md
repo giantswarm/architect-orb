@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.14.0] - 2025-05-08
+
 ### Removed
 
 - Remove golangci-lint from go-test and go-build
@@ -1196,7 +1198,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.13.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.14.0...HEAD
+[5.14.0]: https://github.com/giantswarm/architect-orb/compare/v5.13.1...v5.14.0
 [5.13.1]: https://github.com/giantswarm/architect-orb/compare/v5.13.0...v5.13.1
 [5.13.0]: https://github.com/giantswarm/architect-orb/compare/v5.12.1...v5.13.0
 [5.12.1]: https://github.com/giantswarm/architect-orb/compare/v5.12.0...v5.12.1
