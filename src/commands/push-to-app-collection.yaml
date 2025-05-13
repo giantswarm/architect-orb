@@ -18,6 +18,10 @@ steps:
       command: |
         architect project version | tee .app_version_in_project
   - run:
+      name: "architect/push-to-app-collection: Clone app collection repo"
+      command: |
+        git clone -q --depth=1 --single-branch git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
+  - run:
       name: "architect/push-to-app-collection: Generate Flux Generator"
       command: |
         if [[ -d ".app-collection/flux-manifests" ]]; then
@@ -33,16 +37,12 @@ steps:
           echo "./flux-manifests folder does not exists in the collection, skipping konfigure generator input generation..."
         fi
   - run:
-      name: "architect/push-to-app-collection: Clone app collection repo"
-      command: |
-        git clone -q --depth=1 --single-branch git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
-  - run:
       name: "architect/push-to-app-collection: Fetch current version of the app in the collection"
       command: |
         if [ ! -f .app-collection/kustomize/<<parameters.app_name>>.yaml ]; then
           echo "0.0.0" | tee .app_version_in_collection
         else
-          yq eval ".app_version" ".app-collection/kustomize/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
+          yq eval ".spec.version" ".app-collection/kustomize/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
         fi
   - run:
       name: "architect/push-to-app-collection: Add / update resources to the collection repo"
