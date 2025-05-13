@@ -18,36 +18,44 @@ steps:
       command: |
         architect project version | tee .app_version_in_project
   - run:
-      name: "architect/push-to-app-collection: Generate Flux Generator"
-      command: |
-        architect create fluxgenerator \
-          --name="<<parameters.app_name>>" \
-          --app-name="<<parameters.app_name>>" \
-          --app-version="$(cat .app_version_in_project)" \
-          --app-destination-namespace="<<parameters.app_namespace>>" \
-          --app-catalog="<<parameters.app_catalog>>" \
-          --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
-          -o yaml | tee .fluxgenerator.yaml
-  - run:
       name: "architect/push-to-app-collection: Clone app collection repo"
       command: |
         git clone -q --depth=1 --single-branch git@github.com:giantswarm/<<parameters.app_collection_repo>>.git .app-collection
   - run:
+      name: "architect/push-to-app-collection: Generate Flux Generator"
+      command: |
+        if [[ -d ".app-collection/flux-manifests" ]]; then
+          architect create fluxgenerator \
+            --name="<<parameters.app_name>>" \
+            --app-name="<<parameters.app_name>>" \
+            --app-version="$(cat .app_version_in_project)" \
+            --app-destination-namespace="<<parameters.app_namespace>>" \
+            --app-catalog="<<parameters.app_catalog>>" \
+            --disable-force-upgrade=<<parameters.disable_force_upgrade>> \
+            -o yaml | tee .fluxgenerator.yaml
+        else
+          echo "./flux-manifests folder does not exists in the collection, skipping konfigure generator input generation..."
+        fi
+  - run:
       name: "architect/push-to-app-collection: Fetch current version of the app in the collection"
       command: |
-        if [ ! -f .app-collection/flux-manifests/<<parameters.app_name>>.yaml ]; then
+        if [ ! -f .app-collection/kustomize/<<parameters.app_name>>.yaml ]; then
           echo "0.0.0" | tee .app_version_in_collection
         else
-          yq eval ".app_version" ".app-collection/flux-manifests/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
+          yq eval ".spec.version" ".app-collection/kustomize/<<parameters.app_name>>.yaml" | tee .app_version_in_collection
         fi
   - run:
       name: "architect/push-to-app-collection: Add / update resources to the collection repo"
       command: |
         # Konfigure generators
-        mkdir -p .app-collection/flux-manifests
-        mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
-        architect create kustomization --generators=true --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
-        git -C .app-collection add flux-manifests/
+        if [[ -d ".app-collection/flux-manifests" ]]; then
+          mkdir -p .app-collection/flux-manifests
+          mv -f .fluxgenerator.yaml .app-collection/flux-manifests/<<parameters.app_name>>.yaml
+          architect create kustomization --generators=true --dir .app-collection/flux-manifests | tee .app-collection/flux-manifests/kustomization.yaml
+          git -C .app-collection add flux-manifests/
+        else
+          echo "./flux-manifests folder does not exists in the collection, skipping konfigure generator input update..."
+        fi
 
         # Pre-flight checks for CAPx collections
         if [[ ! -d ".app-collection/kustomize" ]]; then
