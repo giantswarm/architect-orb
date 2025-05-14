@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Do not update or create konfigure generator input when the `./flux-manifests` folder does not exist in the collection. 
+- Print values file name when testing with `conftest`.
 
 ## [5.14.0] - 2025-05-08
 
