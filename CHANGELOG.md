@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.0] - 2025-06-11
+
 ### Removed
 
 - Remove support for konfigure generators in `push-to-app-collection` command.
@@ -1209,7 +1211,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v5.15.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.0.0...HEAD
+[6.0.0]: https://github.com/giantswarm/architect-orb/compare/v5.15.0...v6.0.0
 [5.15.0]: https://github.com/giantswarm/architect-orb/compare/v5.14.0...v5.15.0
 [5.14.0]: https://github.com/giantswarm/architect-orb/compare/v5.13.1...v5.14.0
 [5.13.1]: https://github.com/giantswarm/architect-orb/compare/v5.13.0...v5.13.1
