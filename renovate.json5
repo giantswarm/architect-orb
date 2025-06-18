@@ -7,7 +7,7 @@
   customManagers: [
     {
       description: 'Allow updating container images in executors',
-      managerFilePatterns: ["/^src\\/executors\\/[a-z0-9-]+\\.yaml$/"],
+      managerFilePatterns: ["src/executors/*.yaml"],
       matchStrings: ["image: (?<depName>\\S*):(?<currentValue>\\S*)"],
       datasourceTemplate: "docker",
       versioning: "loose",
