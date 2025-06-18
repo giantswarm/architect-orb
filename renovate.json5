@@ -8,7 +8,7 @@
     {
       description: 'Allow updating container images in executors',
       managerFilePatterns: ["src/executors/*.yaml"],
-      matchStrings: ["image: (?<depName>\\S*):(?<currentValue>\\S*)"],
+      matchStrings: ["\\s*image:\\s+(?<depName>[^:]+):(?<currentValue>\\S+)"],
       datasourceTemplate: "docker",
       versioning: "loose",
     },
