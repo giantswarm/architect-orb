@@ -1,4 +1,3 @@
 docker:
   - entrypoint: /bin/bash
-    # renovate: datasource=docker
     image: gsoci.azurecr.io/giantswarm/architect:7.0.2

@@ -7,14 +7,11 @@
   customManagers: [
     {
       description: 'Allow updating container images in executors',
-      customType: 'regex',
-      managerFilePatterns: [
-        '/src\\/executors\\/.*\\.yaml$/',
-      ],
-      matchStrings: [
-        '# renovate: datasource=(?<datasource>.*?)\\s+image: (?<depName>.*?):(?<currentValue>.*?)\\n',
-      ],
-      versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}',
+      "managerFilePatterns": ["/^src\\/executors\\/.*.yaml$/"],
+      "matchStrings": ["image: gsoci.azurecr.io/giantswarm/architect:(?<currentValue>.*?)\\n"],
+      "depNameTemplate": "gsoci.azurecr.io/giantswarm/architect",
+      "datasourceTemplate": "docker"
+      "versioning": "loose",
     },
   ],
   packageRules: [
