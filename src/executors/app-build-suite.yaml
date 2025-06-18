@@ -1,3 +1,4 @@
 docker:
   - entrypoint: /bin/bash
+    # renovate: datasource=docker
     image: gsoci.azurecr.io/giantswarm/app-build-suite:1.2.8-circleci

@@ -1,3 +1,4 @@
 docker:
-    - image: gsoci.azurecr.io/giantswarm/gitleaks:v3.3.0
-      entrypoint: /bin/bash
+  - entrypoint: /bin/bash
+    # renovate: datasource=docker
+    image: gsoci.azurecr.io/giantswarm/gitleaks:v3.3.0
