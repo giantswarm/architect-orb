@@ -1,6 +1,28 @@
 {
-  "extends": [
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
     // Base config - https://github.com/giantswarm/renovate-presets/blob/main/default.json5
     "github>giantswarm/renovate-presets:default.json5",
+  ],
+  customManagers: [
+    {
+      description: 'Allow updating container images in executors',
+      customType: 'regex',
+      managerFilePatterns: [
+        '/src\\/executors\\/.*\\.yaml$/',
+      ],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>.*?)\\s+image: (?<depName>.*?):(?<currentValue>.*?)\\n',
+      ],
+      versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}',
+    },
+  ],
+  packageRules: [
+    {
+      "matchDepNames": [
+        "/^giantswarm/architect$/",
+      ],
+      "allowedVersions": "<= 9999.0.0", // fix for bad tags in architect like '9777070'
+    },
   ],
 }
