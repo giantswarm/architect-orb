@@ -7,9 +7,8 @@
   customManagers: [
     {
       description: 'Allow updating container images in executors',
-      managerFilePatterns: ["/^src\\/executors\\/.*.yaml$/"],
-      matchStrings: ["image: gsoci.azurecr.io/giantswarm/architect:(?<currentValue>.*?)\\n"],
-      depNameTemplate: "gsoci.azurecr.io/giantswarm/architect",
+      managerFilePatterns: ["/^src\\/executors\\/[a-z0-9-]+\\.yaml$/"],
+      matchStrings: ["image: (?<depName>\\S*):(?<currentValue>\\S*)"],
       datasourceTemplate: "docker",
       versioning: "loose",
     },
