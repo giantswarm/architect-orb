@@ -1,7 +1,8 @@
 # push-to-registries
 
 This job builds a container image and pushes it to a set of registries configured within the job itself.
-This way this job centralizes the management over image uploads and build process.
+This job is intended for classic single-architecture Dockerfiles, where a single binary is copied into the image (e.g., `COPY myapp /usr/local/bin/myapp`).
+
 It uses the `Dockerfile` found at the root of the workspace directory and the root directory as
 build context by default.
 Otherwise, it is possible to specify the Dockerfile and build context to use with `dockerfile` and `build-context` arguments respectively.
@@ -12,7 +13,7 @@ Otherwise, it is possible to specify the Dockerfile and build context to use wit
 
 Argument `tag-suffix` allows to specify a special suffix to be added after the generated container tag.
 
-Example usage:
+## Example usage
 
 ```yaml
 version: 2.1
@@ -23,15 +24,7 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-registries:
-          context: architect
-          name: push-to-registries
-          requires:
-            # Make sure binary is built.
-            - go-build
-          filters:
-            # Trigger job also on git tag.
-            tags:
-              only: /^v.*/
+          image: myapp
 ```
 
 You might want to restrict the build of tags even further, by only building tags that are valid semver strings.
