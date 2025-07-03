@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.1.0] - 2025-07-03
+
 ### Added
 
 - Unified multi-arch and single-arch image build/push logic into `image-build-and-push-multiarch.yaml` command and `push-to-registries-multiarch` job.
@@ -1216,7 +1218,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.0.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.1.0...HEAD
+[6.1.0]: https://github.com/giantswarm/architect-orb/compare/v6.0.0...v6.1.0
 [6.0.0]: https://github.com/giantswarm/architect-orb/compare/v5.15.0...v6.0.0
 [5.15.0]: https://github.com/giantswarm/architect-orb/compare/v5.14.0...v5.15.0
 [5.14.0]: https://github.com/giantswarm/architect-orb/compare/v5.13.1...v5.14.0
