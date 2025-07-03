@@ -6,15 +6,40 @@ description: |
 
   The job produces static binary named after the repository name. It is
   persisted to workspace under "./" path.
+#
+# Job: go-build
+#
+# This job runs go-test and then builds a Go binary for the specified architecture using the go-build command.
+# If the architecture is set (e.g., linux/amd64), the binary will be named <binary>-<GOOS>-<GOARCH> and, if linux/amd64, also as <binary>.
+# All produced binaries are persisted to the workspace.
+#
+# Parameters:
+#   binary: Name of the binary produced by the job. It is also persisted to the workspace.
+#   architecture: Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64"). Default: linux/amd64.
+#   os: (Deprecated) Use architecture instead for multi-arch support.
+#   path: Path where the Go package to build is located (default: ".").
+#   pre_test_target: Makefile target to run before lints and tests (optional).
+#   resource_class: CircleCI resource class for the job.
+#   test_target: Makefile target to run for tests (optional).
+#   tags: Additional Go build tags (optional).
+#
+# Behavior:
+#   - Runs go-build command with all parameters.
+#   - Persists all binaries (including multi-arch and default) to the workspace.
 parameters:
   binary:
     description: "Name of the binary produced by the job. It is also persisted to the workspace."
     type: "string"
+  architecture:
+    description: |
+      Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64").
+      This will be split into GOOS and GOARCH for the build. Example: "linux/amd64".
+    type: string
+    default: "linux/amd64"
   os:
+    description: "**Deprecated.** Use architecture instead for multi-arch support."
+    type: string
     default: "linux"
-    description: "The target Operating System for the binary. Must be one of \"linux\", \"darwin\"."
-    type: enum
-    enum: ["linux", "darwin"]
   path:
     default: "."
     description: |
@@ -53,11 +78,12 @@ steps:
       binary: << parameters.binary >>
       os: << parameters.os >>
       path: << parameters.path >>
-      pre_test_target: <<parameters.pre_test_target>>
+      pre_test_target: << parameters.pre_test_target >>
       tags: << parameters.tags >>
-      test_target: <<parameters.test_target>>
-  - go-cache-save
+      test_target: << parameters.test_target >>
+      architecture: << parameters.architecture >>
   - persist_to_workspace:
       root: .
       paths:
-        - ./<< parameters.binary >>
+        - ./<< parameters.binary >>*
+  - go-cache-save

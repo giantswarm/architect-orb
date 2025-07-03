@@ -1,0 +1,125 @@
+parameters:
+  image:
+    type: string
+  tag-latest-branch:
+    type: string
+    default: ""
+  tag-suffix:
+    type: string
+    default: ""
+  build-context:
+    type: string
+    default: "."
+  dockerfile:
+    type: string
+    default: "./Dockerfile"
+  registries-data:
+    default: ""
+    description: |
+      A string that defines configuration for registries
+      Each line describes one registry using the following format
+      visibility registry username_envvar password_envvar push_dev_image
+    type: string
+  force-public:
+    type: boolean
+    default: false
+  platforms:
+    description: "Comma-separated string of platforms for multi-arch image build (e.g., 'linux/amd64,linux/arm64'). If not set, defaults to 'linux/amd64'."
+    type: string
+    default: "linux/amd64"
+steps:
+  - run:
+      name: Build and push multi-arch image to all registries
+      command: |
+        # Determine tag value from tag_envvar or fallback
+        TAG_VALUE="${DOCKER_IMAGE_TAG}"
+        tag_suffix="<<parameters.tag-suffix>>"
+        tag_latest_branch="<<parameters.tag-latest-branch>>"
+        platforms=$(IFS=,; echo "<<parameters.platforms>>")
+        # If image is forced to be pushed as a public one,
+        # we shouldn't check whether the source is public
+        # if repo is private, push to private only
+        # if repo is public or force-public is set push to public only
+        if [[ "<< parameters.force-public >>" = "true" ]]; then
+          echo -e "'force-public' flag is set, treating the image as public.\n"
+          IMAGE_ACCESS=public
+        else
+          GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          GITHUB_MESSAGE=$(curl -sL -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}" | jq -r '.message')
+          if [[ "${GITHUB_MESSAGE}" = "Not Found" ]]; then
+            echo -e "The GitHub repository is not detected as public, treating the image as a private one.\n"
+            IMAGE_ACCESS=private
+          else
+            echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"
+            IMAGE_ACCESS=public
+          fi
+        fi
+
+        if ! [[ -f .registries_data ]]; then
+          if [[ "<<parameters.registries-data>>" ]]; then
+            echo "Using registries data from the circle.ci job parameters."
+            REGISTRIES_DATA="<<parameters.registries-data>>"
+          else
+            echo "Using registries data from the circle.ci environment variable settings."
+            if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
+              echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
+              exit 1
+            fi
+            REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
+          fi
+          echo "${REGISTRIES_DATA}" > .registries_data
+        fi
+
+        # Collect all tags
+        tags=("<<parameters.image>>:${TAG_VALUE}")
+        if [[ "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
+          tags+=("<<parameters.image>>:latest$tag_suffix")
+        fi
+        if [[ -n "$tag_suffix" ]]; then
+          tags+=("<<parameters.image>>:${TAG_VALUE}-$tag_suffix")
+        fi
+        # Prepare all registry/image:tag combinations
+        all_tags=()
+        while IFS=' ' read -r access reg _ _ push_dev; do
+          [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+          if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
+            continue
+          fi
+          if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
+            for tag in "${tags[@]}"; do
+              echo -e "\nProcessing image push config for registry $reg."
+              echo "Tag the image for $reg"
+              echo "Preparing tag for $reg: <<parameters.image>>:${tag##*:}"
+              all_tags+=("--tag" "$reg/<<parameters.image>>:${tag##*:}")
+            done
+          else
+            echo "Registry $reg is not configured for $IMAGE_ACCESS images, skipping"
+          fi
+        done < .registries_data
+        if [[ ${#all_tags[@]} -eq 0 ]]; then
+          echo "No valid registry/tag combinations found for push. Exiting."
+          exit 1
+        fi
+        docker buildx create --use --name multiarch-builder 2>/dev/null || docker buildx use multiarch-builder
+        # Single buildx build/push for all tags/registries
+        SUCCESS=false
+        for i in {1..4}; do
+          echo "attempt: $i for all registries/tags"
+          if docker buildx build \
+            --platform "$platforms" \
+            "${all_tags[@]}" \
+            -f "<<parameters.dockerfile>>" \
+            "<<parameters.build-context>>" \
+            --push; then
+            echo "Image is pushed to all registries."
+            SUCCESS=true
+            break
+          fi
+          echo "Waiting 5 seconds before the next attempt."
+          sleep 5
+        done
+        if [[ "$SUCCESS" == "false" ]]; then
+          echo "Some images couldn't be pushed. Check buildx output above."
+          exit 1
+        fi

@@ -1,3 +1,22 @@
+# Command: go-build
+#
+# Builds a Go binary for a specified architecture and persists it to the workspace. If the architecture is set (e.g., linux/amd64), the binary will be named <binary>-<GOOS>-<GOARCH>. If the architecture is linux/amd64, a copy will also be made as <binary> for compatibility with legacy workflows.
+#
+# Parameters:
+#   binary: Name of the binary to produce (and to copy to if linux/amd64).
+#   os: (Deprecated) Use 'architecture' instead for multi-arch support.
+#   path: Path to the Go package to build (default: ".").
+#   pre_test_target: Makefile target to run before tests/lints (optional).
+#   tags: Additional Go build tags (optional).
+#   test_target: Makefile target to run for tests (optional).
+#   architecture: Target architecture (e.g., linux/amd64, linux/arm64, darwin/amd64). If set, will split into GOOS/GOARCH and name the binary accordingly. If not set, falls back to 'os' for legacy single-arch builds.
+#
+# Behavior:
+#   - Runs go-test first (with pre_test_target and test_target if set).
+#   - Builds the binary for the specified architecture.
+#   - If architecture is linux/amd64, also copies the binary to <binary>.
+#   - If architecture is not set, builds <binary> using the deprecated 'os' parameter.
+
 parameters:
   binary:
     type: "string"
@@ -21,6 +40,12 @@ parameters:
     description: |
       Executes the requested Makefile target.
     type: string
+  architecture:
+    default: "linux/amd64"
+    description: |
+      Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64").
+      This will be split into GOOS and GOARCH for the build. Example: "linux/amd64".
+    type: string
 steps:
   - go-test:
       path: <<parameters.path>>
@@ -29,4 +54,21 @@ steps:
   - run:
       name: Build binaries
       command: |
-        CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -tags "<< parameters.tags >>" -o << parameters.binary >> << parameters.path >>
+        if [[ -n "<< parameters.architecture >>" ]]; then
+          ARCH="<<parameters.architecture>>"
+          GOOS=$(echo $ARCH | cut -d'/' -f1)
+          GOARCH=$(echo $ARCH | cut -d'/' -f2)
+          binary_name="<< parameters.binary >>-${GOOS}-${GOARCH}"
+          LD_FLAGS=""
+          ldflags_file=".ldflags-${GOOS}-${GOARCH}"
+          if [ -f "$ldflags_file" ]; then
+            LD_FLAGS="$(cat "$ldflags_file")"
+          fi
+          CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LD_FLAGS" -tags "<< parameters.tags >>" -o "$binary_name" << parameters.path >>
+          # If linux/amd64, also create/copy to <<parameters.binary>>
+          if [[ "$GOOS" == "linux" && "$GOARCH" == "amd64" ]]; then
+            cp "$binary_name" "<< parameters.binary >>"
+          fi
+        else
+          CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -tags "<< parameters.tags >>" -o << parameters.binary >> << parameters.path >>
+        fi

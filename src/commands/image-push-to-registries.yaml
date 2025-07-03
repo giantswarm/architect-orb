@@ -70,7 +70,6 @@ steps:
             fi
             REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
           fi
-
           echo "${REGISTRIES_DATA}" > .registries_data
         fi
 

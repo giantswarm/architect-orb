@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Unified multi-arch and single-arch image build/push logic into `image-build-and-push-multiarch.yaml` command and `push-to-registries-multiarch` job.
+- Simplified `go-build` job and command: now supports multi-arch and always produces a `binary` for `linux/amd64`.
+
 ## [6.0.0] - 2025-06-11
 
 ### Removed
@@ -559,7 +564,7 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 ### Changed
 
-- Change download URL of `dats.sh` wrapper to use raw.githubusercontent.com to be able to run pre-release versions of app-test-suite in `run-tests-with-ats` job.
+- Change download URL of `dats.sh` wrapper to use raw.githubusercontent.com to be able to run pre-release versions of app-test-suite in `run-tests-with-abs` job.
 
 ### Removed
 

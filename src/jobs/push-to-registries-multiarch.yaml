@@ -1,0 +1,75 @@
+# Multi-arch version of push-to-registries job
+description: "Build and push a multi-architecture container image to registries."
+executor: "architect"
+environment:
+  DOCKER_BUILDKIT: "1"
+resource_class: "<< parameters.resource_class >>"
+parameters:
+  image:
+    description: Name of the  container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
+    type: string
+    default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
+  tag-latest-branch:
+    description: 'Name of the branch on which the image will be additionally tagged as "latest".'
+    type: string
+    default: main
+  resource_class:
+    default: small
+    description: |
+      Configures the amount of CPU and RAM for the job. See
+      https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+      for details.
+    type: enum
+    enum: ["small", "medium", "medium+", "large", "xlarge"]
+  build-context:
+    type: string
+    default: "."
+  dockerfile:
+    type: string
+    default: "./Dockerfile"
+  git-tag-prefix:
+    type: string
+    default: ""
+  tag-suffix:
+    type: string
+    default: ""
+  force-public:
+    description: Skip the repo visibility check and push the the image to public registries
+    type: boolean
+    default: false
+  registries-data:
+    default: ""
+    type: string
+  platforms:
+    description: "Comma-separated string of platforms for multi-arch image build (e.g., 'linux/amd64,linux/arm64'). If not set, defaults to 'linux/amd64'."
+    type: string
+    default: "linux/amd64"
+steps:
+  - checkout
+  - setup_remote_docker:
+      version: default
+  - attach_workspace:
+      at: .
+  - run:
+      name: Set git tag prefix (empty if not set, only used on mono repos)
+      command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
+  - image-prepare-tag:
+      tag-suffix: <<parameters.tag-suffix>>
+  - image-login-to-registries:
+      registries-data: <<parameters.registries-data>>
+  - run:
+      name: Validate platforms parameter
+      command: |
+        if [ -z "<<parameters.platforms>>" ] || [[ ! "<<parameters.platforms>>" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
+          echo "ERROR: The 'platforms' parameter must be a non-empty, comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
+          exit 1
+        fi
+  - image-build-and-push-multiarch:
+      image: <<parameters.image>>
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      force-public: <<parameters.force-public>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      tag-suffix: <<parameters.tag-suffix>>
+      registries-data: <<parameters.registries-data>>
+      platforms: <<parameters.platforms>>
