@@ -67,7 +67,19 @@ steps:
             yq -i 'del(.metadata.annotations."chart-operator.giantswarm.io/force-helm-upgrade")' .app-collection/kustomize/<<parameters.app_name>>.yaml
           fi
 
-          yq -i '.spec.configuration.applications.includes.exactMatchers = (.spec.configuration.applications.includes.exactMatchers + "<<parameters.app_name>>" | sort)' ".app-collection/kustomize/konfiguration.yaml"
+          # MCC
+          if [[ -f ".app-collection/kustomize/konfiguration.yaml" ]]; then
+            yq -i '.spec.configuration.applications.includes.exactMatchers = (.spec.configuration.applications.includes.exactMatchers + "<<parameters.app_name>>" | sort)' ".app-collection/kustomize/konfiguration.yaml"
+          else
+            echo "Management Cluster konfiguration file - konfiguration.yaml - does not exist, skipping updating it..."
+          fi
+
+          # KFG
+          if [[ -f ".app-collection/kustomize/konfiguration.v2.yaml" ]]; then
+            yq '.spec.targets.iterations.<<parameters.app_name>> = {"variables": [{"name": "app", "value": "<<parameters.app_name>>"}]} | sortKeys(.spec.targets.iterations)' ".app-collection/kustomize/konfiguration.v2.yaml"
+          else
+            echo "Generic konfiguration file - konfiguration.v2.yaml - does not exist, skipping updating it..."
+          fi
 
           architect create kustomization --generators=false --dir .app-collection/kustomize | tee .app-collection/kustomize/kustomization.yaml
         fi
