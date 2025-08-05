@@ -35,7 +35,16 @@ steps:
         mkdir -p .app-collection/kustomize
 
         if [[ -f .app-collection/kustomize/<<parameters.app_name>>.yaml ]]; then
+            yq -i '.spec.catalog = "<<parameters.app_catalog>>"' .app-collection/kustomize/<<parameters.app_name>>.yaml
+            yq -i '.spec.namespace = "<<parameters.app_namespace>>"' .app-collection/kustomize/<<parameters.app_name>>.yaml
+
             yq -i ".spec.version = \"$(head -n 1 .app_version_in_project)\"" .app-collection/kustomize/<<parameters.app_name>>.yaml
+
+            if [[ "<<parameters.disable_force_upgrade>>" == "true" ]]; then
+              yq -i 'del(.metadata.annotations."chart-operator.giantswarm.io/force-helm-upgrade")' .app-collection/kustomize/<<parameters.app_name>>.yaml
+            else
+              yq -i '.metadata.annotations."chart-operator.giantswarm.io/force-helm-upgrade" = "true"' .app-collection/kustomize/<<parameters.app_name>>.yaml
+            fi
         else
             cat > .app-collection/kustomize/<<parameters.app_name>>.yaml \<<EOF
         apiVersion: application.giantswarm.io/v1alpha1
