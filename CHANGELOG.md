@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.3.0] - 2025-08-06
+
 ### Added
 
 - Update `push-to-app-collection` with knowledge on how to update `Konfiguration` CRs in collections.
@@ -1239,7 +1241,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.2.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.3.0...HEAD
+[6.3.0]: https://github.com/giantswarm/architect-orb/compare/v6.2.1...v6.3.0
 [6.2.1]: https://github.com/giantswarm/architect-orb/compare/v6.2.0...v6.2.1
 [6.2.0]: https://github.com/giantswarm/architect-orb/compare/v6.1.0...v6.2.0
 [6.1.0]: https://github.com/giantswarm/architect-orb/compare/v6.0.0...v6.1.0
