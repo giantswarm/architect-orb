@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Update `push-to-app-collection` with knowledge on how to update `Konfiguration` CRs in collections.
+
+### Changed
+
+- Update `push-to-app-collection` to skip updating `ManagementClusterConfiguration` CRs in a collection if `kustomize/konfiguration.yaml` does not exist.
+- Update `push-to-app-collection` to respect other job parameters as well on version updates in `App` CRs.
+
 ## [6.2.1] - 2025-07-08
 
 ### Changed
