@@ -65,7 +65,8 @@ parameters:
     type: boolean
     default: false
     description: |
-      When this is `true`, checking for deprecated manifest versions will be skipped.
+      This parameter has no effect anymore, it is kept for backwards compatibility.
+      Will be removed in a future version.
   persist_chart_archive:
     type: boolean
     default: false
@@ -127,11 +128,6 @@ steps:
             ct_config: "<< parameters.ct_config >>"
         - kubeconform:
             chart: << parameters.chart >>
-        - unless:
-            condition: << parameters.skip_conftest_deprek8ion >>
-            steps:
-              - helm-conftest:
-                  chart: "<< parameters.chart >>"
         - run:
             name: "architect/push-to-app-catalog: Package the chart archive with helm"
             command: |
@@ -144,11 +140,6 @@ steps:
             name: "architect/package-helm-with-abs: Execute App Build Suite"
             command: |
               mkdir build && python -m app_build_suite --chart-dir ./helm/<< parameters.chart >> --destination build --generate-metadata --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" --keep-chart-changes
-        - unless:
-            condition: << parameters.skip_conftest_deprek8ion >>
-            steps:
-              - helm-conftest:
-                  chart: "<< parameters.chart >>"
   - push-helm:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>

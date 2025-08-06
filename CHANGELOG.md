@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The `skip_conftest_deprek8ion` parameter is now ignored and will be removed in the future.
+
+### Removed
+
+- The `helm-conftest` step in the `push-to-app-catalog` job is removed.
+
 ## [6.3.1] - 2025-08-06
 
 ### Changed
