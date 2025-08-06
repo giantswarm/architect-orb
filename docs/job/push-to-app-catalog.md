@@ -56,20 +56,6 @@ the registry.
 You can read more about storing helm charts in OCI registries in the [helm
 documentation](https://helm.sh/blog/storing-charts-in-oci/).
 
-## Validations
-
-### conftest
-
-We use [`conftest`](https://www.conftest.dev/) to validate that the manifests inside the Helm chart don't use features
-that will be deprecated on future kubernetes releases.
-This is done using these [rego policies](https://github.com/swade1987/deprek8ion).
-
-The policies are evaluated using the **rendered kubernetes manifests in the Helm chart**.
-If there are values files in the `ci` folder of the chart, they will be used to render the chart templates.
-
-In case you don't want to check for deprecated manifests, it is possible to skip `conftest` checking by setting parameter
-[`skip_conftest_deprek8ion`](#skip_conftest_deprek8ion-optional-boolean-defaultfalse) to `true`.
-
 ## Parameters
 
 - [common parameters](common.md#parameters) shared in all jobs.
@@ -78,7 +64,6 @@ In case you don't want to check for deprecated manifests, it is possible to skip
 - [chart](#chart) name of the directory containing the chart in `helm/`
 - [on_tag](#on_tag-optional-boolean-defaulttrue) only push tagged commits to `app_catalog`
 - [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
-- [skip_conftest_deprek8ion](#skip_conftest_deprek8ion-optional-boolean-defaultfalse)
 - [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
 - [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaultfalse)
@@ -114,10 +99,6 @@ the name of the repository with an optional `-app` suffix.
 
 Should be used to allow chart name validation. Set to `true` to explicitly disable checking against the name of the repository with optional `-app` suffix.
 This can be the case if the chart directory is generated during CI runs or when multiple charts reside in a single repository.
-
-### skip_conftest_deprek8ion (optional boolean, default=false)
-
-Disable checking manifests against deprecated apiVersions using [deprek8ion](https://github.com/swade1987/deprek8ion) rules.
 
 ### persist_chart_archive (optional boolean, default=false)
 
