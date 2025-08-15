@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use architect v7.1.0 that applies Go 1.25
+
 ## [6.3.2] - 2025-08-06
 
 ### Changed
