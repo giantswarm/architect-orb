@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove `ManagementClusterConfiguration` support from `push-to-app-collection` command.
+
 ## [6.4.1] - 2025-09-03
 
 ### Changed
