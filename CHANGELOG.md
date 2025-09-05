@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update app-build-suite to v1.2.9
+- Update gitleaks to v8.28.0
+- Update kind to v0.30.0
+- Update default apptestctl version to v0.24.0
+- Update default helm version to v3.18.6
+- Update default Kubernetes version to v1.31.12
+
 ## [6.5.0] - 2025-09-03
 
 ### Removed

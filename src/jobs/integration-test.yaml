@@ -8,7 +8,7 @@ description: |
   See [docs](docs/integration_test.md) for more details.
 parameters:
   apptestctl-version:
-    default: "v0.22.1"
+    default: "v0.24.0"
     description: "apptestctl version for bootstrapping app platform."
     type: string
   env-file:
@@ -16,7 +16,7 @@ parameters:
     description: "File of environment variables to set."
     type: string
   helm-version:
-    default: "v3.16.2"
+    default: "v3.18.6"
     description: "Helm version to install."
     type: string
   install-app-platform:
@@ -30,7 +30,7 @@ parameters:
     description: "Path to kind config file."
     type: string
   kubernetes-version:
-    default: "v1.29.2"
+    default: "v1.31.12"
     description: "Kubernetes version for kind cluster."
     type: string
   setup-script:
