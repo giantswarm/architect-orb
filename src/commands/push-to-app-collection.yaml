@@ -76,14 +76,7 @@ steps:
             yq -i 'del(.metadata.annotations."chart-operator.giantswarm.io/force-helm-upgrade")' .app-collection/kustomize/<<parameters.app_name>>.yaml
           fi
 
-          # MCC
-          if [[ -f ".app-collection/kustomize/konfiguration.yaml" ]]; then
-            yq -i '.spec.configuration.applications.includes.exactMatchers = (.spec.configuration.applications.includes.exactMatchers + "<<parameters.app_name>>" | sort)' ".app-collection/kustomize/konfiguration.yaml"
-          else
-            echo "Management Cluster konfiguration file - konfiguration.yaml - does not exist, skipping updating it..."
-          fi
-
-          # KFG
+          # Update Konfiguration CR with the new app
           if [[ -f ".app-collection/kustomize/konfiguration.v2.yaml" ]]; then
             yq -i '.spec.targets.iterations.<<parameters.app_name>> = {"variables": [{"name": "app", "value": "<<parameters.app_name>>"}]} | sortKeys(.spec.targets.iterations)' ".app-collection/kustomize/konfiguration.v2.yaml"
           else

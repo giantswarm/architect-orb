@@ -12,6 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update app-build-suite to v1.2.9
 - Update gitleaks to v8.28.0
 
+## [6.5.0] - 2025-09-03
+
+### Removed
+
+- Remove `ManagementClusterConfiguration` support from `push-to-app-collection` command.
+
+## [6.4.1] - 2025-09-03
+
+### Changed
+
+- Update `run-tests-with-ats` job with latest app-test-suite version.
+
 ## [6.4.0] - 2025-08-15
 
 ### Changed
@@ -1268,7 +1280,9 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.4.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.5.0...HEAD
+[6.5.0]: https://github.com/giantswarm/architect-orb/compare/v6.4.1...v6.5.0
+[6.4.1]: https://github.com/giantswarm/architect-orb/compare/v6.4.0...v6.4.1
 [6.4.0]: https://github.com/giantswarm/architect-orb/compare/v6.3.2...v6.4.0
 [6.3.2]: https://github.com/giantswarm/architect-orb/compare/v6.3.1...v6.3.2
 [6.3.1]: https://github.com/giantswarm/architect-orb/compare/v6.3.0...v6.3.1
