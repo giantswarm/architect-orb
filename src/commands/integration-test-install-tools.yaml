@@ -15,7 +15,9 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Download kubectl"
       command: |
-        curl -LO "https://dl.k8s.io/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl"
+        URL="https://dl.k8s.io/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl"
+        echo "URL: $URL"
+        curl -LOs --retry 3 --retry-all-errors $URL
   - run:
       name: "architect/integration-test-install-tools: Install kubectl"
       command: |
