@@ -15,7 +15,7 @@ steps:
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin
   - run:
-      name: "architect/integration-test-install-tools: Download kubectl"
+      name: "architect/integration-test-install-tools: Install kubectl"
       command: |
         URL="https://dl.k8s.io/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl"
         echo "URL: $URL"
