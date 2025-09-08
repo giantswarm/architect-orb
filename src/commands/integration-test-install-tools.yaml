@@ -22,6 +22,7 @@ steps:
       name: "architect/integration-test-install-tools: Install kubectl"
       command: |
         chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+        ls -la /usr/local/bin/kubectl
   - run:
       name: "architect/integration-test-install-tools: Check kubectl version"
       command: |
@@ -29,14 +30,14 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Install Helm"
       command: |
-        curl -L https://get.helm.sh/helm-<< parameters.helm-version >>-linux-amd64.tar.gz >./helm.tar.gz
+        curl -Ls --retry 3 --retry-all-errors https://get.helm.sh/helm-<< parameters.helm-version >>-linux-amd64.tar.gz >./helm.tar.gz
         tar xzvf helm.tar.gz
         chmod u+x linux-amd64/helm
         sudo mv linux-amd64/helm /usr/local/bin/
   - run:
       name: "architect/integration-test-install-tools: Install apptestctl"
       command: |
-        curl -L https://github.com/giantswarm/apptestctl/releases/download/<< parameters.apptestctl-version >>/apptestctl-<< parameters.apptestctl-version >>-linux-amd64.tar.gz > ./apptestctl.tar.gz
+        curl -Ls --retry 3 --retry-all-errors https://github.com/giantswarm/apptestctl/releases/download/<< parameters.apptestctl-version >>/apptestctl-<< parameters.apptestctl-version >>-linux-amd64.tar.gz > ./apptestctl.tar.gz
         tar xzvf apptestctl.tar.gz
         chmod u+x apptestctl-<< parameters.apptestctl-version >>-linux-amd64/apptestctl
         sudo mv apptestctl-<< parameters.apptestctl-version >>-linux-amd64/apptestctl /usr/local/bin
