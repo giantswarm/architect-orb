@@ -11,7 +11,7 @@ steps:
       command: |
         URL="https://kind.sigs.k8s.io/dl/v0.30.0/kind-$(uname)-amd64"
         echo "URL: $URL"
-        curl -Los ./kind --retry 3 --retry-all-errors $URL
+        curl -Ls --output ./kind --retry 3 --retry-all-errors $URL
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin
   - run:
@@ -19,7 +19,7 @@ steps:
       command: |
         URL="https://dl.k8s.io/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl"
         echo "URL: $URL"
-        curl -Los ./kubectl --retry 3 --retry-all-errors $URL
+        curl -Ls --output ./kubectl --retry 3 --retry-all-errors $URL
         chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
         ls -la /usr/local/bin/kubectl
         kubectl version --client
@@ -28,7 +28,7 @@ steps:
       command: |
         URL="https://get.helm.sh/helm-<< parameters.helm-version >>-linux-amd64.tar.gz"
         echo "URL: $URL"
-        curl -Ls --retry 3 --retry-all-errors $URL > ./helm.tar.gz
+        curl -Ls --output ./helm.tar.gz --retry 3 --retry-all-errors $URL
         tar xzvf helm.tar.gz
         chmod u+x linux-amd64/helm
         sudo mv linux-amd64/helm /usr/local/bin/
@@ -37,7 +37,7 @@ steps:
       command: |
         URL="https://github.com/giantswarm/apptestctl/releases/download/<< parameters.apptestctl-version >>/apptestctl-<< parameters.apptestctl-version >>-linux-amd64.tar.gz"
         echo "URL: $URL"
-        curl -Ls --retry 3 --retry-all-errors $URL > ./apptestctl.tar.gz
+        curl -Ls --output ./apptestctl.tar.gz --retry 3 --retry-all-errors $URL
         tar xzvf apptestctl.tar.gz
         chmod u+x apptestctl-<< parameters.apptestctl-version >>-linux-amd64/apptestctl
         sudo mv apptestctl-<< parameters.apptestctl-version >>-linux-amd64/apptestctl /usr/local/bin
