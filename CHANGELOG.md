@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.6.1] - 2025-09-08
+
 ### Fixed
 
 - Change download URL for `kubectl` to `https://dl.k8s.io/release/VERSION/bin/linux/amd64/kubectl`
@@ -1294,7 +1296,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.6.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.6.1...HEAD
+[6.6.1]: https://github.com/giantswarm/architect-orb/compare/v6.6.0...v6.6.1
 [6.6.0]: https://github.com/giantswarm/architect-orb/compare/v6.5.0...v6.6.0
 [6.5.0]: https://github.com/giantswarm/architect-orb/compare/v6.4.1...v6.5.0
 [6.4.1]: https://github.com/giantswarm/architect-orb/compare/v6.4.0...v6.4.1
