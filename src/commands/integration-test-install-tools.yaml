@@ -15,7 +15,7 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Download kubectl"
       command: |
-        curl -LO https://storage.googleapis.com/kubernetes-release/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl
+        curl -LO "https://dl.k8s.io/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl"
   - run:
       name: "architect/integration-test-install-tools: Install kubectl"
       command: |
