@@ -9,7 +9,9 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Install kind"
       command: |
-        curl -Lo ./kind "https://kind.sigs.k8s.io/dl/v0.30.0/kind-$(uname)-amd64"
+        URL="https://kind.sigs.k8s.io/dl/v0.30.0/kind-$(uname)-amd64"
+        echo "URL: $URL"
+        curl -Los ./kind --retry 3 --retry-all-errors $URL
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin
   - run:
@@ -17,15 +19,9 @@ steps:
       command: |
         URL="https://dl.k8s.io/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl"
         echo "URL: $URL"
-        curl -LOs --retry 3 --retry-all-errors $URL
-  - run:
-      name: "architect/integration-test-install-tools: Install kubectl"
-      command: |
+        curl -Los ./kubectl --retry 3 --retry-all-errors $URL
         chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
         ls -la /usr/local/bin/kubectl
-  - run:
-      name: "architect/integration-test-install-tools: Check kubectl version"
-      command: |
         kubectl version --client
   - run:
       name: "architect/integration-test-install-tools: Install Helm"
