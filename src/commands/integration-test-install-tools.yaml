@@ -9,32 +9,35 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Install kind"
       command: |
-        curl -Lo ./kind "https://kind.sigs.k8s.io/dl/v0.30.0/kind-$(uname)-amd64"
+        URL="https://kind.sigs.k8s.io/dl/v0.30.0/kind-$(uname)-amd64"
+        echo "URL: $URL"
+        curl -Ls --output ./kind --retry 3 --retry-all-errors $URL
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin
   - run:
-      name: "architect/integration-test-install-tools: Download kubectl"
-      command: |
-        curl -LO https://storage.googleapis.com/kubernetes-release/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl
-  - run:
       name: "architect/integration-test-install-tools: Install kubectl"
       command: |
+        URL="https://dl.k8s.io/release/<< parameters.kubernetes-version >>/bin/linux/amd64/kubectl"
+        echo "URL: $URL"
+        curl -Ls --output ./kubectl --retry 3 --retry-all-errors $URL
         chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
-  - run:
-      name: "architect/integration-test-install-tools: Check kubectl version"
-      command: |
+        ls -la /usr/local/bin/kubectl
         kubectl version --client
   - run:
       name: "architect/integration-test-install-tools: Install Helm"
       command: |
-        curl -L https://get.helm.sh/helm-<< parameters.helm-version >>-linux-amd64.tar.gz >./helm.tar.gz
+        URL="https://get.helm.sh/helm-<< parameters.helm-version >>-linux-amd64.tar.gz"
+        echo "URL: $URL"
+        curl -Ls --output ./helm.tar.gz --retry 3 --retry-all-errors $URL
         tar xzvf helm.tar.gz
         chmod u+x linux-amd64/helm
         sudo mv linux-amd64/helm /usr/local/bin/
   - run:
       name: "architect/integration-test-install-tools: Install apptestctl"
       command: |
-        curl -L https://github.com/giantswarm/apptestctl/releases/download/<< parameters.apptestctl-version >>/apptestctl-<< parameters.apptestctl-version >>-linux-amd64.tar.gz > ./apptestctl.tar.gz
+        URL="https://github.com/giantswarm/apptestctl/releases/download/<< parameters.apptestctl-version >>/apptestctl-<< parameters.apptestctl-version >>-linux-amd64.tar.gz"
+        echo "URL: $URL"
+        curl -Ls --output ./apptestctl.tar.gz --retry 3 --retry-all-errors $URL
         tar xzvf apptestctl.tar.gz
         chmod u+x apptestctl-<< parameters.apptestctl-version >>-linux-amd64/apptestctl
         sudo mv apptestctl-<< parameters.apptestctl-version >>-linux-amd64/apptestctl /usr/local/bin
