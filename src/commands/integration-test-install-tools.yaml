@@ -30,14 +30,18 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Install Helm"
       command: |
-        curl -Ls --retry 3 --retry-all-errors https://get.helm.sh/helm-<< parameters.helm-version >>-linux-amd64.tar.gz >./helm.tar.gz
+        URL="https://get.helm.sh/helm-<< parameters.helm-version >>-linux-amd64.tar.gz"
+        echo "URL: $URL"
+        curl -Ls --retry 3 --retry-all-errors $URL > ./helm.tar.gz
         tar xzvf helm.tar.gz
         chmod u+x linux-amd64/helm
         sudo mv linux-amd64/helm /usr/local/bin/
   - run:
       name: "architect/integration-test-install-tools: Install apptestctl"
       command: |
-        curl -Ls --retry 3 --retry-all-errors https://github.com/giantswarm/apptestctl/releases/download/<< parameters.apptestctl-version >>/apptestctl-<< parameters.apptestctl-version >>-linux-amd64.tar.gz > ./apptestctl.tar.gz
+        URL="https://github.com/giantswarm/apptestctl/releases/download/<< parameters.apptestctl-version >>/apptestctl-<< parameters.apptestctl-version >>-linux-amd64.tar.gz"
+        echo "URL: $URL"
+        curl -Ls --retry 3 --retry-all-errors $URL > ./apptestctl.tar.gz
         tar xzvf apptestctl.tar.gz
         chmod u+x apptestctl-<< parameters.apptestctl-version >>-linux-amd64/apptestctl
         sudo mv apptestctl-<< parameters.apptestctl-version >>-linux-amd64/apptestctl /usr/local/bin
