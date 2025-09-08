@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Change download URL for `kubectl` to `https://dl.k8s.io/release/VERSION/bin/linux/amd64/kubectl`
 
+### Changed
+
+- Add retries to downloads in `integration-test-install-tools` steps
+
 ## [6.6.0] - 2025-09-05
 
 ### Changed
