@@ -59,12 +59,15 @@ steps:
           GOOS=$(echo $ARCH | cut -d'/' -f1)
           GOARCH=$(echo $ARCH | cut -d'/' -f2)
           binary_name="<< parameters.binary >>-${GOOS}-${GOARCH}"
-          LD_FLAGS=""
+          LD_FLAGS="-s -w"
           ldflags_file=".ldflags-${GOOS}-${GOARCH}"
+
           if [ -f "$ldflags_file" ]; then
             LD_FLAGS="$(cat "$ldflags_file")"
           fi
+          
           CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LD_FLAGS" -tags "<< parameters.tags >>" -o "$binary_name" << parameters.path >>
+          
           # If linux/amd64, also create/copy to <<parameters.binary>>
           if [[ "$GOOS" == "linux" && "$GOARCH" == "amd64" ]]; then
             cp "$binary_name" "<< parameters.binary >>"
