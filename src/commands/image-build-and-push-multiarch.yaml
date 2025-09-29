@@ -111,6 +111,7 @@ steps:
             "${all_tags[@]}" \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
+            --progress=plain \
             --push; then
             echo "Image is pushed to all registries."
             SUCCESS=true
