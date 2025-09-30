@@ -35,7 +35,7 @@ steps:
   - run:
       name: Create ldflags file
       command: |
-        echo -n "-w -linkmode 'auto' -extldflags '-static'" > .ldflags
+        echo -n "-s -w -linkmode 'auto' -extldflags '-static'" > .ldflags
 
         # buildTimestamp
         echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
