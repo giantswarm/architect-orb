@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.7.0] - 2025-10-01
+
 ### Changed
 
 - Use architect v7.2.1 which supports running on ARM.
@@ -1300,7 +1302,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.6.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.7.0...HEAD
+[6.7.0]: https://github.com/giantswarm/architect-orb/compare/v6.6.1...v6.7.0
 [6.6.1]: https://github.com/giantswarm/architect-orb/compare/v6.6.0...v6.6.1
 [6.6.0]: https://github.com/giantswarm/architect-orb/compare/v6.5.0...v6.6.0
 [6.5.0]: https://github.com/giantswarm/architect-orb/compare/v6.4.1...v6.5.0
