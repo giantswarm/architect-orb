@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use architect v7.2.1 which supports running on ARM.
+
 ## [6.6.1] - 2025-09-08
 
 ### Fixed

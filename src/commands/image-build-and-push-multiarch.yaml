@@ -36,6 +36,7 @@ steps:
         tag_suffix="<<parameters.tag-suffix>>"
         tag_latest_branch="<<parameters.tag-latest-branch>>"
         platforms=$(IFS=,; echo "<<parameters.platforms>>")
+
         # If image is forced to be pushed as a public one,
         # we shouldn't check whether the source is public
         # if repo is private, push to private only
@@ -78,6 +79,7 @@ steps:
         if [[ -n "$tag_suffix" ]]; then
           tags+=("<<parameters.image>>:${TAG_VALUE}-$tag_suffix")
         fi
+
         # Prepare all registry/image:tag combinations
         all_tags=()
         while IFS=' ' read -r access reg _ _ push_dev; do
@@ -97,11 +99,14 @@ steps:
             echo "Registry $reg is not configured for $IMAGE_ACCESS images, skipping"
           fi
         done < .registries_data
+
         if [[ ${#all_tags[@]} -eq 0 ]]; then
           echo "No valid registry/tag combinations found for push. Exiting."
           exit 1
         fi
+
         docker buildx create --use --name multiarch-builder 2>/dev/null || docker buildx use multiarch-builder
+
         # Single buildx build/push for all tags/registries
         SUCCESS=false
         for i in {1..4}; do
@@ -111,6 +116,7 @@ steps:
             "${all_tags[@]}" \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
+            --progress=plain \
             --push; then
             echo "Image is pushed to all registries."
             SUCCESS=true
@@ -119,6 +125,7 @@ steps:
           echo "Waiting 5 seconds before the next attempt."
           sleep 5
         done
+
         if [[ "$SUCCESS" == "false" ]]; then
           echo "Some images couldn't be pushed. Check buildx output above."
           exit 1

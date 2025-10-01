@@ -1,6 +1,8 @@
 # Command: go-build
 #
-# Builds a Go binary for a specified architecture and persists it to the workspace. If the architecture is set (e.g., linux/amd64), the binary will be named <binary>-<GOOS>-<GOARCH>. If the architecture is linux/amd64, a copy will also be made as <binary> for compatibility with legacy workflows.
+# Builds a Go binary for a specified architecture and persists it to the workspace. If the architecture is set (e.g., linux/amd64),
+# the binary will be named <binary>-<GOOS>-<GOARCH>. If the architecture is linux/amd64, a copy will also be made as <binary> for
+# compatibility with legacy workflows.
 #
 # Parameters:
 #   binary: Name of the binary to produce (and to copy to if linux/amd64).
@@ -9,7 +11,8 @@
 #   pre_test_target: Makefile target to run before tests/lints (optional).
 #   tags: Additional Go build tags (optional).
 #   test_target: Makefile target to run for tests (optional).
-#   architecture: Target architecture (e.g., linux/amd64, linux/arm64, darwin/amd64). If set, will split into GOOS/GOARCH and name the binary accordingly. If not set, falls back to 'os' for legacy single-arch builds.
+#   architecture: Target architecture (e.g., linux/amd64, linux/arm64, darwin/amd64). If set, will split into GOOS/GOARCH and name
+#                 the binary accordingly. If not set, falls back to 'os' for legacy single-arch builds.
 #
 # Behavior:
 #   - Runs go-test first (with pre_test_target and test_target if set).
@@ -59,12 +62,15 @@ steps:
           GOOS=$(echo $ARCH | cut -d'/' -f1)
           GOARCH=$(echo $ARCH | cut -d'/' -f2)
           binary_name="<< parameters.binary >>-${GOOS}-${GOARCH}"
-          LD_FLAGS=""
+          LD_FLAGS="-s -w"
           ldflags_file=".ldflags-${GOOS}-${GOARCH}"
+
           if [ -f "$ldflags_file" ]; then
             LD_FLAGS="$(cat "$ldflags_file")"
           fi
+
           CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LD_FLAGS" -tags "<< parameters.tags >>" -o "$binary_name" << parameters.path >>
+
           # If linux/amd64, also create/copy to <<parameters.binary>>
           if [[ "$GOOS" == "linux" && "$GOARCH" == "amd64" ]]; then
             cp "$binary_name" "<< parameters.binary >>"
