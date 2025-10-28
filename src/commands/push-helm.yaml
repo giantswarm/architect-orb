@@ -16,6 +16,9 @@ parameters:
   push_to_oci_registry:
     default: true
     type: boolean
+  force-public:
+    type: boolean
+    default: false
 steps:
   - when:
       condition:
@@ -125,29 +128,37 @@ steps:
 
               exit $ret
         - run:
-            name: "architect/push-helm-package: Authenticate and push to the OCI registry"
+            name: "architect/push-helm-package: Authenticate and push to giantswarm OCI registry"
             command: |
               set -euo pipefail
 
-              GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-              GITHUB_MESSAGE=$(curl -sL -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}" | jq -r '.message')
+              if [[ "<< parameters.force-public >>" = "true" ]]; then
+                echo -e "'force-public' flag is set, treating the chart as public.\n"
 
-              if [[ "${GITHUB_MESSAGE}" = "Not Found" ]]; then
-                echo -e "The GitHub repository is not detected as public, treating the Helm chart as a private one.\n"
-
-                IMAGE_ACCESS=private
-
-                OCI_REGISTRY_URL="gsociprivate.azurecr.io"
-                OCI_REGISTRY_AUTH_USERNAME="${ACR_GSOCIPRIVATE_USERNAME}"
-                OCI_REGISTRY_AUTH_PASSWORD="${ACR_GSOCIPRIVATE_PASSWORD}"
+                CHART_ACCESS=public
               else
-                echo -e "The GitHub repository is detected as public, treating the Helm chart as a public one.\n"
+                GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+                GITHUB_MESSAGE=$(curl -s -o /dev/null -w "%{http_code}" -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}")
 
-                IMAGE_ACCESS=public
+                if [[ "${GITHUB_MESSAGE}" = "200" ]]; then
+                  echo -e "The GitHub repository is detected as public, treating the Helm chart as a public one.\n"
 
-                OCI_REGISTRY_URL="gsoci.azurecr.io"
-                OCI_REGISTRY_AUTH_USERNAME="${ACR_GSOCI_USERNAME}"
-                OCI_REGISTRY_AUTH_PASSWORD="${ACR_GSOCI_PASSWORD}"
+                  CHART_ACCESS=public
+                else
+                  echo -e "The GitHub repository is not detected as public, treating the Helm chart as a private one.\n"
+
+                  CHART_ACCESS=private
+                fi
+              fi
+
+              if [[ "${CHART_ACCESS}" = "public" ]]; then
+                  OCI_REGISTRY_URL="gsoci.azurecr.io"
+                  OCI_REGISTRY_AUTH_USERNAME="${ACR_GSOCI_USERNAME}"
+                  OCI_REGISTRY_AUTH_PASSWORD="${ACR_GSOCI_PASSWORD}"
+              else
+                OCI_REGISTRY_URL="gsociprivate.azurecr.io"
+                  OCI_REGISTRY_AUTH_USERNAME="${ACR_GSOCIPRIVATE_USERNAME}"
+                  OCI_REGISTRY_AUTH_PASSWORD="${ACR_GSOCIPRIVATE_PASSWORD}"
               fi
 
               echo -e "Authenticating to ${OCI_REGISTRY_URL}"
