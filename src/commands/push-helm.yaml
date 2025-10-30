@@ -19,12 +19,6 @@ parameters:
   force-public:
     type: boolean
     default: false
-  app_id:
-    type: string
-  private_key_base64:
-    type: string
-  installation_id:
-    type: string
 steps:
   - when:
       condition:
