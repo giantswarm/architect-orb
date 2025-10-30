@@ -1,3 +1,3 @@
 docker:
   - entrypoint: /bin/bash
-    image: gsoci.azurecr.io/giantswarm/app-build-suite:1.2.10-circleci
+    image: gsoci.azurecr.io/giantswarm/app-build-suite:1.2.10-b9b675cab0a2480825c90fc29baa5c8582df0b9f-circleci
