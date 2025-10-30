@@ -36,6 +36,7 @@ parameters:
     type: boolean
     default: false
 steps:
+  - generate-github-token
   - run:
       name: Push image to registries
       command: |
@@ -48,7 +49,7 @@ steps:
           IMAGE_ACCESS=public
         else
           GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-          GITHUB_MESSAGE=$(curl -s -o /dev/null -w "%{http_code}" -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}")
+          GITHUB_MESSAGE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" -H "X-Github-Api-Version: 2022-11-28" "${GITHUB_API_URL}")
 
           if [[ "${GITHUB_MESSAGE}" = "200" ]]; then
             echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"

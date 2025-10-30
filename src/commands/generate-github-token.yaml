@@ -1,0 +1,19 @@
+parameters:
+  app_id_env_var:
+    type: string
+    default: CIRCLECI_ARCHITECT_GITHUB_APP_APP_ID
+  private_key_base64_env_var:
+    type: string
+    default: CIRCLECI_ARCHITECT_GITHUB_APP_PRIVATE_KEY_B64
+  installation_id_env_var:
+    type: string
+    default: CIRCLECI_ARCHITECT_GITHUB_APP_INSTALLATION_ID
+steps:
+  - run:
+    name: Generate temporary GitHub token
+    command: |
+      echo -n "${<< parameters.private_key_base64_env_var >>}" | base64 -d > /tmp/private-key.pem
+
+      TOKEN=$(gh-token generate --key /tmp/private-key.pem --app-id "${<< parameters.app_id_env_var >>}" --installation-id "${<< parameters.installation_id_env_var >>}" --token-only)
+
+      echo "export GITHUB_TOKEN=\"$TOKEN\"" >> $BASH_ENV
