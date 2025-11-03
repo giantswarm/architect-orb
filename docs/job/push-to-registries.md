@@ -62,7 +62,7 @@ Every line will be split to 5 variables by the whitespace, where
 
 The job distinguishes between release and dev builds. Builds for commits in a branch (other than the default branch) are considered **dev** builds, all others are **release** builds.
 
-By default, images from dev builds are only pushed to `gsoci` and `quay.io`, but not to Aliyun and `docker.io`.
+By default, images from dev builds are only pushed to `gsoci`, but not to Aliyun.
 
 ## Private vs Public images, how does the job handle it?
 
