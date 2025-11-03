@@ -50,7 +50,6 @@ If you're not happy with default values, you will have to pass the argumet `regi
 registries-data: |-
   private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD false
   public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD false
-  private/public quay.io QUAY_USERNAME QUAY_PASSWORD true
 ```
 
 Every line will be split to 5 variables by the whitespace, where
