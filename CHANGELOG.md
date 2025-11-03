@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed all info regarding pushing images to `quay.io/giantswarm` and `docker.io/giantswarm` from docs and comments
+
 ## [6.7.0] - 2025-10-01
 
 ### Changed
