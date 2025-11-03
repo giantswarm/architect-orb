@@ -116,15 +116,15 @@ workflows:
   my-workflow:
     jobs:
       - architect/push-to-app-catalog:
-          context: "architect"
-          name: "push-REPOSITORY-to-CATALOG-app-catalog"
-          app_catalog: "CATALOG-catalog"
-          app_catalog_test: "CATALOG-test-catalog"
-          chart: "REPOSITORY"
-          executor: "app-build-suite"
+          context: architect
+          name: push-REPOSITORY-to-CATALOG-app-catalog
+          app_catalog: CATALOG-catalog
+          app_catalog_test: CATALOG-test-catalog
+          chart: REPOSITORY
+          executor: app-build-suite
           requires:
             # Make sure docker image is successfully built.
-            - push-REPOSITORY-to-quay
+            - push-REPOSITORY
           filters:
             # Trigger job also on git tag.
             tags:

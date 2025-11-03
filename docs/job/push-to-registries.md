@@ -50,7 +50,6 @@ If you're not happy with default values, you will have to pass the argumet `regi
 registries-data: |-
   private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD false
   public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD false
-  private/public quay.io QUAY_USERNAME QUAY_PASSWORD true
 ```
 
 Every line will be split to 5 variables by the whitespace, where
@@ -63,7 +62,7 @@ Every line will be split to 5 variables by the whitespace, where
 
 The job distinguishes between release and dev builds. Builds for commits in a branch (other than the default branch) are considered **dev** builds, all others are **release** builds.
 
-By default, images from dev builds are only pushed to `gsoci` and `quay.io`, but not to Aliyun and `docker.io`.
+By default, images from dev builds are only pushed to `gsoci`, but not to Aliyun.
 
 ## Private vs Public images, how does the job handle it?
 
