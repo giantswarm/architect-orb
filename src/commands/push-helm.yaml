@@ -16,6 +16,9 @@ parameters:
   push_to_oci_registry:
     default: true
     type: boolean
+  force-public:
+    type: boolean
+    default: false
 steps:
   - when:
       condition:
@@ -96,11 +99,11 @@ steps:
         equal: [<< parameters.push_to_oci_registry >>, true]
       steps:
         - run:
-            name: "architect/push-helm-package: Authenticate to the OCI registry"
+            name: "[deprecated] architect/push-helm-package: Authenticate to the OCI registry"
             command: |
               helm registry login << parameters.registry_url >> --username "${<< parameters.username_envar >>}" --password "${<< parameters.password_envar >>}"
         - run:
-            name: "architect/push-helm-package: Push chart archive to OCI registry app catalog"
+            name: "[deprecated] architect/push-helm-package: Push chart archive to OCI registry app catalog"
             command: |
               readonly app_catalog_name="oci://<< parameters.registry_url >>/$(cat .app_catalog_name)/"
               readonly reference="$(cat .reference)"
@@ -124,3 +127,45 @@ steps:
               echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
 
               exit $ret
+        - generate-github-token
+        - run:
+            name: "architect/push-helm-package: Authenticate and push to giantswarm OCI registry"
+            command: |
+              set -euo pipefail
+
+              if [[ "<< parameters.force-public >>" = "true" ]]; then
+                echo -e "'force-public' flag is set, treating the chart as public.\n"
+
+                CHART_ACCESS=public
+              else
+                GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+                GITHUB_RESPONSE=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" "${GITHUB_API_URL}")
+
+                REPO_PRIVATE=$(echo $GITHUB_RESPONSE | jq .private)
+
+                if [[ "${REPO_PRIVATE}" = "false" ]]; then
+                  echo -e "The GitHub repository is detected as public, treating the Helm chart as a public one.\n"
+
+                  CHART_ACCESS=public
+                else
+                  echo -e "The GitHub repository is not detected as public, treating the Helm chart as a private one.\n"
+
+                  CHART_ACCESS=private
+                fi
+              fi
+
+              if [[ "${CHART_ACCESS}" = "public" ]]; then
+                  OCI_REGISTRY_URL="gsoci.azurecr.io"
+                  OCI_REGISTRY_AUTH_USERNAME="${ACR_GSOCI_USERNAME}"
+                  OCI_REGISTRY_AUTH_PASSWORD="${ACR_GSOCI_PASSWORD}"
+              else
+                OCI_REGISTRY_URL="gsociprivate.azurecr.io"
+                  OCI_REGISTRY_AUTH_USERNAME="${ACR_GSOCIPRIVATE_USERNAME}"
+                  OCI_REGISTRY_AUTH_PASSWORD="${ACR_GSOCIPRIVATE_PASSWORD}"
+              fi
+
+              echo -e "Authenticating to ${OCI_REGISTRY_URL}"
+              helm registry login "${OCI_REGISTRY_URL}" --username "${OCI_REGISTRY_AUTH_USERNAME}" --password "${OCI_REGISTRY_AUTH_PASSWORD}"
+
+              echo -e "Pushing build artifacts to ${OCI_REGISTRY_URL}"
+              helm push build/*.tgz "oci://${OCI_REGISTRY_URL}/charts/giantswarm"
