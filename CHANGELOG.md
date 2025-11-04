@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 ### Added
 
 - Add `generate-github-token` command that can generate a temporary token from a GitHub App (private key, app id, installation id) and store in `GITHUB_TOKEN` environment variable in `BASH_ENV`.
@@ -16,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Mark steps pushing charts to `giantswarmpublic` as deprecated.
 - Change visibility detection of repositories to use a temporary GitHub token and check for: image push, multi architecture image push.
+
+### Removed
+
+- Removed all info regarding pushing images to `quay.io/giantswarm` and `docker.io/giantswarm` from docs and comments
+
 
 ## [6.7.0] - 2025-10-01
 
