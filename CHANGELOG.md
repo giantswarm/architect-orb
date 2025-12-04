@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [6.8.0] - 2025-11-04
+### Changed
 
+- Use app-build-suite v1.4.2
+
+## [6.8.0] - 2025-11-04
 
 ### Added
 
