@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Use app-build-suite v1.4.2
+- Use app-build-suite v1.4.2, which brings support for OCI-compliant chart annotations.
 
 ## [6.8.0] - 2025-11-04
 
