@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.9.0] - 2025-12-04
+
 ### Changed
 
 - Use app-build-suite v1.4.2
@@ -1323,7 +1325,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.8.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.9.0...HEAD
+[6.9.0]: https://github.com/giantswarm/architect-orb/compare/v6.8.0...v6.9.0
 [6.8.0]: https://github.com/giantswarm/architect-orb/compare/v6.7.0...v6.8.0
 [6.7.0]: https://github.com/giantswarm/architect-orb/compare/v6.6.1...v6.7.0
 [6.6.1]: https://github.com/giantswarm/architect-orb/compare/v6.6.0...v6.6.1
