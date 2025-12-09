@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Default multiarch image builds to `linux/amd64` and `linux/arm64` (previously this was only amd64)
+
 ## [6.9.0] - 2025-12-04
 
 ### Changed
@@ -131,7 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Do not update or create konfigure generator input when the `./flux-manifests` folder does not exist in the collection. 
+- Do not update or create konfigure generator input when the `./flux-manifests` folder does not exist in the collection.
 - Print values file name when testing with `conftest`.
 
 ## [5.14.0] - 2025-05-08

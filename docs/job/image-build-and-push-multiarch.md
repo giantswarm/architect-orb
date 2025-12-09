@@ -33,7 +33,8 @@ workflows:
           requires:
             - architect/go-build
           image: giantswarm/myapp
-          platforms: "linux/amd64,linux/arm64"
+          # This is the default, so you can leave it out:
+          # platforms: "linux/amd64,linux/arm64"
 ```
 
 - The matrix runs go-build for each architecture in parallel.

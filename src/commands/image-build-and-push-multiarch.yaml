@@ -24,9 +24,9 @@ parameters:
     type: boolean
     default: false
   platforms:
-    description: "Comma-separated string of platforms for multi-arch image build (e.g., 'linux/amd64,linux/arm64'). If not set, defaults to 'linux/amd64'."
+    description: "Comma-separated string of platforms for multi-arch image build (e.g., 'linux/amd64,linux/arm64'). If not set, defaults to 'linux/amd64,linux/arm64'."
     type: string
-    default: "linux/amd64"
+    default: "linux/amd64,linux/arm64"
 steps:
   - generate-github-token
   - run:
