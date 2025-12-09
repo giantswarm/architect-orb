@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Default multiarch image builds to `linux/amd64` and `linux/arm64` (previously this was only linux/amd64)
-- Update app-build-suite image version to 1.4.3
+
+### Fixed
+
+- Update app-build-suite image version to 1.4.3, which fixes support for OCI-compliant chart annotations.
 
 ## [6.9.0] - 2025-12-04
 
