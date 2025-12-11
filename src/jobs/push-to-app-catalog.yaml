@@ -48,6 +48,10 @@ parameters:
     description: |
       Push the chart to OCI registry if this is `true`.
     type: boolean
+  force-public:
+    description: Skip the repo visibility check and push the the chart to public registry
+    type: boolean
+    default: false
   registry_url:
     type: "string"
     default: "giantswarmpublic.azurecr.io"
@@ -143,6 +147,7 @@ steps:
   - push-helm:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>
+      force-public: <<parameters.force-public>>
       password_envar: << parameters.password_envar >>
       username_envar: << parameters.username_envar >>
       registry_url: << parameters.registry_url>>
