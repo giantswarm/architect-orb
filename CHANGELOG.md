@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `force-public` flag to `push-to-app-catalog` job.
+
 ## [6.10.0] - 2025-12-09
 
 ### Changed
