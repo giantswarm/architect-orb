@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.11.0] - 2025-12-11
+
 ### Added
 
 - Add `force-public` flag to `push-to-app-catalog` job.
@@ -1339,7 +1341,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.10.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.11.0...HEAD
+[6.11.0]: https://github.com/giantswarm/architect-orb/compare/v6.10.0...v6.11.0
 [6.10.0]: https://github.com/giantswarm/architect-orb/compare/v6.9.0...v6.10.0
 [6.9.0]: https://github.com/giantswarm/architect-orb/compare/v6.8.0...v6.9.0
 [6.8.0]: https://github.com/giantswarm/architect-orb/compare/v6.7.0...v6.8.0
