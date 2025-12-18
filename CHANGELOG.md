@@ -2,8 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -37,21 +37,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- Add `generate-github-token` command that can generate a temporary token from a GitHub App (private key, app
-  id, installation id) and store in `GITHUB_TOKEN` environment variable in `BASH_ENV`.
-- Push charts to `gsoci` (public images) and `gsociprivate` (private images) registries under
-  `charts/giantswarm`.
+- Add `generate-github-token` command that can generate a temporary token from a GitHub App (private key, app id, installation id) and store in `GITHUB_TOKEN` environment variable in `BASH_ENV`.
+- Push charts to `gsoci` (public images) and `gsociprivate` (private images) registries under `charts/giantswarm`.
 
 ### Changed
 
 - Mark steps pushing charts to `giantswarmpublic` as deprecated.
-- Change visibility detection of repositories to use a temporary GitHub token and check for: image push, multi
-  architecture image push.
+- Change visibility detection of repositories to use a temporary GitHub token and check for: image push, multi architecture image push.
 
 ### Removed
 
-- Removed all info regarding pushing images to `quay.io/giantswarm` and `docker.io/giantswarm` from docs and
-  comments
+- Removed all info regarding pushing images to `quay.io/giantswarm` and `docker.io/giantswarm` from docs and comments
+
 
 ## [6.7.0] - 2025-10-01
 
@@ -122,8 +119,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- Update `push-to-app-collection` to skip updating `ManagementClusterConfiguration` CRs in a collection if
-  `kustomize/konfiguration.yaml` does not exist.
+- Update `push-to-app-collection` to skip updating `ManagementClusterConfiguration` CRs in a collection if `kustomize/konfiguration.yaml` does not exist.
 - Update `push-to-app-collection` to respect other job parameters as well on version updates in `App` CRs.
 
 ## [6.2.1] - 2025-07-08
@@ -142,10 +138,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- Unified multi-arch and single-arch image build/push logic into `image-build-and-push-multiarch.yaml` command
-  and `push-to-registries-multiarch` job.
-- Simplified `go-build` job and command: now supports multi-arch and always produces a `binary` for
-  `linux/amd64`.
+- Unified multi-arch and single-arch image build/push logic into `image-build-and-push-multiarch.yaml` command and `push-to-registries-multiarch` job.
+- Simplified `go-build` job and command: now supports multi-arch and always produces a `binary` for `linux/amd64`.
 
 ## [6.0.0] - 2025-06-11
 
@@ -157,8 +151,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- Do not update or create konfigure generator input when the `./flux-manifests` folder does not exist in the
-  collection.
+- Do not update or create konfigure generator input when the `./flux-manifests` folder does not exist in the collection.
 - Print values file name when testing with `conftest`.
 
 ## [5.14.0] - 2025-05-08
@@ -205,8 +198,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- architect version changed to [v6.18.2](https://github.com/giantswarm/architect/releases/tag/v6.18.2), which
-  updates the golangci-lint version used to v1.64.4, which is compatible with Go 1.24.
+- architect version changed to [v6.18.2](https://github.com/giantswarm/architect/releases/tag/v6.18.2), which updates the golangci-lint version used to v1.64.4, which is compatible with Go 1.24.
 
 ## [5.11.4] - 2025-01-07
 
@@ -218,8 +210,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- Reorder commands in `push-to-app-catalog` job to prevent duplicated code and duplicated executions of
-  architect and app-build-suite.
+- Reorder commands in `push-to-app-catalog` job to prevent duplicated code and duplicated executions of architect and app-build-suite.
 
 ## [5.11.2] - 2024-12-04
 
@@ -291,8 +282,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- In command `go-test`, the `golangci-lint` call is no longer limited to a certain number of issues per linter
-  (max-issues-per-linter is now 0).
+- In command `go-test`, the `golangci-lint` call is no longer limited to a certain number of issues per linter (max-issues-per-linter is now 0).
 - In command `go-test`, use the `environment` key for setting environment variables.
 
 ## [5.5.1] - 2024-08-22
@@ -351,8 +341,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- Make `image-prepare-tag` command fail when `architect project version` command fails (because CircleCI runs
-  the scripts with `-o pipefail`)
+- Make `image-prepare-tag` command fail when `architect project version` command fails (because CircleCI runs the scripts with `-o pipefail`)
 
 ## [5.1.0] - 2024-02-23
 
@@ -372,15 +361,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 
-- Removed `push-to-docker` job. Please migrate to
-  [`push-to-registries`](https://github.com/giantswarm/architect-orb/blob/main/docs/job/push-to-registries.md).
+- Removed `push-to-docker` job. Please migrate to [`push-to-registries`](https://github.com/giantswarm/architect-orb/blob/main/docs/job/push-to-registries.md).
 
 ## [4.38.0] - 2024-01-10
 
 ### Changed
 
-- Update `app-build-suite` version to
-  [`v1.2.2`](https://github.com/giantswarm/app-build-suite/releases/tag/v1.2.2).
+- Update `app-build-suite` version to [`v1.2.2`](https://github.com/giantswarm/app-build-suite/releases/tag/v1.2.2).
 - Switch images to be pulled from `gsoci.azurecr.io` instead of `quay.io`
 
 ## [4.37.0] - 2023-12-20
@@ -393,17 +380,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - `push-to-registries` job changes:
   - Add retries to all remote commands
-  - Add a check for a visibility of the source code in the job that pushes images to registry. If repo is
-    private, an image should only be pushed to registries that are configured as private ones.
-  - Add repos configuration that is parsed from an environment variable. This allows to configure the job to
-    push to different registries based on the configuration only.
+  - Add a check for a visibility of the source code in the job that pushes images to registry. If repo is private, an image should only be pushed to registries that are configured as private ones.
+  - Add repos configuration that is parsed from an environment variable. This allows to configure the job to push to different registries based on the configuration only.
 
 ## [4.35.6] - 2023-12-05
 
 ### Changed
 
-- Update `push-to-app-collection` command to check if the released version is greater than the one stored in
-  the app collection repository. If so, the update is pushed. Skipped otherwise (for lesser or equal).
+- Update `push-to-app-collection` command to check if the released version is greater than the one stored in the app collection repository. If so, the update is pushed. Skipped otherwise (for lesser or equal).
 - Let golangci-lint report more than 3 items of the same type of complaint
 
 ## [4.35.5] - 2023-11-28
@@ -418,16 +402,13 @@ In the 'push-to-registries' job, pushing to `docker.io` is now the default as we
 
 ### Fixed
 
-- Made the `image-build-with-docker` command work in a situation where the `docker build` command would output
-  the image SHA more than once.
+- Made the `image-build-with-docker` command work in a situation where the `docker build` command would output the image SHA more than once.
 
 ## [4.35.2] - 2023-11-24
 
 - More improvements to the [`push-to-registries`](./docs/job/push-to-registries.md) job:
-  - It is possible now to configure which target registry should receive images for dev builds. This defaults
-    to gsoci (new ACR) and quay.io only. Check the docs for details.
-  - The `image` parameter is now optional. The default is to create the name from the GitHub organization and
-    repository name.
+  - It is possible now to configure which target registry should receive images for dev builds. This defaults to gsoci (new ACR) and quay.io only. Check the docs for details.
+  - The `image` parameter is now optional. The default is to create the name from the GitHub organization and repository name.
 
 ## [4.35.1] - 2023-11-22
 
@@ -437,8 +418,7 @@ In the 'push-to-registries' job, pushing to `docker.io` is now the default as we
 
 ## [4.35.0] - 2023-11-21
 
-Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job that pushes charts to multiple
-registries at once.
+Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job that pushes charts to multiple registries at once.
 
 ## [4.34.1] - 2023-11-10
 
@@ -450,8 +430,7 @@ registries at once.
 
 ### Changed
 
-- Update `architect` version to [`v6.13.0`](https://github.com/giantswarm/architect/releases/tag/v6.13.0)
-  (includes Go v1.21.3)
+- Update `architect` version to [`v6.13.0`](https://github.com/giantswarm/architect/releases/tag/v6.13.0) (includes Go v1.21.3)
 
 ## [4.33.1] - 2023-10-31
 
@@ -470,15 +449,13 @@ registries at once.
 ### Changed
 
 - Update `app-test-suite` to v0.4.1.
-- Update `apptestctl` to v0.18.0, which installs VerticalPodAutoscaler and PolicyException CRDs to test
-  clusters.
+- Update `apptestctl` to v0.18.0, which installs VerticalPodAutoscaler and PolicyException CRDs to test clusters.
 
 ## [4.31.0] - 2023-08-02
 
 ### Changed
 
-- Update `apptestctl` to v0.17.0, which installs ServiceMonitor and PodMonitor CRDs to test clusters and makes
-  it compatible with Kubernetes 1.25 and above.
+- Update `apptestctl` to v0.17.0, which installs ServiceMonitor and PodMonitor CRDs to test clusters and makes it compatible with Kubernetes 1.25 and above.
 
 ## [4.30.1] - 2023-07-20
 
@@ -496,15 +473,13 @@ registries at once.
 
 ### Changed
 
-- Update `apptestctl` to v0.15.0, which installs Cilium Network Policy and Cluster-wide Policy CRDs by
-  default.
+- Update `apptestctl` to v0.15.0, which installs Cilium Network Policy and Cluster-wide Policy CRDs by default.
 
 ## [4.28.1] - 2023-03-09
 
 ### Added
 
-- Add `pre_test_target` parameter to `go-build` and `go-test` jobs. This allows a Makefile target to be
-  executed when specified and is helpful for generating code before any linters run.
+- Add `pre_test_target` parameter to `go-build` and `go-test` jobs. This allows a Makefile target to be executed when specified and is helpful for generating code before any linters run.
 
 ## [4.28.0] - 2023-02-21
 
@@ -512,10 +487,8 @@ registries at once.
 
 - Fix `go test` `nancy` external service error ignore logic
 - Add `explicit_allow_chart_name_mismatch` to `push-to-app-catalog` with `app-build-suite` executor.
-- Add `test_target` parameter to `go-test` command. This allows a Makefile target to be executed when
-  specified.
-- Remove deprecated `kubeval` command in favor of `kubeconform`. Add more recent k8s version checks and
-  validation against our giantswarm/json-schema repo
+- Add `test_target` parameter to `go-test` command. This allows a Makefile target to be executed when specified.
+- Remove deprecated `kubeval` command in favor of `kubeconform`. Add more recent k8s version checks and validation against our giantswarm/json-schema repo
 
 ### Changed
 
@@ -525,8 +498,7 @@ registries at once.
 ## [4.26.0] - 2022-11-21
 
 - Update `architect` version to [`v6.8.0`](https://github.com/giantswarm/architect/releases/tag/v6.8.0).
-- Update `app-build-suite` version to
-  [`v1.1.3`](https://github.com/giantswarm/app-build-suite/releases/tag/v1.1.3).
+- Update `app-build-suite` version to [`v1.1.3`](https://github.com/giantswarm/app-build-suite/releases/tag/v1.1.3).
 
 ## [4.25.3] - 2022-10-26
 
@@ -559,10 +531,7 @@ registries at once.
 
 - Update `architect` version to [`v6.6.0`](https://github.com/giantswarm/architect/releases/tag/v6.6.0).
   - Update `nancy` to `v1.0.37`.
-- Use an additional nancy exclude vulnerabilities file at the root of the repositories:
-  `.nancy-ignore.generated`. If the file does not exist, nancy will ignore it. The standard `.nancy-ignore`
-  file should contain the repository specific excludes and `.nancy-ignore.generated` is a generated one that
-  should contain globally ignored vulnerabilities, if any.
+- Use an additional nancy exclude vulnerabilities file at the root of the repositories: `.nancy-ignore.generated`. If the file does not exist, nancy will ignore it. The standard `.nancy-ignore` file should contain the repository specific excludes and `.nancy-ignore.generated` is a generated one that should contain globally ignored vulnerabilities, if any.
 
 ## [4.23.0] - 2022-06-22
 
@@ -618,8 +587,7 @@ registries at once.
 
 ### Changed
 
-- Update [deprek8ion](https://github.com/swade1987/deprek8ion) policies to include checking for deprecated
-  manifests of kubernetes releases 1.22
+- Update [deprek8ion](https://github.com/swade1987/deprek8ion) policies to include checking for deprecated manifests of kubernetes releases 1.22
 - Change `kubeval` k8s schema to more up-to-date source. (1.21 and 1.22)
 
 ## [4.15.0] - 2022-03-29
@@ -648,8 +616,7 @@ registries at once.
 
 ### Fixed
 
-- Check out app catalog at default `HEAD` instead of specifying `master` branch for compatibility with `main`
-  branch.
+- Check out app catalog at default `HEAD` instead of specifying `master` branch for compatibility with `main` branch.
 
 ## [4.14.1] - 2022-03-07
 
@@ -690,9 +657,7 @@ registries at once.
 
 ### Changed
 
-- Update architect to
-  [6.0.0](https://github.com/giantswarm/architect/blob/master/CHANGELOG.md#600---2022-02-07). Includes
-  generators for Flux-friendly app collections.
+- Update architect to [6.0.0](https://github.com/giantswarm/architect/blob/master/CHANGELOG.md#600---2022-02-07). Includes generators for Flux-friendly app collections.
 
 ## [4.10.0] - 2022-02-07
 
@@ -709,17 +674,13 @@ registries at once.
 
 ## [4.8.1] - 2021-11-17
 
-- Update `app-test-suite` to
-  [0.2.2](https://github.com/giantswarm/app-test-suite/blob/master/CHANGELOG.md#022---2021-11-17). Includes 2
-  important bugfixes for working with ginatswarm catalog.
+- Update `app-test-suite` to [0.2.2](https://github.com/giantswarm/app-test-suite/blob/master/CHANGELOG.md#022---2021-11-17). Includes 2 important bugfixes for working with ginatswarm catalog.
 
 ## [4.8.0] - 2021-11-03
 
 ### Changed
 
-- Update `app-test-suite` to
-  [0.2.1](https://github.com/giantswarm/app-test-suite/blob/master/CHANGELOG.md#021---2021-10-28). Main
-  changes are
+- Update `app-test-suite` to [0.2.1](https://github.com/giantswarm/app-test-suite/blob/master/CHANGELOG.md#021---2021-10-28). Main changes are
   - New test type - upgrade test
   - New test executor - go test
   - Update python to 3.9
@@ -732,8 +693,7 @@ registries at once.
 
 ### Changed
 
-- Change download URL of `dats.sh` wrapper to use raw.githubusercontent.com to be able to run pre-release
-  versions of app-test-suite in `run-tests-with-abs` job.
+- Change download URL of `dats.sh` wrapper to use raw.githubusercontent.com to be able to run pre-release versions of app-test-suite in `run-tests-with-abs` job.
 
 ### Removed
 
@@ -756,12 +716,9 @@ registries at once.
 
 ### Changed
 
-- Use version [1.0.4](https://github.com/giantswarm/app-build-suite/blob/master/CHANGELOG.md#104---2021-09-21)
-  of app-build-suite for `app-build-suite` executor.
-- Replace `run-tests-with-abs` with `run-tests-with-ats`. Use new
-  [`app-test-suite`](https://github.com/giantswarm/app-test-suite).
-- Add `persist_chart_archive` parameter to `push-to-app-catalog` job to be used together with
-  `run-tests-with-abs` job.
+- Use version [1.0.4](https://github.com/giantswarm/app-build-suite/blob/master/CHANGELOG.md#104---2021-09-21) of app-build-suite for `app-build-suite` executor.
+- Replace `run-tests-with-abs` with `run-tests-with-ats`. Use new [`app-test-suite`](https://github.com/giantswarm/app-test-suite).
+- Add `persist_chart_archive` parameter to `push-to-app-catalog` job to be used together with `run-tests-with-abs` job.
 
 ## [4.3.0] - 2021-09-13
 
@@ -780,8 +737,7 @@ registries at once.
 
 ### Changed
 
-- Update [deprek8ion](https://github.com/swade1987/deprek8ion) policies to include checking for deprecated
-  manifests of kubernetes releases 1.16, 1.17, 1.18, 1.19 and 1.20
+- Update [deprek8ion](https://github.com/swade1987/deprek8ion) policies to include checking for deprecated manifests of kubernetes releases 1.16, 1.17, 1.18, 1.19 and 1.20
 
 ### Removed
 
@@ -808,8 +764,7 @@ registries at once.
 
 ### Removed
 
-- Remove `skip_helm_chart_linting` option introduced in
-  [#256](https://github.com/giantswarm/architect-orb/pull/256).
+- Remove `skip_helm_chart_linting` option introduced in [#256](https://github.com/giantswarm/architect-orb/pull/256).
 
 ## [3.1.0] - 2021-05-26
 
@@ -821,25 +776,22 @@ registries at once.
 
 ### Changed
 
-- :warning: Push Argo Application CRs instead of Giant Swarm App CRs to collections' /helm directory. This is
-  a breaking change.
+- :warning: Push Argo Application CRs instead of Giant Swarm App CRs to collections'
+  /helm directory. This is a breaking change.
 
 ### Removed
 
-- :warning: Remove all `user_configmap*` and `user_secret*` parameters from `push-to-app-collection` job. This
-  is a breaking change.
+- :warning: Remove all `user_configmap*` and `user_secret*` parameters from `push-to-app-collection` job. This is a breaking change.
 
 ## [2.11.0] - 2021-05-20
 
 ### Added
 
-- Add `selfHeal: true` and `allowEmpty: true` to the generated Application CR sync policy in
-  `push-to-app-collectoin` job (See [architect@v3.6.0]).
+- Add `selfHeal: true` and `allowEmpty: true` to the generated Application CR sync policy in `push-to-app-collectoin` job (See [architect@v3.6.0]).
 
 ### Fixed
 
-- Temporarily don't fail when Chart.yaml doesn't have the config annotation in `push-to-app-collectoin` job
-  (See [architect@v3.6.0]).
+- Temporarily don't fail when Chart.yaml doesn't have the config annotation in `push-to-app-collectoin` job (See [architect@v3.6.0]).
 
 [architect@v3.6.0]: https://github.com/giantswarm/architect/blob/master/CHANGELOG.md#360---2021-05-20
 
@@ -855,8 +807,7 @@ registries at once.
 
 ### Added
 
-- Create Argo CD Application CR alongside Giant Swarm App CR in `push-to-app-collection` job. They are pushed
-  to separate _/manifests_ directory.
+- Create Argo CD Application CR alongside Giant Swarm App CR in `push-to-app-collection` job. They are pushed to separate _/manifests_ directory.
 
 ## [2.8.0] - 2021-05-13
 
@@ -868,8 +819,7 @@ registries at once.
 
 ### Fixed
 
-- Regenerate ssh public key in `push-to-app-catalog` and `push-to-app-collection` to match given private
-  catalogbot ssh key.
+- Regenerate ssh public key in `push-to-app-catalog` and `push-to-app-collection` to match given private catalogbot ssh key.
 
 ## [2.6.0] - 2021-04-07
 
@@ -894,8 +844,7 @@ registries at once.
 
 ### Changed
 
-- Upgrade architect to [3.4.1](https://github.com/giantswarm/architect/releases/tag/v3.4.1) which contains the
-  extended chart schema of app-build-suite.
+- Upgrade architect to [3.4.1](https://github.com/giantswarm/architect/releases/tag/v3.4.1) which contains the extended chart schema of app-build-suite.
 
 ## [2.4.0] - 2021-03-23
 
@@ -931,8 +880,7 @@ registries at once.
 
 ### Changed
 
-- Allow chart name mismatch for `push-to-app-catalog` by setting `explicit_allow_chart_name_mismatch` to
-  `true`.
+- Allow chart name mismatch for `push-to-app-catalog` by setting `explicit_allow_chart_name_mismatch` to `true`.
 
 ## [2.1.0] - 2021-02-24
 
@@ -970,25 +918,27 @@ registries at once.
 
 ### Changed
 
-- Allow `chart` parameter value of job `push-to-app-catalog` to be "name of repository with optional -app
-  suffix".
+- Allow `chart` parameter value of job `push-to-app-catalog` to be
+  "name of repository with optional -app suffix".
 
 ## [1.0.0] - 2020-12-04
 
 ### Added
 
-- Set configuration version in the generated App CR in `push-to-app-collection` if
-  "config.giantswarm.io/version" annotation is set in Chart.yaml.
+- Set configuration version in the generated App CR in `push-to-app-collection`
+  if "config.giantswarm.io/version" annotation is set in Chart.yaml.
 
 ### Removed
 
-- Removed `unique` parameter from `push-to-app-collection` job. This is a breaking change.
+- Removed `unique` parameter from `push-to-app-collection` job. This is
+  a breaking change.
 
 ## [0.18.1] - 2020-11-30
 
 ### Added
 
-- Use apptestctl v0.5.1 in `integration-test` job to add printer columns for app and chart CRDs.
+- Use apptestctl v0.5.1 in `integration-test` job to add printer columns for
+  app and chart CRDs.
 
 ### Fixed
 
@@ -1012,23 +962,22 @@ registries at once.
 - Add `build-context`, `dockerfile` and `tag-suffix` parameters to `push-to-docker`.
 - Added names to steps in `push-to-docker` command.
 - Added `app-build-suite` executor.
-- Add `executor` parameter to `push-to-catalog` job to enable building charts using
-  [app-build-suite](https://github.com/giantswarm/app-build-suite) for metadata generation in
-  `push-to-app-catalog` job.
+- Add `executor` parameter to `push-to-catalog` job to enable building charts using [app-build-suite](https://github.com/giantswarm/app-build-suite) for metadata generation in `push-to-app-catalog` job.
 
 ## [0.17.0] - 2020-11-06
 
 ### Added
 
-- Add `install-app-platform` param to integration-test job that runs `apptestctl bootstrap` to add support for
-  using app CRs in tests.
+- Add `install-app-platform` param to integration-test job that runs
+  `apptestctl bootstrap` to add support for using app CRs in tests.
 - Update kubernetes in integration-test job to v1.17.11.
 - Update kind in integration-test job to v0.9.0.
 - Update helm CLI in integration-test job to v3.4.0.
 
 ### Fixed
 
-- Remove copying code to GOPATH in integration-test job since migration to Go modules is complete.
+- Remove copying code to GOPATH in integration-test job since migration to
+  Go modules is complete.
 
 ## [0.16.0] - 2020-10-27
 
@@ -1040,8 +989,7 @@ registries at once.
 
 ### Changed
 
-- Set defaults for 'helm-version' (2.16.5), 'kind-version' (0.7.0) and 'kubectl-version' (1.18.0) in
-  'run-kat-tests' job.
+- Set defaults for 'helm-version' (2.16.5), 'kind-version' (0.7.0) and 'kubectl-version' (1.18.0) in 'run-kat-tests' job.
 
 ## [0.15.0] - 2020-10-26
 
@@ -1151,16 +1099,15 @@ registries at once.
 
 ### Fixed
 
-- The `go-test` job takes into consideration go modules when generating flags to inject values into the
-  binary.
+- The `go-test` job takes into consideration go modules when generating flags to inject values into the binary.
 
 ## [0.8.12] - 2020-04-22
 
 ### Added
 
-- Add new parameter `disable_force_upgrade` to `push-to-app-collection` job which allows configuring App CR
-  annotation `chart-operator.giantswarm.io/force-helm-upgrade`. This annotation defines whether
-  `chart-operator` forces helm chart upgrade on failure.
+- Add new parameter `disable_force_upgrade` to `push-to-app-collection` job which allows
+  configuring App CR annotation `chart-operator.giantswarm.io/force-helm-upgrade`.
+  This annotation defines whether `chart-operator` forces helm chart upgrade on failure.
 
 ## [0.8.11] - 2020-04-21
 
@@ -1183,8 +1130,8 @@ registries at once.
 
 ### Changed
 
-- `push-to-app-catalog` doesn't lint helm charts anymore, as that is now part of tests run by
-  `kube-app-testing`
+- `push-to-app-catalog` doesn't lint helm charts anymore, as that is now part
+  of tests run by `kube-app-testing`
 
 ## [0.8.8] - 2020-04-09
 
@@ -1200,8 +1147,8 @@ registries at once.
 
 ### Added
 
-- Add new parameter `namespace` to `push-to-app-collection` job which allows configuring namespace where chart
-  should be installed.
+- Add new parameter `namespace` to `push-to-app-collection` job which allows
+  configuring namespace where chart should be installed.
 
 ## [0.8.6] - 2020-03-30
 
@@ -1213,14 +1160,16 @@ registries at once.
 
 ### Changed
 
-- Validate templated charts using `architect helm template` in `push-to-app-catalog` job.
+- Validate templated charts using `architect helm template` in
+  `push-to-app-catalog` job.
 
 ## [0.8.4] - 2020-03-24
 
 ### Added
 
-- New parameter `test-timeout` for the `integration-test-go-test` command and `integration-test` job which
-  allows to define the timeout for the test execution. It defaults to the value that was already in use.
+- New parameter `test-timeout` for the `integration-test-go-test` command and
+  `integration-test` job which allows to define the timeout for the test execution.
+  It defaults to the value that was already in use.
 
 ### Changed
 
@@ -1231,8 +1180,9 @@ registries at once.
 
 ### Added
 
-- New parameter `on_tag` for the `package-and-push` command and `push-to-app-catalog` job which allows merges
-  to the `master` branch to be deployed to the non-testing app catalog without requiring a tag.
+- New parameter `on_tag` for the `package-and-push` command and
+  `push-to-app-catalog` job which allows merges to the `master` branch
+  to be deployed to the non-testing app catalog without requiring a tag.
 
 ### Changed
 
@@ -1259,9 +1209,10 @@ registries at once.
 - Support for optionally attaching the persisted workspace in the `push-to-app-catalog` job.
 - Introduce Helm Chart testing and linting in `push-to-app-catalog` job.
 - Add `changelog-lint` job.
-- Introduce `integration-test` job for running `Go` integration tests in a `KIND` cluster.
-- Verify chart, operator and tag versions while packing helm chart on tagged operator build in
-  `push-to-app-collection` job.
+- Introduce `integration-test` job for running `Go` integration tests in a `KIND`
+  cluster.
+- Verify chart, operator and tag versions while packing helm chart on tagged
+  operator build in `push-to-app-collection` job.
 
 ### Changed
 
@@ -1277,25 +1228,24 @@ registries at once.
 
 - Introduce `go-lint` for running configurable linting jobs on `Go` code
 - Introduce `gitleaks` for entropy-based checks for secrets in the repository (language-agnostic)
-- Support for modern code analysis tools for dep-based projects using the new `go-test-legacy` job. Based on
-  the existing `go-test` job.
-- Support for running arbitrary architect commands inside an architect container avoiding the requirement of
-  installing the binary locally using the new `go-architect-legacy` job.
-- New `go-cache-save-legacy` and `go-cache-restore-legacy` commands which enable `dep` dependencies to be
-  cached in jobs as long as `Gopkg.lock` doesn't change.
+- Support for modern code analysis tools for dep-based projects using the new
+  `go-test-legacy` job. Based on the existing `go-test` job.
+- Support for running arbitrary architect commands inside an architect container
+  avoiding the requirement of installing the binary locally using the new
+  `go-architect-legacy` job.
+- New `go-cache-save-legacy` and `go-cache-restore-legacy` commands
+  which enable `dep` dependencies to be cached in jobs as long as `Gopkg.lock` doesn't change.
 - Names for steps in `tools-info` command.
 
 ## [0.6.0] - 2020-02-19
 
 ### Changed
 
-- Stop injecting version into build info in `go-test` command to allow version to be maintained directly in
-  source.
+- Stop injecting version into build info in `go-test` command to allow version to be maintained directly in source.
 
 ### Fixed
 
-- Fix pushing new unique app in push-to-app-collection job.
-  <https://github.com/giantswarm/architect-orb/pull/69>
+- Fix pushing new unique app in push-to-app-collection job. <https://github.com/giantswarm/architect-orb/pull/69>
 
 ## [0.5.3] - 2020-02-11
 
