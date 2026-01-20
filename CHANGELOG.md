@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Update app-build-suite image version to 1.5.2, which fixes handling of GitHub URLs for non-tag builds.
 - Update app-build-suite image version to 1.5.1, which fixes support for OCI-compliant chart annotations.
 
 ## [6.11.0] - 2025-12-11
