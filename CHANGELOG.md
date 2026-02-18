@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update architect executor to v7.4.0
+- Update architect executor to v7.4.0, which brings app-build-suite to v1.7.0
 
 ## [6.12.0] - 2026-01-20
 
