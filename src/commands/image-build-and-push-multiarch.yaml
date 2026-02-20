@@ -124,11 +124,13 @@ steps:
         annotation_flags=()
         annotations_input="<<parameters.annotations>>"
         if [[ -n "$annotations_input" ]]; then
+          printf '%s\n' "$annotations_input" > .annotations_input
           while IFS= read -r line; do
             line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
             [[ -z "$line" || "$line" =~ ^# ]] && continue
             annotation_flags+=("--annotation" "$line")
-          done <<< "$annotations_input"
+          done < .annotations_input
+          rm -f .annotations_input
         fi
 
         # Single buildx build/push for all tags/registries
