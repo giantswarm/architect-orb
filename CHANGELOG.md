@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix `push_dev` detection in multi-arch image push: the tag regex was anchored (`^[a-f0-9]{40}$`) and never matched the actual `version-commitsha` tag format produced by `architect project version`, causing dev images to be pushed to registries with `push_dev: false` (e.g. Aliyun).
+
 ## [6.14.0] - 2026-02-20
 
 ### Added
