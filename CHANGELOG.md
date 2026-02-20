@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.14.0] - 2026-02-20
+
 ### Added
 
 - Add optional `annotations` parameter to `push-to-registries-multiarch` for OCI manifest annotations via `docker buildx build --annotation`.
@@ -1358,7 +1360,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.13.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.14.0...HEAD
+[6.14.0]: https://github.com/giantswarm/architect-orb/compare/v6.13.0...v6.14.0
 [6.13.0]: https://github.com/giantswarm/architect-orb/compare/v6.12.0...v6.13.0
 [6.12.0]: https://github.com/giantswarm/architect-orb/compare/v6.11.0...v6.12.0
 [6.11.0]: https://github.com/giantswarm/architect-orb/compare/v6.10.0...v6.11.0
