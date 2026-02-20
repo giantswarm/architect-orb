@@ -40,6 +40,32 @@ workflows:
 - The matrix runs go-build for each architecture in parallel.
 - The push-to-registries-multiarch job waits for all go-build jobs to finish, then builds and pushes the multi-arch image.
 
+### With OCI manifest annotations
+
+```yaml
+version: 2.1
+orbs:
+  architect: giantswarm/architect@VERSION
+
+workflows:
+  my-workflow:
+    jobs:
+      - architect/go-build:
+          matrix:
+            parameters:
+              architecture: ["linux/amd64", "linux/arm64"]
+          binary: myapp
+      - architect/push-to-registries-multiarch:
+          name: push-to-registries-multiarch
+          requires:
+            - architect/go-build
+          image: giantswarm/myapp
+          annotations: |
+            manifest:io.giantswarm.klaus.type=toolchain
+            manifest:io.giantswarm.klaus.name=myapp
+            manifest:io.giantswarm.klaus.version=1.0.0
+```
+
 ### Classic (single-arch) usage
 
 ```yaml
@@ -92,7 +118,8 @@ ENTRYPOINT ["/workspace/myapp"]
 - `tag-latest-branch`: Name of the branch on which the image will be additionally tagged as "latest".
 - `tag-suffix`: Suffix to append to image tags (optional).
 - `registries-data`: Registry configuration string (see orb docs for format).
-- `platforms`: Comma-separated string of platforms to build for (e.g., "linux/amd64,linux/arm64"). Defaults to "linux/amd64".
+- `platforms`: Comma-separated string of platforms to build for (e.g., "linux/amd64,linux/arm64"). Defaults to "linux/amd64,linux/arm64".
+- `annotations`: Newline-separated OCI annotations passed verbatim to `docker buildx build --annotation`. Each line uses the buildx format `[type:]key=value`. Common prefixes for multi-arch builds: `manifest:` (each platform manifest), `index:` (the manifest list), `manifest-descriptor:` (index descriptors). Without a prefix, annotations default to the index.
 
 ## Notes
 - This job requires Docker Buildx and a compatible executor (the default architect executor supports this).

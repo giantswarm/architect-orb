@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add optional `annotations` parameter to `push-to-registries-multiarch` for OCI manifest annotations via `docker buildx build --annotation`.
+
 ## [6.13.0] - 2026-02-18
 
 ### Changed
