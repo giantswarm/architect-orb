@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.14.1] - 2026-02-24
+
 ### Fixed
 
 - Fix `push_dev` detection in multi-arch image push: the tag regex was anchored (`^[a-f0-9]{40}$`) and never matched the actual `version-commitsha` tag format produced by `architect project version`, causing dev images to be pushed to registries with `push_dev: false` (e.g. Aliyun).
@@ -1364,7 +1366,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.14.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.14.1...HEAD
+[6.14.1]: https://github.com/giantswarm/architect-orb/compare/v6.14.0...v6.14.1
 [6.14.0]: https://github.com/giantswarm/architect-orb/compare/v6.13.0...v6.14.0
 [6.13.0]: https://github.com/giantswarm/architect-orb/compare/v6.12.0...v6.13.0
 [6.12.0]: https://github.com/giantswarm/architect-orb/compare/v6.11.0...v6.12.0
