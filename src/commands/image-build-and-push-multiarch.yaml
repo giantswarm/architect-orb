@@ -98,7 +98,7 @@ steps:
         all_tags=()
         while IFS=' ' read -r access reg _ _ push_dev; do
           [[ -z "$reg" || "$reg" =~ ^# ]] && continue
-          if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ ^[a-f0-9]{40}$ ]]; then
+          if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ [a-f0-9]{40} ]]; then
             echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
             continue
           fi
