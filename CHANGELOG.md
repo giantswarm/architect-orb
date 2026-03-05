@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Improve error handling in `push-helm` command's OCI registry step. The GitHub API call to detect repository visibility now checks the HTTP status code, validates JSON responses, and prints the actual response body on failure instead of producing a cryptic `jq` parse error.
+
 ## [6.14.1] - 2026-02-24
 
 ### Fixed

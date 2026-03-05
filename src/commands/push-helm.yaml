@@ -138,10 +138,48 @@ steps:
 
                 CHART_ACCESS=public
               else
-                GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-                GITHUB_RESPONSE=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" "${GITHUB_API_URL}")
+                if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+                  echo "ERROR: GITHUB_TOKEN is not set. Did the generate-github-token step succeed?" >&2
+                  exit 1
+                fi
 
-                REPO_PRIVATE=$(echo $GITHUB_RESPONSE | jq .private)
+                GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+
+                echo "Querying GitHub API for repository visibility: ${GITHUB_API_URL}"
+
+                GITHUB_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET \
+                  -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  "${GITHUB_API_URL}")
+
+                HTTP_STATUS=$(echo "$GITHUB_RESPONSE" | tail -1)
+                GITHUB_BODY=$(echo "$GITHUB_RESPONSE" | sed '$d')
+
+                if [[ "$HTTP_STATUS" -ne 200 ]]; then
+                  echo "ERROR: GitHub API returned HTTP ${HTTP_STATUS}" >&2
+                  echo "Request URL: ${GITHUB_API_URL}" >&2
+                  echo "Response body:" >&2
+                  echo "$GITHUB_BODY" | head -20 >&2
+                  exit 1
+                fi
+
+                if ! echo "$GITHUB_BODY" | jq empty 2>/dev/null; then
+                  echo "ERROR: GitHub API returned non-JSON response" >&2
+                  echo "HTTP status: ${HTTP_STATUS}" >&2
+                  echo "Response body:" >&2
+                  echo "$GITHUB_BODY" | head -20 >&2
+                  exit 1
+                fi
+
+                REPO_PRIVATE=$(echo "$GITHUB_BODY" | jq -r '.private')
+
+                if [[ "${REPO_PRIVATE}" != "true" && "${REPO_PRIVATE}" != "false" ]]; then
+                  echo "ERROR: Unexpected value for .private field: '${REPO_PRIVATE}'" >&2
+                  echo "This may indicate an API authentication issue or an unexpected response format." >&2
+                  echo "Response body:" >&2
+                  echo "$GITHUB_BODY" | head -20 >&2
+                  exit 1
+                fi
 
                 if [[ "${REPO_PRIVATE}" = "false" ]]; then
                   echo -e "The GitHub repository is detected as public, treating the Helm chart as a public one.\n"
