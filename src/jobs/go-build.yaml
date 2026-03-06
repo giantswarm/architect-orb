@@ -68,6 +68,13 @@ parameters:
     description: |
       Additional tags to include in -tags flag of go build.
     type: string
+  skip_tests:
+    default: false
+    description: |
+      When true, skip linting, formatting checks, unit tests, and security scans.
+      Only creates the ldflags file and builds the binary. Useful in multi-arch
+      workflows where tests only need to run once on the primary architecture.
+    type: boolean
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -82,6 +89,7 @@ steps:
       tags: << parameters.tags >>
       test_target: << parameters.test_target >>
       architecture: << parameters.architecture >>
+      skip_tests: << parameters.skip_tests >>
   - persist_to_workspace:
       root: .
       paths:

@@ -13,9 +13,12 @@
 #   test_target: Makefile target to run for tests (optional).
 #   architecture: Target architecture (e.g., linux/amd64, linux/arm64, darwin/amd64). If set, will split into GOOS/GOARCH and name
 #                 the binary accordingly. If not set, falls back to 'os' for legacy single-arch builds.
+#   skip_tests: When true, skip go-test and only create ldflags + build. Useful for multi-arch workflows where tests
+#               only need to run once.
 #
 # Behavior:
-#   - Runs go-test first (with pre_test_target and test_target if set).
+#   - Unless skip_tests is true, runs go-test first (with pre_test_target and test_target if set).
+#   - When skip_tests is true, only creates ldflags file and builds the binary.
 #   - Builds the binary for the specified architecture.
 #   - If architecture is linux/amd64, also copies the binary to <binary>.
 #   - If architecture is not set, builds <binary> using the deprecated 'os' parameter.
@@ -49,11 +52,26 @@ parameters:
       Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64").
       This will be split into GOOS and GOARCH for the build. Example: "linux/amd64".
     type: string
+  skip_tests:
+    default: false
+    description: |
+      When true, skip linting, formatting checks, unit tests, and security scans.
+      Only creates the ldflags file and builds the binary. Useful in multi-arch
+      workflows where tests only need to run once on the primary architecture.
+    type: boolean
 steps:
-  - go-test:
-      path: <<parameters.path>>
-      pre_test_target: <<parameters.pre_test_target>>
-      test_target: <<parameters.test_target>>
+  - when:
+      condition: <<parameters.skip_tests>>
+      steps:
+        - go-create-ldflags:
+            path: <<parameters.path>>
+  - unless:
+      condition: <<parameters.skip_tests>>
+      steps:
+        - go-test:
+            path: <<parameters.path>>
+            pre_test_target: <<parameters.pre_test_target>>
+            test_target: <<parameters.test_target>>
   - run:
       name: Build binaries
       command: |
@@ -67,6 +85,8 @@ steps:
 
           if [ -f "$ldflags_file" ]; then
             LD_FLAGS="$(cat "$ldflags_file")"
+          elif [ -f ".ldflags" ]; then
+            LD_FLAGS="$(cat ".ldflags")"
           fi
 
           CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LD_FLAGS" -tags "<< parameters.tags >>" -o "$binary_name" << parameters.path >>

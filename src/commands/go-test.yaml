@@ -32,19 +32,8 @@ steps:
       command: |
         go mod tidy && git diff --exit-code
 
-  - run:
-      name: Create ldflags file
-      command: |
-        echo -n "-s -w -linkmode 'auto' -extldflags '-static'" > .ldflags
-
-        # buildTimestamp
-        echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.buildTimestamp=$(date --utc '+%FT%TZ')'" >> .ldflags
-
-        # Commit SHA
-        echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
-
-        # Print content
-        echo "\"$(cat .ldflags)\""
+  - go-create-ldflags:
+      path: <<parameters.path>>
 
   - run:
       name: Check for non-ASCII characters in file names
