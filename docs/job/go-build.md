@@ -18,6 +18,7 @@ This job builds Go binaries for one or more target architectures and operating s
 - `tags`: Additional Go build tags (optional).
 - `test_target`: Makefile target to run for tests (optional).
 - `resource_class`: CircleCI resource class for the job.
+- `skip_tests`: When `true`, skip linting, formatting checks, unit tests, and security scans. Only creates the ldflags file and builds the binary. Useful in multi-arch workflows where tests only need to run once on the primary architecture. Defaults to `false`.
 
 ## Example usage
 
@@ -58,14 +59,14 @@ workflows:
       - architect/go-build:
           binary: myapp
           architecture: "linux/arm64"
-          resource_class: arm.medium
+          skip_tests: true
       - architect/go-build:
           binary: myapp
-          architecture: "darwin/amd64"
-          resource_class: macos.xlarge
+          architecture: "linux/386"
+          skip_tests: true
 ```
 
-This will run the `go-build` job in parallel for each architecture, and you can specify a different executor or resource_class for each if needed (e.g., to use ARM or macOS runners).
+Use `skip_tests: true` for secondary architectures to avoid redundant test runs. Tests only need to run once (on the primary architecture). The ldflags file is still created correctly for all architectures.
 
 ### Multi-architecture (using CircleCI matrix, recommended for push-to-registries-multiarch)
 
@@ -78,11 +79,17 @@ orbs:
 workflows:
   build-multiarch:
     jobs:
+      # Primary architecture: runs full tests
+      - architect/go-build:
+          binary: myapp
+          architecture: "linux/amd64"
+      # Secondary architectures: build only, skip redundant tests
       - architect/go-build:
           matrix:
             parameters:
-              architecture: ["linux/amd64", "linux/arm64"]
+              architecture: ["linux/arm64", "linux/386"]
           binary: myapp
+          skip_tests: true
 ```
 
 This approach is scalable and makes it easy to add or remove architectures. Each job runs in parallel, and you can use the `requires` field in your workflow to ensure all builds complete before running `push-to-registries-multiarch`.

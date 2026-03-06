@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `skip_tests` parameter to `go-build` job and command. When `true`, skips linting, tests, and security scans, and only creates the ldflags file and builds the binary. Useful for multi-arch workflows where tests only need to run once on the primary architecture.
+- Add `go-create-ldflags` command, extracted from `go-test`, so ldflags can be created independently of the full test suite.
+
 ### Fixed
 
+- Fix multi-arch `go-build` to fall back to `.ldflags` when the architecture-specific `.ldflags-<GOOS>-<GOARCH>` file does not exist.
 - Improve error handling in `push-helm` command's OCI registry step. The GitHub API call to detect repository visibility now checks the HTTP status code, validates JSON responses, and prints the actual response body on failure instead of producing a cryptic `jq` parse error.
 
 ## [6.14.1] - 2026-02-24
