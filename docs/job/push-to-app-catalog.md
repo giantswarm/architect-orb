@@ -136,14 +136,14 @@ workflows:
 When set to `true`, the packaged chart will be pushed to a classic GitHub app
 catalog.
 
-### push_to_oci_registry (optional boolean, default=false)
+### push_to_oci_registry (optional boolean, default=true)
 
 When set to `true`, the packaged chart will be pushed to the specified OCI
 registry.
 
 ### registry_url (optional string)
 
-Defaults to `giantswarmpublic.azurecr.io`.
+Defaults to `gsoci.azurecr.io` for public source repositories.
 
 Hostname (and subdomain if applies) of the OCI registry to push to. `oci://`
 scheme is implied and should not be added to the URL.
