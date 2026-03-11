@@ -66,7 +66,7 @@ documentation](https://helm.sh/blog/storing-charts-in-oci/).
 - [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
 - [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
-- [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaultfalse)
+- [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaulttrue)
 - [registry_url](#registry_url-optional-string)
 - [username_envar](#username_envar-optional-string)
 - [password_envar](#password_envar-optional-string)
@@ -81,7 +81,7 @@ generated/modified in a previous workflow job and need to be used in this job.
 
 When this is `false`, commits to `master` will be pushed to `app_catalog`
 instead of `app_catalog_test`. Set this to `false` for deployments that follow
-a a master branch for production releases rather than using tags (the default).
+a master branch for production releases rather than using tags (the default).
 
 ### executor (optional, either `architect` or `app-build-suite`, default=`architect`)
 
@@ -143,7 +143,7 @@ registry.
 
 ### registry_url (optional string)
 
-Defaults to `gsoci.azurecr.io` for public source repositories.
+Defaults to `giantswarmpublic.azurecr.io`.
 
 Hostname (and subdomain if applies) of the OCI registry to push to. `oci://`
 scheme is implied and should not be added to the URL.

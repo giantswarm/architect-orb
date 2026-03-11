@@ -3,7 +3,7 @@
 This job:
 
 - Checks if Go modules are tidy.
-- Checks if imports in .go files satisfy import rules defined in fmt.
+- Checks if imports in .go files are properly sorted using `goimports`.
 - Checks if filenames contain non-ASCII characters.
 - Runs `go vet` against the codebase.
 - Runs `go test` against the codebase.
