@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [6.15.0] - 2026-03-12
 
+### Changed
+
+- Update gitleaks executor to v8.30.0
+- Update app-build-suite executor to 1.7.0-circleci
+
 ### Fixed
 
 - Improve error handling in `push-helm` command's OCI registry step. The GitHub API call to detect repository visibility now checks the HTTP status code, validates JSON responses, and prints the actual response body on failure instead of producing a cryptic `jq` parse error.
