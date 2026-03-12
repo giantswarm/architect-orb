@@ -1,3 +1,4 @@
 docker:
   - entrypoint: /bin/bash
+    # registry: gsoci.azurecr.io/giantswarm/architect
     image: gsoci.azurecr.io/giantswarm/architect:7.4.0
