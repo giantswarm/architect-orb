@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.15.0] - 2026-03-12
+
 ### Fixed
 
 - Improve error handling in `push-helm` command's OCI registry step. The GitHub API call to detect repository visibility now checks the HTTP status code, validates JSON responses, and prints the actual response body on failure instead of producing a cryptic `jq` parse error.
@@ -1370,7 +1372,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.14.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.15.0...HEAD
+[6.15.0]: https://github.com/giantswarm/architect-orb/compare/v6.14.1...v6.15.0
 [6.14.1]: https://github.com/giantswarm/architect-orb/compare/v6.14.0...v6.14.1
 [6.14.0]: https://github.com/giantswarm/architect-orb/compare/v6.13.0...v6.14.0
 [6.13.0]: https://github.com/giantswarm/architect-orb/compare/v6.12.0...v6.13.0
