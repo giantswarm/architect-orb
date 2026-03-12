@@ -1,3 +1,4 @@
 docker:
   - entrypoint: /bin/bash
+    # registry: gsoci.azurecr.io/giantswarm/app-build-suite
     image: gsoci.azurecr.io/giantswarm/app-build-suite:1.5.2-circleci

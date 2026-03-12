@@ -3,4 +3,11 @@
     // Base config - https://github.com/giantswarm/renovate-presets/blob/main/default.json5
     "github>giantswarm/renovate-presets:default.json5",
   ],
+  "packageRules": [
+    {
+      "description": "Only allow -circleci tagged versions of app-build-suite",
+      "matchPackageNames": ["gsoci.azurecr.io/giantswarm/app-build-suite"],
+      "allowedVersions": "/-circleci$/"
+    }
+  ],
 }
