@@ -1,4 +1,4 @@
 docker:
   - entrypoint: /bin/bash
     # registry: gsoci.azurecr.io/giantswarm/gitleaks
-    image: gsoci.azurecr.io/giantswarm/gitleaks:v8.28.0
+    image: gsoci.azurecr.io/giantswarm/gitleaks:v8.30.0
