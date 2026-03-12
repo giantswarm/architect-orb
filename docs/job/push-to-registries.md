@@ -45,7 +45,7 @@ workflows:
 
 ## Selecting target registries
 
-If you're not happy with default values, you will have to pass the argumet `registries-data`, that should look like that
+If you're not happy with default values, you will have to pass the argument `registries-data`, that should look like that
 ```yaml
 registries-data: |-
   private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD false

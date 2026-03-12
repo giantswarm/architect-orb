@@ -1,4 +1,4 @@
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/architect-orb/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/architect-orb/tree/master)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/architect-orb/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/architect-orb/tree/main)
 [![Orb Version Badge](https://badges.circleci.com/orbs/giantswarm/architect.svg)](https://circleci.com/developer/orbs/orb/giantswarm/architect)
 
 # architect-orb
@@ -30,8 +30,8 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
   `architect helm template` instead of awkward and error prone `sed` calls.
 
 [architect]: https://github.com/giantswarm/architect
-[architect-executor]: https://github.com/giantswarm/architect-orb/blob/master/src/executors/architect.yaml
-[helm-chart-template]: https://github.com/giantswarm/architect-orb/blob/master/src/commands/helm-chart-template.yaml
+[architect-executor]: https://github.com/giantswarm/architect-orb/blob/main/src/executors/architect.yaml
+[helm-chart-template]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/helm-chart-template.yaml
 
 ## Coding Guidelines
 
@@ -55,9 +55,9 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
 - A command using temporary files should clean them with [cleanup step in
   format linked here][cleanup-step]. This should be the last step of the command.
 
-[cleanup-step]: https://github.com/giantswarm/architect-orb/blob/cbbb1b8d036ba7f10c58fa06e88028d759cd12e8/src/commands/helm-chart-template.yaml#L41-L44
-[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/cbbb1b8d036ba7f10c58fa06e88028d759cd12e8/src/commands/helm-chart-template.yaml#L13-L15
-[step-prefix]: https://github.com/giantswarm/architect-orb/blob/cbbb1b8d036ba7f10c58fa06e88028d759cd12e8/src/commands/helm-chart-template.yaml#L7
+[cleanup-step]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/helm-chart-template.yaml
+[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/helm-chart-template.yaml
+[step-prefix]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/helm-chart-template.yaml
 [when-unless]: https://circleci.com/docs/2.0/configuration-reference/#the-when-step-requires-version-21
 
 ## Development
@@ -84,6 +84,6 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
     - Create new _Unreleased_ section in _CHANGELOG.md_.
     - Update the URLs at the bottom.
 2. Merge your PR.
-3. Create GitHub release for the commit merged to master branch [here]
+3. Create GitHub release for the commit merged to main branch [here]
    (https://github.com/giantswarm/architect-orb/releases/new). Fill in only
    the `Tag version` fields. The rest should remain empty.

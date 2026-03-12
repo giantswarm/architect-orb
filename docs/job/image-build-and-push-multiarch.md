@@ -125,4 +125,4 @@ ENTRYPOINT ["/workspace/myapp"]
 - This job requires Docker Buildx and a compatible executor (the default architect executor supports this).
 - The build and push are performed in a single step for all tags and registries, improving efficiency and reducing duplication.
 - If your Dockerfile does not use the multi-arch pattern, the build will fail for non-matching architectures.
-- For single-arch images, set `platforms: linux/amd64` (the default).
+- For single-arch images, set `platforms: "linux/amd64"`. The default is `"linux/amd64,linux/arm64"`.

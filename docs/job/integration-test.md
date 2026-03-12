@@ -26,12 +26,12 @@ workflows:
 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [test-dir](#attach_workspace) (required string)
-- [apptestctl-version](#apptestctl-version) (optional string, default="v0.18.0")
+- [apptestctl-version](#apptestctl-version) (optional string, default="v0.24.0")
 - [env-file](#env-file) (optional string, default="")
-- [helm-version](#helm-version) (optional string, default="v3.6.3")
+- [helm-version](#helm-version) (optional string, default="v3.18.6")
 - [install-app-platform](#install-app-platform) (optional boolean, default=false)
 - [kind-config](#kind-config) (optional string, default="")
-- [kubernetes-version](#kubernetes-version) (optional string, default="v1.21.1")
+- [kubernetes-version](#kubernetes-version) (optional string, default="v1.31.12")
 - [setup-script](#setup-script) (optional string, default="")
 - [test-dir](#test-dir) (required string)
 - [test-timeout](#test-timeout) (optional string, default="20m")
@@ -94,7 +94,7 @@ nodes:
 
 - The default kubernetes version we test with is set in the integration-test
 job.
-- This can be overriden if you need to test with another version.
+- This can be overridden if you need to test with another version.
 - The KIND node image must have been retagged with [retagger].
 - It's recommended to not change this version and have it updated together with
 the next orb release.
