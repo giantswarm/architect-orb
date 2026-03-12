@@ -51,21 +51,21 @@ find -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit
 
 ### app-test-suite_version
 
-Version of app-test-suite `dats.sh` container wrapper to use (git tag or commit).
+Version of app-test-suite `dabs.sh` container wrapper to use (git tag or commit).
 Use this parameter if you have some changes lined up in `dats.sh` which is not released yet.
 For git tags, the same container tag of app-test-suite will be used.
 
 **Attention:** For git commits or branches, `latest` will be used as container tag.
 This can be circumvented by also setting the parameter [`app-test-suite_container_tag`](#app-test-suite_container_tag).
 
-(Default: "v0.2.2")
+(Default: "v0.10.6")
 
 ### app-test-suite_container_tag
 
 Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite).
 This parameter allows to specify the used container tag of app-test-suite.
 
-(Default: "0.2.2")
+(Default: "0.10.6")
 
 ### additional_app-test-suite_flags
 
@@ -78,4 +78,4 @@ A basic `.ats/main.yaml` could look like this:
 smoke-tests-cluster-type: kind # Create a kind cluster to run tests in
 
 skip-steps: functional, upgrade # Only execute smoke tests
-````
+```

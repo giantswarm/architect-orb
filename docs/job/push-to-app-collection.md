@@ -18,11 +18,11 @@ added to the [Catalog Editors][catalog-editors-team] GitHub team with write perm
 paragraph below for explanation.
 
 All interactions with the app collection GitHub repository are done with
-[CatalogBot GitHub user][catalogbot-user] This job assumes that the app
-collection is defined in a GitHub repository inside `"aws-app-collection"` the
-job will try to use [giantswarm/aws-app-collection][aws-app-collection].
-giantswarm organization. E.g. when `app_collection_repo` parameter is set to
-user] credentials.
+[CatalogBot GitHub user][catalogbot-user] credentials. This job assumes that
+the app collection is defined in a GitHub repository inside the giantswarm
+organization. E.g. when `app_collection_repo` parameter is set to
+`"aws-app-collection"` the job will try to use
+[giantswarm/aws-app-collection][aws-app-collection].
 
 [architect-context]: https://circleci.com/gh/organizations/giantswarm/settings#contexts/ff685959-6b0d-48a9-a79d-4f1089caa3d6
 [aws-app-collection]: https://github.com/giantswarm/aws-app-collection
@@ -46,7 +46,7 @@ workflows:
           app_namespace: "NAMESPACE"
           app_collection_repo: "COLLECTION-app-collection"
           requires:
-            # Make sure the chart bechind the app is in the app catalog.
+            # Make sure the chart behind the app is in the app catalog.
             - push-REPOSITORY-to-CATALOG-app-catalog
           filters:
             # Do not trigger the job on commit.

@@ -8,5 +8,6 @@
 - [push-to-app-catalog](job/push-to-app-catalog.md)
 - [push-to-app-collection](job/push-to-app-collection.md)
 - [push-to-registries](job/push-to-registries.md)
+- [push-to-registries-multiarch](job/image-build-and-push-multiarch.md)
 - [run-kat-tests](job/run-kat-tests.md)
 - [run-tests-with-ats](job/run-tests-with-ats.md) (Experimental)
