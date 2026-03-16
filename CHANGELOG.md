@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove deprecated `run-kat-tests` job and related `kat-tests-install-tools` and `kat-tests-run` commands. The `kube-app-testing` tool is no longer maintained.
+
 ## [6.15.0] - 2026-03-12
 
 ### Changed
