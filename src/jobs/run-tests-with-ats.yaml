@@ -10,7 +10,7 @@ parameters:
   app-test-suite_container_tag:
     description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
     type: string
-    default: "v0.12.0-4c692d16314738922ff85649ef61178b5dc5df71"
+    default: "0.12.0-276b493ab6840a31c92d4fabd177d0b4d689afed"
   additional_app-test-suite_flags:
     description: "Additional app-test-suite flags to use"
     type: string
