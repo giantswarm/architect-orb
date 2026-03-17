@@ -1,0 +1,83 @@
+parameters:
+  image:
+    type: string
+  tag_envvar:
+    type: env_var_name
+  slow-registries:
+    type: string
+    default: ""
+  source-registry:
+    type: string
+    default: "gsoci.azurecr.io"
+  force-public:
+    type: boolean
+    default: false
+  tag-latest-branch:
+    type: string
+    default: "main"
+  tag-suffix:
+    type: string
+    default: ""
+steps:
+  - run:
+      name: Trigger slow registry push pipeline
+      command: |
+        if [[ -n "<<parameters.slow-registries>>" ]]; then
+          SLOW_REGISTRIES="<<parameters.slow-registries>>"
+        else
+          echo "slow-registries parameter not set, using SLOW_REGISTRIES environment variable."
+        fi
+        if [[ -z "${SLOW_REGISTRIES}" ]]; then
+          echo "No slow registries configured, skipping trigger."
+          exit 0
+        fi
+
+        IMAGE_TAG="${<<parameters.tag_envvar>>}"
+        if [[ -z "${IMAGE_TAG}" ]]; then
+          echo "Image tag env var <<parameters.tag_envvar>> is not set."
+          exit 1
+        fi
+
+        if [[ -z "${CIRCLECI_TOKEN}" ]]; then
+          echo "CIRCLECI_TOKEN is not set in the context."
+          exit 1
+        fi
+
+        if [[ "<<parameters.tag-latest-branch>>" == "${CIRCLE_BRANCH}" ]]; then
+          PUSH_LATEST="true"
+        else
+          PUSH_LATEST="false"
+        fi
+
+        PAYLOAD=$(cat <<EOF
+        {
+          "parameters": {
+            "image": "<<parameters.image>>",
+            "tag": "${IMAGE_TAG}",
+            "source_registry": "<<parameters.source-registry>>",
+            "slow_registries": "${SLOW_REGISTRIES}",
+            "force_public": <<parameters.force-public>>,
+            "push_latest": ${PUSH_LATEST},
+            "tag_suffix": "<<parameters.tag-suffix>>"
+          }
+        }
+        EOF
+        )
+
+        echo "Triggering slow-registry-pusher pipeline for image <<parameters.image>>:${IMAGE_TAG}"
+        HTTP_STATUS=$(curl -s -o /tmp/circleci_trigger_response.json -w "%{http_code}" \
+          -X POST \
+          -H "Circle-Token: ${CIRCLECI_TOKEN}" \
+          -H "Content-Type: application/json" \
+          -d "${PAYLOAD}" \
+          "https://circleci.com/api/v2/project/gh/giantswarm/slow-registry-pusher/pipeline")
+
+        if [[ "${HTTP_STATUS}" != "201" ]]; then
+          echo "Failed to trigger slow-registry-pusher pipeline (HTTP ${HTTP_STATUS}):"
+          cat /tmp/circleci_trigger_response.json
+          exit 1
+        fi
+
+        PIPELINE_ID=$(cat /tmp/circleci_trigger_response.json | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+        echo "Triggered slow-registry-pusher pipeline: ${PIPELINE_ID}"
+        echo "Track it at: https://app.circleci.com/pipelines/github/giantswarm/slow-registry-pusher"

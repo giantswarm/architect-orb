@@ -4,7 +4,9 @@ executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 parameters:
   image:
-    description: Name of the  container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
+    description:
+      Name of the  container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain
+      registry host name!
     type: string
     default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
   tag-latest-branch:
@@ -38,6 +40,20 @@ parameters:
   registries-data:
     default: ""
     type: string
+  slow-registries:
+    type: string
+    default: ""
+    description: |
+      Space-separated list of registry hostnames to push asynchronously via a separate pipeline,
+      so they do not block downstream jobs. Only used when async-slow-registries is true.
+      If empty, the SLOW_REGISTRIES environment variable is used instead.
+  async-slow-registries:
+    type: boolean
+    default: true
+    description: |
+      When true (default), registries listed in slow-registries are skipped in this job and pushed
+      asynchronously via the slow-registry-pusher pipeline.
+      When false, all registries are pushed synchronously in this job (original behaviour).
 steps:
   - checkout
   - setup_remote_docker:
@@ -63,9 +79,19 @@ steps:
       force-public: <<parameters.force-public>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
       tag-suffix: <<parameters.tag-suffix>>
+      slow-registries: <<parameters.slow-registries>>
+      async-slow-registries: <<parameters.async-slow-registries>>
       registries-data:
         <<parameters.registries-data>>
-        # 2025.11.03 Current config in the REGISTRIES_DATA_BASE64 env var
-        #        private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD true
-        #        public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD true
-        #        public giantswarm-registry.cn-shanghai.cr.aliyuncs.com ALIYUN_USERNAME ALIYUN_PASSWORD false
+        # Current config in the REGISTRIES_DATA_BASE64 env var
+        #        value saved in 1password
+  - when:
+      condition: <<parameters.async-slow-registries>>
+      steps:
+        - trigger-slow-registry-push:
+            image: <<parameters.image>>
+            tag_envvar: DOCKER_IMAGE_TAG
+            slow-registries: <<parameters.slow-registries>>
+            force-public: <<parameters.force-public>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>

@@ -35,6 +35,19 @@ parameters:
   force-public:
     type: boolean
     default: false
+  slow-registries:
+    type: string
+    default: ""
+    description: |
+      Space-separated list of registry hostnames to skip in this job.
+      These registries will be pushed asynchronously via the slow-registry-pusher pipeline.
+      Only used when async-slow-registries is true.
+      If empty, the SLOW_REGISTRIES environment variable is used instead.
+  async-slow-registries:
+    type: boolean
+    default: true
+    description: |
+      When false, slow-registries is ignored and all registries are pushed synchronously.
 steps:
   - generate-github-token
   - run:
@@ -77,8 +90,22 @@ steps:
           echo "${REGISTRIES_DATA}" > .registries_data
         fi
 
+        if [[ "<< parameters.async-slow-registries >>" == "true" ]]; then
+          if [[ -n "<<parameters.slow-registries>>" ]]; then
+            SLOW_REGISTRIES="<<parameters.slow-registries>>"
+          else
+            echo "slow-registries parameter not set, using SLOW_REGISTRIES environment variable."
+          fi
+        else
+          SLOW_REGISTRIES=""
+        fi
+
         cat .registries_data | while read -r access reg _ _ push_dev; do
           echo -e "\nProcessing image push config for registry ${reg}."
+          if [[ " ${SLOW_REGISTRIES} " == *" ${reg} "* ]]; then
+            echo "Registry ${reg} is configured as slow, skipping (will be pushed asynchronously)."
+            continue
+          fi
           if [[ "${push_dev}" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
             echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
             continue
