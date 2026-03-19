@@ -4,8 +4,55 @@ parameters:
     default: ""
 steps:
   - run:
-      name: Generate container tag from 'architect project version' and tag-suffix parameter
+      name: Generate container tag following semVer tagging schema
       command: |
-        architect project version | head -n 1 | tr -d "\n" | tee .docker_image_tag
+        set -euo pipefail
+
+        if [[ -n "${CIRCLE_TAG:-}" ]]; then
+          # Tagged build (stable release or RC) - use git tag directly
+          TAG="${CIRCLE_TAG}"
+        elif [[ "${CIRCLE_BRANCH:-}" == "main" || "${CIRCLE_BRANCH:-}" == "master" ]]; then
+          # Main branch without tag - use architect project version (backwards compatibility)
+          TAG=$(architect project version | head -n 1 | tr -d "\n")
+        else
+          # Non-main branch - generate semVer dev tag: X.Y.Z-dev.BRANCH.DATE.TIME
+          TAG_PREFIX="${GS_GIT_TAG_PREFIX:-}"
+
+          # Find last stable semver tag (no pre-release suffix)
+          if [[ -n "${TAG_PREFIX}" ]]; then
+            LAST_STABLE=$(git tag --list "${TAG_PREFIX}[0-9]*.[0-9]*.[0-9]*" \
+              | grep -v -- '-' \
+              | sed "s/^${TAG_PREFIX}//" \
+              | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+              | sort -V | tail -n1 || true)
+          else
+            LAST_STABLE=$(git tag --list "[0-9]*.[0-9]*.[0-9]*" \
+              | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+              | sort -V | tail -n1 || true)
+          fi
+
+          if [[ -z "${LAST_STABLE}" ]]; then
+            LAST_STABLE="0.0.0"
+          fi
+
+          # Bump patch version for the next release
+          IFS='.' read -r MAJOR MINOR PATCH_STR <<< "${LAST_STABLE}"
+          BASE_VERSION="${MAJOR}.${MINOR}.$((PATCH_STR + 1))"
+
+          # Sanitize branch name for semVer pre-release identifier:
+          # replace non-alphanumeric (except hyphens) with hyphens, collapse duplicates
+          SAFE_BRANCH=$(echo "${CIRCLE_BRANCH}" \
+            | sed 's/[^a-zA-Z0-9-]/-/g' \
+            | sed 's/-\+/-/g' \
+            | sed 's/^-\|-$//g')
+
+          DATE=$(date -u +%Y%m%d)
+          TIME=$(date -u +%H%M%S)
+
+          TAG="${BASE_VERSION}-dev.${SAFE_BRANCH}.${DATE}.${TIME}"
+        fi
+
+        echo "Generated tag: ${TAG}<<parameters.tag-suffix>>"
+        echo -n "${TAG}" | tee .docker_image_tag
         echo -n "<<parameters.tag-suffix>>" | tee -a .docker_image_tag
-        echo 'export DOCKER_IMAGE_TAG=$(cat .docker_image_tag)' >> $BASH_ENV
+        echo 'export DOCKER_IMAGE_TAG=$(cat .docker_image_tag)' >> "$BASH_ENV"

@@ -79,7 +79,7 @@ steps:
 
         cat .registries_data | while read -r access reg _ _ push_dev; do
           echo -e "\nProcessing image push config for registry ${reg}."
-          if [[ "${push_dev}" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
+          if [[ "${push_dev}" == "false" ]] && ([[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]] || [[ "${DOCKER_IMAGE_TAG}" =~ -dev\. ]]); then
             echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
             continue
           fi
