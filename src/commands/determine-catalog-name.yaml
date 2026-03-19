@@ -17,8 +17,17 @@ steps:
         - run:
             name: "architect/determine-catalog-name: Determine target app catalog based on presence of tag"
             command: |
-              [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
-              echo -n ${CIRCLE_TAG} | tee .reference
+              if [[ -z "${CIRCLE_TAG:-}" ]]; then
+                # Dev build (no tag) - use test catalog
+                echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
+              elif [[ "${CIRCLE_TAG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-.+ ]]; then
+                # Pre-release tag (RC: X.Y.Z-rc.N or dev: X.Y.Z-dev.*) - use test catalog
+                echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
+              else
+                # Stable tag (X.Y.Z) - use production catalog
+                echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
+              fi
+              echo -n "${CIRCLE_TAG:-}" | tee .reference
   - unless:
       condition: << parameters.on_tag >>
       steps:
