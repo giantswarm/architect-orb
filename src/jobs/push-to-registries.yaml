@@ -38,6 +38,30 @@ parameters:
   registries-data:
     default: ""
     type: string
+  multiarch:
+    description: |
+      When true, use 'docker buildx build' to build and push a multi-architecture image.
+      Set 'platforms' to specify target platforms.
+      When false (default), use the classic 'docker build' single-arch path.
+    type: boolean
+    default: false
+  platforms:
+    description: |
+      Comma-separated list of platforms for multi-arch image build.
+      Only used when multiarch: true.
+    type: string
+    default: "linux/amd64,linux/arm64"
+  annotations:
+    description: |
+      Newline-separated OCI annotations passed to 'docker buildx build --annotation'.
+      Each line uses the buildx format '[type:]key=value'. For multi-arch builds:
+        manifest:key=value            - annotates each platform manifest
+        index:key=value               - annotates the manifest list (OCI index)
+        manifest-descriptor:key=value - annotates descriptors in the index
+        key=value (no prefix)         - defaults to index for multi-platform builds
+      Only used when multiarch: true.
+    type: string
+    default: ""
 steps:
   - checkout
   - setup_remote_docker:
@@ -51,21 +75,44 @@ steps:
       tag-suffix: <<parameters.tag-suffix>>
   - image-login-to-registries:
       registries-data: <<parameters.registries-data>>
-  - image-build-with-docker:
-      build-context: <<parameters.build-context>>
-      dockerfile: <<parameters.dockerfile>>
-  - image-push-to-registries:
-      image-sha256_envvar: DOCKER_IMAGE_SHA256
-      image: <<parameters.image>>
-      tag_envvar: DOCKER_IMAGE_TAG
-      build-context: <<parameters.build-context>>
-      dockerfile: <<parameters.dockerfile>>
-      force-public: <<parameters.force-public>>
-      tag-latest-branch: <<parameters.tag-latest-branch>>
-      tag-suffix: <<parameters.tag-suffix>>
-      registries-data:
-        <<parameters.registries-data>>
-        # 2025.11.03 Current config in the REGISTRIES_DATA_BASE64 env var
-        #        private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD true
-        #        public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD true
-        #        public giantswarm-registry.cn-shanghai.cr.aliyuncs.com ALIYUN_USERNAME ALIYUN_PASSWORD false
+  - unless:
+      condition: <<parameters.multiarch>>
+      steps:
+        - image-build-with-docker:
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+        - image-push-to-registries:
+            image-sha256_envvar: DOCKER_IMAGE_SHA256
+            image: <<parameters.image>>
+            tag_envvar: DOCKER_IMAGE_TAG
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+            force-public: <<parameters.force-public>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
+            registries-data:
+              <<parameters.registries-data>>
+              # 2025.11.03 Current config in the REGISTRIES_DATA_BASE64 env var
+              #        private gsociprivate.azurecr.io ACR_GSOCIPRIVATE_USERNAME ACR_GSOCIPRIVATE_PASSWORD true
+              #        public gsoci.azurecr.io ACR_GSOCI_USERNAME ACR_GSOCI_PASSWORD true
+              #        public giantswarm-registry.cn-shanghai.cr.aliyuncs.com ALIYUN_USERNAME ALIYUN_PASSWORD false
+  - when:
+      condition: <<parameters.multiarch>>
+      steps:
+        - run:
+            name: Validate platforms parameter
+            command: |
+              if [ -z "<<parameters.platforms>>" ] || [[ ! "<<parameters.platforms>>" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
+                echo "ERROR: The 'platforms' parameter must be a non-empty, comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
+                exit 1
+              fi
+        - image-build-and-push-multiarch:
+            image: <<parameters.image>>
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+            force-public: <<parameters.force-public>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
+            registries-data: <<parameters.registries-data>>
+            platforms: <<parameters.platforms>>
+            annotations: <<parameters.annotations>>

@@ -1,5 +1,6 @@
-# Multi-arch version of push-to-registries job
-description: "Build and push a multi-architecture container image to registries."
+# DEPRECATED: Use push-to-registries with multiarch: true instead.
+# This job will be removed in the next major version of the orb.
+description: "DEPRECATED: Use push-to-registries with multiarch: true instead. This job will be removed in the next major version."
 executor: "architect"
 environment:
   DOCKER_BUILDKIT: "1"

@@ -1,4 +1,6 @@
-# push-to-registries-multiarch
+# push-to-registries-multiarch (DEPRECATED)
+
+> **DEPRECATED**: This job is deprecated. Use [`push-to-registries`](./push-to-registries.md) with `multiarch: true` instead. It will be removed in the next major version of the orb.
 
 This job builds and pushes a multi-architecture container image to a set of registries using a single, efficient step. It leverages the `push-to-registries-multiarch` command, which combines building and pushing for all specified platforms and registries.
 
