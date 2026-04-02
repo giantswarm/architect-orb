@@ -14,9 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - `push-to-registries-multiarch` job is deprecated. Use `push-to-registries` with `multiarch: true` instead. It will be removed in the next major version.
+
 ### Removed
 
 - Remove deprecated `run-kat-tests` job and related `kat-tests-install-tools` and `kat-tests-run` commands. The `kube-app-testing` tool is no longer maintained.
+
+### Changed
+
+- Improved wording and documentation for `goimports` step in `go-test` job
 
 ## [6.15.0] - 2026-03-12
 
