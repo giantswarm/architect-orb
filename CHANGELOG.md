@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `multiarch`, `platforms`, and `annotations` parameters to `push-to-registries` job, enabling multi-architecture image builds via `docker buildx` as an opt-in path (`multiarch: true`). Single-arch behaviour is unchanged. `platforms` defaults to `"linux/amd64,linux/arm64"`.
 
+### Changed
+
+- Update `run-tests-with-ats` job with latest app-test-suite version (v0.14.0).
+
 ### Deprecated
 
 - `push-to-registries-multiarch` job is deprecated. Use `push-to-registries` with `multiarch: true` instead. It will be removed in the next major version.
