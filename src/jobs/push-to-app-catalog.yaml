@@ -87,6 +87,12 @@ parameters:
     description: |
       Required if `push_to_oci_registry` is set to `true`.
     type: "string"
+  git-tag-prefix:
+    type: string
+    default: ""
+    description: |
+      Optional prefix for git tags. Only used on mono repos where git tags are
+      prefixed with a component name (e.g. "myapp-" for tags like "myapp-1.2.3").
 executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -112,10 +118,67 @@ steps:
             show_architect_version: false
             show_go_version: false
             show_abs_version: true
+  - run:
+      name: Set git tag prefix (empty if not set, only used on mono repos)
+      command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
   - determine-catalog-name:
       app_catalog: << parameters.app_catalog >>
       app_catalog_test: << parameters.app_catalog_test >>
       on_tag: << parameters.on_tag >>
+  - run:
+      name: "architect/push-to-app-catalog: Set chart version for dev branch builds"
+      command: |
+        set -euo pipefail
+
+        # Only apply to branch builds (no git tag, not on main/master)
+        if [[ -n "${CIRCLE_TAG:-}" ]]; then
+          echo "Tagged build (${CIRCLE_TAG}), skipping dev version calculation."
+          exit 0
+        fi
+        if [[ "${CIRCLE_BRANCH:-}" == "main" || "${CIRCLE_BRANCH:-}" == "master" ]]; then
+          echo "Main branch build, skipping dev version calculation."
+          exit 0
+        fi
+
+        TAG_PREFIX="${GS_GIT_TAG_PREFIX:-}"
+
+        # Find last stable semver tag (no pre-release suffix)
+        if [[ -n "${TAG_PREFIX}" ]]; then
+          LAST_STABLE=$(git tag --list "${TAG_PREFIX}[0-9]*.[0-9]*.[0-9]*" \
+            | grep -v -- '-' \
+            | sed "s/^${TAG_PREFIX}//" \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V | tail -n1 || true)
+        else
+          LAST_STABLE=$(git tag --list "[0-9]*.[0-9]*.[0-9]*" \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V | tail -n1 || true)
+        fi
+
+        if [[ -z "${LAST_STABLE}" ]]; then
+          LAST_STABLE="0.0.0"
+        fi
+
+        # Bump patch version for the next release
+        IFS='.' read -r MAJOR MINOR PATCH_STR <<< "${LAST_STABLE}"
+        BASE_VERSION="${MAJOR}.${MINOR}.$((PATCH_STR + 1))"
+
+        # Sanitize branch name for semVer pre-release identifier:
+        # replace non-alphanumeric (except hyphens) with hyphens, collapse duplicates
+        SAFE_BRANCH=$(echo "${CIRCLE_BRANCH}" \
+          | sed 's/[^a-zA-Z0-9-]/-/g' \
+          | sed 's/-\+/-/g' \
+          | sed 's/^-\|-$//g')
+
+        DATE=$(date -u +%Y%m%d)
+        TIME=$(date -u +%H%M%S)
+
+        DEV_VERSION="${BASE_VERSION}-dev.${SAFE_BRANCH}.${DATE}.${TIME}"
+        echo "Setting chart version to dev version: ${DEV_VERSION}"
+
+        sed -i "s/^version: .*$/version: ${DEV_VERSION}/" "./helm/<< parameters.chart >>/Chart.yaml"
+        echo -n "${DEV_VERSION}" | tee .reference
+        echo "export GS_SEMVER_DEV_VERSION=${DEV_VERSION}" >> "$BASH_ENV"
   - when:
       condition: << parameters.attach_workspace >>
       steps:
