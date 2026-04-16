@@ -77,7 +77,6 @@ steps:
       command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
   - image-prepare-tag:
       tag-suffix: <<parameters.tag-suffix>>
-      split-china-push: <<parameters.split-china-push>>
   - image-login-to-registries:
       registries-data: <<parameters.registries-data>>
   - unless:
