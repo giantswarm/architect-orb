@@ -43,7 +43,17 @@ steps:
             CMD="docker login $reg --username '${!username}' --password '${!password}'"
             for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  bash -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
           elif [[ "<<parameters.client>>" == "regctl" ]]; then
-            CMD="regctl registry login $reg -u '${!username}' -p '${!password}'"
+            case "$username" in
+            *[!a-zA-Z0-9_]*) echo "Invalid variable name"; exit 1 ;;
+            *) eval "username=\$$username" ;;
+            esac
+
+            case "$password" in
+            *[!a-zA-Z0-9_]*) echo "Invalid variable name"; exit 1 ;;
+            *) eval "password=\$$password" ;;
+            esac
+
+            CMD="regctl registry login $reg -u '${username}' -p '${password}'"
             for i in $(seq 1 3); do [[ $i -gt 1 ]] && sleep 1;  sh -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
           fi
         done
