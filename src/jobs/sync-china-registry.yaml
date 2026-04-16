@@ -19,4 +19,4 @@ steps:
       command: |
         SOURCE_REPOSITORY="$(cat .docker_image_registry)/<<parameters.image>>:$(cat .docker_image_tag)"
         TARGET_REPOSITORY="giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>:$(cat .docker_image_tag)"
-        echo regctl image copy ${SOURCE_REPOSITORY} ${TARGET_REPOSITORY}
+        regctl image copy ${SOURCE_REPOSITORY} ${TARGET_REPOSITORY}
