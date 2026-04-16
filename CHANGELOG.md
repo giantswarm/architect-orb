@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add `multiarch`, `platforms`, and `annotations` parameters to `push-to-registries` job, enabling multi-architecture image builds via `docker buildx` as an opt-in path (`multiarch: true`). Single-arch behaviour is unchanged. `platforms` defaults to `"linux/amd64,linux/arm64"`.
+- Split pushes to China into two jobs.
 
 ### Deprecated
 
