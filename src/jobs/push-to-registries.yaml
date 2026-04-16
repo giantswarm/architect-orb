@@ -125,8 +125,8 @@ steps:
   - when:
       condition: <<parameters.split-china-push>>
       steps:
-        - persist_to_workspace:
-            root: .
-            paths:
-              - .docker_image_registry
-              - .docker_image_tag
+        - save_cache:
+          key: {{ .Environment.CIRCLE_PIPELINE_ID }}
+          paths:
+            - .docker_image_registry
+            - .docker_image_tag
