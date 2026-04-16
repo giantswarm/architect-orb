@@ -37,6 +37,10 @@ parameters:
         key=value (no prefix)         - defaults to index for multi-platform builds
     type: string
     default: ""
+  split-china-push:
+    description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
+    type: boolean
+    default: false
 steps:
   - generate-github-token
   - run:
@@ -98,11 +102,13 @@ steps:
         all_tags=()
         while IFS=' ' read -r access reg _ _ push_dev; do
           [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+          [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
           if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ [a-f0-9]{40} ]]; then
             echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
             continue
           fi
           if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
+            echo -n ${reg} > .docker_image_registry
             for tag in "${tags[@]}"; do
               echo -e "\nProcessing image push config for registry $reg."
               echo "Tag the image for $reg"

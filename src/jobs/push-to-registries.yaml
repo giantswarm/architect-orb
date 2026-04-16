@@ -35,6 +35,10 @@ parameters:
     description: Skip the repo visibility check and push the the image to public registries
     type: boolean
     default: false
+  split-china-push:
+    description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
+    type: boolean
+    default: false
   registries-data:
     default: ""
     type: string
@@ -73,6 +77,7 @@ steps:
       command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
   - image-prepare-tag:
       tag-suffix: <<parameters.tag-suffix>>
+      split-china-push: <<parameters.split-china-push>>
   - image-login-to-registries:
       registries-data: <<parameters.registries-data>>
   - unless:
@@ -90,6 +95,7 @@ steps:
             force-public: <<parameters.force-public>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+            split-china-push: <<parameters.split-china-push>>
             registries-data:
               <<parameters.registries-data>>
               # 2025.11.03 Current config in the REGISTRIES_DATA_BASE64 env var
@@ -116,3 +122,12 @@ steps:
             registries-data: <<parameters.registries-data>>
             platforms: <<parameters.platforms>>
             annotations: <<parameters.annotations>>
+            split-china-push: <<parameters.split-china-push>>
+  - when:
+      condition: <<parameters.split-china-push>>
+      steps:
+        - persist_to_workspace:
+            root: .
+            paths:
+              - .docker_image_registry
+              - .docker_image_tag

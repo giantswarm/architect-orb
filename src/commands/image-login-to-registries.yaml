@@ -1,4 +1,9 @@
 parameters:
+  client:
+    default: "docker"
+    description: "Registry client to login to registries with"
+    type: enum
+    enum: ["docker", "regctl"]
   registries-data:
     default: ""
     description: |
@@ -33,8 +38,12 @@ steps:
         fi
 
         echo "${REGISTRIES_DATA}" > .registries_data
-
         cat .registries_data | while read -r _ reg username password _; do
-          CMD="docker login $reg --username '${!username}' --password '${!password}'"
-          for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  bash -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+          if [[ "<<parameters.client" == "docker" ]]; then
+            CMD="docker login $reg --username '${!username}' --password '${!password}'"
+            for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  bash -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+          elif [[ "<<parameters.client" == "regctl" ]]; then
+            CMD="regctl registry login $reg -u '${!username}' -p '${!password}'"
+            for i in $(seq 1 3); do [[ $i -gt 1 ]] && sleep 1;  sh -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+          fi
         done

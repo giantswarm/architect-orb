@@ -1,0 +1,22 @@
+executor: "regctl"
+resource_class: giantswarm/galaxy-runner
+parameters:
+  image:
+    description: Name of the  container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
+    type: string
+    default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
+  registries-data:
+    default: ""
+    type: string
+steps:
+  - image-login-to-registries:
+      client: "regctl"
+      registries-data: <<parameters.registries-data>>
+  - attach_workspace:
+      at: .
+  - run:
+      name: Sync image to Aliyun registry
+      command: |
+        SOURCE_REPOSITORY="$(cat .docker_image_registry)/<<parameters.image>>:$(cat .docker_image_tag)"
+        TARGET_REPOSITORY="giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>:$(cat .docker_image_tag)"
+        echo regctl image copy ${SOURCE_REPOSITORY} ${TARGET_REPOSITORY}
