@@ -48,6 +48,12 @@ parameters:
     description: |
       Push the chart to OCI registry if this is `true`.
     type: boolean
+  push_to_legacy_oci_registry:
+    type: boolean
+    default: false
+    description: |
+      When true, also push the chart to the legacy giantswarmpublic.azurecr.io registry.
+      Only set this if a project still requires the legacy registry. Disabled by default.
   force-public:
     description: Skip the repo visibility check and push the the chart to public registry
     type: boolean
@@ -147,6 +153,7 @@ steps:
   - push-helm:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>
+      push_to_legacy_oci_registry: << parameters.push_to_legacy_oci_registry >>
       force-public: <<parameters.force-public>>
       password_envar: << parameters.password_envar >>
       username_envar: << parameters.username_envar >>

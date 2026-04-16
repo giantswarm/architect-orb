@@ -2,12 +2,18 @@ parameters:
   password_envar:
     type: "string"
     default: AZURE_CLIENTSECRET
+    description: |
+      Password environment variable for the legacy OCI registry. Only used when push_to_legacy_oci_registry is true.
   username_envar:
     type: "string"
     default: AZURE_CLIENTID
+    description: |
+      Username environment variable for the legacy OCI registry. Only used when push_to_legacy_oci_registry is true.
   registry_url:
     type: "string"
     default: "giantswarmpublic.azurecr.io"
+    description: |
+      Base URL of the legacy OCI registry. Only used when push_to_legacy_oci_registry is true.
   chart:
     type: "string"
   push_to_appcatalog:
@@ -16,6 +22,12 @@ parameters:
   push_to_oci_registry:
     default: true
     type: boolean
+  push_to_legacy_oci_registry:
+    type: boolean
+    default: false
+    description: |
+      When true, also push the chart to the legacy giantswarmpublic.azurecr.io registry.
+      Only set this if a project still requires the legacy registry. Disabled by default.
   force-public:
     type: boolean
     default: false
@@ -96,7 +108,7 @@ steps:
                 exit $ret
   - when:
       condition:
-        equal: [<< parameters.push_to_oci_registry >>, true]
+        equal: [<< parameters.push_to_legacy_oci_registry >>, true]
       steps:
         - run:
             name: "[deprecated] architect/push-helm-package: Authenticate to the OCI registry"
@@ -127,6 +139,10 @@ steps:
               echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
 
               exit $ret
+  - when:
+      condition:
+        equal: [<< parameters.push_to_oci_registry >>, true]
+      steps:
         - generate-github-token
         - run:
             name: "architect/push-helm-package: Authenticate and push to giantswarm OCI registry"
