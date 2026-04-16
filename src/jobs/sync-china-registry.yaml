@@ -20,4 +20,19 @@ steps:
       command: |
         SOURCE_REPOSITORY="$(cat /tmp/.docker_image_registry)/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
         TARGET_REPOSITORY="giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
-        regctl image copy ${SOURCE_REPOSITORY} ${TARGET_REPOSITORY}
+        CMD="regctl image copy ${SOURCE_REPOSITORY} ${TARGET_REPOSITORY}"
+        SUCCESS=false
+        for x in $(seq 1 10); do
+          echo "attempt: ${x}"
+          if sh -c "${CMD}"; then
+            echo "Image is pushed to the registry."
+            SUCCESS=true
+            break
+          fi
+          echo "Waiting 5 seconds before the next attempt."
+          sleep 5
+        done
+        if [[ "${SUCCESS}" == "false" ]]; then
+          echo "Failed to sync the image"
+          exit 1
+        fi
