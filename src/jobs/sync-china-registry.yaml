@@ -14,7 +14,7 @@ steps:
       registries-data: <<parameters.registries-data>>
   - restore_cache:
       keys:
-        - {{.Environment.CIRCLE_PIPELINE_ID}}
+        - image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
   - run:
       name: Sync image to Aliyun registry
       command: |
