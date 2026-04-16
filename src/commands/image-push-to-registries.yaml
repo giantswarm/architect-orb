@@ -93,7 +93,7 @@ steps:
             docker tag "${<<parameters.image-sha256_envvar>>}" "${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
             echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as ${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
             CMD="docker push \"${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}\""
-            echo -n ${reg} > .docker_image_registry
+            echo -n ${reg} > /tmp/.docker_image_registry
             SUCCESS=false
             for i in $(seq 1 4); do
               echo "attempt: ${i}"

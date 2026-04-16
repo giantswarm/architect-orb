@@ -108,7 +108,7 @@ steps:
             continue
           fi
           if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
-            echo -n ${reg} > .docker_image_registry
+            echo -n ${reg} > /tmp/.docker_image_registry
             for tag in "${tags[@]}"; do
               echo -e "\nProcessing image push config for registry $reg."
               echo "Tag the image for $reg"

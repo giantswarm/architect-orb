@@ -18,6 +18,6 @@ steps:
   - run:
       name: Sync image to Aliyun registry
       command: |
-        SOURCE_REPOSITORY="$(cat .docker_image_registry)/<<parameters.image>>:$(cat .docker_image_tag)"
-        TARGET_REPOSITORY="giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>:$(cat .docker_image_tag)"
+        SOURCE_REPOSITORY="$(cat /tmp/.docker_image_registry)/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
+        TARGET_REPOSITORY="giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
         regctl image copy ${SOURCE_REPOSITORY} ${TARGET_REPOSITORY}

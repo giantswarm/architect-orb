@@ -128,5 +128,5 @@ steps:
         - save_cache:
             key: image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
             paths:
-              - .docker_image_registry
-              - .docker_image_tag
+              - /tmp/.docker_image_registry
+              - /tmp/.docker_image_tag
