@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.16.0] - 2026-04-24
+
 ### Added
 
 - Add `multiarch`, `platforms`, and `annotations` parameters to `push-to-registries` job, enabling multi-architecture image builds via `docker buildx` as an opt-in path (`multiarch: true`). Single-arch behaviour is unchanged. `platforms` defaults to `"linux/amd64,linux/arm64"`.
@@ -1394,7 +1396,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.15.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.16.0...HEAD
+[6.16.0]: https://github.com/giantswarm/architect-orb/compare/v6.15.0...v6.16.0
 [6.15.0]: https://github.com/giantswarm/architect-orb/compare/v6.14.1...v6.15.0
 [6.14.1]: https://github.com/giantswarm/architect-orb/compare/v6.14.0...v6.14.1
 [6.14.0]: https://github.com/giantswarm/architect-orb/compare/v6.13.0...v6.14.0
