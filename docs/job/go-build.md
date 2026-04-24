@@ -18,6 +18,7 @@ This job builds Go binaries for one or more target architectures and operating s
 - `tags`: Additional Go build tags (optional).
 - `test_target`: Makefile target to run for tests (optional).
 - `resource_class`: CircleCI resource class for the job.
+- `clone_depth`: Number of commits to keep in the local git history after checkout (default: `1`). Use `0` for full history. Values greater than `1` deepen the history to that many commits. The default of `1` preserves the behaviour of CircleCI's built-in `checkout` step. Set to `0` when build steps rely on `git log` or `git rev-list` to traverse the repo (for example, a `go generate` step that embeds the commit SHA of the last change to a template file).
 
 ## Example usage
 
