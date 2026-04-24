@@ -35,6 +35,10 @@ parameters:
   force-public:
     type: boolean
     default: false
+  split-china-push:
+    description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
+    type: boolean
+    default: false
 steps:
   - generate-github-token
   - run:
@@ -79,6 +83,7 @@ steps:
 
         cat .registries_data | while read -r access reg _ _ push_dev; do
           echo -e "\nProcessing image push config for registry ${reg}."
+          [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
           if [[ "${push_dev}" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
             echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
             continue
@@ -88,6 +93,7 @@ steps:
             docker tag "${<<parameters.image-sha256_envvar>>}" "${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
             echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as ${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
             CMD="docker push \"${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}\""
+            echo -n ${reg} > /tmp/.docker_image_registry
             SUCCESS=false
             for i in $(seq 1 4); do
               echo "attempt: ${i}"
