@@ -85,7 +85,7 @@ steps:
   - checkout
   - unless:
       condition:
-        equal: [ 1, << parameters.clone_depth >> ]
+        equal: [1, << parameters.clone_depth >>]
       steps:
         - run:
             name: Adjust git clone depth
