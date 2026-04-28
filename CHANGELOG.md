@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.1.0] - 2026-04-28
+
 ### Added
 
 - Split pushes to China into two jobs.
@@ -1400,7 +1402,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v7.0.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v7.1.0...HEAD
+[7.1.0]: https://github.com/giantswarm/architect-orb/compare/v7.0.0...v7.1.0
 [7.0.0]: https://github.com/giantswarm/architect-orb/compare/v6.15.0...v7.0.0
 [6.15.0]: https://github.com/giantswarm/architect-orb/compare/v6.14.1...v6.15.0
 [6.14.1]: https://github.com/giantswarm/architect-orb/compare/v6.14.0...v6.14.1
