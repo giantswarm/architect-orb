@@ -48,6 +48,28 @@ parameters:
       CircleCI build context.
     type: boolean
     default: true
+  provenance:
+    description: |
+      Buildx SLSA provenance attestation mode.
+      - "min" (default): minimal provenance, attached as inline attestation manifest.
+      - "max": rich provenance with full BuildKit args / source provenance.
+      - "false": disable provenance attestation entirely (cleaner manifest list).
+    type: enum
+    enum: ["min", "max", "false"]
+    default: "min"
+  sbom:
+    description: |
+      Generate and attach a Software Bill of Materials (SPDX) attestation per platform.
+    type: boolean
+    default: true
+  sign:
+    description: |
+      Sign the pushed image manifest with cosign keyless OIDC. Public images only —
+      private images are skipped at runtime to avoid leaking digests/timestamps into
+      the public Rekor transparency log. Requires `CIRCLE_OIDC_TOKEN_V2` in the job's
+      CircleCI context (auto-injected when the job uses a `context:`).
+    type: boolean
+    default: true
   split-china-push:
     description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
     type: boolean
@@ -206,7 +228,27 @@ steps:
           rm -f .annotations_input
         fi
 
-        # Single buildx build/push for all tags/registries
+        # Attestations via OCI 1.1 referrers API. When the registry supports
+        # OCI 1.1 (ACR/gsoci, GHCR, recent Quay all do), provenance and SBOM
+        # are stored as referrer artifacts that point to the image by digest
+        # rather than embedded into the image index — keeping the manifest
+        # list to just the runnable platform manifests. Falls back to inline
+        # mode automatically if the registry doesn't advertise referrers
+        # support.
+        attest_flags=()
+        case "<<parameters.provenance>>" in
+          "min")   attest_flags+=("--attest" "type=provenance,mode=min,referrers=true") ;;
+          "max")   attest_flags+=("--attest" "type=provenance,mode=max,referrers=true") ;;
+          "false") attest_flags+=("--provenance=false") ;;
+        esac
+        if [[ "<<parameters.sbom>>" == "true" ]]; then
+          attest_flags+=("--attest" "type=sbom,referrers=true")
+        else
+          attest_flags+=("--sbom=false")
+        fi
+
+        # Single buildx build/push for all tags/registries.
+        # --metadata-file captures the manifest index digest for downstream cosign signing.
         SUCCESS=false
         for i in {1..4}; do
           echo "attempt: $i for all registries/tags"
@@ -215,6 +257,8 @@ steps:
             "${all_tags[@]}" \
             "${annotation_flags[@]}" \
             "${oci_label_flags[@]}" \
+            "${attest_flags[@]}" \
+            --metadata-file=/tmp/.buildx_metadata.json \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
             --progress=plain \
@@ -231,3 +275,66 @@ steps:
           echo "Some images couldn't be pushed. Check buildx output above."
           exit 1
         fi
+
+        # Persist IMAGE_ACCESS for the cosign step to read.
+        echo -n "$IMAGE_ACCESS" > /tmp/.image_access
+  - when:
+      condition: <<parameters.sign>>
+      steps:
+        - run:
+            name: Sign pushed image with cosign keyless OIDC
+            command: |
+              # Only sign public images for now. Private images going into public Sigstore
+              # would leak digests + build times into the public Rekor transparency log.
+              # When a self-hosted Sigstore (or a static-key signing path) is added, this
+              # gate moves out and private images can be signed too.
+              IMAGE_ACCESS=$(cat /tmp/.image_access)
+              if [[ "$IMAGE_ACCESS" != "public" ]]; then
+                echo "Image is not public (IMAGE_ACCESS=$IMAGE_ACCESS); skipping cosign signing."
+                exit 0
+              fi
+
+              if [[ -z "${CIRCLE_OIDC_TOKEN_V2:-}" ]]; then
+                echo "CIRCLE_OIDC_TOKEN_V2 is not set. Either add a CircleCI context that exposes it, or set 'sign: false'."
+                exit 1
+              fi
+
+              if [[ ! -f /tmp/.buildx_metadata.json ]]; then
+                echo "Buildx metadata file is missing — cannot resolve the index digest to sign."
+                exit 1
+              fi
+              index_digest=$(jq -r '."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
+              if [[ -z "$index_digest" || "$index_digest" == "null" ]]; then
+                echo "Could not extract index digest from buildx metadata:"
+                cat /tmp/.buildx_metadata.json
+                exit 1
+              fi
+              echo "Signing index digest: $index_digest"
+
+              # Install cosign (only when we're about to sign).
+              # renovate: datasource=github-releases depName=sigstore/cosign
+              COSIGN_VERSION=v2.6.0
+              host_arch=$(uname -m)
+              case "$host_arch" in
+                x86_64)  cosign_arch=amd64 ;;
+                aarch64) cosign_arch=arm64 ;;
+                *) echo "Unsupported host arch for cosign install: $host_arch"; exit 1 ;;
+              esac
+              curl -sSL "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-${cosign_arch}" -o /usr/local/bin/cosign
+              chmod +x /usr/local/bin/cosign
+              cosign version
+
+              # Sign once per public-accessible pushed registry. cosign uses the docker
+              # config populated by image-login-to-registries for registry auth; the OIDC
+              # token is passed explicitly via --identity-token.
+              while IFS=' ' read -r access reg _ _ _; do
+                [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+                [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
+                # Skip registries that don't host public content even if they were pushed.
+                [[ "$access" == *"public"* ]] || continue
+                if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
+                  ref="${reg}/<<parameters.image>>@${index_digest}"
+                  echo "cosign sign $ref"
+                  cosign sign --yes --identity-token "$CIRCLE_OIDC_TOKEN_V2" "$ref"
+                fi
+              done < .registries_data
