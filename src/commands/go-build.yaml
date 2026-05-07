@@ -1,30 +1,30 @@
 # Command: go-build
 #
-# Builds a Go binary for a specified architecture and persists it to the workspace. If the architecture is set (e.g., linux/amd64),
-# the binary will be named <binary>-<GOOS>-<GOARCH>. If the architecture is linux/amd64, a copy will also be made as <binary> for
-# compatibility with legacy workflows.
+# Builds a Go binary for the architecture given by `architecture` and persists it to the workspace
+# as `<binary>-<GOOS>-<GOARCH>`. For linux/amd64 a copy is also written to `<binary>`.
 #
 # Parameters:
-#   binary: Name of the binary to produce (and to copy to if linux/amd64).
-#   os: (Deprecated) Use 'architecture' instead for multi-arch support.
+#   binary: Name of the binary to produce.
+#   architecture: Target architecture (e.g., linux/amd64, linux/arm64, darwin/amd64). Default: linux/amd64.
+#   os: **Deprecated.** Ignored.
 #   path: Path to the Go package to build (default: ".").
 #   pre_test_target: Makefile target to run before tests/lints (optional).
 #   tags: Additional Go build tags (optional).
 #   test_target: Makefile target to run for tests (optional).
-#   architecture: Target architecture (e.g., linux/amd64, linux/arm64, darwin/amd64). If set, will split into GOOS/GOARCH and name
-#                 the binary accordingly. If not set, falls back to 'os' for legacy single-arch builds.
 #
 # Behavior:
 #   - Runs go-test first (with pre_test_target and test_target if set).
 #   - Builds the binary for the specified architecture.
-#   - If architecture is linux/amd64, also copies the binary to <binary>.
-#   - If architecture is not set, builds <binary> using the deprecated 'os' parameter.
+#   - For linux/amd64, also copies the binary to <binary>.
 
 parameters:
   binary:
     type: "string"
   os:
     type: "string"
+    default: ""
+    description: |
+      **Deprecated.** Ignored. Use `architecture` instead.
   path:
     default: "."
     type: "string"
@@ -47,7 +47,8 @@ parameters:
     default: "linux/amd64"
     description: |
       Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64").
-      This will be split into GOOS and GOARCH for the build. Example: "linux/amd64".
+      Split into GOOS and GOARCH for the build. Produces `<binary>-<GOOS>-<GOARCH>`. For
+      `linux/amd64` a copy is also written to `<binary>` for backward compatibility.
     type: string
 steps:
   - go-test:
@@ -57,24 +58,19 @@ steps:
   - run:
       name: Build binaries
       command: |
-        if [[ -n "<< parameters.architecture >>" ]]; then
-          ARCH="<<parameters.architecture>>"
-          GOOS=$(echo $ARCH | cut -d'/' -f1)
-          GOARCH=$(echo $ARCH | cut -d'/' -f2)
-          binary_name="<< parameters.binary >>-${GOOS}-${GOARCH}"
-          LD_FLAGS="-s -w"
-          ldflags_file=".ldflags-${GOOS}-${GOARCH}"
+        ARCH="<<parameters.architecture>>"
+        GOOS="${ARCH%%/*}"
+        GOARCH="${ARCH##*/}"
+        binary_name="<< parameters.binary >>-${GOOS}-${GOARCH}"
 
-          if [ -f "$ldflags_file" ]; then
-            LD_FLAGS="$(cat "$ldflags_file")"
-          fi
+        LD_FLAGS="-s -w"
+        if [ -f .ldflags ]; then
+          LD_FLAGS="$(cat .ldflags)"
+        fi
 
-          CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LD_FLAGS" -tags "<< parameters.tags >>" -o "$binary_name" << parameters.path >>
+        CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LD_FLAGS" -tags "<< parameters.tags >>" -o "$binary_name" << parameters.path >>
 
-          # If linux/amd64, also create/copy to <<parameters.binary>>
-          if [[ "$GOOS" == "linux" && "$GOARCH" == "amd64" ]]; then
-            cp "$binary_name" "<< parameters.binary >>"
-          fi
-        else
-          CGO_ENABLED=0 GOOS="<< parameters.os >>" go build -ldflags "$(cat .ldflags)" -tags "<< parameters.tags >>" -o << parameters.binary >> << parameters.path >>
+        # If linux/amd64, also create/copy to <<parameters.binary>>
+        if [[ "$GOOS" == "linux" && "$GOARCH" == "amd64" ]]; then
+          cp "$binary_name" "<< parameters.binary >>"
         fi
