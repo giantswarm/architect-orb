@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Revert the v8.0.1 `setup_remote_docker version: docker24` pin in `push-to-registries` and `push-to-registries-multiarch` back to `default`. The pin only covered the daemon side; the architect executor's Docker client (installed via Alpine's `apk add docker`) tracks Alpine stable and is now Docker 28.x (API 1.52), which the pinned daemon (API 1.43 max) refused with `client version 1.52 is too new. Maximum supported API version is 1.43`. Letting the daemon track CircleCI's default lets the two sides stay compatible.
+
 ## [8.0.1] - 2026-05-07
 
 ### Fixed
