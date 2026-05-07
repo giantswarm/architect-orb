@@ -70,6 +70,15 @@ parameters:
       audience=sigstore via `circleci run oidc get` so Fulcio's federation accepts it.
     type: boolean
     default: true
+  cache:
+    description: |
+      Use a registry-side buildx layer cache to speed up warm builds (PR rebuilds,
+      retries on the same SHA). The cache is stored at `<image>:buildcache` on the
+      first public registry the image is pushed to, in `mode=max` (all intermediate
+      layers cached, not just the final ones). Off by default — turning it on adds
+      a write to the cache tag on each build.
+    type: boolean
+    default: false
   split-china-push:
     description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
     type: boolean
@@ -175,6 +184,7 @@ steps:
 
         # Prepare all registry/image:tag combinations
         all_tags=()
+        cache_registry=""
         while IFS=' ' read -r access reg _ _ push_dev; do
           [[ -z "$reg" || "$reg" =~ ^# ]] && continue
           [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
@@ -184,6 +194,8 @@ steps:
           fi
           if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
             echo -n ${reg} > /tmp/.docker_image_registry
+            # Pick the first registry actually pushed to as the cache backend.
+            [[ -z "$cache_registry" ]] && cache_registry="$reg"
             for tag in "${tags[@]}"; do
               echo -e "\nProcessing image push config for registry $reg."
               echo "Tag the image for $reg"
@@ -242,12 +254,10 @@ steps:
           rm -f .annotations_input
         fi
 
-        # SLSA provenance and SBOM attestations. The buildkitd builder config
-        # written above tells BuildKit to store these as OCI 1.1 referrer
-        # artifacts when the target registry supports them (ACR/gsoci, GHCR,
-        # recent Quay), keeping the image index clean. Falls back to inline
-        # attestation manifests if the registry doesn't advertise referrer
-        # support.
+        # SLSA provenance and SBOM attestations. Stored inline in the image
+        # index (the unknown/unknown manifest entries) — see the long-form
+        # comment near the buildx create call for why referrer mode isn't
+        # used today.
         attest_flags=()
         case "<<parameters.provenance>>" in
           "min")   attest_flags+=("--attest" "type=provenance,mode=min") ;;
@@ -258,6 +268,23 @@ steps:
           attest_flags+=("--attest" "type=sbom")
         else
           attest_flags+=("--sbom=false")
+        fi
+
+        # Buildx registry-side layer cache (opt-in). Stored at <image>:buildcache
+        # on the first pushed registry, in mode=max so all intermediate layers
+        # (not just the final ones) are available for warm-build reuse.
+        cache_flags=()
+        if [[ "<<parameters.cache>>" == "true" ]]; then
+          if [[ -z "$cache_registry" ]]; then
+            echo "WARNING: cache=true but no registry available to host the cache; skipping cache flags."
+          else
+            cache_ref="${cache_registry}/<<parameters.image>>:buildcache"
+            echo "Buildx cache ref: $cache_ref (mode=max)"
+            cache_flags+=(
+              --cache-to "type=registry,ref=${cache_ref},mode=max"
+              --cache-from "type=registry,ref=${cache_ref}"
+            )
+          fi
         fi
 
         # Single buildx build/push for all tags/registries.
@@ -271,6 +298,7 @@ steps:
             "${annotation_flags[@]}" \
             "${oci_label_flags[@]}" \
             "${attest_flags[@]}" \
+            "${cache_flags[@]}" \
             --metadata-file=/tmp/.buildx_metadata.json \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \

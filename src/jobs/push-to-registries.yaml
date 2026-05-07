@@ -98,6 +98,13 @@ parameters:
       multi-arch path (v8.x).
     type: boolean
     default: true
+  cache:
+    description: |
+      Use a registry-side buildx layer cache at `<image>:buildcache` on the first
+      pushed registry. mode=max (all intermediate layers cached). Off by default.
+      Currently effective only on the multi-arch path (v8.x).
+    type: boolean
+    default: false
 steps:
   - checkout
   - setup_remote_docker:
@@ -158,6 +165,7 @@ steps:
             provenance: <<parameters.provenance>>
             sbom: <<parameters.sbom>>
             sign: <<parameters.sign>>
+            cache: <<parameters.cache>>
             split-china-push: <<parameters.split-china-push>>
   - when:
       condition: <<parameters.split-china-push>>
