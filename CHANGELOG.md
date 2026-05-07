@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking.** `push-to-registries-multiarch` job (deprecated since v7.0). Migrate to `push-to-registries`.
+- **Breaking.** `multiarch:` parameter on `push-to-registries`. The job always uses `docker buildx` now; consumers of the previous default (`multiarch: false`) get multi-arch builds automatically.
+- **Breaking.** `os` parameter on the `go-build` command and job (deprecated and ignored since v8.1). Use `architectures` instead.
+- **Breaking.** Singular `architecture` parameter on the `go-build` command and job. Replaced entirely by `architectures` (plural). Matrix-based callers must switch to a single job with a comma-separated list.
+- **Breaking.** `image-build-with-docker` and `image-push-to-registries` commands (the single-arch `docker build` / `docker push` path). The single-arch path is collapsed into the buildx path; nothing else in the orb referenced these commands.
+- `password_envar`, `username_envar`, `registry_url` parameters on `push-helm` and the two `[deprecated]` legacy OCI auth/push run steps that used them. The current OCI push flow uses `generate-github-token` + the giantswarm OCI authenticator instead.
+
+### Changed
+
+- **Breaking.** `image-build-and-push-multiarch` command renamed to `image-build-and-push` — multi-arch is no longer a distinguishing trait. Direct callers of the command need to update the name; consumers of the `push-to-registries` job are unaffected.
+
 ### Added
 
 - New `cosign-prepare` command. Mints a CircleCI OIDC token with `aud=sigstore` via `circleci run oidc get --root-issuer`, exporting it as `SIGSTORE_ID_TOKEN` through `BASH_ENV`. The cosign signing blocks in `image-build-and-push` and `push-helm` now call this single command instead of duplicating the token-mint logic.
