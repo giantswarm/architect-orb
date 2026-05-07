@@ -18,14 +18,17 @@ steps:
         label_flags=()
         if [[ "<<parameters.oci-labels>>" == "true" ]]; then
           oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-          oci_created="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          oci_version="${DOCKER_IMAGE_TAG:-unknown}"
+          # Prefer the commit timestamp so rebuilds of the same SHA produce identical labels.
+          oci_created="$(git show -s --format=%cI "$CIRCLE_SHA1" 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
+          oci_version="${DOCKER_IMAGE_TAG:-}"
           label_flags+=(
             --label "org.opencontainers.image.source=${oci_source}"
             --label "org.opencontainers.image.revision=${CIRCLE_SHA1}"
-            --label "org.opencontainers.image.version=${oci_version}"
             --label "org.opencontainers.image.created=${oci_created}"
           )
+          if [[ -n "$oci_version" ]]; then
+            label_flags+=(--label "org.opencontainers.image.version=${oci_version}")
+          fi
         fi
         docker build \
           "${label_flags[@]}" \

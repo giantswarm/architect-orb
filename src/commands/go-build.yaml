@@ -98,6 +98,10 @@ steps:
         : > .platforms
         architectures="<<parameters.architectures>>"
         if [[ -n "$architectures" ]]; then
+          if [[ ! "$architectures" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
+            echo "ERROR: 'architectures' must be a comma-separated list of GOOS/GOARCH pairs (e.g., linux/amd64,linux/arm64)."
+            exit 1
+          fi
           # Replace commas with spaces; bash word-splitting handles the rest.
           for raw in ${architectures//,/ }; do
             arch="$(echo "$raw" | tr -d '[:space:]')"
