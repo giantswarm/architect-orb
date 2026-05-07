@@ -114,12 +114,6 @@
       "groupName": "integration-test tools",
     },
     {
-      "description": "Limit kubernetes-version default to patch updates to avoid PR churn across minor branches",
-      "matchPackageNames": ["kubernetes/kubernetes"],
-      "matchUpdateTypes": ["major", "minor"],
-      "enabled": false,
-    },
-    {
       "description": "Group kyverno tooling defaults",
       "matchPackageNames": [
         "kyverno/kyverno",
