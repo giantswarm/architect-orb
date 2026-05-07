@@ -22,6 +22,72 @@
       "depNameTemplate": "gsoci.azurecr.io/giantswarm/app-test-suite",
       "datasourceTemplate": "docker",
     },
+    {
+      "customType": "regex",
+      "fileMatch": ["^src/commands/integration-test-install-tools\\.yaml$"],
+      "matchStrings": [
+        "kind\\.sigs\\.k8s\\.io/dl/(?<currentValue>v[^/]+)/kind-",
+      ],
+      "depNameTemplate": "kubernetes-sigs/kind",
+      "datasourceTemplate": "github-releases",
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^src/jobs/integration-test\\.yaml$"],
+      "matchStrings": [
+        "apptestctl-version:[\\s\\S]*?default:\\s*\"(?<currentValue>v[^\"]+)\"",
+      ],
+      "depNameTemplate": "giantswarm/apptestctl",
+      "datasourceTemplate": "github-releases",
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^src/jobs/integration-test\\.yaml$"],
+      "matchStrings": [
+        "helm-version:[\\s\\S]*?default:\\s*\"(?<currentValue>v[^\"]+)\"",
+      ],
+      "depNameTemplate": "helm/helm",
+      "datasourceTemplate": "github-releases",
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^src/jobs/integration-test\\.yaml$"],
+      "matchStrings": [
+        "kubernetes-version:[\\s\\S]*?default:\\s*\"(?<currentValue>v[^\"]+)\"",
+      ],
+      "depNameTemplate": "kubernetes/kubernetes",
+      "datasourceTemplate": "github-tags",
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^src/jobs/run-kyverno-tests\\.yaml$"],
+      "matchStrings": [
+        "kyverno_version:[\\s\\S]*?default:\\s*\"(?<currentValue>[^\"]+)\"",
+      ],
+      "depNameTemplate": "kyverno/kyverno",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^src/jobs/run-kyverno-tests\\.yaml$"],
+      "matchStrings": [
+        "kyverno-policies_version:[\\s\\S]*?default:\\s*\"(?<currentValue>[^\"]+)\"",
+      ],
+      "depNameTemplate": "kyverno-policies",
+      "datasourceTemplate": "helm",
+      "registryUrlTemplate": "https://giantswarm.github.io/giantswarm-catalog",
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^src/commands/run-kyverno\\.yaml$"],
+      "matchStrings": [
+        "yq_version:[\\s\\S]*?default:\\s*\"(?<currentValue>[^\"]+)\"",
+      ],
+      "depNameTemplate": "mikefarah/yq",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+    },
   ],
   "packageRules": [
     {
@@ -36,6 +102,30 @@
         "gsoci.azurecr.io/giantswarm/app-test-suite",
       ],
       "groupName": "app-test-suite",
+    },
+    {
+      "description": "Group integration-test tooling defaults",
+      "matchPackageNames": [
+        "giantswarm/apptestctl",
+        "helm/helm",
+        "kubernetes/kubernetes",
+        "kubernetes-sigs/kind",
+      ],
+      "groupName": "integration-test tools",
+    },
+    {
+      "description": "Limit kubernetes-version default to patch updates to avoid PR churn across minor branches",
+      "matchPackageNames": ["kubernetes/kubernetes"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false,
+    },
+    {
+      "description": "Group kyverno tooling defaults",
+      "matchPackageNames": [
+        "kyverno/kyverno",
+        "kyverno-policies",
+      ],
+      "groupName": "kyverno",
     },
   ],
 }
