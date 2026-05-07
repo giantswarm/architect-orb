@@ -106,8 +106,36 @@ steps:
       tags: << parameters.tags >>
       test_target: << parameters.test_target >>
       architecture: << parameters.architecture >>
-  - persist_to_workspace:
-      root: .
-      paths:
-        - ./<< parameters.binary >>*
+  # Persist only the binaries produced by go-build, not unrelated repo files
+  # that share the binary name as a prefix (e.g. `<binary>-manifest.yaml`).
+  # The previous `./<binary>*` glob caused matrix builds to fail with
+  # "Concurrent upstream jobs persisted the same file(s)" whenever such a
+  # file existed in the repo.
+  #
+  # `<binary>-*-*` matches `<binary>-<GOOS>-<GOARCH>` (no hyphens in GOOS or
+  # GOARCH) but not files with a single hyphen.
+  #
+  # The legacy `./<binary>` copy is only created on the linux/amd64 build
+  # (and on the deprecated `os`-only path), so we persist it conditionally.
+  - when:
+      condition:
+        or:
+          - equal: ["linux/amd64", << parameters.architecture >>]
+          - equal: ["", << parameters.architecture >>]
+      steps:
+        - persist_to_workspace:
+            root: .
+            paths:
+              - ./<< parameters.binary >>
+              - ./<< parameters.binary >>-*-*
+  - unless:
+      condition:
+        or:
+          - equal: ["linux/amd64", << parameters.architecture >>]
+          - equal: ["", << parameters.architecture >>]
+      steps:
+        - persist_to_workspace:
+            root: .
+            paths:
+              - ./<< parameters.binary >>-*-*
   - go-cache-save

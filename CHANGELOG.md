@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `go-build`: narrow the workspace persist glob from `./<binary>*` to `./<binary>` (legacy linux/amd64 / `os`-only path) plus `./<binary>-*-*` (multi-arch named binaries). The previous wildcard also captured unrelated repo files matching the binary prefix (e.g. `<binary>-manifest.yaml`), causing matrix multi-arch builds to fail at `attach_workspace` with "Concurrent upstream jobs persisted the same file(s)".
+
 ## [8.0.0] - 2026-05-06
 
 ### Removed
