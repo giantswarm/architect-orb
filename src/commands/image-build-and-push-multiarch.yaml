@@ -207,21 +207,15 @@ steps:
         # renovate: datasource=docker depName=tonistiigi/binfmt
         docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
 
-        # buildkitd config to store SLSA provenance and SBOM attestations as OCI
-        # 1.1 referrer artifacts on registries that support them (ACR, GHCR,
-        # recent Quay), instead of inline manifests in the image index.
-        printf '[attestation]\n  referrers = true\n' > /tmp/buildkitd.toml
-
-        # Reuse the builder if it already exists; create otherwise. Pin a recent
-        # BuildKit version with stable referrer-mode support.
-        # renovate: datasource=docker depName=moby/buildkit
-        BUILDKIT_VERSION=v0.21.0
+        # Reuse the builder if it already exists; create otherwise. Bootstrap
+        # ensures the buildkit container is up before the first build.
+        # SLSA provenance and SBOM attestations are stored inline (the
+        # `unknown/unknown` manifest entries) rather than as OCI 1.1 referrers
+        # — buildx's referrer mode for attestations is partially-landed and
+        # the stable trigger isn't clear yet. Cosign signatures still land as
+        # referrers via cosign's own push code.
         if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then
-          docker buildx create --name multiarch-builder \
-            --driver docker-container \
-            --driver-opt "image=moby/buildkit:${BUILDKIT_VERSION}" \
-            --buildkitd-config /tmp/buildkitd.toml \
-            --use
+          docker buildx create --name multiarch-builder --driver docker-container --use
         else
           docker buildx use multiarch-builder
         fi
