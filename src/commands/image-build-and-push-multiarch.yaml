@@ -207,10 +207,24 @@ steps:
         # renovate: datasource=docker depName=tonistiigi/binfmt
         docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
 
-        # Reuse the builder if it already exists; create otherwise. Bootstrap
-        # ensures the buildkit container is up before the first build.
+        # buildkitd config to store SLSA provenance and SBOM attestations as OCI
+        # 1.1 referrer artifacts on registries that support them (ACR, GHCR,
+        # recent Quay), instead of inline manifests in the image index.
+        cat > /tmp/buildkitd.toml <<'BUILDKITD_TOML'
+        [attestation]
+          referrers = true
+        BUILDKITD_TOML
+
+        # Reuse the builder if it already exists; create otherwise. Pin a recent
+        # BuildKit version with stable referrer-mode support.
+        # renovate: datasource=docker depName=moby/buildkit
+        BUILDKIT_VERSION=v0.21.0
         if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then
-          docker buildx create --name multiarch-builder --driver docker-container --use
+          docker buildx create --name multiarch-builder \
+            --driver docker-container \
+            --driver-opt "image=moby/buildkit:${BUILDKIT_VERSION}" \
+            --buildkitd-config /tmp/buildkitd.toml \
+            --use
         else
           docker buildx use multiarch-builder
         fi
@@ -228,21 +242,20 @@ steps:
           rm -f .annotations_input
         fi
 
-        # Attestations via OCI 1.1 referrers API. When the registry supports
-        # OCI 1.1 (ACR/gsoci, GHCR, recent Quay all do), provenance and SBOM
-        # are stored as referrer artifacts that point to the image by digest
-        # rather than embedded into the image index — keeping the manifest
-        # list to just the runnable platform manifests. Falls back to inline
-        # mode automatically if the registry doesn't advertise referrers
+        # SLSA provenance and SBOM attestations. The buildkitd builder config
+        # written above tells BuildKit to store these as OCI 1.1 referrer
+        # artifacts when the target registry supports them (ACR/gsoci, GHCR,
+        # recent Quay), keeping the image index clean. Falls back to inline
+        # attestation manifests if the registry doesn't advertise referrer
         # support.
         attest_flags=()
         case "<<parameters.provenance>>" in
-          "min")   attest_flags+=("--attest" "type=provenance,mode=min,referrers=true") ;;
-          "max")   attest_flags+=("--attest" "type=provenance,mode=max,referrers=true") ;;
+          "min")   attest_flags+=("--attest" "type=provenance,mode=min") ;;
+          "max")   attest_flags+=("--attest" "type=provenance,mode=max") ;;
           "false") attest_flags+=("--provenance=false") ;;
         esac
         if [[ "<<parameters.sbom>>" == "true" ]]; then
-          attest_flags+=("--attest" "type=sbom,referrers=true")
+          attest_flags+=("--attest" "type=sbom")
         else
           attest_flags+=("--sbom=false")
         fi
