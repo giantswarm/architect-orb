@@ -52,11 +52,6 @@ parameters:
     description: Skip the repo visibility check and push the the chart to public registry
     type: boolean
     default: false
-  registry_url:
-    type: "string"
-    default: "giantswarmpublic.azurecr.io"
-    description: |
-      Base URL of the OCI registry.
   resource_class:
     default: "small"
     description: |
@@ -77,16 +72,6 @@ parameters:
     description: |
       When this is `true`, the packaged chart archive will be persisted to the workspace.
       Set this to `true`, if you're planning to execute tests using app-test-suite.
-  password_envar:
-    default: AZURE_CLIENTSECRET
-    description: |
-      Required if `push_to_oci_registry` is set to `true`.
-    type: "string"
-  username_envar:
-    default: AZURE_CLIENTID
-    description: |
-      Required if `push_to_oci_registry` is set to `true`.
-    type: "string"
 executor: "<< parameters.executor >>"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -148,9 +133,6 @@ steps:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>
       force-public: <<parameters.force-public>>
-      password_envar: << parameters.password_envar >>
-      username_envar: << parameters.username_envar >>
-      registry_url: << parameters.registry_url>>
       chart: << parameters.chart >>
   - when:
       condition: << parameters.persist_chart_archive >>
