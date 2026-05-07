@@ -4,16 +4,18 @@ This job builds Go binaries for one or more target architectures and operating s
 
 **How it works:**
 - Runs `go-test` (with optional `pre_test_target` and `test_target`)
-- Builds the binary for the specified architecture using the `go-build` command
-- If `architecture` is set (e.g., linux/amd64), the binary will be named `<binary>-<GOOS>-<GOARCH>`. If the architecture is linux/amd64, a copy will also be made as `<binary>` for compatibility with legacy workflows.
-- All produced binaries are persisted to the workspace (using a wildcard pattern)
+- Builds the binary for one or more architectures using the `go-build` command
+- Each binary is named `<binary>-<GOOS>-<GOARCH>`. For `linux/amd64` a copy is also written to `<binary>` for backward compatibility.
+- When `architectures` (plural) is set, the resolved list is also written to `.platforms` in the workspace so downstream `push-to-registries` jobs can auto-derive `--platform`.
+- All produced binaries (and `.platforms`) are persisted to the workspace.
 
 ## Parameters
 
 - `binary`: Name of the output binary (required).
-- `architecture`: Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64"). Defaults to "linux/amd64". If set, will split into GOOS/GOARCH and name the binary accordingly. If linux/amd64, also copies to `<binary>`.
-- `os`: **Deprecated.** Use `architecture` instead for multi-arch support.
-- `path`: Path to the Go package to build (default: ".").
+- `architectures`: Comma-separated list of target architectures (e.g., `"linux/amd64,linux/arm64"`). When set, builds all listed targets in this single job and writes the list to `.platforms`. Takes precedence over `architecture`.
+- `architecture`: Single target architecture (e.g., `"linux/amd64"`). Default: `linux/amd64`. Kept for callers using a CircleCI matrix.
+- `os`: **Deprecated.** Ignored. Use `architectures` instead.
+- `path`: Path to the Go package to build (default: `"."`).
 - `pre_test_target`: Makefile target to run before tests/lints (optional).
 - `tags`: Additional Go build tags (optional).
 - `test_target`: Makefile target to run for tests (optional).
@@ -33,7 +35,6 @@ workflows:
     jobs:
       - architect/go-build:
           binary: myapp
-          architecture: "linux/amd64"
 ```
 
 Dockerfile example:
@@ -43,7 +44,9 @@ COPY myapp /usr/local/bin/myapp
 ENTRYPOINT ["/usr/local/bin/myapp"]
 ```
 
-### Multi-architecture (multiple jobs, different resource_class)
+### Multi-architecture (recommended — single job, `architectures` plural)
+
+Builds all listed architectures in one job and writes `.platforms` to the workspace. Downstream `push-to-registries` (with `multiarch: true`) auto-derives `--platform` from `.platforms`, so no platform list needs to be repeated.
 
 ```yaml
 version: 2.1
@@ -54,23 +57,17 @@ workflows:
     jobs:
       - architect/go-build:
           binary: myapp
-          architecture: "linux/amd64"
-          resource_class: medium
-      - architect/go-build:
-          binary: myapp
-          architecture: "linux/arm64"
-          resource_class: arm.medium
-      - architect/go-build:
-          binary: myapp
-          architecture: "darwin/amd64"
-          resource_class: macos.xlarge
+          architectures: "linux/amd64,linux/arm64"
+      - architect/push-to-registries:
+          requires: [architect/go-build]
+          multiarch: true
 ```
 
-This will run the `go-build` job in parallel for each architecture, and you can specify a different executor or resource_class for each if needed (e.g., to use ARM or macOS runners).
+This is the simplest setup for the common case. Tests run once (not per arch), CircleCI startup overhead is paid once, and the platform list lives in one place.
 
-### Multi-architecture (using CircleCI matrix, recommended for push-to-registries-multiarch)
+### Multi-architecture (CircleCI matrix — singular `architecture`)
 
-For best results and maintainability, we recommend using a CircleCI matrix to build all required architectures in parallel. This is especially useful when using `push-to-registries-multiarch`, as it ensures all binaries are built and available for the multi-arch image build step.
+Useful when you want each architecture to run on a different `resource_class` (for example, `arm.medium` to avoid QEMU when compiling inside the Dockerfile). Pass `platforms` explicitly to `push-to-registries`.
 
 ```yaml
 version: 2.1
@@ -84,21 +81,26 @@ workflows:
             parameters:
               architecture: ["linux/amd64", "linux/arm64"]
           binary: myapp
+      - architect/push-to-registries:
+          requires: [architect/go-build]
+          multiarch: true
+          platforms: "linux/amd64,linux/arm64"
 ```
-
-This approach is scalable and makes it easy to add or remove architectures. Each job runs in parallel, and you can use the `requires` field in your workflow to ensure all builds complete before running `push-to-registries-multiarch`.
-
-## Migrating from `os` to `architecture`
-
-The `os` parameter is now deprecated. For multi-arch builds, use the `architecture` parameter and run the job multiple times (once per architecture). For single-arch, you can omit `architecture` (defaults to `linux/amd64`).
 
 ## Preparing for multi-arch container images
 
-If you plan to use the output binaries in a multi-arch Docker image (see [`push-to-registries-multiarch`](./push-to-registries-multiarch.md)), ensure your Dockerfile uses the `TARGETPLATFORM` build argument to select the correct binary at build time. See the multi-arch Dockerfile example in the `push-to-registries-multiarch` documentation.
+If you plan to use the output binaries in a multi-arch Docker image (see [`push-to-registries`](./push-to-registries.md)), ensure your Dockerfile uses the `TARGETARCH` (or `TARGETPLATFORM`) build argument to select the correct binary at build time:
 
-- All referenced binaries (e.g., `myapp-linux-amd64`, `myapp-linux-arm64`) must be present in the workspace before the image build step.
+```dockerfile
+FROM gcr.io/distroless/static
+ARG TARGETARCH
+COPY myapp-linux-${TARGETARCH} /usr/local/bin/myapp
+ENTRYPOINT ["/usr/local/bin/myapp"]
+```
+
+All referenced binaries (e.g., `myapp-linux-amd64`, `myapp-linux-arm64`) must be present in the workspace before the image build step — `go-build` persists them automatically.
 
 ## Notes
-- Backward compatible: existing single-arch workflows do not need to change.
-- For classic single-arch Dockerfiles, use the default or specify a single architecture.
-- For true multi-arch images, use this job with multiple architectures and update your Dockerfile accordingly.
+- Backward compatible: existing single-arch and matrix-based workflows do not need to change.
+- For classic single-arch Dockerfiles, use the default or specify a single `architecture`.
+- For true multi-arch images, prefer `architectures` (plural) so the platform list is auto-discovered downstream.

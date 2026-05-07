@@ -11,11 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `architectures` parameter on the `go-build` command and job: comma-separated list (e.g. `linux/amd64,linux/arm64`) that builds all targets in a single job, removing the need for a CircleCI matrix at the consumer. Writes the resolved list to `.platforms` in the workspace.
 - Auto-derive `platforms` in `push-to-registries` (and the legacy `push-to-registries-multiarch`) from the `.platforms` file written by `go-build`. The `platforms` parameter default is now `""` and falls back to `linux/amd64,linux/arm64` when neither an explicit value nor a workspace file is available — existing consumers see no behavior change.
-- Standard OCI image labels emitted by default in both single-arch (`docker build`) and multi-arch (`docker buildx build`) paths: `org.opencontainers.image.{source,revision,version,created}`.
+- Standard OCI image labels emitted by default in both single-arch (`docker build`) and multi-arch (`docker buildx build`) paths: `org.opencontainers.image.{source,revision,version,created}`. In multi-arch mode the same values are also emitted as OCI manifest index annotations.
+- `oci-labels` boolean parameter (default `true`) on `push-to-registries`, `push-to-registries-multiarch`, `image-build-with-docker`, and `image-build-and-push-multiarch` to opt out of the standard labels.
 
 ### Changed
 
 - `image-login-to-registries`: docker and regctl logins now pipe the password via stdin (`--password-stdin` / `--pass-stdin`) instead of building a shell command string. Drops the `eval`-based env-var resolution in the regctl branch in favour of bash indirect expansion.
+- `image-login-to-registries`: read the registries data file directly (`while read … done < .registries_data`) instead of piping through `cat`, so a failed login terminates the script instead of being trapped in a subshell.
+
+### Fixed
+
+- Drop the duplicated `<version>-<suffix>-<suffix>` tag emitted by the multi-arch push when `tag-suffix` was set (the suffix is already baked into `DOCKER_IMAGE_TAG`).
+- Read the single `.ldflags` file (written by `go-test`) in the multi-arch `go-build` path. The previous lookup of `.ldflags-<GOOS>-<GOARCH>` always missed and silently dropped `gitSHA` / `buildTimestamp` from cross-compiled binaries.
+- Remove the unreachable legacy branch in `go-build` (the `architecture` default of `linux/amd64` made the `os`-based branch dead code). The `os` parameter is kept for backward compatibility but is now ignored; use `architectures` instead.
+- Fail loudly when the GitHub repository visibility check returns a non-200 status or an unparseable body. Previously a rate-limited or errored API response caused the image to be silently treated as private, skipping pushes to public registries.
+- Pin `setup_remote_docker` to `docker24` in `push-to-registries` and `push-to-registries-multiarch` to keep image builds reproducible across CircleCI default-version drift.
+- `image-login-to-registries`: turn off shell xtrace before resolving registry credentials so passwords are no longer printed into CI logs by the `set -x` trace.
 
 ### Deprecated
 

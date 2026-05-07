@@ -41,6 +41,13 @@ parameters:
         key=value (no prefix)         - defaults to index for multi-platform builds
     type: string
     default: ""
+  oci-labels:
+    description: |
+      Emit standard OCI image labels and matching index annotations
+      (org.opencontainers.image.{source,revision,version,created}) derived from the
+      CircleCI build context.
+    type: boolean
+    default: true
   split-china-push:
     description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
     type: boolean
@@ -65,8 +72,22 @@ steps:
         fi
         echo "Building for platforms: $platforms"
 
-        oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-        oci_created="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        oci_label_flags=()
+        if [[ "<<parameters.oci-labels>>" == "true" ]]; then
+          oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          oci_created="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          oci_version="${TAG_VALUE:-unknown}"
+          oci_label_flags+=(
+            --label "org.opencontainers.image.source=${oci_source}"
+            --label "org.opencontainers.image.revision=${CIRCLE_SHA1}"
+            --label "org.opencontainers.image.version=${oci_version}"
+            --label "org.opencontainers.image.created=${oci_created}"
+            --annotation "index:org.opencontainers.image.source=${oci_source}"
+            --annotation "index:org.opencontainers.image.revision=${CIRCLE_SHA1}"
+            --annotation "index:org.opencontainers.image.version=${oci_version}"
+            --annotation "index:org.opencontainers.image.created=${oci_created}"
+          )
+        fi
 
         # If image is forced to be pushed as a public one,
         # we shouldn't check whether the source is public
@@ -174,10 +195,7 @@ steps:
             --platform "$platforms" \
             "${all_tags[@]}" \
             "${annotation_flags[@]}" \
-            --label "org.opencontainers.image.source=${oci_source}" \
-            --label "org.opencontainers.image.revision=${CIRCLE_SHA1}" \
-            --label "org.opencontainers.image.version=${TAG_VALUE}" \
-            --label "org.opencontainers.image.created=${oci_created}" \
+            "${oci_label_flags[@]}" \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
             --progress=plain \

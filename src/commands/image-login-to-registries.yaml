@@ -38,7 +38,14 @@ steps:
         fi
 
         echo "${REGISTRIES_DATA}" > .registries_data
-        cat .registries_data | while read -r _ reg username password _; do
+
+        # Disable xtrace before resolving credentials so passwords don't leak into CI logs.
+        set +x
+
+        # Read the file directly (no pipe) so the loop runs in the current shell and a failed
+        # login terminates the script, instead of being trapped in a subshell.
+        rc=0
+        while read -r _ reg username password _; do
           # Validate env-var names (defence against malicious registries-data input).
           case "$username" in *[!a-zA-Z0-9_]*) echo "Invalid username variable name: $username"; exit 1 ;; esac
           case "$password" in *[!a-zA-Z0-9_]*) echo "Invalid password variable name: $password"; exit 1 ;; esac
@@ -54,7 +61,6 @@ steps:
               fi
               s=$?
             done
-            (exit $s)
           elif [[ "<<parameters.client>>" == "regctl" ]]; then
             for i in 1 2 3; do
               [[ $i -gt 1 ]] && sleep 1
@@ -63,6 +69,7 @@ steps:
               fi
               s=$?
             done
-            (exit $s)
           fi
-        done
+          [[ "$s" -ne 0 ]] && rc=$s
+        done < .registries_data
+        exit "$rc"

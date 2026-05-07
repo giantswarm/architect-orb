@@ -30,9 +30,9 @@ workflows:
           image: myapp
 ```
 
-### Multi-arch
+### Multi-arch (recommended — single `go-build` job)
 
-Use a CircleCI matrix to build all required architectures in parallel, then run the job with `multiarch: true` after all builds complete.
+Use the `architectures` (plural) parameter on `go-build` to build all targets in one job. The job writes `.platforms` to the workspace, and `push-to-registries` auto-derives `--platform` from it — no need to repeat the platform list.
 
 ```yaml
 version: 2.1
@@ -43,19 +43,41 @@ workflows:
   my-workflow:
     jobs:
       - architect/go-build:
+          binary: myapp
+          architectures: "linux/amd64,linux/arm64"
+      - architect/push-to-registries:
+          requires: [architect/go-build]
+          image: giantswarm/myapp
+          multiarch: true
+```
+
+### Multi-arch (CircleCI matrix)
+
+Useful when each architecture should run on a different `resource_class` (e.g., `arm.medium` to avoid QEMU when compiling inside the Dockerfile). Pass `platforms` explicitly since matrix mode does not write `.platforms`.
+
+```yaml
+workflows:
+  my-workflow:
+    jobs:
+      - architect/go-build:
           matrix:
             parameters:
               architecture: ["linux/amd64", "linux/arm64"]
           binary: myapp
       - architect/push-to-registries:
-          name: push-to-registries
-          requires:
-            - architect/go-build
+          requires: [architect/go-build]
           image: giantswarm/myapp
           multiarch: true
-          # platforms defaults to "linux/amd64,linux/arm64", so this can be omitted:
-          # platforms: "linux/amd64,linux/arm64"
+          platforms: "linux/amd64,linux/arm64"
 ```
+
+### Platform resolution order
+
+When `multiarch: true`, the platform list is resolved in this order:
+
+1. Explicit `platforms:` parameter (if non-empty).
+2. `.platforms` file in the workspace (written by `go-build` when `architectures` is set).
+3. Built-in default `linux/amd64,linux/arm64`.
 
 ### Multi-arch with OCI manifest annotations
 
@@ -136,6 +158,17 @@ The list of private registries is set as a parameter in the `image-push-to-regis
 
 If it's required to push an image that uses a private code to public registries, one can set the parameter `force-public` to true, then the whole check will be skipped and the image will be pushed to any registry.
 
+## OCI image labels
+
+By default, the job emits standard OCI image labels (and matching index annotations in multi-arch mode):
+
+- `org.opencontainers.image.source` — `https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}`
+- `org.opencontainers.image.revision` — `${CIRCLE_SHA1}`
+- `org.opencontainers.image.version` — the tag from `architect project version`
+- `org.opencontainers.image.created` — RFC 3339 build timestamp
+
+Set `oci-labels: false` to skip them.
+
 ## Migrating from `push-to-registries-multiarch`
 
 `push-to-registries-multiarch` is deprecated. Replace it with `push-to-registries` and add `multiarch: true`:
@@ -151,4 +184,4 @@ If it's required to push an image that uses a private code to public registries,
     multiarch: true
 ```
 
-The `platforms` parameter defaults to `"linux/amd64,linux/arm64"` in both jobs, so it does not need to be specified explicitly when migrating.
+The `platforms` parameter is auto-derived from `.platforms` (written by `go-build` when `architectures` is set), and falls back to `linux/amd64,linux/arm64` when neither is available — so it usually does not need to be specified.

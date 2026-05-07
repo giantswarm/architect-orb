@@ -5,17 +5,30 @@ parameters:
   dockerfile:
     type: "string"
     default: "./Dockerfile"
+  oci-labels:
+    description: |
+      Emit standard OCI image labels (org.opencontainers.image.{source,revision,version,created})
+      derived from the CircleCI build context.
+    type: boolean
+    default: true
 steps:
   - run:
       name: Build the container image using 'docker build'
       command: |
-        oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-        oci_created="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        label_flags=()
+        if [[ "<<parameters.oci-labels>>" == "true" ]]; then
+          oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          oci_created="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          oci_version="${DOCKER_IMAGE_TAG:-unknown}"
+          label_flags+=(
+            --label "org.opencontainers.image.source=${oci_source}"
+            --label "org.opencontainers.image.revision=${CIRCLE_SHA1}"
+            --label "org.opencontainers.image.version=${oci_version}"
+            --label "org.opencontainers.image.created=${oci_created}"
+          )
+        fi
         docker build \
-          --label "org.opencontainers.image.source=${oci_source}" \
-          --label "org.opencontainers.image.revision=${CIRCLE_SHA1}" \
-          --label "org.opencontainers.image.version=${DOCKER_IMAGE_TAG}" \
-          --label "org.opencontainers.image.created=${oci_created}" \
+          "${label_flags[@]}" \
           -f "<<parameters.dockerfile>>" \
           "<<parameters.build-context>>" \
           --progress plain 2>&1 | tee .docker.log
