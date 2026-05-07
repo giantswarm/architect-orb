@@ -24,9 +24,13 @@ parameters:
     type: boolean
     default: false
   platforms:
-    description: "Comma-separated string of platforms for multi-arch image build (e.g., 'linux/amd64,linux/arm64'). If not set, defaults to 'linux/amd64,linux/arm64'."
+    description: |
+      Comma-separated list of platforms for multi-arch image build (e.g.,
+      'linux/amd64,linux/arm64'). When empty, the list is auto-derived from the `.platforms`
+      file written by `go-build` to the workspace. Falls back to 'linux/amd64,linux/arm64'
+      if neither is available.
     type: string
-    default: "linux/amd64,linux/arm64"
+    default: ""
   annotations:
     description: |
       Newline-separated OCI annotations passed to 'docker buildx build --annotation'.
@@ -50,7 +54,19 @@ steps:
         TAG_VALUE="${DOCKER_IMAGE_TAG}"
         tag_suffix="<<parameters.tag-suffix>>"
         tag_latest_branch="<<parameters.tag-latest-branch>>"
-        platforms=$(IFS=,; echo "<<parameters.platforms>>")
+
+        # Resolve platforms: explicit param > .platforms in workspace > built-in default
+        platforms="<<parameters.platforms>>"
+        if [[ -z "$platforms" && -f .platforms ]]; then
+          platforms=$(paste -sd, .platforms | tr -d '[:space:]')
+        fi
+        if [[ -z "$platforms" ]]; then
+          platforms="linux/amd64,linux/arm64"
+        fi
+        echo "Building for platforms: $platforms"
+
+        oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+        oci_created="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
         # If image is forced to be pushed as a public one,
         # we shouldn't check whether the source is public
@@ -158,6 +174,10 @@ steps:
             --platform "$platforms" \
             "${all_tags[@]}" \
             "${annotation_flags[@]}" \
+            --label "org.opencontainers.image.source=${oci_source}" \
+            --label "org.opencontainers.image.revision=${CIRCLE_SHA1}" \
+            --label "org.opencontainers.image.version=${TAG_VALUE}" \
+            --label "org.opencontainers.image.created=${oci_created}" \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
             --progress=plain \

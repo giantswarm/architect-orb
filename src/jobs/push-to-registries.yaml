@@ -51,10 +51,12 @@ parameters:
     default: false
   platforms:
     description: |
-      Comma-separated list of platforms for multi-arch image build.
-      Only used when multiarch: true.
+      Comma-separated list of platforms for multi-arch image build (only used when
+      multiarch: true). When empty, the list is auto-derived from the `.platforms` file
+      written by `go-build` to the workspace. Falls back to `linux/amd64,linux/arm64` if
+      neither is available.
     type: string
-    default: "linux/amd64,linux/arm64"
+    default: ""
   annotations:
     description: |
       Newline-separated OCI annotations passed to 'docker buildx build --annotation'.
@@ -107,8 +109,8 @@ steps:
         - run:
             name: Validate platforms parameter
             command: |
-              if [ -z "<<parameters.platforms>>" ] || [[ ! "<<parameters.platforms>>" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
-                echo "ERROR: The 'platforms' parameter must be a non-empty, comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
+              if [ -n "<<parameters.platforms>>" ] && [[ ! "<<parameters.platforms>>" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
+                echo "ERROR: The 'platforms' parameter, if set, must be a comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
                 exit 1
               fi
         - image-build-and-push-multiarch:

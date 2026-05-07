@@ -1,11 +1,18 @@
 # Command: go-build
 #
-# Builds a Go binary for the architecture given by `architecture` and persists it to the workspace
-# as `<binary>-<GOOS>-<GOARCH>`. For linux/amd64 a copy is also written to `<binary>`.
+# Builds Go binaries for one or more target architectures and persists them to the workspace.
+# Each binary is named `<binary>-<GOOS>-<GOARCH>`. For linux/amd64 a copy is also written to
+# `<binary>` for backward compatibility.
+#
+# When `architectures` (plural, comma-separated) is set, all listed targets are built in this
+# single job (no matrix needed) and the list is written to `.platforms` in the workspace so
+# downstream `push-to-registries` jobs can auto-derive `--platform`.
 #
 # Parameters:
 #   binary: Name of the binary to produce.
-#   architecture: Target architecture (e.g., linux/amd64, linux/arm64, darwin/amd64). Default: linux/amd64.
+#   architectures: Comma-separated list of target architectures (e.g.,
+#       "linux/amd64,linux/arm64,darwin/amd64"). Takes precedence over `architecture` when set.
+#   architecture: Single target architecture (e.g., linux/amd64). Kept for matrix-based callers.
 #   os: **Deprecated.** Ignored.
 #   path: Path to the Go package to build (default: ".").
 #   pre_test_target: Makefile target to run before tests/lints (optional).
@@ -14,7 +21,9 @@
 #
 # Behavior:
 #   - Runs go-test first (with pre_test_target and test_target if set).
-#   - Builds the binary for the specified architecture.
+#   - If `architectures` is set: loops over each entry, builds `<binary>-<GOOS>-<GOARCH>`, and
+#     writes the architecture list to `.platforms`.
+#   - Otherwise: builds the single `architecture` target.
 #   - For linux/amd64, also copies the binary to <binary>.
 
 parameters:
@@ -24,7 +33,7 @@ parameters:
     type: "string"
     default: ""
     description: |
-      **Deprecated.** Ignored. Use `architecture` instead.
+      **Deprecated.** Ignored. Use `architectures` (plural) instead.
   path:
     default: "."
     type: "string"
@@ -46,9 +55,15 @@ parameters:
   architecture:
     default: "linux/amd64"
     description: |
-      Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64").
-      Split into GOOS and GOARCH for the build. Produces `<binary>-<GOOS>-<GOARCH>`. For
-      `linux/amd64` a copy is also written to `<binary>` for backward compatibility.
+      Single target architecture for Go build (e.g., "linux/amd64"). Kept for callers using
+      a CircleCI matrix. For multi-arch builds in one job, prefer `architectures`.
+    type: string
+  architectures:
+    default: ""
+    description: |
+      Comma-separated list of target architectures to build in this job (e.g.,
+      "linux/amd64,linux/arm64"). When set, takes precedence over `architecture` and writes
+      `.platforms` to the workspace for downstream auto-discovery in `push-to-registries`.
     type: string
 steps:
   - go-test:
@@ -58,19 +73,38 @@ steps:
   - run:
       name: Build binaries
       command: |
-        ARCH="<<parameters.architecture>>"
-        GOOS="${ARCH%%/*}"
-        GOARCH="${ARCH##*/}"
-        binary_name="<< parameters.binary >>-${GOOS}-${GOARCH}"
-
         LD_FLAGS="-s -w"
         if [ -f .ldflags ]; then
           LD_FLAGS="$(cat .ldflags)"
         fi
 
-        CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build -ldflags "$LD_FLAGS" -tags "<< parameters.tags >>" -o "$binary_name" << parameters.path >>
+        build_one() {
+          local arch="$1"
+          local goos="${arch%%/*}"
+          local goarch="${arch##*/}"
+          local binary_name="<<parameters.binary>>-${goos}-${goarch}"
 
-        # If linux/amd64, also create/copy to <<parameters.binary>>
-        if [[ "$GOOS" == "linux" && "$GOARCH" == "amd64" ]]; then
-          cp "$binary_name" "<< parameters.binary >>"
+          echo "Building ${binary_name}..."
+          CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$binary_name" "<<parameters.path>>"
+
+          # If linux/amd64, also create/copy to <<parameters.binary>>
+          if [[ "$goos" == "linux" && "$goarch" == "amd64" ]]; then
+            cp "$binary_name" "<<parameters.binary>>"
+          fi
+        }
+
+        # .platforms is written only in plural mode. In singular/matrix mode it stays empty so
+        # downstream auto-derive falls back to its built-in default.
+        : > .platforms
+        architectures="<<parameters.architectures>>"
+        if [[ -n "$architectures" ]]; then
+          # Replace commas with spaces; bash word-splitting handles the rest.
+          for raw in ${architectures//,/ }; do
+            arch="$(echo "$raw" | tr -d '[:space:]')"
+            [[ -z "$arch" ]] && continue
+            build_one "$arch"
+            echo "$arch" >> .platforms
+          done
+        else
+          build_one "<<parameters.architecture>>"
         fi
