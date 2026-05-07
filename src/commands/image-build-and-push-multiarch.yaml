@@ -327,12 +327,19 @@ steps:
               SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
               export SIGSTORE_ID_TOKEN
 
-              # Sign once per public-accessible pushed registry. cosign reads the docker
-              # config populated by image-login-to-registries for registry auth and the
-              # OIDC token from SIGSTORE_ID_TOKEN.
-              while IFS=' ' read -r access reg _ _ _; do
+              # Sign once per registry the image was actually pushed to. The skip
+              # conditions mirror the push loop above (split-china-push, push_dev for
+              # dev builds, access/IMAGE_ACCESS match) so we never try to sign a
+              # manifest that doesn't exist at that registry.
+              # DOCKER_IMAGE_TAG is exported via BASH_ENV by image-prepare-tag.
+              TAG_VALUE="${DOCKER_IMAGE_TAG}"
+              while IFS=' ' read -r access reg _ _ push_dev; do
                 [[ -z "$reg" || "$reg" =~ ^# ]] && continue
                 [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
+                if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ [a-f0-9]{40} ]]; then
+                  echo "Skipping cosign for $reg (push_dev=false, tag looks like a dev SHA)."
+                  continue
+                fi
                 # Skip registries that don't host public content even if they were pushed.
                 [[ "$access" == *"public"* ]] || continue
                 if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
