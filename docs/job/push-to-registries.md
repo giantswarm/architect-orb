@@ -53,7 +53,7 @@ workflows:
 
 ### Multi-arch (CircleCI matrix)
 
-Useful when each architecture should run on a different `resource_class` (e.g., `arm.medium` to avoid QEMU when compiling inside the Dockerfile). Pass `platforms` explicitly since matrix mode does not write `.platforms`.
+Matrix mode is still supported for callers that want each architecture to run on a different `resource_class`, or that already wire it up this way. Pass `platforms` explicitly since matrix mode does not write `.platforms`.
 
 ```yaml
 workflows:

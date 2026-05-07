@@ -67,7 +67,7 @@ This is the simplest setup for the common case. Tests run once (not per arch), C
 
 ### Multi-architecture (CircleCI matrix — singular `architecture`)
 
-Useful when you want each architecture to run on a different `resource_class` (for example, `arm.medium` to avoid QEMU when compiling inside the Dockerfile). Pass `platforms` explicitly to `push-to-registries`.
+Matrix mode is still supported for callers that want each architecture to run on a different `resource_class`, or that already wire it up this way. Pass `platforms` explicitly to `push-to-registries` since matrix mode does not write `.platforms`.
 
 ```yaml
 version: 2.1
