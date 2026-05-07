@@ -209,11 +209,20 @@ steps:
 
         # Reuse the builder if it already exists; create otherwise. Bootstrap
         # ensures the buildkit container is up before the first build.
-        # SLSA provenance and SBOM attestations are stored inline (the
-        # `unknown/unknown` manifest entries) rather than as OCI 1.1 referrers
-        # — buildx's referrer mode for attestations is partially-landed and
-        # the stable trigger isn't clear yet. Cosign signatures still land as
-        # referrers via cosign's own push code.
+        #
+        # NOTE on attestation storage: BuildKit (and `docker buildx --attest`)
+        # store SLSA provenance and SBOM attestations *inline* in the image
+        # index — this is what produces the `unknown/unknown` manifest entries
+        # that show up in `docker manifest inspect` output. As of writing,
+        # BuildKit does NOT support OCI 1.1 referrer storage for attestations:
+        #   - https://docs.docker.com/build/metadata/attestations/attestation-storage/
+        #     ("In the future, we may support exporting attestations in
+        #      additional formats.")
+        #   - The `--attest` flag has no `referrer` / `referrers` attribute.
+        #   - `buildkitd.toml` has no `[attestation]` section.
+        # Cosign signatures DO land as referrers because cosign uses its own
+        # OCI 1.1 referrer push path (independent of BuildKit). Revisit this
+        # comment when BuildKit ships referrer-mode attestation storage.
         if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then
           docker buildx create --name multiarch-builder --driver docker-container --use
         else
