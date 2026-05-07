@@ -1,0 +1,3 @@
+docker:
+  - image: giantswarm-registry.cn-shanghai.cr.aliyuncs.com/giantswarm/regclient-regctl:v0.11.3-alpine
+    entrypoint: ["/bin/sh"]

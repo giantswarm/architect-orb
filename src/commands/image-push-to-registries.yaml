@@ -35,6 +35,10 @@ parameters:
   force-public:
     type: boolean
     default: false
+  split-china-push:
+    description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
+    type: boolean
+    default: false
 steps:
   - generate-github-token
   - run:
@@ -49,9 +53,23 @@ steps:
           IMAGE_ACCESS=public
         else
           GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-          GITHUB_RESPONSE=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" "${GITHUB_API_URL}")
+          HTTP_STATUS=$(curl -s -o /tmp/.gh_response -w "%{http_code}" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "${GITHUB_API_URL}")
 
-          REPO_PRIVATE=$(echo $GITHUB_RESPONSE | jq .private)
+          if [[ "${HTTP_STATUS}" != "200" ]]; then
+            echo "GitHub API call to ${GITHUB_API_URL} failed (HTTP ${HTTP_STATUS}):"
+            cat /tmp/.gh_response
+            exit 1
+          fi
+
+          REPO_PRIVATE=$(jq -r '.private' < /tmp/.gh_response)
+          if [[ "${REPO_PRIVATE}" != "true" && "${REPO_PRIVATE}" != "false" ]]; then
+            echo "Unexpected GitHub API response (could not parse .private):"
+            cat /tmp/.gh_response
+            exit 1
+          fi
 
           if [[ "${REPO_PRIVATE}" = "false" ]]; then
             echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"
@@ -79,6 +97,7 @@ steps:
 
         cat .registries_data | while read -r access reg _ _ push_dev; do
           echo -e "\nProcessing image push config for registry ${reg}."
+          [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
           if [[ "${push_dev}" == "false" ]] && [[ "${DOCKER_IMAGE_TAG}" =~ [a-f0-9]{40} ]]; then
             echo "Not uploading image with tag ${DOCKER_IMAGE_TAG}, as  'push-dev' is 'false'"
             continue
@@ -88,6 +107,7 @@ steps:
             docker tag "${<<parameters.image-sha256_envvar>>}" "${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
             echo "Pushing image with SHA256 ${<<parameters.image-sha256_envvar>>} as ${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}"
             CMD="docker push \"${reg}/<<parameters.image>>:${<<parameters.tag_envvar>>}\""
+            echo -n ${reg} > /tmp/.docker_image_registry
             SUCCESS=false
             for i in $(seq 1 4); do
               echo "attempt: ${i}"

@@ -58,7 +58,7 @@ parameters:
 steps:
   - checkout
   - setup_remote_docker:
-      version: default
+      version: docker24
   - attach_workspace:
       at: .
   - run:

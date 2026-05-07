@@ -7,9 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.1] - 2026-05-07
+
+### Fixed
+
+- `go-build`: narrow the workspace persist glob from `./<binary>*` to `./<binary>-*-*` (multi-arch named binaries) plus `./<binary>` only on the linux/amd64 build. The previous wildcard also captured unrelated repo files matching the binary prefix (e.g. `<binary>-manifest.yaml`), causing matrix multi-arch builds to fail at `attach_workspace` with "Concurrent upstream jobs persisted the same file(s)".
+- Drop the duplicated `<version>-<suffix>-<suffix>` tag emitted by the multi-arch push when `tag-suffix` was set (the suffix is already baked into `DOCKER_IMAGE_TAG`).
+- Read the single `.ldflags` file (written by `go-test`) in the multi-arch `go-build` path. The previous lookup of `.ldflags-<GOOS>-<GOARCH>` always missed and silently dropped `gitSHA` / `buildTimestamp` from cross-compiled binaries.
+- Remove the unreachable legacy branch in `go-build` (the `architecture` default of `linux/amd64` made the `os`-based branch dead code). The `os` parameter is kept for backward compatibility but is now ignored; use `architecture` instead.
+- Fail loudly when the GitHub repository visibility check returns a non-200 status or an unparseable body. Previously a rate-limited or errored API response caused the image to be silently treated as private, skipping pushes to public registries.
+- Pin `setup_remote_docker` to `docker24` in `push-to-registries` and `push-to-registries-multiarch` to keep image builds reproducible across CircleCI default-version drift.
+
+## [8.0.0] - 2026-05-06
+
+### Removed
+
+- Remove `push-to-app-collection` command and job.
+
+## [7.1.0] - 2026-04-28
+
+### Added
+
+- Split pushes to China into two jobs.
+
+## [7.0.0] - 2026-04-24
+
 ### Added
 
 - Add `multiarch`, `platforms`, and `annotations` parameters to `push-to-registries` job, enabling multi-architecture image builds via `docker buildx` as an opt-in path (`multiarch: true`). Single-arch behaviour is unchanged. `platforms` defaults to `"linux/amd64,linux/arm64"`.
+- Add `clone_depth` parameter to the `go-build` job. Defaults to `1` (preserves current behaviour). Set to `0` for full history when build steps need `git log` / `git rev-list` to traverse the whole repo (e.g. `go generate` that records the last commit touching a file). Any value greater than `1` deepens the history to that many commits.
 
 ### Changed
 
@@ -18,9 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - `push-to-registries-multiarch` job is deprecated. Use `push-to-registries` with `multiarch: true` instead. It will be removed in the next major version.
+
 ### Removed
 
 - Remove deprecated `run-kat-tests` job and related `kat-tests-install-tools` and `kat-tests-run` commands. The `kube-app-testing` tool is no longer maintained.
+
+### Changed
+
+- Improved wording and documentation for `goimports` step in `go-test` job
 
 ## [6.15.0] - 2026-03-12
 
@@ -1392,7 +1423,11 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v6.15.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...HEAD
+[8.0.1]: https://github.com/giantswarm/architect-orb/compare/v8.0.0...v8.0.1
+[8.0.0]: https://github.com/giantswarm/architect-orb/compare/v7.1.0...v8.0.0
+[7.1.0]: https://github.com/giantswarm/architect-orb/compare/v7.0.0...v7.1.0
+[7.0.0]: https://github.com/giantswarm/architect-orb/compare/v6.15.0...v7.0.0
 [6.15.0]: https://github.com/giantswarm/architect-orb/compare/v6.14.1...v6.15.0
 [6.14.1]: https://github.com/giantswarm/architect-orb/compare/v6.14.0...v6.14.1
 [6.14.0]: https://github.com/giantswarm/architect-orb/compare/v6.13.0...v6.14.0
