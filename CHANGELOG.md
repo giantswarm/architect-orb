@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `go-build`: narrow the workspace persist glob from `./<binary>*` to `./<binary>` (legacy linux/amd64 / `os`-only path) plus `./<binary>-*-*` (multi-arch named binaries). The previous wildcard also captured unrelated repo files matching the binary prefix (e.g. `<binary>-manifest.yaml`), causing matrix multi-arch builds to fail at `attach_workspace` with "Concurrent upstream jobs persisted the same file(s)".
+- Drop the duplicated `<version>-<suffix>-<suffix>` tag emitted by the multi-arch push when `tag-suffix` was set (the suffix is already baked into `DOCKER_IMAGE_TAG`).
+- Read the single `.ldflags` file (written by `go-test`) in the multi-arch `go-build` path. The previous lookup of `.ldflags-<GOOS>-<GOARCH>` always missed and silently dropped `gitSHA` / `buildTimestamp` from cross-compiled binaries.
+- Remove the unreachable legacy branch in `go-build` (the `architecture` default of `linux/amd64` made the `os`-based branch dead code). The `os` parameter is kept for backward compatibility but is now ignored; use `architecture` instead.
+- Fail loudly when the GitHub repository visibility check returns a non-200 status or an unparseable body. Previously a rate-limited or errored API response caused the image to be silently treated as private, skipping pushes to public registries.
+- Pin `setup_remote_docker` to `docker24` in `push-to-registries` and `push-to-registries-multiarch` to keep image builds reproducible across CircleCI default-version drift.
 
 ## [8.0.0] - 2026-05-06
 
