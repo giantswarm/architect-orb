@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.1] - 2026-05-07
+
 ### Fixed
 
 - `go-build`: narrow the workspace persist glob from `./<binary>*` to `./<binary>-*-*` (multi-arch named binaries) plus `./<binary>` only on the linux/amd64 build. The previous wildcard also captured unrelated repo files matching the binary prefix (e.g. `<binary>-manifest.yaml`), causing matrix multi-arch builds to fail at `attach_workspace` with "Concurrent upstream jobs persisted the same file(s)".
@@ -1417,7 +1419,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.0.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...HEAD
+[8.0.1]: https://github.com/giantswarm/architect-orb/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/giantswarm/architect-orb/compare/v7.1.0...v8.0.0
 [7.1.0]: https://github.com/giantswarm/architect-orb/compare/v7.0.0...v7.1.0
 [7.0.0]: https://github.com/giantswarm/architect-orb/compare/v6.15.0...v7.0.0
