@@ -44,9 +44,9 @@ COPY myapp /usr/local/bin/myapp
 ENTRYPOINT ["/usr/local/bin/myapp"]
 ```
 
-### Multi-architecture (recommended — single job, `architectures` plural)
+### Multi-architecture
 
-Builds all listed architectures in one job and writes `.platforms` to the workspace. Downstream `push-to-registries` (with `multiarch: true`) auto-derives `--platform` from `.platforms`, so no platform list needs to be repeated.
+Use the `architectures` (plural) parameter to build all listed targets in one job. The job writes the resolved list to `.platforms`, and `push-to-registries` (with `multiarch: true`) auto-derives `--platform` from it — no platform list needs to be repeated.
 
 ```yaml
 version: 2.1
@@ -63,19 +63,13 @@ workflows:
           multiarch: true
 ```
 
-This is the simplest setup for the common case. Tests run once (not per arch), CircleCI startup overhead is paid once, and the platform list lives in one place.
+Tests run once (not per arch), CircleCI startup overhead is paid once, and the platform list lives in one place.
 
-### Multi-architecture (CircleCI matrix — singular `architecture`)
+#### Override: CircleCI matrix on singular `architecture`
 
-Matrix mode is still supported for callers that want each architecture to run on a different `resource_class`, or that already wire it up this way. Pass `platforms` explicitly to `push-to-registries` since matrix mode does not write `.platforms`.
+For callers that want each architecture to run on a different `resource_class`, or that already wire it up this way, the matrix form is still supported. Pass `platforms` explicitly since matrix mode does not write `.platforms`.
 
 ```yaml
-version: 2.1
-orbs:
-  architect: giantswarm/architect@x.y.z
-workflows:
-  build-multiarch:
-    jobs:
       - architect/go-build:
           matrix:
             parameters:

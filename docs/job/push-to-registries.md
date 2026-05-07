@@ -30,7 +30,7 @@ workflows:
           image: myapp
 ```
 
-### Multi-arch (recommended — single `go-build` job)
+### Multi-arch
 
 Use the `architectures` (plural) parameter on `go-build` to build all targets in one job. The job writes `.platforms` to the workspace, and `push-to-registries` auto-derives `--platform` from it — no need to repeat the platform list.
 
@@ -51,14 +51,11 @@ workflows:
           multiarch: true
 ```
 
-### Multi-arch (CircleCI matrix)
+#### Override: CircleCI matrix on singular `architecture`
 
-Matrix mode is still supported for callers that want each architecture to run on a different `resource_class`, or that already wire it up this way. Pass `platforms` explicitly since matrix mode does not write `.platforms`.
+For callers that want each architecture to run on a different `resource_class`, or that already wire it up this way, the matrix form is still supported. Pass `platforms` explicitly since matrix mode does not write `.platforms`.
 
 ```yaml
-workflows:
-  my-workflow:
-    jobs:
       - architect/go-build:
           matrix:
             parameters:
