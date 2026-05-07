@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.2] - 2026-05-07
+
+### Fixed
+
+- Revert the v8.0.1 `setup_remote_docker version: docker24` pin in `push-to-registries` and `push-to-registries-multiarch` back to `default`. The pin only covered the daemon side; the architect executor's Docker client (installed via Alpine's `apk add docker`) tracks Alpine stable and is now Docker 28.x (API 1.52), which the pinned daemon (API 1.43 max) refused with `client version 1.52 is too new. Maximum supported API version is 1.43`. Letting the daemon track CircleCI's default lets the two sides stay compatible.
+
 ## [8.0.1] - 2026-05-07
 
 ### Fixed
@@ -1419,7 +1425,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...HEAD
+[8.0.2]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...v8.0.2
 [8.0.1]: https://github.com/giantswarm/architect-orb/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/giantswarm/architect-orb/compare/v7.1.0...v8.0.0
 [7.1.0]: https://github.com/giantswarm/architect-orb/compare/v7.0.0...v7.1.0
