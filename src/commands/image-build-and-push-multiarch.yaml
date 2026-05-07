@@ -66,8 +66,8 @@ parameters:
     description: |
       Sign the pushed image manifest with cosign keyless OIDC. Public images only —
       private images are skipped at runtime to avoid leaking digests/timestamps into
-      the public Rekor transparency log. Requires `CIRCLE_OIDC_TOKEN_V2` in the job's
-      CircleCI context (auto-injected when the job uses a `context:`).
+      the public Rekor transparency log. Mints a fresh CircleCI OIDC token with
+      audience=sigstore via `circleci run oidc get` so Fulcio's federation accepts it.
     type: boolean
     default: true
   split-china-push:
@@ -294,11 +294,6 @@ steps:
                 exit 0
               fi
 
-              if [[ -z "${CIRCLE_OIDC_TOKEN_V2:-}" ]]; then
-                echo "CIRCLE_OIDC_TOKEN_V2 is not set. Either add a CircleCI context that exposes it, or set 'sign: false'."
-                exit 1
-              fi
-
               if [[ ! -f /tmp/.buildx_metadata.json ]]; then
                 echo "Buildx metadata file is missing — cannot resolve the index digest to sign."
                 exit 1
@@ -313,7 +308,7 @@ steps:
 
               # Install cosign (only when we're about to sign).
               # renovate: datasource=github-releases depName=sigstore/cosign
-              COSIGN_VERSION=v2.6.0
+              COSIGN_VERSION=v3.0.3
               host_arch=$(uname -m)
               case "$host_arch" in
                 x86_64)  cosign_arch=amd64 ;;
@@ -324,9 +319,17 @@ steps:
               chmod +x /usr/local/bin/cosign
               cosign version
 
-              # Sign once per public-accessible pushed registry. cosign uses the docker
-              # config populated by image-login-to-registries for registry auth; the OIDC
-              # token is passed explicitly via --identity-token.
+              # Mint a CircleCI OIDC token with audience=sigstore so Fulcio's federation
+              # accepts it. The auto-injected CIRCLE_OIDC_TOKEN_V2 has a different
+              # audience and would be rejected with HTTP 400 from Fulcio.
+              # `--root-issuer` requests the org-level issuer URL (the one federated
+              # with Fulcio), not the project-scoped one.
+              SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
+              export SIGSTORE_ID_TOKEN
+
+              # Sign once per public-accessible pushed registry. cosign reads the docker
+              # config populated by image-login-to-registries for registry auth and the
+              # OIDC token from SIGSTORE_ID_TOKEN.
               while IFS=' ' read -r access reg _ _ _; do
                 [[ -z "$reg" || "$reg" =~ ^# ]] && continue
                 [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
@@ -335,6 +338,6 @@ steps:
                 if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
                   ref="${reg}/<<parameters.image>>@${index_digest}"
                   echo "cosign sign $ref"
-                  cosign sign --yes --identity-token "$CIRCLE_OIDC_TOKEN_V2" "$ref"
+                  cosign sign --yes "$ref"
                 fi
               done < .registries_data

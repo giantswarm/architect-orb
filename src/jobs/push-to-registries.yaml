@@ -93,8 +93,8 @@ parameters:
     description: |
       Sign the pushed image with cosign keyless OIDC. Public images only — private
       images are skipped at runtime to avoid leaking digests/timestamps into the public
-      Rekor transparency log. Requires `CIRCLE_OIDC_TOKEN_V2` in the job's CircleCI
-      context (auto-injected for context-bound jobs). Currently effective only on the
+      Rekor transparency log. Mints a fresh CircleCI OIDC token with
+      audience=sigstore via `circleci run oidc get`. Currently effective only on the
       multi-arch path (v8.x).
     type: boolean
     default: true
