@@ -210,10 +210,7 @@ steps:
         # buildkitd config to store SLSA provenance and SBOM attestations as OCI
         # 1.1 referrer artifacts on registries that support them (ACR, GHCR,
         # recent Quay), instead of inline manifests in the image index.
-        cat > /tmp/buildkitd.toml <<'BUILDKITD_TOML'
-        [attestation]
-          referrers = true
-        BUILDKITD_TOML
+        printf '[attestation]\n  referrers = true\n' > /tmp/buildkitd.toml
 
         # Reuse the builder if it already exists; create otherwise. Pin a recent
         # BuildKit version with stable referrer-mode support.
