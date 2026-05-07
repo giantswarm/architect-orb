@@ -35,6 +35,10 @@ parameters:
     description: Skip the repo visibility check and push the the image to public registries
     type: boolean
     default: false
+  split-china-push:
+    description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
+    type: boolean
+    default: false
   registries-data:
     default: ""
     type: string
@@ -65,7 +69,7 @@ parameters:
 steps:
   - checkout
   - setup_remote_docker:
-      version: default
+      version: docker24
   - attach_workspace:
       at: .
   - run:
@@ -90,6 +94,7 @@ steps:
             force-public: <<parameters.force-public>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+            split-china-push: <<parameters.split-china-push>>
             registries-data:
               <<parameters.registries-data>>
               # 2025.11.03 Current config in the REGISTRIES_DATA_BASE64 env var
@@ -116,3 +121,12 @@ steps:
             registries-data: <<parameters.registries-data>>
             platforms: <<parameters.platforms>>
             annotations: <<parameters.annotations>>
+            split-china-push: <<parameters.split-china-push>>
+  - when:
+      condition: <<parameters.split-china-push>>
+      steps:
+        - save_cache:
+            key: image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
+            paths:
+              - /tmp/.docker_image_registry
+              - /tmp/.docker_image_tag

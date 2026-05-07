@@ -22,6 +22,7 @@ description: |
 #   resource_class: CircleCI resource class for the job.
 #   test_target: Makefile target to run for tests (optional).
 #   tags: Additional Go build tags (optional).
+#   clone_depth: Number of commits to fetch after checkout. Default: 1 (current CircleCI default). Use 0 for full history.
 #
 # Behavior:
 #   - Runs go-build command with all parameters.
@@ -68,10 +69,33 @@ parameters:
     description: |
       Additional tags to include in -tags flag of go build.
     type: string
+  clone_depth:
+    default: 1
+    description: |
+      Number of commits to include in the local git history after checkout.
+      Use `0` for unlimited depth (unshallow). Values greater than `1` deepen
+      the history to that many commits. The default of `1` preserves the
+      current behaviour of CircleCI's built-in `checkout` step. Use `0` when
+      build steps (e.g. `go generate`) rely on `git log` / `git rev-list` to
+      find the last commit that touched a specific file.
+    type: integer
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
+  - unless:
+      condition:
+        equal: [1, << parameters.clone_depth >>]
+      steps:
+        - run:
+            name: Adjust git clone depth
+            command: |
+              depth="<< parameters.clone_depth >>"
+              if [[ "$depth" == "0" ]]; then
+                git fetch --tags --unshallow 2>/dev/null || git fetch --tags
+              else
+                git fetch --tags --depth="$depth"
+              fi
   - tools-info
   - go-cache-restore
   - go-build:
