@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Cosign keyless signing for Helm charts pushed to the giantswarm OCI registry. Public charts only — private charts are skipped at runtime to avoid leaking digests/timestamps into the public Rekor transparency log. Same OIDC mechanism as container-image signing (`circleci run oidc get --claims '{"aud":"sigstore"}' --root-issuer`). Controlled by `sign: true|false` (default `true`) on `push-to-app-catalog` and the underlying `push-helm` command. Signature lands as an OCI 1.1 referrer artifact, queryable via the registry's referrers API.
+
 ### Removed
 
 - **Breaking.** `push-to-registries-multiarch` job (deprecated since v7.0). Migrate to `push-to-registries`.

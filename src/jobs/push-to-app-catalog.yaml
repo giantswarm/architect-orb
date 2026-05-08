@@ -52,6 +52,14 @@ parameters:
     description: Skip the repo visibility check and push the the chart to public registry
     type: boolean
     default: false
+  sign:
+    description: |
+      Sign the published Helm chart with cosign keyless OIDC. Public charts only —
+      private charts are skipped at runtime to avoid leaking digests/timestamps
+      into the public Rekor transparency log. Requires `CIRCLE_OIDC_TOKEN_V2` in
+      the job's CircleCI context (auto-injected for context-bound jobs).
+    type: boolean
+    default: true
   resource_class:
     default: "small"
     description: |
@@ -133,6 +141,7 @@ steps:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>
       force-public: <<parameters.force-public>>
+      sign: << parameters.sign >>
       chart: << parameters.chart >>
   - when:
       condition: << parameters.persist_chart_archive >>
