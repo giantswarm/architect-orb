@@ -174,6 +174,14 @@ steps:
 
               echo -e "Authenticating to ${OCI_REGISTRY_URL}"
               helm registry login "${OCI_REGISTRY_URL}" --username "${OCI_REGISTRY_AUTH_USERNAME}" --password "${OCI_REGISTRY_AUTH_PASSWORD}"
+              # Cosign reads ~/.docker/config.json for registry auth, not helm's
+              # registry config. Write a minimal docker auth file so signature
+              # uploads authenticate. Works in executors without a docker CLI
+              # (e.g. app-build-suite).
+              mkdir -p ~/.docker
+              auth=$(printf '%s:%s' "${OCI_REGISTRY_AUTH_USERNAME}" "${OCI_REGISTRY_AUTH_PASSWORD}" | base64 -w0)
+              printf '{"auths":{"%s":{"auth":"%s"}}}' "${OCI_REGISTRY_URL}" "$auth" > ~/.docker/config.json
+              chmod 600 ~/.docker/config.json
 
               echo -e "Pushing build artifacts to ${OCI_REGISTRY_URL}"
               chart_digest=$(helm push build/*.tgz "oci://${OCI_REGISTRY_URL}/charts/giantswarm" 2>&1 \
