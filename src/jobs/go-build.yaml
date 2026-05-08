@@ -94,7 +94,9 @@ steps:
   # error on lists that don't include amd64.
   - when:
       condition:
-        matches: { pattern: ".*linux/amd64.*", value: << parameters.architectures >> }
+        matches:
+          pattern: ".*linux/amd64.*"
+          value: << parameters.architectures >>
       steps:
         - persist_to_workspace:
             root: .
