@@ -38,22 +38,40 @@ steps:
         fi
 
         echo "${REGISTRIES_DATA}" > .registries_data
-        cat .registries_data | while read -r _ reg username password _; do
+
+        # Disable xtrace before resolving credentials so passwords don't leak into CI logs.
+        set +x
+
+        # Read the file directly (no pipe) so the loop runs in the current shell and a failed
+        # login terminates the script, instead of being trapped in a subshell.
+        rc=0
+        while read -r _ reg username password _; do
+          # Default to success so misconfigured client values don't leave $s unset.
+          s=0
+          # Validate env-var names (defence against malicious registries-data input).
+          case "$username" in *[!a-zA-Z0-9_]*) echo "Invalid username variable name: $username"; exit 1 ;; esac
+          case "$password" in *[!a-zA-Z0-9_]*) echo "Invalid password variable name: $password"; exit 1 ;; esac
+
+          username_val="${!username}"
+          password_val="${!password}"
+
           if [[ "<<parameters.client>>" == "docker" ]]; then
-            CMD="docker login $reg --username '${!username}' --password '${!password}'"
-            for i in {1..3}; do [[ $i -gt 1 ]] && sleep 1;  bash -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+            for i in 1 2 3; do
+              [[ $i -gt 1 ]] && sleep 1
+              if printf '%s' "$password_val" | docker login "$reg" --username "$username_val" --password-stdin; then
+                s=0; break
+              fi
+              s=$?
+            done
           elif [[ "<<parameters.client>>" == "regctl" ]]; then
-            case "$username" in
-            *[!a-zA-Z0-9_]*) echo "Invalid variable name"; exit 1 ;;
-            *) eval "username=\$$username" ;;
-            esac
-
-            case "$password" in
-            *[!a-zA-Z0-9_]*) echo "Invalid variable name"; exit 1 ;;
-            *) eval "password=\$$password" ;;
-            esac
-
-            CMD="regctl registry login $reg -u '${username}' -p '${password}'"
-            for i in $(seq 1 3); do [[ $i -gt 1 ]] && sleep 1;  sh -c "${CMD}" && s=0 && break || s=$?; done; (exit $s)
+            for i in 1 2 3; do
+              [[ $i -gt 1 ]] && sleep 1
+              if printf '%s' "$password_val" | regctl registry login "$reg" -u "$username_val" --pass-stdin; then
+                s=0; break
+              fi
+              s=$?
+            done
           fi
-        done
+          [[ "$s" -ne 0 ]] && rc=$s
+        done < .registries_data
+        exit "$rc"
