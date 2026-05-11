@@ -83,6 +83,21 @@ parameters:
       via `circleci run oidc get`.
     type: boolean
     default: true
+  hadolint:
+    description: |
+      Lint the Dockerfile with hadolint before building.
+      - "warn" (default): run hadolint, print findings, never fail the job.
+      - "fail": run hadolint and fail the job on any finding.
+      - "skip": don't run hadolint at all.
+    type: enum
+    enum: ["warn", "fail", "skip"]
+    default: "warn"
+  hadolint-config:
+    description: |
+      Optional path to a `.hadolint.yaml` configuration file. When empty,
+      hadolint uses its built-in defaults.
+    type: string
+    default: ""
 steps:
   - checkout
   - setup_remote_docker:
@@ -94,6 +109,32 @@ steps:
       command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
   - image-prepare-tag:
       tag-suffix: <<parameters.tag-suffix>>
+  - unless:
+      condition:
+        equal: ["<<parameters.hadolint>>", "skip"]
+      steps:
+        - run:
+            name: "hadolint: lint <<parameters.dockerfile>>"
+            command: |
+              set -uo pipefail
+              if ! command -v hadolint >/dev/null 2>&1; then
+                echo "hadolint not found on PATH; the architect image should provide it." >&2
+                if [[ "<<parameters.hadolint>>" == "fail" ]]; then exit 1; fi
+                exit 0
+              fi
+              args=()
+              if [[ -n "<<parameters.hadolint-config>>" ]]; then
+                args+=("--config" "<<parameters.hadolint-config>>")
+              fi
+              if hadolint "${args[@]}" "<<parameters.dockerfile>>"; then
+                echo "hadolint: no findings."
+                exit 0
+              fi
+              rc=$?
+              if [[ "<<parameters.hadolint>>" == "fail" ]]; then
+                exit "$rc"
+              fi
+              echo "hadolint reported findings (mode=warn); continuing build."
   - image-login-to-registries:
       registries-data: <<parameters.registries-data>>
   - run:

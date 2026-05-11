@@ -58,6 +58,14 @@ parameters:
       build steps (e.g. `go generate`) rely on `git log` / `git rev-list` to
       find the last commit that touched a specific file.
     type: integer
+  sign:
+    description: |
+      Sign each produced binary with cosign keyless OIDC, persisting a sibling
+      `<binary>-<GOOS>-<GOARCH>.bundle` file (Sigstore bundle). Public repos only —
+      private repos are skipped at runtime to avoid leaking artifacts into the
+      public Rekor transparency log.
+    type: boolean
+    default: true
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -84,6 +92,7 @@ steps:
       tags: << parameters.tags >>
       test_target: << parameters.test_target >>
       architectures: << parameters.architectures >>
+      sign: << parameters.sign >>
   - persist_to_workspace:
       root: .
       paths:
