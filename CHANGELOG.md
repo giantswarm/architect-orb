@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update `run-tests-with-ats` job with latest app-test-suite version (v0.15.0).
 ## [8.0.2] - 2026-05-07
 
 ### Fixed
