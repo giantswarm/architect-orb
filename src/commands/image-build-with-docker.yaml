@@ -5,11 +5,36 @@ parameters:
   dockerfile:
     type: "string"
     default: "./Dockerfile"
+  oci-labels:
+    description: |
+      Emit standard OCI image labels (org.opencontainers.image.{source,revision,version,created})
+      derived from the CircleCI build context.
+    type: boolean
+    default: true
 steps:
   - run:
       name: Build the container image using 'docker build'
       command: |
-        docker build -f "<<parameters.dockerfile>>" "<<parameters.build-context>>" --progress plain 2>&1 | tee .docker.log
+        label_flags=()
+        if [[ "<<parameters.oci-labels>>" == "true" ]]; then
+          oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          # Prefer the commit timestamp so rebuilds of the same SHA produce identical labels.
+          oci_created="$(git show -s --format=%cI "$CIRCLE_SHA1" 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
+          oci_version="${DOCKER_IMAGE_TAG:-}"
+          label_flags+=(
+            --label "org.opencontainers.image.source=${oci_source}"
+            --label "org.opencontainers.image.revision=${CIRCLE_SHA1}"
+            --label "org.opencontainers.image.created=${oci_created}"
+          )
+          if [[ -n "$oci_version" ]]; then
+            label_flags+=(--label "org.opencontainers.image.version=${oci_version}")
+          fi
+        fi
+        docker build \
+          "${label_flags[@]}" \
+          -f "<<parameters.dockerfile>>" \
+          "<<parameters.build-context>>" \
+          --progress plain 2>&1 | tee .docker.log
   - run:
       name: Save container image SHA256 to temp file
       command: |
