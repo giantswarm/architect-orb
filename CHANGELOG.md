@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `image-login-to-registries`: docker and regctl logins now pipe the password via stdin (`--password-stdin` / `--pass-stdin`) instead of building a shell command string. Drops the `eval`-based env-var resolution in the regctl branch in favour of bash indirect expansion.
 - `image-login-to-registries`: read the registries data file directly (`while read … done < .registries_data`) instead of piping through `cat`, so a failed login terminates the script instead of being trapped in a subshell.
 - `go-build`: validate the `architectures` parameter against `^[a-zA-Z0-9/_,-]+$` before splitting, matching the existing check on `platforms`.
+- Update `run-tests-with-ats` job with latest app-test-suite version (v0.15.0).
 
 ### Fixed
 
