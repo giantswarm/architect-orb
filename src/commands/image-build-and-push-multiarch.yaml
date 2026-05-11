@@ -294,6 +294,7 @@ steps:
   - when:
       condition: <<parameters.sign>>
       steps:
+        - cosign-prepare
         - run:
             name: Sign pushed image with cosign keyless OIDC
             command: |
@@ -318,16 +319,6 @@ steps:
                 exit 1
               fi
               echo "Signing index digest: $index_digest"
-
-              cosign version
-
-              # Mint a CircleCI OIDC token with audience=sigstore so Fulcio's federation
-              # accepts it. The auto-injected CIRCLE_OIDC_TOKEN_V2 has a different
-              # audience and would be rejected with HTTP 400 from Fulcio.
-              # `--root-issuer` requests the org-level issuer URL (the one federated
-              # with Fulcio), not the project-scoped one.
-              SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
-              export SIGSTORE_ID_TOKEN
 
               # Sign once per registry the image was actually pushed to. The skip
               # conditions mirror the push loop above (split-china-push, push_dev for

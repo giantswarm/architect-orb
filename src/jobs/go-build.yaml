@@ -91,6 +91,14 @@ parameters:
       build steps (e.g. `go generate`) rely on `git log` / `git rev-list` to
       find the last commit that touched a specific file.
     type: integer
+  sign:
+    description: |
+      Sign each produced binary with cosign keyless OIDC, persisting a sibling
+      `<binary>-<GOOS>-<GOARCH>.bundle` file (Sigstore bundle). Public repos only —
+      private repos are skipped at runtime to avoid leaking artifacts into the
+      public Rekor transparency log.
+    type: boolean
+    default: true
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -119,6 +127,7 @@ steps:
       test_target: << parameters.test_target >>
       architecture: << parameters.architecture >>
       architectures: << parameters.architectures >>
+      sign: << parameters.sign >>
   # Persist only the binaries produced by go-build, not unrelated repo files
   # that share the binary name as a prefix (e.g. `<binary>-manifest.yaml`).
   # The previous `./<binary>*` glob caused matrix builds to fail with
