@@ -19,6 +19,14 @@ parameters:
   force-public:
     type: boolean
     default: false
+  sign:
+    description: |
+      Sign the pushed Helm chart with cosign keyless OIDC. Public charts only —
+      private charts are skipped at runtime to avoid leaking digests/timestamps
+      into the public Rekor transparency log. Mints a fresh CircleCI OIDC token
+      with audience=sigstore via `circleci run oidc get`.
+    type: boolean
+    default: true
 steps:
   - when:
       condition:
@@ -204,6 +212,31 @@ steps:
 
               echo -e "Authenticating to ${OCI_REGISTRY_URL}"
               helm registry login "${OCI_REGISTRY_URL}" --username "${OCI_REGISTRY_AUTH_USERNAME}" --password "${OCI_REGISTRY_AUTH_PASSWORD}"
+              # Cosign reads ~/.docker/config.json for registry auth, not helm's
+              # registry config. Write a minimal docker auth file so signature
+              # uploads authenticate. Works in executors without a docker CLI
+              # (e.g. app-build-suite).
+              mkdir -p ~/.docker
+              auth=$(printf '%s:%s' "${OCI_REGISTRY_AUTH_USERNAME}" "${OCI_REGISTRY_AUTH_PASSWORD}" | base64 -w0)
+              printf '{"auths":{"%s":{"auth":"%s"}}}' "${OCI_REGISTRY_URL}" "$auth" > ~/.docker/config.json
+              chmod 600 ~/.docker/config.json
 
               echo -e "Pushing build artifacts to ${OCI_REGISTRY_URL}"
-              helm push build/*.tgz "oci://${OCI_REGISTRY_URL}/charts/giantswarm"
+              chart_digest=$(helm push build/*.tgz "oci://${OCI_REGISTRY_URL}/charts/giantswarm" 2>&1 \
+                | tee /dev/stderr | grep -oE 'sha256:[a-f0-9]{64}' | head -1)
+
+              # Cosign keyless signing (public charts only).
+              if [[ "<<parameters.sign>>" == "true" && "${CHART_ACCESS}" == "public" ]]; then
+                if [[ -z "$chart_digest" ]]; then
+                  echo "ERROR: could not extract OCI manifest digest from helm push output." >&2
+                  exit 1
+                fi
+                chart_ref="${OCI_REGISTRY_URL}/charts/giantswarm/<<parameters.chart>>@${chart_digest}"
+                echo "Signing chart: $chart_ref"
+
+                cosign version
+
+                SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
+                export SIGSTORE_ID_TOKEN
+                cosign sign --yes "$chart_ref"
+              fi
