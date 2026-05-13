@@ -225,18 +225,32 @@ steps:
               chart_digest=$(helm push build/*.tgz "oci://${OCI_REGISTRY_URL}/charts/giantswarm" 2>&1 \
                 | tee /dev/stderr | grep -oE 'sha256:[a-f0-9]{64}' | head -1)
 
-              # Cosign keyless signing (public charts only).
-              if [[ "<<parameters.sign>>" == "true" && "${CHART_ACCESS}" == "public" ]]; then
-                if [[ -z "$chart_digest" ]]; then
-                  echo "ERROR: could not extract OCI manifest digest from helm push output." >&2
-                  exit 1
-                fi
-                chart_ref="${OCI_REGISTRY_URL}/charts/giantswarm/<<parameters.chart>>@${chart_digest}"
-                echo "Signing chart: $chart_ref"
+              # Persist the chart digest (and access) for the cosign step that follows.
+              # The cosign step runs in its own shell, so we can't rely on env vars.
+              echo -n "${chart_digest:-}" > /tmp/.chart_digest
+              echo -n "${CHART_ACCESS}" > /tmp/.chart_access
+              echo -n "${OCI_REGISTRY_URL}" > /tmp/.chart_registry
+        - when:
+            condition: <<parameters.sign>>
+            steps:
+              - cosign-prepare
+              - run:
+                  name: "architect/push-helm-package: Sign pushed chart with cosign keyless OIDC"
+                  command: |
+                    set -euo pipefail
 
-                cosign version
+                    CHART_ACCESS=$(cat /tmp/.chart_access)
+                    if [[ "${CHART_ACCESS}" != "public" ]]; then
+                      echo "Chart is not public (CHART_ACCESS=${CHART_ACCESS}); skipping cosign signing."
+                      exit 0
+                    fi
 
-                SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
-                export SIGSTORE_ID_TOKEN
-                cosign sign --yes "$chart_ref"
-              fi
+                    chart_digest=$(cat /tmp/.chart_digest)
+                    OCI_REGISTRY_URL=$(cat /tmp/.chart_registry)
+                    if [[ -z "$chart_digest" ]]; then
+                      echo "ERROR: could not extract OCI manifest digest from helm push output." >&2
+                      exit 1
+                    fi
+                    chart_ref="${OCI_REGISTRY_URL}/charts/giantswarm/<<parameters.chart>>@${chart_digest}"
+                    echo "Signing chart: $chart_ref"
+                    cosign sign --yes "$chart_ref"
