@@ -1,41 +1,46 @@
 {
-  "extends": [
-    // Base config - https://github.com/giantswarm/renovate-presets/blob/main/default.json5
-    "github>giantswarm/renovate-presets:default.json5",
+  extends: [
+    'github>giantswarm/renovate-presets:default.json5',
   ],
-  "customManagers": [
+  customManagers: [
     {
-      "customType": "regex",
-      "fileMatch": ["^src/jobs/run-tests-with-ats\\.yaml$"],
-      "matchStrings": [
-        "app-test-suite_version:[\\s\\S]*?default:\\s*\"(?<currentValue>v[^\"]+)\"",
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/run-tests-with-ats\\.yaml$/',
       ],
-      "depNameTemplate": "giantswarm/app-test-suite",
-      "datasourceTemplate": "github-tags",
+      matchStrings: [
+        'app-test-suite_version:[\\s\\S]*?default:\\s*"(?<currentValue>v[^"]+)"',
+      ],
+      depNameTemplate: 'giantswarm/app-test-suite',
+      datasourceTemplate: 'github-tags',
     },
     {
-      "customType": "regex",
-      "fileMatch": ["^src/jobs/run-tests-with-ats\\.yaml$"],
-      "matchStrings": [
-        "app-test-suite_container_tag:[\\s\\S]*?default:\\s*\"(?<currentValue>[^\"]+)\"",
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/run-tests-with-ats\\.yaml$/',
       ],
-      "depNameTemplate": "gsoci.azurecr.io/giantswarm/app-test-suite",
-      "datasourceTemplate": "docker",
+      matchStrings: [
+        'app-test-suite_container_tag:[\\s\\S]*?default:\\s*"(?<currentValue>[^"]+)"',
+      ],
+      depNameTemplate: 'gsoci.azurecr.io/giantswarm/app-test-suite',
+      datasourceTemplate: 'docker',
     },
   ],
-  "packageRules": [
+  packageRules: [
     {
-      "description": "Only allow -circleci tagged versions of app-build-suite",
-      "matchPackageNames": ["gsoci.azurecr.io/giantswarm/app-build-suite"],
-      "allowedVersions": "/-circleci$/",
+      description: 'Only allow -circleci tagged versions of app-build-suite',
+      matchPackageNames: [
+        'gsoci.azurecr.io/giantswarm/app-build-suite',
+      ],
+      allowedVersions: '/-circleci$/',
     },
     {
-      "description": "Group app-test-suite git tag and container tag bumps",
-      "matchPackageNames": [
-        "giantswarm/app-test-suite",
-        "gsoci.azurecr.io/giantswarm/app-test-suite",
+      description: 'Group app-test-suite git tag and container tag bumps',
+      matchPackageNames: [
+        'giantswarm/app-test-suite',
+        'gsoci.azurecr.io/giantswarm/app-test-suite',
       ],
-      "groupName": "app-test-suite",
+      groupName: 'app-test-suite',
     },
   ],
 }
