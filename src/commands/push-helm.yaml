@@ -234,16 +234,7 @@ steps:
                 chart_ref="${OCI_REGISTRY_URL}/charts/giantswarm/<<parameters.chart>>@${chart_digest}"
                 echo "Signing chart: $chart_ref"
 
-                # renovate: datasource=github-releases depName=sigstore/cosign
-                COSIGN_VERSION=v3.0.3
-                host_arch=$(uname -m)
-                case "$host_arch" in
-                  x86_64)  cosign_arch=amd64 ;;
-                  aarch64) cosign_arch=arm64 ;;
-                  *) echo "Unsupported host arch for cosign install: $host_arch"; exit 1 ;;
-                esac
-                curl -sSL "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-${cosign_arch}" -o /usr/local/bin/cosign
-                chmod +x /usr/local/bin/cosign
+                cosign version
 
                 SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
                 export SIGSTORE_ID_TOKEN
