@@ -319,17 +319,6 @@ steps:
               fi
               echo "Signing index digest: $index_digest"
 
-              # Install cosign (only when we're about to sign).
-              # renovate: datasource=github-releases depName=sigstore/cosign
-              COSIGN_VERSION=v3.0.3
-              host_arch=$(uname -m)
-              case "$host_arch" in
-                x86_64)  cosign_arch=amd64 ;;
-                aarch64) cosign_arch=arm64 ;;
-                *) echo "Unsupported host arch for cosign install: $host_arch"; exit 1 ;;
-              esac
-              curl -sSL "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-${cosign_arch}" -o /usr/local/bin/cosign
-              chmod +x /usr/local/bin/cosign
               cosign version
 
               # Mint a CircleCI OIDC token with audience=sigstore so Fulcio's federation
