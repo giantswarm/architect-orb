@@ -339,5 +339,11 @@ steps:
                   ref="${reg}/<<parameters.image>>@${index_digest}"
                   echo "cosign sign $ref"
                   cosign sign --yes "$ref"
+
+                  echo "cosign verify $ref"
+                  cosign verify \
+                    --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
+                    --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$' \
+                    "$ref" > /dev/null
                 fi
               done < .registries_data
