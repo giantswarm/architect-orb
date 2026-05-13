@@ -4,55 +4,22 @@ description: |
   job does and runs `go build` against the codebase on top of that. It injects
   all the variables go-test job does into the produced binary.
 
-  The job produces static binary named after the repository name. It is
-  persisted to workspace under "./" path.
-#
-# Job: go-build
-#
-# This job runs go-test and then builds Go binaries for one or more architectures.
-# When `architectures` (plural, comma-separated) is set, all listed targets are built in this
-# single job and the list is written to `.platforms` in the workspace so downstream
-# `push-to-registries` jobs can auto-derive `--platform`. Otherwise the singular `architecture`
-# parameter is used (suitable for matrix-based callers).
-#
-# Parameters:
-#   binary: Name of the binary produced by the job. It is also persisted to the workspace.
-#   architectures: Comma-separated list of target architectures (e.g.,
-#       "linux/amd64,linux/arm64"). Takes precedence over `architecture` when set.
-#   architecture: Single target architecture for Go build (e.g., "linux/amd64"). Default: linux/amd64.
-#   os: (Deprecated) Ignored.
-#   path: Path where the Go package to build is located (default: ".").
-#   pre_test_target: Makefile target to run before lints and tests (optional).
-#   resource_class: CircleCI resource class for the job.
-#   test_target: Makefile target to run for tests (optional).
-#   tags: Additional Go build tags (optional).
-#   clone_depth: Number of commits to fetch after checkout. Default: 1 (current CircleCI default). Use 0 for full history.
-#
-# Behavior:
-#   - Runs go-build command with all parameters.
-#   - Persists all binaries (including multi-arch and default) to the workspace.
-#   - When `architectures` is set, also persists `.platforms` for downstream auto-discovery.
+  The job produces static binaries named `<binary>-<GOOS>-<GOARCH>` for each
+  entry in `architectures`, persists them to the workspace, and writes the
+  resolved architecture list to `.platforms` so downstream `push-to-registries`
+  can auto-derive `--platform`.
+
 parameters:
   binary:
     description: "Name of the binary produced by the job. It is also persisted to the workspace."
     type: "string"
   architectures:
     description: |
-      Comma-separated list of target architectures to build in this single job (e.g.,
-      "linux/amd64,linux/arm64"). When set, takes precedence over `architecture` and writes
-      `.platforms` to the workspace for downstream auto-discovery in `push-to-registries`.
-    type: string
-    default: ""
-  architecture:
-    description: |
-      Single target architecture for Go build (e.g., "linux/amd64"). Kept for callers using
-      a CircleCI matrix. For multi-arch builds in one job, prefer `architectures`.
+      Comma-separated list of target architectures to build (e.g.,
+      "linux/amd64,linux/arm64"). The resolved list is written to `.platforms` in
+      the workspace for downstream auto-discovery in `push-to-registries`.
     type: string
     default: "linux/amd64"
-  os:
-    description: "**Deprecated.** Ignored. Use `architectures` instead."
-    type: string
-    default: ""
   path:
     default: "."
     description: |
@@ -120,44 +87,28 @@ steps:
   - go-cache-restore
   - go-build:
       binary: << parameters.binary >>
-      os: << parameters.os >>
       path: << parameters.path >>
       pre_test_target: << parameters.pre_test_target >>
       tags: << parameters.tags >>
       test_target: << parameters.test_target >>
-      architecture: << parameters.architecture >>
       architectures: << parameters.architectures >>
       sign: << parameters.sign >>
-  # Persist only the binaries produced by go-build, not unrelated repo files
-  # that share the binary name as a prefix (e.g. `<binary>-manifest.yaml`).
-  # The previous `./<binary>*` glob caused matrix builds to fail with
-  # "Concurrent upstream jobs persisted the same file(s)" whenever such a
-  # file existed in the repo. `<binary>-*-*` matches `<binary>-<GOOS>-<GOARCH>`
-  # (neither GOOS nor GOARCH contains a hyphen) but not files with a single
-  # hyphen.
   - persist_to_workspace:
       root: .
       paths:
         - ./<< parameters.binary >>-*-*
-  # The legacy `./<binary>` copy is only created on the linux/amd64 build,
-  # so persist it only there — otherwise the literal path would error in
-  # other matrix arms where the file does not exist.
+        - ./.platforms
+  # The bare `./<binary>` is the linux/amd64 copy and only exists when amd64 is
+  # in the architectures list. Persist it conditionally to avoid a missing-path
+  # error on lists that don't include amd64.
   - when:
       condition:
-        equal: ["linux/amd64", << parameters.architecture >>]
+        matches:
+          pattern: ".*linux/amd64.*"
+          value: << parameters.architectures >>
       steps:
         - persist_to_workspace:
             root: .
             paths:
               - ./<< parameters.binary >>
-  # `.platforms` is only written in plural-mode (`architectures` non-empty),
-  # which runs as a single job, so persisting it then avoids the matrix
-  # "Concurrent upstream jobs persisted the same file(s)" failure.
-  - when:
-      condition: << parameters.architectures >>
-      steps:
-        - persist_to_workspace:
-            root: .
-            paths:
-              - ./.platforms
   - go-cache-save

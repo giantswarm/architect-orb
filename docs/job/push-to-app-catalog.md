@@ -47,11 +47,7 @@ It is an rare case so triggering again the build should solve the issue.
 
 ## Pushing to OCI Registries (`push_to_oci_registry: true`)
 
-This job assumes that App Catalog is hosted inside a suitable container
-registry specified by `registry_url` parameter, e.g.
-`giantswarmpublic.azurecr.io`. CircleCI environment variables (specified by
-`username_envar` and `password_envar`) will be used by `helm` to sign in to
-the registry.
+The job pushes Helm charts to Giant Swarm's App Catalog OCI registry — `gsoci.azurecr.io/charts/giantswarm` for public images, `gsociprivate.azurecr.io/charts/giantswarm` for private. Visibility is detected from the source GitHub repository (`force-public: true` overrides). Authentication uses the standard CircleCI context env vars (`ACR_GSOCI_USERNAME`/`ACR_GSOCI_PASSWORD` or `ACR_GSOCIPRIVATE_*`).
 
 You can read more about storing helm charts in OCI registries in the [helm
 documentation](https://helm.sh/blog/storing-charts-in-oci/).
@@ -67,9 +63,6 @@ documentation](https://helm.sh/blog/storing-charts-in-oci/).
 - [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
 - [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaulttrue)
-- [registry_url](#registry_url-optional-string)
-- [username_envar](#username_envar-optional-string)
-- [password_envar](#password_envar-optional-string)
 
 ### attach_workspace
 
@@ -138,24 +131,9 @@ catalog.
 
 ### push_to_oci_registry (optional boolean, default=true)
 
-When set to `true`, the packaged chart will be pushed to the specified OCI
-registry.
-
-### registry_url (optional string)
-
-Defaults to `giantswarmpublic.azurecr.io`.
-
-Hostname (and subdomain if applies) of the OCI registry to push to. `oci://`
-scheme is implied and should not be added to the URL.
-
-### username_envar (optional string)
-
-Defaults to `AZURE_CLIENTID`.
-
-Specifies environment variable to use as OCI registry username.
-
-### password_envar (optional string)
-
-Defaults to `AZURE_CLIENTSECRET`.
-
-Specifies environment variable to use as OCI registry password.
+When set to `true`, the packaged chart will be pushed to the giantswarm OCI
+registry (`gsoci.azurecr.io/charts/giantswarm` for public charts,
+`gsociprivate.azurecr.io/charts/giantswarm` for private). The registry URL
+and authentication are not configurable — they're determined from the source
+repository's GitHub visibility and standard `ACR_GSOCI_*` /
+`ACR_GSOCIPRIVATE_*` context env vars.
