@@ -178,7 +178,21 @@ steps:
           exit 1
         fi
 
-        docker buildx create --use --name multiarch-builder 2>/dev/null || docker buildx use multiarch-builder
+        # Register QEMU/binfmt handlers in the kernel so buildx can execute
+        # non-host-arch RUN steps. Required for plain Dockerfiles that don't
+        # gate RUN with --platform=$BUILDPLATFORM. Image is pinned via tag and
+        # bumped by Renovate.
+        # renovate: datasource=docker depName=tonistiigi/binfmt
+        docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
+
+        # Reuse the builder if it already exists; create otherwise. Bootstrap
+        # ensures the buildkit container is up before the first build.
+        if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then
+          docker buildx create --name multiarch-builder --driver docker-container --use
+        else
+          docker buildx use multiarch-builder
+        fi
+        docker buildx inspect --bootstrap
 
         annotation_flags=()
         annotations_input="<<parameters.annotations>>"
