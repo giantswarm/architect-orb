@@ -57,6 +57,14 @@ parameters:
     default: "giantswarmpublic.azurecr.io"
     description: |
       Base URL of the OCI registry.
+  sign:
+    description: |
+      Sign the published Helm chart with cosign keyless OIDC. Public charts only —
+      private charts are skipped at runtime to avoid leaking digests/timestamps
+      into the public Rekor transparency log. Requires `CIRCLE_OIDC_TOKEN_V2` in
+      the job's CircleCI context (auto-injected for context-bound jobs).
+    type: boolean
+    default: true
   resource_class:
     default: "small"
     description: |
@@ -151,6 +159,7 @@ steps:
       password_envar: << parameters.password_envar >>
       username_envar: << parameters.username_envar >>
       registry_url: << parameters.registry_url>>
+      sign: << parameters.sign >>
       chart: << parameters.chart >>
   - when:
       condition: << parameters.persist_chart_archive >>
