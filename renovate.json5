@@ -1,13 +1,151 @@
 {
-  "extends": [
-    // Base config - https://github.com/giantswarm/renovate-presets/blob/main/default.json5
-    "github>giantswarm/renovate-presets:default.json5",
+  extends: [
+    'github>giantswarm/renovate-presets:default.json5',
   ],
-  "packageRules": [
+  customManagers: [
     {
-      "description": "Only allow -circleci tagged versions of app-build-suite",
-      "matchPackageNames": ["gsoci.azurecr.io/giantswarm/app-build-suite"],
-      "allowedVersions": "/-circleci$/"
-    }
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/run-tests-with-ats\\.yaml$/',
+      ],
+      matchStrings: [
+        'app-test-suite_version:[\\s\\S]*?default:\\s*"(?<currentValue>v[^"]+)"',
+      ],
+      depNameTemplate: 'giantswarm/app-test-suite',
+      datasourceTemplate: 'github-tags',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/run-tests-with-ats\\.yaml$/',
+      ],
+      matchStrings: [
+        'app-test-suite_container_tag:[\\s\\S]*?default:\\s*"(?<currentValue>[^"]+)"',
+      ],
+      depNameTemplate: 'gsoci.azurecr.io/giantswarm/app-test-suite',
+      datasourceTemplate: 'docker',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/commands/integration-test-install-tools\\.yaml$/',
+      ],
+      matchStrings: [
+        'kind\\.sigs\\.k8s\\.io/dl/(?<currentValue>v[^/]+)/kind-',
+      ],
+      depNameTemplate: 'kubernetes-sigs/kind',
+      datasourceTemplate: 'github-releases',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/integration-test\\.yaml$/',
+      ],
+      matchStrings: [
+        'apptestctl-version:[\\s\\S]*?default:\\s*"(?<currentValue>v[^"]+)"',
+      ],
+      depNameTemplate: 'giantswarm/apptestctl',
+      datasourceTemplate: 'github-releases',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/integration-test\\.yaml$/',
+      ],
+      matchStrings: [
+        'helm-version:[\\s\\S]*?default:\\s*"(?<currentValue>v[^"]+)"',
+      ],
+      depNameTemplate: 'helm/helm',
+      datasourceTemplate: 'github-releases',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/integration-test\\.yaml$/',
+      ],
+      matchStrings: [
+        'kubernetes-version:[\\s\\S]*?default:\\s*"(?<currentValue>v[^"]+)"',
+      ],
+      depNameTemplate: 'kubernetes/kubernetes',
+      datasourceTemplate: 'github-tags',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/run-kyverno-tests\\.yaml$/',
+      ],
+      matchStrings: [
+        'kyverno_version:[\\s\\S]*?default:\\s*"(?<currentValue>[^"]+)"',
+      ],
+      depNameTemplate: 'kyverno/kyverno',
+      datasourceTemplate: 'github-releases',
+      extractVersionTemplate: '^v(?<version>.+)$',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/run-kyverno-tests\\.yaml$/',
+      ],
+      matchStrings: [
+        'kyverno-policies_version:[\\s\\S]*?default:\\s*"(?<currentValue>[^"]+)"',
+      ],
+      depNameTemplate: 'kyverno-policies',
+      datasourceTemplate: 'helm',
+      registryUrlTemplate: 'https://giantswarm.github.io/giantswarm-catalog',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/commands/run-kyverno\\.yaml$/',
+      ],
+      matchStrings: [
+        'yq_version:[\\s\\S]*?default:\\s*"(?<currentValue>[^"]+)"',
+      ],
+      depNameTemplate: 'mikefarah/yq',
+      datasourceTemplate: 'github-releases',
+      extractVersionTemplate: '^v(?<version>.+)$',
+    },
+  ],
+  packageRules: [
+    {
+      description: 'Only allow -circleci tagged versions of app-build-suite',
+      matchPackageNames: [
+        'gsoci.azurecr.io/giantswarm/app-build-suite',
+      ],
+      allowedVersions: '/-circleci$/',
+    },
+    {
+      description: 'Group app-test-suite git tag and container tag bumps',
+      matchPackageNames: [
+        'giantswarm/app-test-suite',
+        'gsoci.azurecr.io/giantswarm/app-test-suite',
+      ],
+      groupName: 'app-test-suite',
+    },
+    {
+      description: 'Group integration-test tooling defaults',
+      matchPackageNames: [
+        'giantswarm/apptestctl',
+        'helm/helm',
+        'kubernetes/kubernetes',
+        'kubernetes-sigs/kind',
+      ],
+      groupName: 'integration-test tools',
+    },
+    {
+      // Pin helm to major 3.x until we validate the orb and downstream
+      // integration tests against helm 4.
+      description: 'Restrict helm to major 3.x for now',
+      matchPackageNames: ['helm/helm'],
+      allowedVersions: '<4',
+    },
+    {
+      description: 'Group kyverno tooling defaults',
+      matchPackageNames: [
+        'kyverno/kyverno',
+        'kyverno-policies',
+      ],
+      groupName: 'kyverno',
+    },
   ],
 }
