@@ -20,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cosign keyless image signing enabled by default (`sign: true`) on the multi-arch path. Signatures are stored as proper OCI 1.1 referrer artifacts (cosign's own implementation, independent of BuildKit). **Public images only** — private images are skipped at runtime to avoid leaking digests/timestamps into the public Rekor transparency log. A fresh CircleCI OIDC token with `aud=sigstore` is minted via `circleci run oidc get --claims '{"aud":"sigstore"}' --root-issuer`; the auto-injected `CIRCLE_OIDC_TOKEN_V2` is not used because its audience doesn't match what Fulcio's CircleCI federation expects. The signing cert SAN URI is UUID-based (CircleCI's choice), but the Sigstore X.509 extensions populate the friendly source repo URI (`github.com/<org>/<repo>`) in OID `1.3.6.1.4.1.57264.1.12`, so verification policies can pin to the readable identity.
 - `--metadata-file` capture from buildx is now used to resolve the manifest index digest for cosign signing.
 
+### Changed
+
+- Update apptestctl to v0.25.0
+- Update helm to 3.21.0
+- Update kind to 0.31.0
+- Update kubernetes to 1.36.1
+
 ## [8.1.0] - 2026-05-18
 
 ### Added

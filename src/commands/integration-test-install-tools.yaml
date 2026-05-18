@@ -9,7 +9,7 @@ steps:
   - run:
       name: "architect/integration-test-install-tools: Install kind"
       command: |
-        URL="https://kind.sigs.k8s.io/dl/v0.30.0/kind-$(uname)-amd64"
+        URL="https://kind.sigs.k8s.io/dl/v0.31.0/kind-$(uname)-amd64"
         echo "URL: $URL"
         curl -Ls --output ./kind --retry 3 --retry-all-errors $URL
         chmod +x ./kind
