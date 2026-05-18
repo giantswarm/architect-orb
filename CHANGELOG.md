@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Register QEMU/binfmt handlers (`tonistiigi/binfmt --install all`) before `docker buildx build` so Dockerfiles with `RUN` steps on a non-host architecture work without consumers needing `--platform=$BUILDPLATFORM` themselves. The image tag is bumped automatically by Renovate.
+- Register QEMU/binfmt handlers (`tonistiigi/binfmt --install all`) before `docker buildx build` so Dockerfiles with `RUN` steps on a non-host architecture work without consumers needing `--platform=$BUILDPLATFORM` themselves. The image tag is bumped automatically by Renovate. See [Multi-arch Dockerfiles: avoiding QEMU emulation](docs/multi-arch-dockerfiles.md) for the conversion patterns that avoid the emulation slowdown.
 - Replace the buildx builder bootstrap (`buildx create --use 2>/dev/null || buildx use`) with explicit `buildx inspect` / `create --driver docker-container` / `inspect --bootstrap`, so failures in builder setup surface instead of being masked.
 - `architectures` parameter on the `go-build` command and job: comma-separated list (e.g. `linux/amd64,linux/arm64`) that builds all targets in a single job, removing the need for a CircleCI matrix at the consumer. Writes the resolved list to `.platforms` in the workspace.
 - Auto-derive `platforms` in `push-to-registries` (and the legacy `push-to-registries-multiarch`) from the `.platforms` file written by `go-build`. The `platforms` parameter default is now `""` and falls back to `linux/amd64,linux/arm64` when neither an explicit value nor a workspace file is available — existing consumers see no behavior change.
