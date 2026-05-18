@@ -53,6 +53,6 @@ steps:
         fi
 
         echo "Generated tag: ${TAG}<<parameters.tag-suffix>>"
-        echo -n "${TAG}" | tee .docker_image_tag
-        echo -n "<<parameters.tag-suffix>>" | tee -a .docker_image_tag
-        echo 'export DOCKER_IMAGE_TAG=$(cat .docker_image_tag)' >> "$BASH_ENV"
+        echo -n "${TAG}" | tee /tmp/.docker_image_tag
+        echo -n "<<parameters.tag-suffix>>" | tee -a /tmp/.docker_image_tag
+        echo 'export DOCKER_IMAGE_TAG=$(cat /tmp/.docker_image_tag)' >> "$BASH_ENV"

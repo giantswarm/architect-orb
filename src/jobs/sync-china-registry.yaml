@@ -1,0 +1,38 @@
+executor: "regctl"
+resource_class: giantswarm/galaxy-runner
+parameters:
+  image:
+    description: Name of the  container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
+    type: string
+    default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
+  registries-data:
+    default: ""
+    type: string
+steps:
+  - image-login-to-registries:
+      client: "regctl"
+      registries-data: <<parameters.registries-data>>
+  - restore_cache:
+      keys:
+        - image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
+  - run:
+      name: Sync image to Aliyun registry
+      command: |
+        SOURCE_REPOSITORY="$(cat /tmp/.docker_image_registry)/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
+        TARGET_REPOSITORY="giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
+        CMD="regctl image copy ${SOURCE_REPOSITORY} ${TARGET_REPOSITORY}"
+        SUCCESS=false
+        for x in $(seq 1 10); do
+          echo "attempt: ${x}"
+          if sh -c "${CMD}"; then
+            echo "Image is pushed to the registry."
+            SUCCESS=true
+            break
+          fi
+          echo "Waiting 5 seconds before the next attempt."
+          sleep 5
+        done
+        if [[ "${SUCCESS}" == "false" ]]; then
+          echo "Failed to sync the image"
+          exit 1
+        fi

@@ -9,37 +9,50 @@ description: |
 #
 # Job: go-build
 #
-# This job runs go-test and then builds a Go binary for the specified architecture using the go-build command.
-# If the architecture is set (e.g., linux/amd64), the binary will be named <binary>-<GOOS>-<GOARCH> and, if linux/amd64, also as <binary>.
-# All produced binaries are persisted to the workspace.
+# This job runs go-test and then builds Go binaries for one or more architectures.
+# When `architectures` (plural, comma-separated) is set, all listed targets are built in this
+# single job and the list is written to `.platforms` in the workspace so downstream
+# `push-to-registries` jobs can auto-derive `--platform`. Otherwise the singular `architecture`
+# parameter is used (suitable for matrix-based callers).
 #
 # Parameters:
 #   binary: Name of the binary produced by the job. It is also persisted to the workspace.
-#   architecture: Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64"). Default: linux/amd64.
-#   os: (Deprecated) Use architecture instead for multi-arch support.
+#   architectures: Comma-separated list of target architectures (e.g.,
+#       "linux/amd64,linux/arm64"). Takes precedence over `architecture` when set.
+#   architecture: Single target architecture for Go build (e.g., "linux/amd64"). Default: linux/amd64.
+#   os: (Deprecated) Ignored.
 #   path: Path where the Go package to build is located (default: ".").
 #   pre_test_target: Makefile target to run before lints and tests (optional).
 #   resource_class: CircleCI resource class for the job.
 #   test_target: Makefile target to run for tests (optional).
 #   tags: Additional Go build tags (optional).
+#   clone_depth: Number of commits to fetch after checkout. Default: 1 (current CircleCI default). Use 0 for full history.
 #
 # Behavior:
 #   - Runs go-build command with all parameters.
 #   - Persists all binaries (including multi-arch and default) to the workspace.
+#   - When `architectures` is set, also persists `.platforms` for downstream auto-discovery.
 parameters:
   binary:
     description: "Name of the binary produced by the job. It is also persisted to the workspace."
     type: "string"
+  architectures:
+    description: |
+      Comma-separated list of target architectures to build in this single job (e.g.,
+      "linux/amd64,linux/arm64"). When set, takes precedence over `architecture` and writes
+      `.platforms` to the workspace for downstream auto-discovery in `push-to-registries`.
+    type: string
+    default: ""
   architecture:
     description: |
-      Target architecture for Go build (e.g., "linux/amd64", "linux/arm64", or "darwin/amd64").
-      This will be split into GOOS and GOARCH for the build. Example: "linux/amd64".
+      Single target architecture for Go build (e.g., "linux/amd64"). Kept for callers using
+      a CircleCI matrix. For multi-arch builds in one job, prefer `architectures`.
     type: string
     default: "linux/amd64"
   os:
-    description: "**Deprecated.** Use architecture instead for multi-arch support."
+    description: "**Deprecated.** Ignored. Use `architectures` instead."
     type: string
-    default: "linux"
+    default: ""
   path:
     default: "."
     description: |
@@ -68,10 +81,33 @@ parameters:
     description: |
       Additional tags to include in -tags flag of go build.
     type: string
+  clone_depth:
+    default: 1
+    description: |
+      Number of commits to include in the local git history after checkout.
+      Use `0` for unlimited depth (unshallow). Values greater than `1` deepen
+      the history to that many commits. The default of `1` preserves the
+      current behaviour of CircleCI's built-in `checkout` step. Use `0` when
+      build steps (e.g. `go generate`) rely on `git log` / `git rev-list` to
+      find the last commit that touched a specific file.
+    type: integer
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
   - checkout
+  - unless:
+      condition:
+        equal: [1, << parameters.clone_depth >>]
+      steps:
+        - run:
+            name: Adjust git clone depth
+            command: |
+              depth="<< parameters.clone_depth >>"
+              if [[ "$depth" == "0" ]]; then
+                git fetch --tags --unshallow 2>/dev/null || git fetch --tags
+              else
+                git fetch --tags --depth="$depth"
+              fi
   - tools-info
   - go-cache-restore
   - go-build:
@@ -82,8 +118,37 @@ steps:
       tags: << parameters.tags >>
       test_target: << parameters.test_target >>
       architecture: << parameters.architecture >>
+      architectures: << parameters.architectures >>
+  # Persist only the binaries produced by go-build, not unrelated repo files
+  # that share the binary name as a prefix (e.g. `<binary>-manifest.yaml`).
+  # The previous `./<binary>*` glob caused matrix builds to fail with
+  # "Concurrent upstream jobs persisted the same file(s)" whenever such a
+  # file existed in the repo. `<binary>-*-*` matches `<binary>-<GOOS>-<GOARCH>`
+  # (neither GOOS nor GOARCH contains a hyphen) but not files with a single
+  # hyphen.
   - persist_to_workspace:
       root: .
       paths:
-        - ./<< parameters.binary >>*
+        - ./<< parameters.binary >>-*-*
+  # The legacy `./<binary>` copy is only created on the linux/amd64 build,
+  # so persist it only there — otherwise the literal path would error in
+  # other matrix arms where the file does not exist.
+  - when:
+      condition:
+        equal: ["linux/amd64", << parameters.architecture >>]
+      steps:
+        - persist_to_workspace:
+            root: .
+            paths:
+              - ./<< parameters.binary >>
+  # `.platforms` is only written in plural-mode (`architectures` non-empty),
+  # which runs as a single job, so persisting it then avoids the matrix
+  # "Concurrent upstream jobs persisted the same file(s)" failure.
+  - when:
+      condition: << parameters.architectures >>
+      steps:
+        - persist_to_workspace:
+            root: .
+            paths:
+              - ./.platforms
   - go-cache-save

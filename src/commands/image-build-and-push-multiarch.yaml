@@ -24,9 +24,13 @@ parameters:
     type: boolean
     default: false
   platforms:
-    description: "Comma-separated string of platforms for multi-arch image build (e.g., 'linux/amd64,linux/arm64'). If not set, defaults to 'linux/amd64,linux/arm64'."
+    description: |
+      Comma-separated list of platforms for multi-arch image build (e.g.,
+      'linux/amd64,linux/arm64'). When empty, the list is auto-derived from the `.platforms`
+      file written by `go-build` to the workspace. Falls back to 'linux/amd64,linux/arm64'
+      if neither is available.
     type: string
-    default: "linux/amd64,linux/arm64"
+    default: ""
   annotations:
     description: |
       Newline-separated OCI annotations passed to 'docker buildx build --annotation'.
@@ -37,6 +41,17 @@ parameters:
         key=value (no prefix)         - defaults to index for multi-platform builds
     type: string
     default: ""
+  oci-labels:
+    description: |
+      Emit standard OCI image labels and matching index annotations
+      (org.opencontainers.image.{source,revision,version,created}) derived from the
+      CircleCI build context.
+    type: boolean
+    default: true
+  split-china-push:
+    description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
+    type: boolean
+    default: false
 steps:
   - generate-github-token
   - run:
@@ -46,7 +61,38 @@ steps:
         TAG_VALUE="${DOCKER_IMAGE_TAG}"
         tag_suffix="<<parameters.tag-suffix>>"
         tag_latest_branch="<<parameters.tag-latest-branch>>"
-        platforms=$(IFS=,; echo "<<parameters.platforms>>")
+
+        # Resolve platforms: explicit param > .platforms in workspace > built-in default
+        platforms="<<parameters.platforms>>"
+        if [[ -z "$platforms" && -f .platforms ]]; then
+          platforms=$(paste -sd, .platforms | tr -d '[:space:]')
+        fi
+        if [[ -z "$platforms" ]]; then
+          platforms="linux/amd64,linux/arm64"
+        fi
+        echo "Building for platforms: $platforms"
+
+        oci_label_flags=()
+        if [[ "<<parameters.oci-labels>>" == "true" ]]; then
+          oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          # Prefer the commit timestamp so rebuilds of the same SHA produce identical labels.
+          oci_created="$(git show -s --format=%cI "$CIRCLE_SHA1" 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
+          oci_version="${TAG_VALUE:-}"
+          oci_label_flags+=(
+            --label "org.opencontainers.image.source=${oci_source}"
+            --label "org.opencontainers.image.revision=${CIRCLE_SHA1}"
+            --label "org.opencontainers.image.created=${oci_created}"
+            --annotation "index:org.opencontainers.image.source=${oci_source}"
+            --annotation "index:org.opencontainers.image.revision=${CIRCLE_SHA1}"
+            --annotation "index:org.opencontainers.image.created=${oci_created}"
+          )
+          if [[ -n "$oci_version" ]]; then
+            oci_label_flags+=(
+              --label "org.opencontainers.image.version=${oci_version}"
+              --annotation "index:org.opencontainers.image.version=${oci_version}"
+            )
+          fi
+        fi
 
         # If image is forced to be pushed as a public one,
         # we shouldn't check whether the source is public
@@ -57,9 +103,23 @@ steps:
           IMAGE_ACCESS=public
         else
           GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-          GITHUB_RESPONSE=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" "${GITHUB_API_URL}")
+          HTTP_STATUS=$(curl -s -o /tmp/.gh_response -w "%{http_code}" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "${GITHUB_API_URL}")
 
-          REPO_PRIVATE=$(echo $GITHUB_RESPONSE | jq .private)
+          if [[ "${HTTP_STATUS}" != "200" ]]; then
+            echo "GitHub API call to ${GITHUB_API_URL} failed (HTTP ${HTTP_STATUS}):"
+            cat /tmp/.gh_response
+            exit 1
+          fi
+
+          REPO_PRIVATE=$(jq -r '.private' < /tmp/.gh_response)
+          if [[ "${REPO_PRIVATE}" != "true" && "${REPO_PRIVATE}" != "false" ]]; then
+            echo "Unexpected GitHub API response (could not parse .private):"
+            cat /tmp/.gh_response
+            exit 1
+          fi
 
           if [[ "${REPO_PRIVATE}" = "false" ]]; then
             echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"
@@ -90,19 +150,18 @@ steps:
         if [[ "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
           tags+=("<<parameters.image>>:latest$tag_suffix")
         fi
-        if [[ -n "$tag_suffix" ]]; then
-          tags+=("<<parameters.image>>:${TAG_VALUE}-$tag_suffix")
-        fi
 
         # Prepare all registry/image:tag combinations
         all_tags=()
         while IFS=' ' read -r access reg _ _ push_dev; do
           [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+          [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
           if [[ "$push_dev" == "false" ]] && ([[ "$TAG_VALUE" =~ [a-f0-9]{40} ]] || [[ "$TAG_VALUE" =~ -dev\. ]]); then
             echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
             continue
           fi
           if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
+            echo -n ${reg} > /tmp/.docker_image_registry
             for tag in "${tags[@]}"; do
               echo -e "\nProcessing image push config for registry $reg."
               echo "Tag the image for $reg"
@@ -141,6 +200,7 @@ steps:
             --platform "$platforms" \
             "${all_tags[@]}" \
             "${annotation_flags[@]}" \
+            "${oci_label_flags[@]}" \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
             --progress=plain \
