@@ -18,6 +18,7 @@ Builds Go binaries for one or more target architectures in a single job and pers
 - `test_target`: Makefile target to run for tests (optional).
 - `resource_class`: CircleCI resource class for the job.
 - `clone_depth`: Commits to keep in local git history after checkout (default: `1`, i.e. CircleCI's default shallow clone). Use `0` for full history. Greater than `1` deepens to that many commits. Set to `0` when build steps rely on `git log` / `git rev-list` (e.g. `go generate` embedding the commit SHA of the last change to a template).
+- `sign`: Sign each produced binary with cosign keyless OIDC (default: `true`). Public repos only — private repos are skipped at runtime. See [Signing](#signing).
 
 ## Example usage
 
@@ -71,3 +72,20 @@ ENTRYPOINT ["/myapp"]
 A Dockerfile that does `ADD myapp myapp` (no per-arch selector) will silently ship the same binary for both architectures and the arm64 variant will crash with `exec format error` on arm64 hosts.
 
 See [`push-to-registries`](./push-to-registries.md) for the full Dockerfile contract, including the compile-in-Dockerfile pattern (`--platform=$BUILDPLATFORM` builder).
+
+## Signing
+
+`sign: true` (default) signs each `<binary>-<GOOS>-<GOARCH>` with cosign
+keyless OIDC and writes a sibling `<binary>-<GOOS>-<GOARCH>.bundle`
+Sigstore bundle. The bundle is verified immediately with
+`cosign verify-blob` before the job exits. Bundles are persisted alongside
+the binaries via the existing workspace glob.
+
+Skipped at runtime when the source repo is private — signing would
+publish digest + timestamp metadata to the public Rekor transparency log.
+
+To upload signed binaries (and their `.bundle` siblings) to a GitHub
+Release, follow `go-build` with the `upload-release-assets` job.
+
+See [Cosign signing](../cosign-signing.md) for the verification command
+and the end-to-end identity model.

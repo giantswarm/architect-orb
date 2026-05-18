@@ -63,6 +63,7 @@ documentation](https://helm.sh/blog/storing-charts-in-oci/).
 - [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
 - [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaulttrue)
+- [sign](#sign-optional-boolean-defaulttrue)
 
 ### attach_workspace
 
@@ -137,3 +138,15 @@ registry (`gsoci.azurecr.io/charts/giantswarm` for public charts,
 and authentication are not configurable — they're determined from the source
 repository's GitHub visibility and standard `ACR_GSOCI_*` /
 `ACR_GSOCIPRIVATE_*` context env vars.
+
+### sign (optional boolean, default=true)
+
+When `true`, the pushed Helm chart is signed with cosign keyless OIDC.
+The signature lands as an OCI 1.1 referrer artifact on the chart and is
+queryable via the registry's referrers API.
+
+Skipped at runtime when the source repository is private (signing would
+publish digest + timestamp metadata to the public Rekor transparency log).
+
+See [Cosign signing](../cosign-signing.md) for the verification command
+and the end-to-end identity model.

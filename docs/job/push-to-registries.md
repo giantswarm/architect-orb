@@ -140,14 +140,27 @@ Emitted by default and configurable via `oci-labels: true|false`:
 
 In multi-arch mode the same values are also emitted as OCI manifest index annotations.
 
+## Hadolint
+
+`hadolint: warn|fail|skip` (default `warn`) lints the Dockerfile before
+the buildx build using the hadolint binary baked into the architect image.
+
+- `warn` — print findings, never fail the job.
+- `fail` — fail the job on any finding.
+- `skip` — don't run hadolint at all.
+
+`hadolint-config` is an optional path to a `.hadolint.yaml` configuration
+file relative to the workspace; defaults to hadolint's built-in rules.
+
 ## Cosign signing
 
-`sign: true` (default) signs the pushed image manifest with cosign keyless OIDC.
+`sign: true` (default) signs the pushed image manifest with cosign keyless
+OIDC. Public images only — private images are skipped at runtime.
 
-- **Public images only.** Private images are skipped at runtime to avoid leaking digests/timestamps into the public Rekor transparency log.
-- A fresh CircleCI OIDC token with `aud=sigstore` is minted via `circleci run oidc get` (the auto-injected `CIRCLE_OIDC_TOKEN_V2` has the wrong audience for Fulcio).
-- The cert SAN URI is UUID-based but the Sigstore extensions populate the friendly source repo URI in OID `1.3.6.1.4.1.57264.1.12`, so verification policies can pin to `github.com/<org>/<repo>`.
+See [Cosign signing](../cosign-signing.md) for the verification command,
+identity model (CircleCI's UUID-based SAN URI + the friendly source-repo
+OID), and verify-after-sign behavior.
 
 ## Migrating from v8.x
 
-In v8.x there were two ways to reach this functionality (`push-to-registries` with `multiarch: true` plus the deprecated `push-to-registries-multiarch` job). Both are gone in v9 — `push-to-registries` always uses buildx now. Consumers of the deprecated job rename to `push-to-registries`; consumers using `multiarch: false` get multi-arch for free. The `multiarch:` parameter is no longer accepted.
+See [Migrating from architect-orb v8.x to v9](../migration-v8-to-v9.md).

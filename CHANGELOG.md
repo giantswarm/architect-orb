@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> **Upgrading from v8.x?** See [docs/migration-v8-to-v9.md](docs/migration-v8-to-v9.md)
+> for breaking changes and the defaults that change. See
+> [docs/cosign-signing.md](docs/cosign-signing.md) for the supply-chain model.
+
 ### Removed
 
 - **Breaking.** `push-to-registries-multiarch` job (deprecated since v7.0). Migrate to `push-to-registries`.
