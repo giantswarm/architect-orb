@@ -99,6 +99,14 @@ parameters:
       public Rekor transparency log.
     type: boolean
     default: true
+  trimpath:
+    description: |
+      Pass `-trimpath` to `go build`. Strips absolute file paths from the produced
+      binary so builds are reproducible across hosts and don't leak the build-host
+      directory layout. Set to `false` if a debugger needs the embedded build path
+      to resolve sources.
+    type: boolean
+    default: true
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -128,6 +136,7 @@ steps:
       architecture: << parameters.architecture >>
       architectures: << parameters.architectures >>
       sign: << parameters.sign >>
+      trimpath: << parameters.trimpath >>
   # Persist only the binaries produced by go-build, not unrelated repo files
   # that share the binary name as a prefix (e.g. `<binary>-manifest.yaml`).
   # The previous `./<binary>*` glob caused matrix builds to fail with
