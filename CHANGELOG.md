@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SBOM (SPDX) attestation enabled by default (`sbom: true`) on the multi-arch path. Configurable via `sbom: true|false`. Same inline-storage caveat as provenance.
 - Cosign keyless image signing enabled by default (`sign: true`) on the multi-arch path. Signatures are stored as proper OCI 1.1 referrer artifacts (cosign's own implementation, independent of BuildKit). **Public images only** — private images are skipped at runtime to avoid leaking digests/timestamps into the public Rekor transparency log. A fresh CircleCI OIDC token with `aud=sigstore` is minted via `circleci run oidc get --claims '{"aud":"sigstore"}' --root-issuer`; the auto-injected `CIRCLE_OIDC_TOKEN_V2` is not used because its audience doesn't match what Fulcio's CircleCI federation expects. The signing cert SAN URI is UUID-based (CircleCI's choice), but the Sigstore X.509 extensions populate the friendly source repo URI (`github.com/<org>/<repo>`) in OID `1.3.6.1.4.1.57264.1.12`, so verification policies can pin to the readable identity.
 - `--metadata-file` capture from buildx is now used to resolve the manifest index digest for cosign signing.
+
+## [8.1.0] - 2026-05-18
+
+### Added
+
 - Register QEMU/binfmt handlers (`tonistiigi/binfmt --install all`) before `docker buildx build` so Dockerfiles with `RUN` steps on a non-host architecture work without consumers needing `--platform=$BUILDPLATFORM` themselves. The image tag is bumped automatically by Renovate. See [Multi-arch Dockerfiles: avoiding QEMU emulation](docs/multi-arch-dockerfiles.md) for the conversion patterns that avoid the emulation slowdown.
 - Replace the buildx builder bootstrap (`buildx create --use 2>/dev/null || buildx use`) with explicit `buildx inspect` / `create --driver docker-container` / `inspect --bootstrap`, so failures in builder setup surface instead of being masked.
 - `architectures` parameter on the `go-build` command and job: comma-separated list (e.g. `linux/amd64,linux/arm64`) that builds all targets in a single job, removing the need for a CircleCI matrix at the consumer. Writes the resolved list to `.platforms` in the workspace.
@@ -1458,7 +1463,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.1.0...HEAD
+[8.1.0]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...v8.1.0
 [8.0.2]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...v8.0.2
 [8.0.1]: https://github.com/giantswarm/architect-orb/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/giantswarm/architect-orb/compare/v7.1.0...v8.0.0
