@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.1.0] - 2026-05-18
+
 ### Added
 
 - Register QEMU/binfmt handlers (`tonistiigi/binfmt --install all`) before `docker buildx build` so Dockerfiles with `RUN` steps on a non-host architecture work without consumers needing `--platform=$BUILDPLATFORM` themselves. The image tag is bumped automatically by Renovate. See [Multi-arch Dockerfiles: avoiding QEMU emulation](docs/multi-arch-dockerfiles.md) for the conversion patterns that avoid the emulation slowdown.
@@ -1454,7 +1456,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.1.0...HEAD
+[8.1.0]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...v8.1.0
 [8.0.2]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...v8.0.2
 [8.0.1]: https://github.com/giantswarm/architect-orb/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/giantswarm/architect-orb/compare/v7.1.0...v8.0.0
