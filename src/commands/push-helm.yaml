@@ -254,3 +254,9 @@ steps:
                     chart_ref="${OCI_REGISTRY_URL}/charts/giantswarm/<<parameters.chart>>@${chart_digest}"
                     echo "Signing chart: $chart_ref"
                     cosign sign --yes "$chart_ref"
+
+                    echo "Verifying signature for $chart_ref"
+                    cosign verify \
+                      --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
+                      --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$' \
+                      "$chart_ref" > /dev/null
