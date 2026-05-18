@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.1.0] - 2026-05-18
+
 ### Added
 
 - `architectures` parameter on the `go-build` command and job: comma-separated list (e.g. `linux/amd64,linux/arm64`) that builds all targets in a single job, removing the need for a CircleCI matrix at the consumer. Writes the resolved list to `.platforms` in the workspace.
@@ -1452,7 +1454,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.1.0...HEAD
+[8.1.0]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...v8.1.0
 [8.0.2]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...v8.0.2
 [8.0.1]: https://github.com/giantswarm/architect-orb/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/giantswarm/architect-orb/compare/v7.1.0...v8.0.0
