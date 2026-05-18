@@ -1,0 +1,21 @@
+# Command: cosign-prepare
+#
+# Mints a CircleCI OIDC token with audience=sigstore via
+# `circleci run oidc get --claims '{"aud":"sigstore"}' --root-issuer` and
+# exports it as SIGSTORE_ID_TOKEN through BASH_ENV so subsequent run steps in
+# the same job can `cosign sign` / `cosign verify` without additional setup.
+#
+# The auto-injected CIRCLE_OIDC_TOKEN_V2 has an audience claim that Fulcio's
+# CircleCI federation doesn't accept, so a fresh sigstore-audience token is
+# required for `cosign sign` to retrieve a Fulcio signing cert successfully.
+
+steps:
+  - run:
+      name: Mint Sigstore OIDC token
+      command: |
+        set -euo pipefail
+
+        cosign version
+
+        SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
+        echo "export SIGSTORE_ID_TOKEN=\"$SIGSTORE_ID_TOKEN\"" >> "$BASH_ENV"

@@ -1,0 +1,78 @@
+description: |
+  Uploads previously persisted build artifacts to the GitHub Release for the
+  current tag. Designed to run on tagged builds only — apply a tag filter when
+  wiring it into a workflow.
+
+  The release itself is created by the giantswarm/automerge / create-release
+  GitHub Action shortly after the tag lands; this job retries `gh release upload`
+  for up to a minute to absorb that race.
+
+  Helm charts and container images are NOT uploaded here — they live in the OCI
+  registry. This job is for downloadable binary artifacts (and their cosign
+  bundles when signing is enabled).
+
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
+parameters:
+  binary:
+    description: |
+      Binary name as passed to `go-build`. The job uploads all matching files
+      from the attached workspace: `<binary>-<GOOS>-<GOARCH>` and any
+      `<binary>-<GOOS>-<GOARCH>.bundle` cosign signature bundles.
+    type: string
+  attempts:
+    description: |
+      Maximum number of upload attempts. Each attempt waits 5s before retrying
+      to absorb the race with the release-creation GitHub Action.
+    type: integer
+    default: 12
+  resource_class:
+    default: "small"
+    description: |
+      Configures the amount of CPU and RAM for the job. See
+      https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+      for details.
+    type: "enum"
+    enum: ["small", "medium", "medium+", "large", "xlarge"]
+steps:
+  - checkout
+  - attach_workspace:
+      at: .
+  - generate-github-token
+  - run:
+      name: Upload release assets to GitHub
+      command: |
+        set -euo pipefail
+
+        if [[ -z "${CIRCLE_TAG:-}" ]]; then
+          echo "CIRCLE_TAG is not set — this job must be wired with a tag filter."
+          exit 1
+        fi
+        if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+          echo "GITHUB_TOKEN is not set; generate-github-token did not run successfully." >&2
+          exit 1
+        fi
+
+        shopt -s nullglob
+        assets=( "<<parameters.binary>>"-*-* )
+        if [[ ${#assets[@]} -eq 0 ]]; then
+          echo "No assets found matching '<<parameters.binary>>-*-*' in the workspace."
+          ls -la
+          exit 1
+        fi
+        echo "Uploading ${#assets[@]} asset(s):"
+        printf '  %s\n' "${assets[@]}"
+
+        attempts="<<parameters.attempts>>"
+        for i in $(seq 1 "$attempts"); do
+          if gh release upload "$CIRCLE_TAG" "${assets[@]}" --clobber \
+              --repo "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"; then
+            echo "Uploaded ${#assets[@]} asset(s) on attempt $i."
+            exit 0
+          fi
+          echo "Attempt $i/$attempts failed (release may not exist yet); sleeping 5s."
+          sleep 5
+        done
+
+        echo "Giving up after $attempts attempts." >&2
+        exit 1

@@ -65,6 +65,14 @@ parameters:
       "linux/amd64,linux/arm64"). When set, takes precedence over `architecture` and writes
       `.platforms` to the workspace for downstream auto-discovery in `push-to-registries`.
     type: string
+  sign:
+    description: |
+      Sign each produced binary with cosign keyless OIDC, emitting a sibling
+      `<binary>-<GOOS>-<GOARCH>.bundle` file (Sigstore bundle). Public repos only —
+      private repos are skipped at runtime to avoid leaking artifacts/timestamps into
+      the public Rekor transparency log.
+    type: boolean
+    default: true
 steps:
   - go-test:
       path: <<parameters.path>>
@@ -112,3 +120,71 @@ steps:
         else
           build_one "<<parameters.architecture>>"
         fi
+  - when:
+      condition: <<parameters.sign>>
+      steps:
+        - generate-github-token
+        - run:
+            name: Resolve repo visibility for binary signing
+            command: |
+              set -euo pipefail
+              # Only sign binaries when the repo is public — signing private artifacts
+              # in public Sigstore would leak filenames/timestamps into the public Rekor
+              # transparency log.
+              if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+                echo "ERROR: GITHUB_TOKEN is not set. Did generate-github-token succeed?" >&2
+                exit 1
+              fi
+              GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+              HTTP_STATUS=$(curl -s -o /tmp/.gh_response_binsign -w "%{http_code}" \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "${GITHUB_API_URL}")
+              if [[ "${HTTP_STATUS}" != "200" ]]; then
+                echo "GitHub API call to ${GITHUB_API_URL} failed (HTTP ${HTTP_STATUS}):"
+                cat /tmp/.gh_response_binsign
+                exit 1
+              fi
+              REPO_PRIVATE=$(jq -r '.private' < /tmp/.gh_response_binsign)
+              if [[ "${REPO_PRIVATE}" == "false" ]]; then
+                echo "public" > /tmp/.binary_sign_access
+              else
+                echo "private" > /tmp/.binary_sign_access
+              fi
+              echo "Repo visibility: ${REPO_PRIVATE} (private=$REPO_PRIVATE) → $(cat /tmp/.binary_sign_access)"
+        - cosign-prepare
+        - run:
+            name: Sign binaries with cosign keyless OIDC
+            command: |
+              set -euo pipefail
+              access=$(cat /tmp/.binary_sign_access)
+              if [[ "$access" != "public" ]]; then
+                echo "Repo is not public; skipping binary signing."
+                exit 0
+              fi
+
+              shopt -s nullglob
+              binaries=( "<<parameters.binary>>"-*-* )
+              # Don't re-sign existing .bundle files if the glob picks them up.
+              filtered=()
+              for f in "${binaries[@]}"; do
+                [[ "$f" == *.bundle ]] && continue
+                filtered+=("$f")
+              done
+              if [[ ${#filtered[@]} -eq 0 ]]; then
+                echo "No binaries found matching <<parameters.binary>>-*-*; nothing to sign."
+                exit 0
+              fi
+
+              for bin in "${filtered[@]}"; do
+                bundle="${bin}.bundle"
+                echo "cosign sign-blob $bin → $bundle"
+                cosign sign-blob --yes --bundle "$bundle" "$bin"
+
+                echo "cosign verify-blob $bin"
+                cosign verify-blob \
+                  --bundle "$bundle" \
+                  --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
+                  --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$' \
+                  "$bin" > /dev/null
+              done
