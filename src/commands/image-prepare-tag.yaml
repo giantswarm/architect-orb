@@ -18,15 +18,15 @@ steps:
           # Non-main branch - generate semVer dev tag: X.Y.Z-dev.BRANCH.DATE.TIME
           TAG_PREFIX="${GS_GIT_TAG_PREFIX:-}"
 
-          # Find last stable semver tag (no pre-release suffix)
+          # Find last stable semver tag reachable from HEAD (no pre-release suffix)
           if [[ -n "${TAG_PREFIX}" ]]; then
-            LAST_STABLE=$(git tag --list "${TAG_PREFIX}[0-9]*.[0-9]*.[0-9]*" \
+            LAST_STABLE=$(git tag --list "${TAG_PREFIX}[0-9]*.[0-9]*.[0-9]*" --merged HEAD \
               | grep -v -- '-' \
               | sed "s/^${TAG_PREFIX}//" \
               | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
               | sort -V | tail -n1 || true)
           else
-            LAST_STABLE=$(git tag --list "[0-9]*.[0-9]*.[0-9]*" \
+            LAST_STABLE=$(git tag --list "[0-9]*.[0-9]*.[0-9]*" --merged HEAD \
               | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
               | sort -V | tail -n1 || true)
           fi
