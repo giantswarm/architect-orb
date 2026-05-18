@@ -64,18 +64,39 @@ Tests run once instead of per-arch; CircleCI startup overhead is paid once.
 
 The parameter has been ignored since v8.1. Remove it from your config.
 
-### 5. `image-build-with-docker` and `image-push-to-registries` commands → removed
+### 5. `go-build` default `architectures` is now `linux/amd64,linux/arm64`
+
+Previously the default was `linux/amd64` only. Consumers that relied on
+the implicit default now get both architectures built in a single job
+and a `.platforms` file listing both, which `push-to-registries` picks
+up automatically. To keep building a single architecture, set
+`architectures` explicitly:
+
+```yaml
+- architect/go-build:
+    binary: myapp
+    architectures: "linux/amd64"
+```
+
+If your Dockerfile copies a non-arch-specific binary (e.g.
+`ADD myapp /myapp`), the arm64 image will silently ship the amd64
+binary and crash with `exec format error` on arm64 hosts. Switch to the
+`TARGETARCH` selector (see the Dockerfile contract in
+[`push-to-registries`](./job/push-to-registries.md)) or pin
+`architectures: "linux/amd64"`.
+
+### 6. `image-build-with-docker` and `image-push-to-registries` commands → removed
 
 These backed the single-arch `docker build` / `docker push` path inside the
 orb. Nothing else referenced them. Direct command callers (rare) switch to
-`image-build-and-push` (see §6).
+`image-build-and-push` (see §7).
 
-### 6. `image-build-and-push-multiarch` command → renamed to `image-build-and-push`
+### 7. `image-build-and-push-multiarch` command → renamed to `image-build-and-push`
 
 Multi-arch is no longer a distinguishing trait. Direct command callers
 update the name; `push-to-registries` job consumers are unaffected.
 
-### 7. `push-helm` legacy auth parameters → removed
+### 8. `push-helm` legacy auth parameters → removed
 
 `registry_url`, `username_envar`, `password_envar` on the `push-helm`
 command (and the two `[deprecated]` legacy OCI auth/push run steps that
@@ -96,6 +117,7 @@ No config changes needed; these all activate automatically on the v9 jobs:
 | Cosign keyless image signing | `sign: true` | `push-to-registries` (public images) | `sign: false` |
 | Cosign keyless chart signing | `sign: true` | `push-to-app-catalog` (public charts) | `sign: false` |
 | Cosign keyless binary signing (`.bundle` sidecars) | `sign: true` | `go-build` (public repos) | `sign: false` |
+| Multi-arch Go binaries | `architectures: "linux/amd64,linux/arm64"` | `go-build` | `architectures: "linux/amd64"` |
 | SLSA provenance attestation | `provenance: min` | `push-to-registries` | `provenance: false` |
 | SPDX SBOM attestation | `sbom: true` | `push-to-registries` | `sbom: false` |
 | OCI image labels + index annotations | `oci-labels: true` | `push-to-registries` | `oci-labels: false` |

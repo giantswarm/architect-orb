@@ -19,7 +19,7 @@ parameters:
       "linux/amd64,linux/arm64"). The resolved list is written to `.platforms` in
       the workspace for downstream auto-discovery in `push-to-registries`.
     type: string
-    default: "linux/amd64"
+    default: "linux/amd64,linux/arm64"
   path:
     default: "."
     description: |

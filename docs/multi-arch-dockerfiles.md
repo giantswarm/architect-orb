@@ -48,13 +48,13 @@ CircleCI side:
 ```yaml
 - architect/go-build:
     binary: myapp
-    architectures: "linux/amd64,linux/arm64"
 - architect/push-to-registries:
     requires: [architect/go-build]
     image: giantswarm/myapp
 ```
 
-`go-build` writes `.platforms` to the workspace; `push-to-registries`
+`go-build`'s `architectures` defaults to `linux/amd64,linux/arm64`; the
+job writes `.platforms` to the workspace and `push-to-registries`
 auto-derives `--platform` from it.
 
 ## Pattern B — cross-compile inside the Dockerfile with `$BUILDPLATFORM`
@@ -105,8 +105,8 @@ binary. Always use `${TARGETARCH}` selection (Pattern A) or a
 1. Move every `RUN` out of the final image. If you need `ca-certificates`,
    pull it from a distroless or static base image that already includes
    it (`gcr.io/distroless/static-debian12`, `cgr.dev/chainguard/static`).
-2. Build the binary outside Docker via `architect/go-build` with
-   `architectures: "linux/amd64,linux/arm64"`.
+2. Build the binary outside Docker via `architect/go-build` (the default
+   `architectures` is already `linux/amd64,linux/arm64`).
 3. Replace the final stage with `FROM gcr.io/distroless/static` + a single
    `ADD` of the binary selected by `TARGETARCH` (Pattern A above).
 

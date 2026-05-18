@@ -21,13 +21,12 @@ workflows:
     jobs:
       - architect/go-build:
           binary: myapp
-          architectures: "linux/amd64,linux/arm64"
       - architect/push-to-registries:
           requires: [architect/go-build]
           image: giantswarm/myapp
 ```
 
-`go-build` writes a `.platforms` file to the workspace; `push-to-registries` reads it to set `--platform` automatically. No need to repeat the platform list.
+`go-build` defaults to `linux/amd64,linux/arm64` and writes a `.platforms` file to the workspace; `push-to-registries` reads it to set `--platform` automatically. No need to repeat the platform list.
 
 By default this also emits SLSA provenance, an SPDX SBOM, OCI labels, and a cosign keyless signature on public images. Each is individually controllable: `provenance: min|max|false`, `sbom: true|false`, `oci-labels: true|false`, `sign: true|false`.
 

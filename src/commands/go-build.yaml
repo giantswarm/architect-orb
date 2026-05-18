@@ -11,7 +11,7 @@
 # Parameters:
 #   binary: Name of the binary to produce.
 #   architectures: Comma-separated list of target architectures (e.g.,
-#       "linux/amd64,linux/arm64,darwin/amd64"). Default: linux/amd64.
+#       "linux/amd64,linux/arm64,darwin/amd64"). Default: linux/amd64,linux/arm64.
 #   path: Path to the Go package to build (default: ".").
 #   pre_test_target: Makefile target to run before tests/lints (optional).
 #   tags: Additional Go build tags (optional).
@@ -39,7 +39,7 @@ parameters:
       Executes the requested Makefile target.
     type: string
   architectures:
-    default: "linux/amd64"
+    default: "linux/amd64,linux/arm64"
     description: |
       Comma-separated list of target architectures to build in this job (e.g.,
       "linux/amd64,linux/arm64"). The resolved list is written to `.platforms` in the

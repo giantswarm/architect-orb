@@ -11,7 +11,7 @@ Builds Go binaries for one or more target architectures in a single job and pers
 ## Parameters
 
 - `binary`: Name of the output binary (required).
-- `architectures`: Comma-separated list of target architectures (e.g., `"linux/amd64,linux/arm64"`). Default: `"linux/amd64"`.
+- `architectures`: Comma-separated list of target architectures (e.g., `"linux/amd64,linux/arm64"`). Default: `"linux/amd64,linux/arm64"`.
 - `path`: Path to the Go package to build (default: `"."`).
 - `pre_test_target`: Makefile target to run before tests/lints (optional).
 - `tags`: Additional Go build tags (optional).
@@ -22,7 +22,7 @@ Builds Go binaries for one or more target architectures in a single job and pers
 
 ## Example usage
 
-### Single-arch
+### Multi-arch (default)
 
 ```yaml
 version: 2.1
@@ -33,30 +33,29 @@ workflows:
     jobs:
       - architect/go-build:
           binary: myapp
+      - architect/push-to-registries:
+          requires: [architect/go-build]
 ```
 
-Dockerfile (single-arch):
+`architectures` defaults to `linux/amd64,linux/arm64`, so the default invocation builds both binaries in a single job. Tests run once (not per arch), CircleCI startup overhead is paid once, and `push-to-registries` auto-derives `--platform` from the `.platforms` file written to the workspace.
+
+### Restricting to a single architecture
+
+Set `architectures` explicitly when you only need one target:
+
+```yaml
+- architect/go-build:
+    binary: myapp
+    architectures: "linux/amd64"
+```
+
+Dockerfile (any arch list):
 ```dockerfile
 FROM gcr.io/distroless/static:nonroot
 ARG TARGETARCH
 ADD myapp-linux-${TARGETARCH} /myapp
 ENTRYPOINT ["/myapp"]
 ```
-
-### Multi-arch (recommended)
-
-```yaml
-workflows:
-  build:
-    jobs:
-      - architect/go-build:
-          binary: myapp
-          architectures: "linux/amd64,linux/arm64"
-      - architect/push-to-registries:
-          requires: [architect/go-build]
-```
-
-Tests run once (not per arch), CircleCI startup overhead is paid once, and the platform list lives in exactly one place. `push-to-registries` auto-derives `--platform` from `.platforms`.
 
 ## Dockerfile contract
 
