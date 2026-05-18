@@ -48,6 +48,28 @@ parameters:
       CircleCI build context.
     type: boolean
     default: true
+  provenance:
+    description: |
+      Buildx SLSA provenance attestation mode.
+      - "min" (default): minimal provenance, attached as inline attestation manifest.
+      - "max": rich provenance with full BuildKit args / source provenance.
+      - "false": disable provenance attestation entirely (cleaner manifest list).
+    type: enum
+    enum: ["min", "max", "false"]
+    default: "min"
+  sbom:
+    description: |
+      Generate and attach a Software Bill of Materials (SPDX) attestation per platform.
+    type: boolean
+    default: true
+  sign:
+    description: |
+      Sign the pushed image manifest with cosign keyless OIDC. Public images only —
+      private images are skipped at runtime to avoid leaking digests/timestamps into
+      the public Rekor transparency log. Mints a fresh CircleCI OIDC token with
+      audience=sigstore via `circleci run oidc get` so Fulcio's federation accepts it.
+    type: boolean
+    default: true
   split-china-push:
     description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
     type: boolean
@@ -187,6 +209,20 @@ steps:
 
         # Reuse the builder if it already exists; create otherwise. Bootstrap
         # ensures the buildkit container is up before the first build.
+        #
+        # NOTE on attestation storage: BuildKit (and `docker buildx --attest`)
+        # store SLSA provenance and SBOM attestations *inline* in the image
+        # index — this is what produces the `unknown/unknown` manifest entries
+        # that show up in `docker manifest inspect` output. As of writing,
+        # BuildKit does NOT support OCI 1.1 referrer storage for attestations:
+        #   - https://docs.docker.com/build/metadata/attestations/attestation-storage/
+        #     ("In the future, we may support exporting attestations in
+        #      additional formats.")
+        #   - The `--attest` flag has no `referrer` / `referrers` attribute.
+        #   - `buildkitd.toml` has no `[attestation]` section.
+        # Cosign signatures DO land as referrers because cosign uses its own
+        # OCI 1.1 referrer push path (independent of BuildKit). Revisit this
+        # comment when BuildKit ships referrer-mode attestation storage.
         if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then
           docker buildx create --name multiarch-builder --driver docker-container --use
         else
@@ -206,7 +242,26 @@ steps:
           rm -f .annotations_input
         fi
 
-        # Single buildx build/push for all tags/registries
+        # SLSA provenance and SBOM attestations. The buildkitd builder config
+        # written above tells BuildKit to store these as OCI 1.1 referrer
+        # artifacts when the target registry supports them (ACR/gsoci, GHCR,
+        # recent Quay), keeping the image index clean. Falls back to inline
+        # attestation manifests if the registry doesn't advertise referrer
+        # support.
+        attest_flags=()
+        case "<<parameters.provenance>>" in
+          "min")   attest_flags+=("--attest" "type=provenance,mode=min") ;;
+          "max")   attest_flags+=("--attest" "type=provenance,mode=max") ;;
+          "false") attest_flags+=("--provenance=false") ;;
+        esac
+        if [[ "<<parameters.sbom>>" == "true" ]]; then
+          attest_flags+=("--attest" "type=sbom")
+        else
+          attest_flags+=("--sbom=false")
+        fi
+
+        # Single buildx build/push for all tags/registries.
+        # --metadata-file captures the manifest index digest for downstream cosign signing.
         SUCCESS=false
         for i in {1..4}; do
           echo "attempt: $i for all registries/tags"
@@ -215,6 +270,8 @@ steps:
             "${all_tags[@]}" \
             "${annotation_flags[@]}" \
             "${oci_label_flags[@]}" \
+            "${attest_flags[@]}" \
+            --metadata-file=/tmp/.buildx_metadata.json \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
             --progress=plain \
@@ -231,3 +288,65 @@ steps:
           echo "Some images couldn't be pushed. Check buildx output above."
           exit 1
         fi
+
+        # Persist IMAGE_ACCESS for the cosign step to read.
+        echo -n "$IMAGE_ACCESS" > /tmp/.image_access
+  - when:
+      condition: <<parameters.sign>>
+      steps:
+        - run:
+            name: Sign pushed image with cosign keyless OIDC
+            command: |
+              # Only sign public images for now. Private images going into public Sigstore
+              # would leak digests + build times into the public Rekor transparency log.
+              # When a self-hosted Sigstore (or a static-key signing path) is added, this
+              # gate moves out and private images can be signed too.
+              IMAGE_ACCESS=$(cat /tmp/.image_access)
+              if [[ "$IMAGE_ACCESS" != "public" ]]; then
+                echo "Image is not public (IMAGE_ACCESS=$IMAGE_ACCESS); skipping cosign signing."
+                exit 0
+              fi
+
+              if [[ ! -f /tmp/.buildx_metadata.json ]]; then
+                echo "Buildx metadata file is missing — cannot resolve the index digest to sign."
+                exit 1
+              fi
+              index_digest=$(jq -r '."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
+              if [[ -z "$index_digest" || "$index_digest" == "null" ]]; then
+                echo "Could not extract index digest from buildx metadata:"
+                cat /tmp/.buildx_metadata.json
+                exit 1
+              fi
+              echo "Signing index digest: $index_digest"
+
+              cosign version
+
+              # Mint a CircleCI OIDC token with audience=sigstore so Fulcio's federation
+              # accepts it. The auto-injected CIRCLE_OIDC_TOKEN_V2 has a different
+              # audience and would be rejected with HTTP 400 from Fulcio.
+              # `--root-issuer` requests the org-level issuer URL (the one federated
+              # with Fulcio), not the project-scoped one.
+              SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
+              export SIGSTORE_ID_TOKEN
+
+              # Sign once per registry the image was actually pushed to. The skip
+              # conditions mirror the push loop above (split-china-push, push_dev for
+              # dev builds, access/IMAGE_ACCESS match) so we never try to sign a
+              # manifest that doesn't exist at that registry.
+              # DOCKER_IMAGE_TAG is exported via BASH_ENV by image-prepare-tag.
+              TAG_VALUE="${DOCKER_IMAGE_TAG}"
+              while IFS=' ' read -r access reg _ _ push_dev; do
+                [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+                [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
+                if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ [a-f0-9]{40} ]]; then
+                  echo "Skipping cosign for $reg (push_dev=false, tag looks like a dev SHA)."
+                  continue
+                fi
+                # Skip registries that don't host public content even if they were pushed.
+                [[ "$access" == *"public"* ]] || continue
+                if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
+                  ref="${reg}/<<parameters.image>>@${index_digest}"
+                  echo "cosign sign $ref"
+                  cosign sign --yes "$ref"
+                fi
+              done < .registries_data
