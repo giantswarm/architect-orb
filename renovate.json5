@@ -133,6 +133,13 @@
       groupName: 'integration-test tools',
     },
     {
+      // Pin helm to major 3.x until we validate the orb and downstream
+      // integration tests against helm 4.
+      description: 'Restrict helm to major 3.x for now',
+      matchPackageNames: ['helm/helm'],
+      allowedVersions: '<4',
+    },
+    {
       description: 'Group kyverno tooling defaults',
       matchPackageNames: [
         'kyverno/kyverno',
