@@ -9,3 +9,7 @@
 - [push-to-registries](job/push-to-registries.md)
 - [push-to-registries-multiarch](job/image-build-and-push-multiarch.md) (Deprecated)
 - [run-tests-with-ats](job/run-tests-with-ats.md) (Experimental)
+
+## Guides
+
+- [Multi-arch Dockerfiles: avoiding QEMU emulation](multi-arch-dockerfiles.md)

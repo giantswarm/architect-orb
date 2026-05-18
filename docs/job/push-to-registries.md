@@ -110,6 +110,13 @@ workflows:
 
 When using `multiarch: true`, your Dockerfile must use the `TARGETPLATFORM` build argument to select the correct binary for each architecture. Example:
 
+> Since v8.2, the job registers QEMU/binfmt handlers before building, so
+> a plain Dockerfile (`RUN apk add …`, `RUN go build …`) also produces a
+> working multi-arch image — but its `RUN` steps run **emulated and 5–20×
+> slower** for non-host architectures. See
+> [Multi-arch Dockerfiles: avoiding QEMU emulation](../multi-arch-dockerfiles.md)
+> for the three Dockerfile patterns and how to migrate.
+
 ```dockerfile
 FROM alpine AS binary-selector
 ARG TARGETPLATFORM
