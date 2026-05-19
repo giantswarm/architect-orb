@@ -23,18 +23,22 @@ parameters:
 steps:
   - run:
       name: Login to registries
+      # Use POSIX sh syntax only. This command is shared between the
+      # architect/architect executor (bash) and the regctl executor (alpine
+      # `/bin/sh`, BusyBox), and bash-only constructs (`${!var}`, `[[ ... ]]`)
+      # silently break on the latter -- see giantswarm/architect-orb#765.
       command: |
         set -x
 
-        if [[ "<<parameters.registries-data>>" ]]; then
-          REGISTRIES_DATA="<<parameters.registries-data>>";
+        if [ -n "<<parameters.registries-data>>" ]; then
+          REGISTRIES_DATA="<<parameters.registries-data>>"
         else
-          echo "Using registries data from the circle.ci environment settings.";
-          if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
+          echo "Using registries data from the circle.ci environment settings."
+          if [ -z "${REGISTRIES_DATA_BASE64}" ]; then
             echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
             exit 1
           fi
-          REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
+          REGISTRIES_DATA=$(echo "${REGISTRIES_DATA_BASE64}" | base64 -d)
         fi
 
         echo "${REGISTRIES_DATA}" > .registries_data
@@ -48,30 +52,35 @@ steps:
         while read -r _ reg username password _; do
           # Default to success so misconfigured client values don't leave $s unset.
           s=0
-          # Validate env-var names (defence against malicious registries-data input).
+          # Validate env-var names (defence against malicious registries-data
+          # input). The eval below relies on these constraints to stay safe.
           case "$username" in *[!a-zA-Z0-9_]*) echo "Invalid username variable name: $username"; exit 1 ;; esac
           case "$password" in *[!a-zA-Z0-9_]*) echo "Invalid password variable name: $password"; exit 1 ;; esac
 
-          username_val="${!username}"
-          password_val="${!password}"
+          # POSIX-portable indirect expansion. `${!var}` is bash-only; alpine
+          # /bin/sh aborts with "bad substitution" before any login is
+          # attempted. The case-statements above restrict $username and
+          # $password to [A-Za-z0-9_], so the eval input is fully constrained.
+          eval "username_val=\${$username}"
+          eval "password_val=\${$password}"
 
-          if [[ "<<parameters.client>>" == "docker" ]]; then
+          if [ "<<parameters.client>>" = "docker" ]; then
             for i in 1 2 3; do
-              [[ $i -gt 1 ]] && sleep 1
+              [ "$i" -gt 1 ] && sleep 1
               if printf '%s' "$password_val" | docker login "$reg" --username "$username_val" --password-stdin; then
                 s=0; break
               fi
               s=$?
             done
-          elif [[ "<<parameters.client>>" == "regctl" ]]; then
+          elif [ "<<parameters.client>>" = "regctl" ]; then
             for i in 1 2 3; do
-              [[ $i -gt 1 ]] && sleep 1
+              [ "$i" -gt 1 ] && sleep 1
               if printf '%s' "$password_val" | regctl registry login "$reg" -u "$username_val" --pass-stdin; then
                 s=0; break
               fi
               s=$?
             done
           fi
-          [[ "$s" -ne 0 ]] && rc=$s
+          [ "$s" -ne 0 ] && rc=$s
         done < .registries_data
         exit "$rc"
