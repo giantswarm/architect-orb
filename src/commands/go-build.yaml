@@ -73,6 +73,16 @@ parameters:
       the public Rekor transparency log.
     type: boolean
     default: true
+  trimpath:
+    description: |
+      Pass `-trimpath` to `go build`. Strips absolute file paths from the produced
+      binary (DWARF debug info, `runtime.Caller`, panic stack traces, embedded build
+      info), so builds are reproducible across hosts and the build-host directory
+      layout doesn't ride along in the binary. Matches `goreleaser`'s default and
+      standard Go release practice (Kubernetes, kubectl, controller-runtime, …).
+      Set to `false` if a debugger needs the embedded build path to resolve sources.
+    type: boolean
+    default: true
 steps:
   - go-test:
       path: <<parameters.path>>
@@ -86,6 +96,11 @@ steps:
           LD_FLAGS="$(cat .ldflags)"
         fi
 
+        build_flags=()
+        if [[ "<<parameters.trimpath>>" == "true" ]]; then
+          build_flags+=( -trimpath )
+        fi
+
         build_one() {
           local arch="$1"
           local goos="${arch%%/*}"
@@ -93,7 +108,7 @@ steps:
           local binary_name="<<parameters.binary>>-${goos}-${goarch}"
 
           echo "Building ${binary_name}..."
-          CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$binary_name" "<<parameters.path>>"
+          CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build "${build_flags[@]}" -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$binary_name" "<<parameters.path>>"
 
           # If linux/amd64, also create/copy to <<parameters.binary>>
           if [[ "$goos" == "linux" && "$goarch" == "amd64" ]]; then
