@@ -105,6 +105,18 @@
       datasourceTemplate: 'github-releases',
       extractVersionTemplate: '^v(?<version>.+)$',
     },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/commands/cosign-prepare\\.yaml$/',
+      ],
+      matchStrings: [
+        'cosign_version:[\\s\\S]*?default:\\s*"(?<currentValue>[^"]+)"',
+      ],
+      depNameTemplate: 'sigstore/cosign',
+      datasourceTemplate: 'github-releases',
+      extractVersionTemplate: '^v(?<version>.+)$',
+    },
   ],
   packageRules: [
     {

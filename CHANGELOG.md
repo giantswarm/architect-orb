@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `cosign-prepare` now self-installs the official `cosign` static binary into `${HOME}/.local/bin` when `cosign` is not already on `PATH`, with SHA-256 verification against the upstream `cosign_checksums.txt`. The v8.2.0 default of `sign: true` on `push-to-app-catalog` broke every consumer that uses `executor: app-build-suite` (the `gsoci.azurecr.io/giantswarm/app-build-suite:1.8.0-circleci` image ships no `cosign`) with `cosign: command not found` on the new `Mint Sigstore OIDC token` step. Existing consumers that worked around the breakage with `sign: false` can drop that line on the next orb bump and pick up signing again. The `architect` executor path is unchanged — its baked-in `cosign` is detected and reused. Pinned version is exposed via a new `cosign_version` command parameter (default `3.0.6`) and tracked by Renovate (`sigstore/cosign` GitHub releases). Closes #769.
+
 ## [8.2.1] - 2026-05-19
 
 ### Fixed
