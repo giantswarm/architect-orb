@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.2.1] - 2026-05-19
+
 ### Fixed
 
 - `image-login-to-registries` now uses POSIX-portable shell syntax (`[ ... ]`, `eval "var=\${name}"` for indirect expansion) instead of bash-only constructs (`[[ ... ]]`, `${!var}`). The bash dependency was introduced in v8.1.0 (#736) and silently broke the `sync-china-registry` job, which runs on the `regctl` executor (alpine + BusyBox `/bin/sh`). Every `sync-china-registry` invocation across all consumers that had migrated to `split-china-push: true` was failing on its very first step with `/bin/sh: syntax error: bad substitution`, before any login attempt could be made -- so no image was ever mirrored to Aliyun. The env-var-name validation that already restricted `username` / `password` to `[A-Za-z0-9_]` makes the `eval` indirection safe; the credential **value** is never re-evaluated. Closes #765.
@@ -1483,7 +1485,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.2.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.2.1...HEAD
+[8.2.1]: https://github.com/giantswarm/architect-orb/compare/v8.2.0...v8.2.1
 [8.2.0]: https://github.com/giantswarm/architect-orb/compare/v8.1.0...v8.2.0
 [8.1.0]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...v8.1.0
 [8.0.2]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...v8.0.2
