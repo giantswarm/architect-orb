@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.2.0] - 2026-05-19
+
 ### Added
 
 - New `cosign-prepare` command. Mints a CircleCI OIDC token with `aud=sigstore` via `circleci run oidc get --root-issuer`, exporting it as `SIGSTORE_ID_TOKEN` through `BASH_ENV`. The cosign signing blocks in `image-build-and-push` and `push-helm` now call this single command instead of duplicating the token-mint logic.
@@ -1477,7 +1479,8 @@ Introduce a new [`push-to-registries`](./docs/job/push-to-registries.md) job tha
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.1.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.2.0...HEAD
+[8.2.0]: https://github.com/giantswarm/architect-orb/compare/v8.1.0...v8.2.0
 [8.1.0]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...v8.1.0
 [8.0.2]: https://github.com/giantswarm/architect-orb/compare/v8.0.1...v8.0.2
 [8.0.1]: https://github.com/giantswarm/architect-orb/compare/v8.0.0...v8.0.1
