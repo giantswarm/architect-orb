@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [8.2.2] - 2026-05-19
+
 ### Changed
 
 - `app-build-suite` image updated to 1.8.1 to fix the missing `cosign` binary error
@@ -1645,7 +1647,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.2.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.2.2...HEAD
+[8.2.2]: https://github.com/giantswarm/architect-orb/compare/v8.2.1...v8.2.2
 [8.2.1]: https://github.com/giantswarm/architect-orb/compare/v8.2.0...v8.2.1
 [8.2.0]: https://github.com/giantswarm/architect-orb/compare/v8.1.0...v8.2.0
 [8.1.0]: https://github.com/giantswarm/architect-orb/compare/v8.0.2...v8.1.0
