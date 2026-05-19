@@ -1,11 +1,11 @@
 parameters:
   kyverno-policies_version:
     description: "Version of Kyverno policies to use"
-    default: "0.23.0"
+    default: "0.25.0"
     type: "string"
   kyverno_version:
     description: "Version of Kyverno CLI to use"
-    default: "1.13.4"
+    default: "1.18.1"
     type: "string"
   resource_class:
     default: "medium"
