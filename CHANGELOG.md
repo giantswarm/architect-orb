@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `image-login-to-registries` now uses POSIX-portable shell syntax (`[ ... ]`, `eval "var=\${name}"` for indirect expansion) instead of bash-only constructs (`[[ ... ]]`, `${!var}`). The bash dependency was introduced in v8.1.0 (#736) and silently broke the `sync-china-registry` job, which runs on the `regctl` executor (alpine + BusyBox `/bin/sh`). Every `sync-china-registry` invocation across all consumers that had migrated to `split-china-push: true` was failing on its very first step with `/bin/sh: syntax error: bad substitution`, before any login attempt could be made -- so no image was ever mirrored to Aliyun. The env-var-name validation that already restricted `username` / `password` to `[A-Za-z0-9_]` makes the `eval` indirection safe; the credential **value** is never re-evaluated. Closes #765.
+
 ## [8.2.0] - 2026-05-19
 
 ### Added
