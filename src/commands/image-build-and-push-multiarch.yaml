@@ -294,14 +294,19 @@ steps:
   - when:
       condition: <<parameters.sign>>
       steps:
-        - cosign-prepare
         - run:
-            name: Sign pushed image with cosign keyless OIDC
+            name: Stage cosign refs for pushed image
             command: |
-              # Only sign public images for now. Private images going into public Sigstore
-              # would leak digests + build times into the public Rekor transparency log.
-              # When a self-hosted Sigstore (or a static-key signing path) is added, this
-              # gate moves out and private images can be signed too.
+              # Resolve which registries we actually pushed to and write one OCI ref per
+              # line to /tmp/.cosign_refs. The shared cosign-sign-verify command consumes
+              # this file. Skip conditions mirror the push loop above (split-china-push,
+              # push_dev for dev builds, public-access filter) so we never try to sign a
+              # manifest that doesn't exist at that registry.
+              #
+              # Private images stay out of the file — the public Rekor transparency log
+              # would otherwise leak their digests + build times.
+              : > /tmp/.cosign_refs
+
               IMAGE_ACCESS=$(cat /tmp/.image_access)
               if [[ "$IMAGE_ACCESS" != "public" ]]; then
                 echo "Image is not public (IMAGE_ACCESS=$IMAGE_ACCESS); skipping cosign signing."
@@ -318,12 +323,8 @@ steps:
                 cat /tmp/.buildx_metadata.json
                 exit 1
               fi
-              echo "Signing index digest: $index_digest"
+              echo "Index digest: $index_digest"
 
-              # Sign once per registry the image was actually pushed to. The skip
-              # conditions mirror the push loop above (split-china-push, push_dev for
-              # dev builds, access/IMAGE_ACCESS match) so we never try to sign a
-              # manifest that doesn't exist at that registry.
               # DOCKER_IMAGE_TAG is exported via BASH_ENV by image-prepare-tag.
               TAG_VALUE="${DOCKER_IMAGE_TAG}"
               while IFS=' ' read -r access reg _ _ push_dev; do
@@ -333,17 +334,12 @@ steps:
                   echo "Skipping cosign for $reg (push_dev=false, tag looks like a dev SHA)."
                   continue
                 fi
-                # Skip registries that don't host public content even if they were pushed.
                 [[ "$access" == *"public"* ]] || continue
                 if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
-                  ref="${reg}/<<parameters.image>>@${index_digest}"
-                  echo "cosign sign $ref"
-                  cosign sign --yes "$ref"
-
-                  echo "cosign verify $ref"
-                  cosign verify \
-                    --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
-                    --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$' \
-                    "$ref" > /dev/null
+                  echo "${reg}/<<parameters.image>>@${index_digest}" >> /tmp/.cosign_refs
                 fi
               done < .registries_data
+
+              echo "Staged refs for signing:"
+              cat /tmp/.cosign_refs
+        - cosign-sign-verify

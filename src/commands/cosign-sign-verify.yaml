@@ -1,0 +1,87 @@
+# Command: cosign-sign-verify
+#
+# Mints a sigstore-audience OIDC token via `circleci run oidc get` and signs +
+# verifies one or more artifacts with cosign keyless OIDC. Supports both OCI
+# references (image / chart) and blob files (Go binaries) under a single command
+# so the CircleCI OIDC issuer/identity regex pair stays in one place.
+#
+# Inputs are read from a file rather than passed as parameters because callers
+# produce them inside a runtime shell loop (per-registry refs from the image
+# push, per-architecture binaries from go-build) and orb commands cannot be
+# invoked from within a shell loop.
+#
+# File format:
+#   kind=oci   — one OCI reference per line, e.g. `gsoci.azurecr.io/charts/giantswarm/cert-exporter@sha256:…`
+#   kind=blob  — one `<file> <bundle-path>` pair per line, e.g. `mybin-linux-amd64 mybin-linux-amd64.bundle`
+# Blank lines and lines starting with `#` are ignored. If the file does not
+# exist or is empty, the step exits 0 without doing anything (so callers that
+# decide at runtime to skip signing — e.g. private artifacts — can do so by
+# truncating the file).
+
+parameters:
+  kind:
+    description: |
+      Which cosign subcommand pair to invoke.
+      `oci`  → `cosign sign` / `cosign verify` on OCI references.
+      `blob` → `cosign sign-blob --bundle` / `cosign verify-blob --bundle` on files.
+    type: enum
+    enum: [oci, blob]
+    default: oci
+  refs_file:
+    description: |
+      Path to a file containing one entry per line. See the command header for the
+      per-kind format. Defaults to `/tmp/.cosign_refs` for `oci` and
+      `/tmp/.cosign_blobs` is the conventional choice for `blob` (set explicitly).
+    type: string
+    default: /tmp/.cosign_refs
+steps:
+  - run:
+      name: Cosign sign + verify (<<parameters.kind>>)
+      command: |
+        set -euo pipefail
+
+        refs_file="<<parameters.refs_file>>"
+        if [[ ! -s "$refs_file" ]]; then
+          echo "No entries in $refs_file; nothing to sign."
+          exit 0
+        fi
+
+        cosign version
+
+        # Fulcio's CircleCI federation expects an OIDC token with aud=sigstore.
+        # The auto-injected CIRCLE_OIDC_TOKEN_V2 has a different audience and
+        # gets rejected with HTTP 400. Mint a fresh sigstore-audience token via
+        # the circleci CLI; cosign reads SIGSTORE_ID_TOKEN automatically.
+        SIGSTORE_ID_TOKEN=$(circleci run oidc get --claims '{"aud": "sigstore"}' --root-issuer)
+        export SIGSTORE_ID_TOKEN
+
+        ISSUER_REGEX='^https://oidc\.circleci\.com'
+        IDENTITY_REGEX='^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$'
+
+        case "<<parameters.kind>>" in
+          oci)
+            while IFS= read -r ref; do
+              [[ -z "$ref" || "$ref" =~ ^# ]] && continue
+              echo "cosign sign $ref"
+              cosign sign --yes "$ref"
+              echo "cosign verify $ref"
+              cosign verify \
+                --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
+                --certificate-identity-regexp "$IDENTITY_REGEX" \
+                "$ref" > /dev/null
+            done < "$refs_file"
+            ;;
+          blob)
+            while IFS=' ' read -r file bundle; do
+              [[ -z "$file" || "$file" =~ ^# ]] && continue
+              echo "cosign sign-blob $file → $bundle"
+              cosign sign-blob --yes --bundle "$bundle" "$file"
+              echo "cosign verify-blob $file"
+              cosign verify-blob \
+                --bundle "$bundle" \
+                --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
+                --certificate-identity-regexp "$IDENTITY_REGEX" \
+                "$file" > /dev/null
+            done < "$refs_file"
+            ;;
+        esac
