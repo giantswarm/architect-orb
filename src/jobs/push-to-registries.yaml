@@ -31,6 +31,18 @@ parameters:
   tag-suffix:
     type: string
     default: ""
+  branch-tag:
+    description: |
+      When true, additionally tag the image with `branch-<slug>-<CIRCLE_BUILD_NUM>`,
+      where `<slug>` is `CIRCLE_BRANCH` with `/` replaced by `-`. The slug is
+      validated against the DNS-1123 label regex `^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`
+      and the job fails early if it does not match — catches non-deploy-safe
+      branch names before any image is built. Intended for per-branch
+      deployments where Flux Image Update Automation needs a numerically-sortable
+      tag stream keyed on the branch. Default false — no behavior change for
+      consumers that do not opt in.
+    type: boolean
+    default: false
   force-public:
     description: Skip the repo visibility check and push the the image to public registries
     type: boolean
@@ -124,6 +136,10 @@ steps:
       command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
   - image-prepare-tag:
       tag-suffix: <<parameters.tag-suffix>>
+  - when:
+      condition: <<parameters.branch-tag>>
+      steps:
+        - image-compute-branch-slug
   - unless:
       condition:
         equal: ["<<parameters.hadolint>>", "skip"]
@@ -168,6 +184,7 @@ steps:
             force-public: <<parameters.force-public>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+            branch-tag: <<parameters.branch-tag>>
             split-china-push: <<parameters.split-china-push>>
             registries-data:
               <<parameters.registries-data>>
@@ -192,6 +209,7 @@ steps:
             force-public: <<parameters.force-public>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>
+            branch-tag: <<parameters.branch-tag>>
             registries-data: <<parameters.registries-data>>
             platforms: <<parameters.platforms>>
             annotations: <<parameters.annotations>>

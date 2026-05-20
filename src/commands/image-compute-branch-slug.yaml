@@ -1,0 +1,19 @@
+steps:
+  - run:
+      name: Compute and validate branch slug for branch-keyed image tag
+      # Derives a DNS-1123-label-safe slug from CIRCLE_BRANCH and writes it to
+      # /tmp/.build_branch_slug for the push commands to consume. Fails early
+      # if the slug doesn't conform — catches non-deploy-safe branch names
+      # before any image is built. Only invoked when `branch-tag: true`, so
+      # callers using nonconforming branch names (e.g. `feat/foo`) are not
+      # affected unless they opt in.
+      command: |
+        set -euo pipefail
+        slug=$(printf '%s' "${CIRCLE_BRANCH}" | tr '/' '-')
+        if ! printf '%s' "${slug}" | grep -Eq '^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$'; then
+          echo "ERROR: derived slug '${slug}' (from CIRCLE_BRANCH='${CIRCLE_BRANCH}') is not a valid DNS-1123 label." >&2
+          echo "       branch-tag requires CIRCLE_BRANCH to slugify to ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$" >&2
+          exit 1
+        fi
+        printf '%s' "${slug}" > /tmp/.build_branch_slug
+        echo "branch slug: ${slug}"

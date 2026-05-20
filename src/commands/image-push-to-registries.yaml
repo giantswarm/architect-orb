@@ -10,6 +10,14 @@ parameters:
   tag-suffix:
     type: "string"
     default: ""
+  branch-tag:
+    description: |
+      When true, additionally push `<image>:branch-<slug>-<CIRCLE_BUILD_NUM>`,
+      where `<slug>` is read from /tmp/.build_branch_slug (written by
+      `image-compute-branch-slug`). Skipped per-registry on the same
+      `push_dev` / access-visibility rules as the primary tag.
+    type: boolean
+    default: false
   build-context:
     type: "string"
     default: "."
@@ -139,6 +147,27 @@ steps:
               done
               if [[ "${SUCCESS}" == "false" ]]; then
                 echo "${reg}:latest<< parameters.tag-suffix >>" >> .failed_images
+              fi
+            fi
+            if [[ "<<parameters.branch-tag>>" == "true" ]]; then
+              BRANCH_SLUG=$(cat /tmp/.build_branch_slug)
+              BRANCH_TAG="branch-${BRANCH_SLUG}-${CIRCLE_BUILD_NUM}"
+              echo "Tagging the image as ${BRANCH_TAG}"
+              docker tag "${<<parameters.image-sha256_envvar>>}" "${reg}/<<parameters.image>>:${BRANCH_TAG}"
+              CMD="docker push \"${reg}/<<parameters.image>>:${BRANCH_TAG}\""
+              SUCCESS=false
+              for x in $(seq 1 4); do
+                echo "attempt: ${x}"
+                if bash -c "${CMD}"; then
+                  echo "Image is pushed to the registry."
+                  SUCCESS=true
+                  break
+                fi
+                echo "Waiting 5 seconds before the next attempt."
+                sleep 5
+              done
+              if [[ "${SUCCESS}" == "false" ]]; then
+                echo "${reg}:${BRANCH_TAG}" >> .failed_images
               fi
             fi
           else

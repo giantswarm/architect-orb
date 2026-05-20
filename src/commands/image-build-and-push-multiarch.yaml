@@ -7,6 +7,16 @@ parameters:
   tag-suffix:
     type: string
     default: ""
+  branch-tag:
+    description: |
+      When true, additionally tag the multi-arch index with
+      `branch-<slug>-<CIRCLE_BUILD_NUM>`, where `<slug>` is read from
+      /tmp/.build_branch_slug (written by `image-compute-branch-slug`).
+      The extra tag rides the same buildx push as the primary tag, so it
+      inherits the same push_dev / access-visibility gating, OCI annotations,
+      and cosign signing (signing is by index digest, tag-independent).
+    type: boolean
+    default: false
   build-context:
     type: string
     default: "."
@@ -171,6 +181,10 @@ steps:
         tags=("<<parameters.image>>:${TAG_VALUE}")
         if [[ "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
           tags+=("<<parameters.image>>:latest$tag_suffix")
+        fi
+        if [[ "<<parameters.branch-tag>>" == "true" ]]; then
+          BRANCH_SLUG=$(cat /tmp/.build_branch_slug)
+          tags+=("<<parameters.image>>:branch-${BRANCH_SLUG}-${CIRCLE_BUILD_NUM}")
         fi
 
         # Prepare all registry/image:tag combinations

@@ -14,6 +14,8 @@ Otherwise, it is possible to specify the Dockerfile and build context to use wit
 
 Argument `tag-suffix` allows to specify a special suffix to be added after the generated container tag.
 
+Argument `branch-tag` (boolean, default `false`) is opt-in. When `true`, the job pushes an additional tag `branch-<slug>-<CIRCLE_BUILD_NUM>` alongside the standard `<semver>-<sha>` tag. The slug is derived from `CIRCLE_BRANCH` with `/` replaced by `-`, and validated against the DNS-1123 label regex `^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`. The job fails early if the slug does not match — this catches non-deploy-safe branch names before any image is built. The check fires only when `branch-tag: true`, so consumers using branch names like `feat/foo` are not affected unless they opt in. Intended for per-branch deployments where Flux Image Update Automation needs a numerically-sortable tag stream keyed on the branch.
+
 ## Example usage
 
 ### Single-arch (default)
