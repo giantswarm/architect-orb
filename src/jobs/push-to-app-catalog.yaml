@@ -48,6 +48,20 @@ parameters:
     description: |
       Push the chart to OCI registry if this is `true`.
     type: boolean
+  branch-tag:
+    description: |
+      When true, package the chart with version `0.0.0-branch-<slug>-<CIRCLE_BUILD_NUM>`
+      (a valid SemVer pre-release identifier) and push to the OCI registry under that
+      tag. `<slug>` is `CIRCLE_BRANCH` with `/` replaced by `-`. The slug is validated
+      against the DNS-1123 label regex `^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$` and the
+      job fails early if it does not match. The legacy git-based app catalog push
+      (`push_to_appcatalog`) is force-skipped when `branch-tag: true`: per-branch
+      builds are not meant for the production catalog repo. Intended for per-branch
+      deployments where the chart tag must align with the per-branch image tag stream
+      produced by `push-to-registries`. Requires `executor: architect`. Default false
+      — no behavior change for consumers that do not opt in.
+    type: boolean
+    default: false
   force-public:
     description: Skip the repo visibility check and push the the chart to public registry
     type: boolean
@@ -125,6 +139,17 @@ steps:
       app_catalog_test: << parameters.app_catalog_test >>
       on_tag: << parameters.on_tag >>
   - when:
+      condition: << parameters.branch-tag >>
+      steps:
+        - run:
+            name: "architect/push-to-app-catalog: Guard branch-tag requires architect executor"
+            command: |
+              if [[ "<< parameters.executor >>" != "architect" ]]; then
+                echo "ERROR: branch-tag: true is only supported with executor: architect (got '<< parameters.executor >>')." >&2
+                exit 1
+              fi
+        - image-compute-branch-slug
+  - when:
       condition: << parameters.attach_workspace >>
       steps:
         - attach_workspace:
@@ -143,7 +168,12 @@ steps:
         - run:
             name: "architect/push-to-app-catalog: Package the chart archive with helm"
             command: |
-              mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build
+              version_arg=""
+              if [[ "<< parameters.branch-tag >>" == "true" ]]; then
+                slug=$(cat /tmp/.build_branch_slug)
+                version_arg="--version 0.0.0-branch-${slug}-${CIRCLE_BUILD_NUM}"
+              fi
+              mkdir build && helm package ./helm/<< parameters.chart >> --destination ./build ${version_arg}
   - when:
       condition:
         equal: ["<< parameters.executor >>", "app-build-suite"]
@@ -155,6 +185,7 @@ steps:
   - push-helm:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>
+      branch-tag: << parameters.branch-tag >>
       force-public: <<parameters.force-public>>
       password_envar: << parameters.password_envar >>
       username_envar: << parameters.username_envar >>

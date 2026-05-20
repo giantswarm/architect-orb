@@ -16,6 +16,15 @@ parameters:
   push_to_oci_registry:
     default: true
     type: boolean
+  branch-tag:
+    description: |
+      When true, the legacy git-based app catalog push is force-skipped regardless
+      of `push_to_appcatalog`. Only the OCI registry push runs. The chart's internal
+      version (set at `helm package` time by the caller) is expected to be a
+      branch-keyed pre-release like `0.0.0-branch-<slug>-<build-num>` so the OCI
+      tag matches that pattern.
+    type: boolean
+    default: false
   force-public:
     type: boolean
     default: false
@@ -30,7 +39,9 @@ parameters:
 steps:
   - when:
       condition:
-        equal: [<< parameters.push_to_appcatalog >>, true]
+        and:
+          - equal: [<< parameters.push_to_appcatalog >>, true]
+          - not: << parameters.branch-tag >>
       steps:
         - run:
             name: "architect/push-helm-package: Check environment variables"

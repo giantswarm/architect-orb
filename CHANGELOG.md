@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - New `branch-tag` parameter on `push-to-registries` (off by default). When `true`, the job pushes an additional, branch-keyed tag `<image>:branch-<slug>-<CIRCLE_BUILD_NUM>` alongside the standard `<semver>-<sha>` tag, where `<slug>` is `CIRCLE_BRANCH` with `/` replaced by `-`. The slug is validated against the DNS-1123 label regex (`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`) and the job fails early if it doesn't match — catches non-path-safe branch names before any image is built. Intended for per-branch deployments where Flux Image Update Automation needs a numerically-sortable tag stream keyed on the branch. Existing callers see no behavior change.
+- New `branch-tag` parameter on `push-to-app-catalog` (off by default). When `true`, the chart is packaged with version `0.0.0-branch-<slug>-<CIRCLE_BUILD_NUM>` (a valid SemVer pre-release identifier) and pushed to the OCI registry under that tag, matching the per-branch image tag stream produced by `push-to-registries`. The legacy git-based app catalog push (`push_to_appcatalog`) is force-skipped when `branch-tag: true`: per-branch builds are not meant for the production catalog repo. Requires `executor: architect`. Existing callers see no behavior change.
 
 ## [8.3.0] - 2026-05-20
 

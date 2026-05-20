@@ -67,6 +67,7 @@ documentation](https://helm.sh/blog/storing-charts-in-oci/).
 - [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
 - [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaulttrue)
+- [branch-tag](#branch-tag-optional-boolean-defaultfalse)
 - [registry_url](#registry_url-optional-string)
 - [username_envar](#username_envar-optional-string)
 - [password_envar](#password_envar-optional-string)
@@ -140,6 +141,25 @@ catalog.
 
 When set to `true`, the packaged chart will be pushed to the specified OCI
 registry.
+
+### branch-tag (optional boolean, default=false)
+
+When set to `true`, the chart is packaged with version
+`0.0.0-branch-<slug>-<CIRCLE_BUILD_NUM>` (a valid SemVer pre-release identifier)
+and pushed to the OCI registry under that tag. `<slug>` is `CIRCLE_BRANCH` with
+`/` replaced by `-`. The slug is validated against the DNS-1123 label regex
+`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$` and the job fails early if it does not
+match.
+
+The legacy git-based app catalog push (`push_to_appcatalog`) is force-skipped
+when `branch-tag: true`: per-branch builds are not meant for the production
+catalog repo. Only the OCI registry push runs. Requires `executor: architect`.
+
+Intended for per-branch deployments where the chart tag must align with the
+per-branch image tag stream produced by the `push-to-registries` job's
+[`branch-tag`](push-to-registries.md#branch-tag-optional-boolean-defaultfalse)
+parameter, so that a Helm chart and its container image are co-versioned per
+push.
 
 ### registry_url (optional string)
 
