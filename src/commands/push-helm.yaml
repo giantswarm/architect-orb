@@ -222,41 +222,42 @@ steps:
               chmod 600 ~/.docker/config.json
 
               echo -e "Pushing build artifacts to ${OCI_REGISTRY_URL}"
-              chart_digest=$(helm push build/*.tgz "oci://${OCI_REGISTRY_URL}/charts/giantswarm" 2>&1 \
-                | tee /dev/stderr | grep -oE 'sha256:[a-f0-9]{64}' | head -1)
+              push_out=$(helm push build/*.tgz "oci://${OCI_REGISTRY_URL}/charts/giantswarm" 2>&1)
+              echo "$push_out"
 
-              # Persist the chart digest (and access) for the cosign step that follows.
-              # The cosign step runs in its own shell, so we can't rely on env vars.
-              echo -n "${chart_digest:-}" > /tmp/.chart_digest
+              # Derive both the chart digest and the pushed OCI repo path from the same
+              # `helm push` output. The repo path is taken from helm itself rather than
+              # <<parameters.chart>> so that callers using `explicit_allow_chart_name_mismatch`
+              # (Chart.yaml name ≠ chart parameter, e.g. giantswarm/releases) sign the artifact
+              # at the path it was actually pushed to.
+              chart_digest=$(echo "$push_out" | grep -oE 'sha256:[a-f0-9]{64}' | head -1)
+              pushed_ref=$(echo "$push_out" | sed -nE 's@^Pushed:[[:space:]]+(oci://)?([^[:space:]]+)$@\2@p' | head -1)
+
+              if [[ -z "$chart_digest" || -z "$pushed_ref" ]]; then
+                echo "ERROR: could not parse digest or pushed ref from helm push output." >&2
+                exit 1
+              fi
+
+              # Strip the :<version> tag from the pushed ref to get the bare repo path.
+              chart_repo="${pushed_ref%:*}"
+
+              # Persist for the cosign step (separate shell).
               echo -n "${CHART_ACCESS}" > /tmp/.chart_access
-              echo -n "${OCI_REGISTRY_URL}" > /tmp/.chart_registry
+              echo -n "${chart_repo}@${chart_digest}" > /tmp/.cosign_refs.candidate
         - when:
             condition: <<parameters.sign>>
             steps:
-              - cosign-prepare
               - run:
-                  name: "architect/push-helm-package: Sign pushed chart with cosign keyless OIDC"
+                  name: "architect/push-helm-package: Stage cosign refs"
                   command: |
                     set -euo pipefail
-
                     CHART_ACCESS=$(cat /tmp/.chart_access)
                     if [[ "${CHART_ACCESS}" != "public" ]]; then
                       echo "Chart is not public (CHART_ACCESS=${CHART_ACCESS}); skipping cosign signing."
+                      : > /tmp/.cosign_refs
                       exit 0
                     fi
-
-                    chart_digest=$(cat /tmp/.chart_digest)
-                    OCI_REGISTRY_URL=$(cat /tmp/.chart_registry)
-                    if [[ -z "$chart_digest" ]]; then
-                      echo "ERROR: could not extract OCI manifest digest from helm push output." >&2
-                      exit 1
-                    fi
-                    chart_ref="${OCI_REGISTRY_URL}/charts/giantswarm/<<parameters.chart>>@${chart_digest}"
-                    echo "Signing chart: $chart_ref"
-                    cosign sign --yes "$chart_ref"
-
-                    echo "Verifying signature for $chart_ref"
-                    cosign verify \
-                      --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
-                      --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$' \
-                      "$chart_ref" > /dev/null
+                    cp /tmp/.cosign_refs.candidate /tmp/.cosign_refs
+                    echo "Staged ref for signing:"
+                    cat /tmp/.cosign_refs
+              - cosign-sign-verify

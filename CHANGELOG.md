@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- New `cosign-sign-verify` command. Mints a sigstore-audience CircleCI OIDC token and signs + verifies a batch of artifacts read from a file (one per line). Supports OCI references (`kind: oci`, default — used by `push-helm` and `image-build-and-push-multiarch`) and blob files (`kind: blob` — used by `go-build` for Go binaries with `--bundle` sidecars). Single source of truth for the CircleCI OIDC issuer / identity regex pair so a future CircleCI URL-scheme rotation only needs updating in one place. Replaces the previous per-call duplication of the sign + verify block in all three signing sites.
+
+### Removed
+
+- `cosign-prepare` command. Its OIDC token-mint step is now folded into `cosign-sign-verify`, which is the only command callers need to invoke after staging refs.
+
+### Fixed
+
+- `push-helm`: derive the chart OCI repo path from `helm push` output (the `Pushed:` line) instead of `<<parameters.chart>>`. Consumers that set `explicit_allow_chart_name_mismatch: true` — where the Chart.yaml `name` differs from the orb `chart` parameter, e.g. `giantswarm/releases` pushing `release-aws` / `release-azure` / etc. under `chart: release-chart` — now sign the artifact at the path it was actually pushed to, instead of failing with `404 Not Found` on a non-existent `<chart-param>@<digest>` reference.
+
 ## [8.2.2] - 2026-05-19
 
 ### Changed

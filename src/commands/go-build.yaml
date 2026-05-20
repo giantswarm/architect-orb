@@ -167,11 +167,14 @@ steps:
                 echo "private" > /tmp/.binary_sign_access
               fi
               echo "Repo visibility: ${REPO_PRIVATE} (private=$REPO_PRIVATE) → $(cat /tmp/.binary_sign_access)"
-        - cosign-prepare
         - run:
-            name: Sign binaries with cosign keyless OIDC
+            name: Stage cosign blobs for built binaries
             command: |
               set -euo pipefail
+              # Build a `<binary> <bundle>` pair list for cosign-sign-verify.
+              # Private repos produce an empty file → the command is a no-op.
+              : > /tmp/.cosign_blobs
+
               access=$(cat /tmp/.binary_sign_access)
               if [[ "$access" != "public" ]]; then
                 echo "Repo is not public; skipping binary signing."
@@ -179,27 +182,18 @@ steps:
               fi
 
               shopt -s nullglob
-              binaries=( "<<parameters.binary>>"-*-* )
-              # Don't re-sign existing .bundle files if the glob picks them up.
-              filtered=()
-              for f in "${binaries[@]}"; do
+              for f in "<<parameters.binary>>"-*-*; do
                 [[ "$f" == *.bundle ]] && continue
-                filtered+=("$f")
+                echo "$f ${f}.bundle" >> /tmp/.cosign_blobs
               done
-              if [[ ${#filtered[@]} -eq 0 ]]; then
+
+              if [[ ! -s /tmp/.cosign_blobs ]]; then
                 echo "No binaries found matching <<parameters.binary>>-*-*; nothing to sign."
                 exit 0
               fi
 
-              for bin in "${filtered[@]}"; do
-                bundle="${bin}.bundle"
-                echo "cosign sign-blob $bin → $bundle"
-                cosign sign-blob --yes --bundle "$bundle" "$bin"
-
-                echo "cosign verify-blob $bin"
-                cosign verify-blob \
-                  --bundle "$bundle" \
-                  --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
-                  --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$' \
-                  "$bin" > /dev/null
-              done
+              echo "Staged binaries for signing:"
+              cat /tmp/.cosign_blobs
+        - cosign-sign-verify:
+            kind: blob
+            refs_file: /tmp/.cosign_blobs
