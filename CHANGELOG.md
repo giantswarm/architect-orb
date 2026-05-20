@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [8.3.0] - 2026-05-20
+
 ### Added
 
 - New `cosign-sign-verify` command. Mints a sigstore-audience CircleCI OIDC token and signs + verifies a batch of artifacts read from a file (one per line). Supports OCI references (`kind: oci`, default — used by `push-helm` and `image-build-and-push-multiarch`) and blob files (`kind: blob` — used by `go-build` for Go binaries with `--bundle` sidecars). Single source of truth for the CircleCI OIDC issuer / identity regex pair so a future CircleCI URL-scheme rotation only needs updating in one place. Replaces the previous per-call duplication of the sign + verify block in all three signing sites.
@@ -1659,7 +1661,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.2.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.3.0...HEAD
+[8.3.0]: https://github.com/giantswarm/architect-orb/compare/v8.2.2...v8.3.0
 [8.2.2]: https://github.com/giantswarm/architect-orb/compare/v8.2.1...v8.2.2
 [8.2.1]: https://github.com/giantswarm/architect-orb/compare/v8.2.0...v8.2.1
 [8.2.0]: https://github.com/giantswarm/architect-orb/compare/v8.1.0...v8.2.0
