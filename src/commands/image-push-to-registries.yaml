@@ -7,6 +7,7 @@ parameters:
     type: "env_var_name"
   tag-latest-branch:
     type: "string"
+    default: ""
   tag-suffix:
     type: "string"
     default: ""
