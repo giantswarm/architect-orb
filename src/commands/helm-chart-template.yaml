@@ -6,6 +6,7 @@ steps:
   - run:
       name: "Stamp chart version from gitsemver"
       command: |
+        [ -z $CIRCLE_TAG ] && echo "skip: not tag build" && exit 0
         VERSION=$(gitsemver version | tr -d "\n")
         sed -i "s/^version:.*$/version: ${VERSION}/" ./helm/<<parameters.chart>>/Chart.yaml
         sed -i "s/^appVersion:.*$/appVersion: ${VERSION}/" ./helm/<<parameters.chart>>/Chart.yaml
