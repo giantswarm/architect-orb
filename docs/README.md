@@ -8,7 +8,7 @@
 - [push-to-app-catalog](job/push-to-app-catalog.md)
 - [push-to-registries](job/push-to-registries.md)
 - [run-tests-with-ats](job/run-tests-with-ats.md) (Experimental)
-- `upload-release-assets` — see CHANGELOG; uploads workspace binaries and cosign `.bundle` siblings to the current GitHub Release.
+- [upload-release-assets](job/upload-release-assets.md)
 
 ## Guides
 

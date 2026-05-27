@@ -9,7 +9,6 @@ description: |
   resolved architecture list to `.platforms` so downstream `push-to-registries`
   can auto-derive `--platform`.
 
-
 parameters:
   binary:
     description: "Name of the binary produced by the job. It is also persisted to the workspace."

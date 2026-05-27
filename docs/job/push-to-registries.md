@@ -79,7 +79,7 @@ The Dockerfile must select the right binary per platform. Two patterns work; pic
 FROM gcr.io/distroless/static:nonroot
 ARG TARGETARCH
 WORKDIR /
-ADD myapp-linux-${TARGETARCH} myapp
+COPY myapp-linux-${TARGETARCH} myapp
 USER 65532:65532
 ENTRYPOINT ["/myapp"]
 ```
@@ -107,7 +107,7 @@ The `--platform=$BUILDPLATFORM` on the builder pins it to the host arch so `RUN 
 
 ### What does NOT work
 
-A Dockerfile that does `ADD myapp myapp` (a single binary file with no per-arch selection) will produce broken arm64 images — both manifests will contain the same (likely amd64) binary. Always use `${TARGETARCH}` (or a `--platform=$BUILDPLATFORM` builder stage that emits per-arch output).
+A Dockerfile that does `COPY myapp myapp` (a single binary file with no per-arch selection) will produce broken arm64 images — both manifests will contain the same (likely amd64) binary. Always use `${TARGETARCH}` (or a `--platform=$BUILDPLATFORM` builder stage that emits per-arch output).
 
 ## Selecting target registries
 

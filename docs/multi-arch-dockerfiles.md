@@ -38,7 +38,7 @@ picks the right one based on `TARGETARCH`. No `RUN` runs under emulation.
 ```dockerfile
 FROM gcr.io/distroless/static:nonroot
 ARG TARGETARCH
-ADD myapp-linux-${TARGETARCH} /myapp
+COPY myapp-linux-${TARGETARCH} /myapp
 USER 65532:65532
 ENTRYPOINT ["/myapp"]
 ```
@@ -109,7 +109,7 @@ binary. Always use `${TARGETARCH}` selection (Pattern A) or a
 2. Build the binary outside Docker via `architect/go-build` (the default
    `architectures` is already `linux/amd64,linux/arm64`).
 3. Replace the final stage with `FROM gcr.io/distroless/static` + a single
-   `ADD` of the binary selected by `TARGETARCH` (Pattern A above).
+   `COPY` of the binary selected by `TARGETARCH` (Pattern A above).
 
 For non-Go projects, the same shape applies: produce arch-specific
 artifacts in a prior CI job, then `COPY --from=…` based on `TARGETARCH`.

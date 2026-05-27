@@ -79,7 +79,7 @@ up automatically. To keep building a single architecture, set
 ```
 
 If your Dockerfile copies a non-arch-specific binary (e.g.
-`ADD myapp /myapp`), the arm64 image will silently ship the amd64
+`COPY myapp /myapp`), the arm64 image will silently ship the amd64
 binary and crash with `exec format error` on arm64 hosts. Switch to the
 `TARGETARCH` selector (see the Dockerfile contract in
 [`push-to-registries`](./job/push-to-registries.md)) or pin
@@ -143,5 +143,5 @@ end-to-end identity model.
 
 ```bash
 # Make sure no v8-only parameters remain.
-grep -nE 'multiarch:|architecture:[^s]|push-to-registries-multiarch|password_envar|username_envar|registry_url' .circleci/config.yml || echo "OK"
+grep -nE 'multiarch:|[^e]architecture:|push-to-registries-multiarch|password_envar|username_envar|registry_url' .circleci/config.yml || echo "OK"
 ```

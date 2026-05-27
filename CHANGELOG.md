@@ -25,7 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking.** `image-build-and-push-multiarch` command renamed to `image-build-and-push` — multi-arch is no longer a distinguishing trait. Direct callers of the command need to update the name; consumers of the `push-to-registries` job are unaffected.
 - **Breaking.** `go-build` default `architectures` is now `linux/amd64,linux/arm64` (previously `linux/amd64`). Set `architectures: "linux/amd64"` explicitly to keep single-arch builds.
 
-
 ### Added
 
 - New `cosign-prepare` command. Mints a CircleCI OIDC token with `aud=sigstore` via `circleci run oidc get --root-issuer`, exporting it as `SIGSTORE_ID_TOKEN` through `BASH_ENV`. The cosign signing blocks in `image-build-and-push` and `push-helm` now call this single command instead of duplicating the token-mint logic.

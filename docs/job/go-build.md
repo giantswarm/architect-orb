@@ -53,7 +53,7 @@ Dockerfile (any arch list):
 ```dockerfile
 FROM gcr.io/distroless/static:nonroot
 ARG TARGETARCH
-ADD myapp-linux-${TARGETARCH} /myapp
+COPY myapp-linux-${TARGETARCH} /myapp
 ENTRYPOINT ["/myapp"]
 ```
 
@@ -64,11 +64,11 @@ ENTRYPOINT ["/myapp"]
 ```dockerfile
 FROM gcr.io/distroless/static:nonroot
 ARG TARGETARCH
-ADD myapp-linux-${TARGETARCH} /myapp
+COPY myapp-linux-${TARGETARCH} /myapp
 ENTRYPOINT ["/myapp"]
 ```
 
-A Dockerfile that does `ADD myapp myapp` (no per-arch selector) will silently ship the same binary for both architectures and the arm64 variant will crash with `exec format error` on arm64 hosts.
+A Dockerfile that does `COPY myapp myapp` (no per-arch selector) will silently ship the same binary for both architectures and the arm64 variant will crash with `exec format error` on arm64 hosts.
 
 See [`push-to-registries`](./push-to-registries.md) for the full Dockerfile contract, including the compile-in-Dockerfile pattern (`--platform=$BUILDPLATFORM` builder).
 
