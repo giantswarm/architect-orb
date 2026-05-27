@@ -68,6 +68,13 @@ The Dockerfile must select the right binary per platform. Two patterns work; pic
 
 `go-build` produces `myapp-linux-amd64` and `myapp-linux-arm64` in the workspace; the Dockerfile selects on `TARGETARCH`:
 
+> Since v8.2, the job registers QEMU/binfmt handlers before building, so
+> a plain Dockerfile (`RUN apk add …`, `RUN go build …`) also produces a
+> working multi-arch image — but its `RUN` steps run **emulated and 5–20×
+> slower** for non-host architectures. See
+> [Multi-arch Dockerfiles: avoiding QEMU emulation](../multi-arch-dockerfiles.md)
+> for the three Dockerfile patterns and how to migrate.
+
 ```dockerfile
 FROM gcr.io/distroless/static:nonroot
 ARG TARGETARCH

@@ -9,6 +9,7 @@ description: |
   resolved architecture list to `.platforms` so downstream `push-to-registries`
   can auto-derive `--platform`.
 
+
 parameters:
   binary:
     description: "Name of the binary produced by the job. It is also persisted to the workspace."
@@ -111,4 +112,14 @@ steps:
             root: .
             paths:
               - ./<< parameters.binary >>
+  # `.platforms` is only written in plural-mode (`architectures` non-empty),
+  # which runs as a single job, so persisting it then avoids the matrix
+  # "Concurrent upstream jobs persisted the same file(s)" failure.
+  - when:
+      condition: << parameters.architectures >>
+      steps:
+        - persist_to_workspace:
+            root: .
+            paths:
+              - ./.platforms
   - go-cache-save
