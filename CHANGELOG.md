@@ -9,24 +9,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- `image-prepare-tag`: replace `architect project version` with `gitsemver version` to compute the Docker image tag. Dev builds now produce a readable semver pre-release string (`X.Y.(Z+1)-dev.<branch>.<date>.<time>`) instead of a raw 40-character commit SHA. `GS_GIT_TAG_PREFIX` is honoured by `gitsemver` under the same env var name, so monorepo tag-prefix support is unchanged.
-- `image-push-to-registries`, `image-build-and-push-multiarch`: update dev-build detection to match the new `gitsemver` dev-version format (`-dev.` substring) instead of the old 40-char hex SHA pattern.
-- `helm-chart-template`: remove `architect helm template` calls. The command now stamps `version` and `appVersion` in `Chart.yaml` directly using `gitsemver version` output, on tag builds only (matching the previous behaviour). Helm chart validation is expected to be handled by a separate tool.
-- `push-to-app-catalog` (executor `app-build-suite`): compute the chart version with `gitsemver version` on tag builds and pass it to `app_build_suite` via `--override-chart-version` / `--override-app-version`. Required by app-build-suite v2.0.0, which replaced `HelmGitVersionSetter` with `HelmVersionSetter` and no longer derives chart/app versions from git state automatically.
+- `image-prepare-tag`: replace `architect project version` with `gitsemver version` to compute the Docker
+  image tag. Dev builds now produce a readable semver pre-release string
+  (`X.Y.(Z+1)-dev.<branch>.<date>.<time>`) instead of a raw 40-character commit SHA. `GS_GIT_TAG_PREFIX` is
+  honoured by `gitsemver` under the same env var name, so monorepo tag-prefix support is unchanged.
+- `image-push-to-registries`, `image-build-and-push-multiarch`: update dev-build detection to match the new
+  `gitsemver` dev-version format (`-dev.` substring) instead of the old 40-char hex SHA pattern.
+- `helm-chart-template`: remove `architect helm template` calls. The command now stamps `version` and
+  `appVersion` in `Chart.yaml` directly using `gitsemver version` output, on tag builds only (matching the
+  previous behaviour). Helm chart validation is expected to be handled by a separate tool.
+- `push-to-app-catalog` (executor `app-build-suite`): compute the chart version with `gitsemver version` on
+  tag builds and pass it to `app_build_suite` via `--override-chart-version` / `--override-app-version`.
+  Required by app-build-suite v2.0.0, which replaced `HelmGitVersionSetter` with `HelmVersionSetter` and no
+  longer derives chart/app versions from git state automatically.
+- push-to-registries: make tag-latest-branch opt-in with empty default
 
 ## [8.3.0] - 2026-05-20
 
 ### Added
 
-- New `cosign-sign-verify` command. Mints a sigstore-audience CircleCI OIDC token and signs + verifies a batch of artifacts read from a file (one per line). Supports OCI references (`kind: oci`, default — used by `push-helm` and `image-build-and-push-multiarch`) and blob files (`kind: blob` — used by `go-build` for Go binaries with `--bundle` sidecars). Single source of truth for the CircleCI OIDC issuer / identity regex pair so a future CircleCI URL-scheme rotation only needs updating in one place. Replaces the previous per-call duplication of the sign + verify block in all three signing sites.
+- New `cosign-sign-verify` command. Mints a sigstore-audience CircleCI OIDC token and signs + verifies a batch
+  of artifacts read from a file (one per line). Supports OCI references (`kind: oci`, default — used by
+  `push-helm` and `image-build-and-push-multiarch`) and blob files (`kind: blob` — used by `go-build` for Go
+  binaries with `--bundle` sidecars). Single source of truth for the CircleCI OIDC issuer / identity regex
+  pair so a future CircleCI URL-scheme rotation only needs updating in one place. Replaces the previous
+  per-call duplication of the sign + verify block in all three signing sites.
 
 ### Removed
 
-- `cosign-prepare` command. Its OIDC token-mint step is now folded into `cosign-sign-verify`, which is the only command callers need to invoke after staging refs.
+- `cosign-prepare` command. Its OIDC token-mint step is now folded into `cosign-sign-verify`, which is the
+  only command callers need to invoke after staging refs.
 
 ### Fixed
 
-- `push-helm`: derive the chart OCI repo path from `helm push` output (the `Pushed:` line) instead of `<<parameters.chart>>`. Consumers that set `explicit_allow_chart_name_mismatch: true` — where the Chart.yaml `name` differs from the orb `chart` parameter, e.g. `giantswarm/releases` pushing `release-aws` / `release-azure` / etc. under `chart: release-chart` — now sign the artifact at the path it was actually pushed to, instead of failing with `404 Not Found` on a non-existent `<chart-param>@<digest>` reference.
+- `push-helm`: derive the chart OCI repo path from `helm push` output (the `Pushed:` line) instead of
+  `<<parameters.chart>>`. Consumers that set `explicit_allow_chart_name_mismatch: true` — where the Chart.yaml
+  `name` differs from the orb `chart` parameter, e.g. `giantswarm/releases` pushing `release-aws` /
+  `release-azure` / etc. under `chart: release-chart` — now sign the artifact at the path it was actually
+  pushed to, instead of failing with `404 Not Found` on a non-existent `<chart-param>@<digest>` reference.
 
 ## [8.2.2] - 2026-05-19
 
