@@ -4,7 +4,7 @@ Builds a multi-architecture container image with `docker buildx` and pushes it t
 
 By default it uses the `Dockerfile` at the workspace root and the root directory as the build context; pass `dockerfile` and `build-context` to override.
 
-The image is tagged with the version produced by `architect project version`. The registry hosts come from `registries-data` (or the `REGISTRIES_DATA_BASE64` environment variable) — `image` should only be `repository/image`, no host.
+The image is tagged with the version produced by `gitsemver version`. The registry hosts come from `registries-data` (or the `REGISTRIES_DATA_BASE64` environment variable) — `image` should only be `repository/image`, no host.
 
 `tag-suffix` adds a suffix to the generated tag.
 
@@ -141,7 +141,7 @@ Emitted by default and configurable via `oci-labels: true|false`:
 
 - `org.opencontainers.image.source` — `https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}`
 - `org.opencontainers.image.revision` — `${CIRCLE_SHA1}`
-- `org.opencontainers.image.version` — the tag from `architect project version`
+- `org.opencontainers.image.version` — the tag from `gitsemver version`
 - `org.opencontainers.image.created` — commit timestamp (RFC 3339, deterministic per commit)
 
 In multi-arch mode the same values are also emitted as OCI manifest index annotations.

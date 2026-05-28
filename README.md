@@ -26,8 +26,9 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
   available inside [architect executor][architect-executor] most of the time).
   E.g. `docker`, `git`, `helm`, etc. Instead of wrapping existing well known
   functionality in [architect][architect] binary.
-- Using [architect][architect] commands for complex tasks. Good example is
-  `architect helm template` instead of awkward and error prone `sed` calls.
+- Using purpose-built binaries for complex tasks. For example, `gitsemver
+  version` computes chart/image versions from git state, replacing earlier
+  `architect`-driven version manipulation.
 
 [architect]: https://github.com/giantswarm/architect
 [architect-executor]: https://github.com/giantswarm/architect-orb/blob/main/src/executors/architect.yaml
