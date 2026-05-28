@@ -9,20 +9,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- `image-prepare-tag`: replace `architect project version` with `gitsemver version` to compute the Docker
-  image tag. Dev builds now produce a readable semver pre-release string
+- **Breaking**. `image-prepare-tag`: replace `architect project version` with `gitsemver version` to compute
+  the Docker image tag. Dev builds now produce a readable semver pre-release string
   (`X.Y.(Z+1)-dev.<branch>.<date>.<time>`) instead of a raw 40-character commit SHA. `GS_GIT_TAG_PREFIX` is
   honoured by `gitsemver` under the same env var name, so monorepo tag-prefix support is unchanged.
-- `image-push-to-registries`, `image-build-and-push-multiarch`: update dev-build detection to match the new
-  `gitsemver` dev-version format (`-dev.` substring) instead of the old 40-char hex SHA pattern.
-- `helm-chart-template`: remove `architect helm template` calls. The command now stamps `version` and
-  `appVersion` in `Chart.yaml` directly using `gitsemver version` output, on tag builds only (matching the
-  previous behaviour). Helm chart validation is expected to be handled by a separate tool.
-- `push-to-app-catalog` (executor `app-build-suite`): compute the chart version with `gitsemver version` on
-  tag builds and pass it to `app_build_suite` via `--override-chart-version` / `--override-app-version`.
-  Required by app-build-suite v2.0.0, which replaced `HelmGitVersionSetter` with `HelmVersionSetter` and no
-  longer derives chart/app versions from git state automatically.
-- push-to-registries: make tag-latest-branch opt-in with empty default
+  - `image-push-to-registries`, `image-build-and-push-multiarch`: update dev-build detection to match the new
+    `gitsemver` dev-version format (`-dev.` substring) instead of the old 40-char hex SHA pattern.
+  - `helm-chart-template`: remove `architect helm template` calls. The command now stamps `version` and
+    `appVersion` in `Chart.yaml` directly using `gitsemver version` output, on tag builds only (matching the
+    previous behaviour). Helm chart validation is expected to be handled by a separate tool.
+  - `push-to-app-catalog` (executor `app-build-suite`): compute the chart version with `gitsemver version` on
+    tag builds and pass it to `app_build_suite` via `--override-chart-version` / `--override-app-version`.
+    Required by app-build-suite v2.0.0, which replaced `HelmGitVersionSetter` with `HelmVersionSetter` and no
+    longer derives chart/app versions from git state automatically.
+- **Breaking**. `push-to-registries`: make tag-latest-branch opt-in with empty default
+- **Breaking.** `image-build-and-push-multiarch` command renamed to `image-build-and-push` — multi-arch is no
+  longer a distinguishing trait. Direct callers of the command need to update the name; consumers of the
+  `push-to-registries` job are unaffected.
+- **Breaking.** `go-build` default `architectures` is now `linux/amd64,linux/arm64` (previously
+  `linux/amd64`). Set `architectures: "linux/amd64"` explicitly to keep single-arch builds.
+
+### Removed
+
+- **Breaking.** `push-to-registries-multiarch` job (deprecated since v7.0). Migrate to `push-to-registries`.
+- **Breaking.** `multiarch:` parameter on `push-to-registries`. The job always uses `docker buildx` now;
+  consumers of the previous default (`multiarch: false`) get multi-arch builds automatically.
+- **Breaking.** `os` parameter on the `go-build` command and job (deprecated and ignored since v8.1). Use
+  `architectures` instead.
+- **Breaking.** Singular `architecture` parameter on the `go-build` command and job. Replaced entirely by
+  `architectures` (plural). Matrix-based callers must switch to a single job with a comma-separated list.
+- **Breaking.** `image-build-with-docker` and `image-push-to-registries` commands (the single-arch
+  `docker build` / `docker push` path). The single-arch path is collapsed into the buildx path; nothing else
+  in the orb referenced these commands.
+- `password_envar`, `username_envar`, `registry_url` parameters on `push-helm` and the two `[deprecated]`
+  legacy OCI auth/push run steps that used them. The current OCI push flow uses `generate-github-token` + the
+  giantswarm OCI authenticator instead.
+
+> **Upgrading from v8.x?** See [docs/migration-v8-to-v9.md](docs/migration-v8-to-v9.md) for breaking changes
+> and the defaults that change. See [docs/cosign-signing.md](docs/cosign-signing.md) for the supply-chain
+> model.
 
 ## [8.3.0] - 2026-05-20
 
