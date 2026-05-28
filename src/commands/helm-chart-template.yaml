@@ -4,12 +4,9 @@ parameters:
     type: string
 steps:
   - run:
-      name: "architect/helm-chart-template: Template chart for branch build"
+      name: "Stamp chart version from gitsemver"
       command: |
-          [ ! -z $CIRCLE_TAG ] && echo "skip: not branch build" && exit 0
-          architect helm template --validate --dir ./helm/<<parameters.chart>>
-  - run:
-      name: "architect/helm-chart-template: Template chart for tag build"
-      command: |
-          [ -z $CIRCLE_TAG ] && echo "skip: not tag build" && exit 0
-          architect helm template --validate --tag-build --dir ./helm/<<parameters.chart>>
+        [ -z $CIRCLE_TAG ] && echo "skip: not tag build" && exit 0
+        VERSION=$(gitsemver version | tr -d "\n")
+        sed -i "s/^version:.*$/version: ${VERSION}/" ./helm/<<parameters.chart>>/Chart.yaml
+        sed -i "s/^appVersion:.*$/appVersion: ${VERSION}/" ./helm/<<parameters.chart>>/Chart.yaml

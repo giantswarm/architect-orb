@@ -66,8 +66,8 @@
       matchStrings: [
         'kubernetes-version:[\\s\\S]*?default:\\s*"(?<currentValue>v[^"]+)"',
       ],
-      depNameTemplate: 'kubernetes/kubernetes',
-      datasourceTemplate: 'github-tags',
+      depNameTemplate: 'kindest/node',
+      datasourceTemplate: 'docker',
     },
     {
       customType: 'regex',
@@ -127,7 +127,7 @@
       matchPackageNames: [
         'giantswarm/apptestctl',
         'helm/helm',
-        'kubernetes/kubernetes',
+        'kindest/node',
         'kubernetes-sigs/kind',
       ],
       groupName: 'integration-test tools',
