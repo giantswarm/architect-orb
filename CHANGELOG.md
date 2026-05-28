@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `image-prepare-tag`: replace `architect project version` with `gitsemver version` to compute the Docker image tag. Dev builds now produce a readable semver pre-release string (`X.Y.(Z+1)-dev.<branch>.<date>.<time>`) instead of a raw 40-character commit SHA. `GS_GIT_TAG_PREFIX` is honoured by `gitsemver` under the same env var name, so monorepo tag-prefix support is unchanged.
 - `image-push-to-registries`, `image-build-and-push-multiarch`: update dev-build detection to match the new `gitsemver` dev-version format (`-dev.` substring) instead of the old 40-char hex SHA pattern.
 - `helm-chart-template`: remove `architect helm template` calls. The command now stamps `version` and `appVersion` in `Chart.yaml` directly using `gitsemver version` output, on tag builds only (matching the previous behaviour). Helm chart validation is expected to be handled by a separate tool.
+- `push-to-app-catalog` (executor `app-build-suite`): compute the chart version with `gitsemver version` on tag builds and pass it to `app_build_suite` via `--override-chart-version` / `--override-app-version`. Required by app-build-suite v2.0.0, which replaced `HelmGitVersionSetter` with `HelmVersionSetter` and no longer derives chart/app versions from git state automatically.
 
 ## [8.3.0] - 2026-05-20
 
