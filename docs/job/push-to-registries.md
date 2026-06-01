@@ -192,22 +192,17 @@ BuildKit's SBOM attestation is SPDX-only. If you also need a **CycloneDX** SBOM,
           sbom-cyclonedx: true
 ```
 
-When enabled, the job generates a CycloneDX SBOM **per architecture** with [syft](https://github.com/anchore/syft) and attaches it to each platform manifest as a keyless cosign attestation (predicate type `cyclonedx`), verifiable with:
+When enabled, the job generates a CycloneDX SBOM **per architecture** with [syft](https://github.com/anchore/syft) and attaches it to each platform manifest as an unsigned OCI 1.1 referrer (artifactType `application/vnd.cyclonedx+json`) using [oras](https://oras.land). Like the inline SPDX SBOM it is **unsigned** and attached the same way for **both public and private images** — no cosign, no Rekor transparency log.
+
+List and pull the attached SBOMs via the referrers API:
 
 ```sh
-cosign verify-attestation --type cyclonedx \
-  --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
-  --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/.*' \
+# Resolve a platform digest, then list its referrers
+oras discover --artifact-type application/vnd.cyclonedx+json \
   <registry>/giantswarm/myapp@<platform-digest>
-```
 
-Like the inline SPDX SBOM, this runs for **both public and private images**. Public attestations are recorded in the public Rekor transparency log; **private** images are attested with `--tlog-upload=false` so their digests/timestamps never reach the public log (the keyless Fulcio certificate never sees the digest). Verify a private attestation by also ignoring the transparency log:
-
-```sh
-cosign verify-attestation --type cyclonedx --insecure-ignore-tlog \
-  --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
-  --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/.*' \
-  <registry>/giantswarm/myapp@<platform-digest>
+# Pull the SBOM blob
+oras pull <registry>/giantswarm/myapp@<sbom-referrer-digest>
 ```
 
 It defaults to off, so existing consumers are unaffected.

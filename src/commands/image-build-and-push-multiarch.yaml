@@ -357,30 +357,17 @@ steps:
       condition: <<parameters.sbom-cyclonedx>>
       steps:
         - run:
-            name: Generate and stage per-arch CycloneDX SBOM attestations
+            name: Generate and attach per-arch CycloneDX SBOMs
             command: |
               set -euo pipefail
 
               # BuildKit's --attest type=sbom only emits SPDX. To also publish a
               # CycloneDX SBOM we generate one per architecture with syft and attach it
-              # to the individual platform manifests via cosign attest (consumed by the
-              # shared cosign-sign-verify command in kind=attest mode). Like the inline
-              # SPDX SBOM, this runs for both public and private images. For private
-              # images we attest WITHOUT uploading to the public Rekor transparency log
-              # (set below) so we don't leak private digests/timestamps — the keyless
-              # Fulcio cert never sees the image digest, so privacy is preserved. The
-              # split-china-push / push_dev filters mirror the push loop so we never
-              # attest a manifest that doesn't exist at that registry.
-              : > /tmp/.cosign_attestations
-
-              IMAGE_ACCESS=$(cat /tmp/.image_access)
-              # Public images go to the transparency log (as cosign signing does);
-              # private images skip it. cosign-sign-verify reads this via tlog-upload.
-              if [[ "$IMAGE_ACCESS" == "public" ]]; then
-                echo 'export COSIGN_ATTEST_TLOG_UPLOAD=true' >> "$BASH_ENV"
-              else
-                echo 'export COSIGN_ATTEST_TLOG_UPLOAD=false' >> "$BASH_ENV"
-              fi
+              # to each platform manifest as an unsigned OCI 1.1 referrer (artifactType
+              # application/vnd.cyclonedx+json) with oras. Like the inline SPDX SBOM this
+              # is unsigned and works uniformly for public and private images — no cosign,
+              # no Rekor transparency log. The split-china-push / push_dev filters mirror
+              # the push loop so we never touch a manifest that doesn't exist at a registry.
 
               if [[ ! -f /tmp/.buildx_metadata.json ]]; then
                 echo "Buildx metadata file is missing — cannot resolve the index digest."
@@ -393,26 +380,30 @@ steps:
                 exit 1
               fi
 
-              # syft generates the CycloneDX SBOM and must be provided by the architect
-              # image. Fail loudly if it's missing rather than installing it on the fly:
-              # this command runs many times a day, and a fallback install would hide a
-              # missing-dependency regression in the image.
-              if ! command -v syft >/dev/null 2>&1; then
-                echo "ERROR: syft not found on PATH. It must be installed in the architect image." >&2
-                exit 1
-              fi
+              # syft generates the SBOM and oras attaches it. Both must be provided by the
+              # architect image; fail loudly rather than installing on the fly (this
+              # command runs many times a day, and a fallback install would hide a
+              # missing-dependency regression in the image).
+              for tool in syft oras; do
+                if ! command -v "$tool" >/dev/null 2>&1; then
+                  echo "ERROR: $tool not found on PATH. It must be installed in the architect image." >&2
+                  exit 1
+                fi
+              done
               syft version
+              oras version
 
+              IMAGE_ACCESS=$(cat /tmp/.image_access)
               TAG_VALUE="${DOCKER_IMAGE_TAG}"
               while IFS=' ' read -r access reg _ _ push_dev; do
                 [[ -z "$reg" || "$reg" =~ ^# ]] && continue
                 [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
                 if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
-                  echo "Skipping CycloneDX attestation for $reg (push_dev=false, tag $TAG_VALUE is a dev version)."
+                  echo "Skipping CycloneDX SBOM for $reg (push_dev=false, tag $TAG_VALUE is a dev version)."
                   continue
                 fi
                 # Only the registries the image was actually pushed to (matching its
-                # visibility); public and private are both attested.
+                # visibility); public and private are both handled.
                 [[ "$access" == *"$IMAGE_ACCESS"* ]] || continue
 
                 base="${reg}/<<parameters.image>>"
@@ -425,23 +416,16 @@ steps:
                   [[ -z "$platform_digest" ]] && continue
                   plat_ref="${base}@${platform_digest}"
                   safe=$(echo "${reg}_${platform}" | tr '/:.' '___')
-                  predicate="/tmp/sbom.${safe}.cdx.json"
+                  sbom_file="/tmp/sbom.${safe}.cdx.json"
                   echo "Generating CycloneDX SBOM for $plat_ref ($platform)"
-                  syft "$plat_ref" -o cyclonedx-json="$predicate"
-                  echo "$plat_ref $predicate" >> /tmp/.cosign_attestations
+                  syft "$plat_ref" -o cyclonedx-json="$sbom_file"
+                  echo "Attaching CycloneDX SBOM to $plat_ref"
+                  oras attach --artifact-type application/vnd.cyclonedx+json \
+                    "$plat_ref" \
+                    "${sbom_file}:application/vnd.cyclonedx+json"
                 done < <(jq -r '
                   .manifests[]
                   | select(.platform.os != "unknown" and .platform.architecture != "unknown")
                   | "\(.digest) \(.platform.os)/\(.platform.architecture)\(if .platform.variant then "/"+.platform.variant else "" end)"
                 ' /tmp/.index.json)
               done < .registries_data
-
-              echo "Staged per-arch CycloneDX attestations:"
-              cat /tmp/.cosign_attestations
-        - cosign-sign-verify:
-            kind: attest
-            predicate-type: cyclonedx
-            refs_file: /tmp/.cosign_attestations
-            # Runtime-decided: "true" for public images, "false" for private (set in the
-            # staging step above via BASH_ENV). Private attestations skip the Rekor log.
-            tlog-upload: "$COSIGN_ATTEST_TLOG_UPLOAD"
