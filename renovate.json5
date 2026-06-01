@@ -105,17 +105,6 @@
       datasourceTemplate: 'github-releases',
       extractVersionTemplate: '^v(?<version>.+)$',
     },
-    {
-      customType: 'regex',
-      managerFilePatterns: [
-        '/^src/commands/image-build-and-push-multiarch\\.yaml$/',
-      ],
-      matchStrings: [
-        'SYFT_VERSION=(?<currentValue>v[^\\s]+)',
-      ],
-      depNameTemplate: 'anchore/syft',
-      datasourceTemplate: 'github-releases',
-    },
   ],
   packageRules: [
     {

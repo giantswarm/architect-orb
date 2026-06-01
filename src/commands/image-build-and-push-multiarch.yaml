@@ -387,14 +387,13 @@ steps:
                 exit 1
               fi
 
-              # syft turns the pushed per-arch image into a CycloneDX SBOM. Pinned and
-              # bumped by Renovate; installed only if the architect image doesn't ship it.
-              # renovate: datasource=github-releases depName=anchore/syft
-              SYFT_VERSION=v1.44.0
+              # syft generates the CycloneDX SBOM and must be provided by the architect
+              # image. Fail loudly if it's missing rather than installing it on the fly:
+              # this command runs many times a day, and a fallback install would hide a
+              # missing-dependency regression in the image.
               if ! command -v syft >/dev/null 2>&1; then
-                echo "syft not found on PATH; installing ${SYFT_VERSION}."
-                curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
-                  | sh -s -- -b /usr/local/bin "${SYFT_VERSION}"
+                echo "ERROR: syft not found on PATH. It must be installed in the architect image." >&2
+                exit 1
               fi
               syft version
 
@@ -402,8 +401,8 @@ steps:
               while IFS=' ' read -r access reg _ _ push_dev; do
                 [[ -z "$reg" || "$reg" =~ ^# ]] && continue
                 [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
-                if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ [a-f0-9]{40} ]]; then
-                  echo "Skipping CycloneDX attestation for $reg (push_dev=false, tag looks like a dev SHA)."
+                if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
+                  echo "Skipping CycloneDX attestation for $reg (push_dev=false, tag $TAG_VALUE is a dev version)."
                   continue
                 fi
                 [[ "$access" == *"public"* ]] || continue
