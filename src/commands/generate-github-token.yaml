@@ -13,9 +13,9 @@ steps:
       name: Generate temporary GitHub token
       command: |
         if [[ -z "${<< parameters.private_key_base64_env_var >>:-}" ]]; then
-          echo "WARNING: << parameters.private_key_base64_env_var >> is not set — skipping GitHub token generation."
-          echo "To enable binary/chart signing, attach the 'architect' CircleCI context to this job."
-          exit 0
+          echo "ERROR: << parameters.private_key_base64_env_var >> is not set." >&2
+          echo "Add 'context: architect' to this job in .circleci/config.yml to enable artifact signing." >&2
+          exit 1
         fi
 
         echo -n "${<< parameters.private_key_base64_env_var >>}" | base64 -d > /tmp/private-key.pem

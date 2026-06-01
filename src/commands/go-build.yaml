@@ -125,9 +125,8 @@ steps:
               # in public Sigstore would leak filenames/timestamps into the public Rekor
               # transparency log.
               if [[ -z "${GITHUB_TOKEN:-}" ]]; then
-                echo "GITHUB_TOKEN is not set (architect context likely not attached) — skipping binary signing."
-                echo "private" > /tmp/.binary_sign_access
-                exit 0
+                echo "ERROR: GITHUB_TOKEN is not set. Did generate-github-token succeed?" >&2
+                exit 1
               fi
               GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
               HTTP_STATUS=$(curl -s -o /tmp/.gh_response_binsign -w "%{http_code}" \
