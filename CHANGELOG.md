@@ -22,6 +22,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     tag builds and pass it to `app_build_suite` via `--override-chart-version` / `--override-app-version`.
     Required by app-build-suite v2.0.0, which replaced `HelmGitVersionSetter` with `HelmVersionSetter` and no
     longer derives chart/app versions from git state automatically.
+- **Breaking**. `push-to-app-catalog`: `executor` parameter now only accepts `app-build-suite` (previously
+  `architect` was the default). Consumers using the default or `executor: architect` explicitly must remove the
+  parameter or set it to `app-build-suite`. The `architect`-executor code path (running `helm-chart-template`,
+  `helm-lint`, `kubeconform`, and `helm package` directly) has been removed; packaging is now always handled by
+  app-build-suite. The `executor` parameter is kept for backwards compatibility and will be removed in a future
+  version.
 - **Breaking**. `push-to-registries`: make tag-latest-branch opt-in with empty default
 - **Breaking.** `image-build-and-push-multiarch` command renamed to `image-build-and-push` — multi-arch is no
   longer a distinguishing trait. Direct callers of the command need to update the name; consumers of the

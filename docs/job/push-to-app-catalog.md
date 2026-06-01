@@ -56,7 +56,7 @@ documentation](https://helm.sh/blog/storing-charts-in-oci/).
 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [attach_workspace](#attach_workspace) (optional boolean, default=false)
-- [executor](#executor-optional-either-architect-or-app-build-suite-defaultarchitect) (optional, either `architect` or `app-build-suite`, default=`architect`)
+- [executor](#executor-optional-deprecated) (optional, deprecated, only `app-build-suite` accepted)
 - [chart](#chart) name of the directory containing the chart in `helm/`
 - [on_tag](#on_tag-optional-boolean-defaulttrue) only push tagged commits to `app_catalog`
 - [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
@@ -77,12 +77,10 @@ When this is `false`, commits to `master` will be pushed to `app_catalog`
 instead of `app_catalog_test`. Set this to `false` for deployments that follow
 a master branch for production releases rather than using tags (the default).
 
-### executor (optional, either `architect` or `app-build-suite`, default=`architect`)
+### executor (optional, deprecated)
 
-Enables users to select the executor and control whether metadata should be generated.
-Selecting `app-build-suite` will execute chart linting, validating and packaging using
-[app-build-suite](https://github.com/giantswarm/app-build-suite). This also enables
-generation and publishing of metadata into the catalog.
+Kept for backwards compatibility. Only `app-build-suite` is accepted and is the default.
+Will be removed in a future version.
 
 ### chart
 
@@ -115,7 +113,6 @@ workflows:
           app_catalog: CATALOG-catalog
           app_catalog_test: CATALOG-test-catalog
           chart: REPOSITORY
-          executor: app-build-suite
           requires:
             # Make sure docker image is successfully built.
             - push-REPOSITORY
