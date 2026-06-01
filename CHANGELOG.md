@@ -9,21 +9,95 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- `push-to-registries` (multi-arch path): new `sbom-cyclonedx` parameter (default `false`). When enabled, generates a CycloneDX SBOM **per architecture** with syft and attaches it to each platform manifest as an unsigned OCI 1.1 referrer (artifactType `application/vnd.cyclonedx+json`) using oras. BuildKit's `--attest type=sbom` only emits SPDX, so CycloneDX is produced out-of-band. Unsigned and attached the same way for both public and private images, mirroring the inline SPDX SBOM — no cosign, no Rekor transparency log. Off by default, so existing consumers are unaffected. Requires `syft` and `oras` in the architect image.
+- `push-to-registries`: new `sbom-cyclonedx` parameter (default `false`). When enabled, generates a CycloneDX SBOM **per architecture** with syft and attaches it to each platform manifest as an unsigned OCI 1.1 referrer (artifactType `application/vnd.cyclonedx+json`) using oras. BuildKit's `--attest type=sbom` only emits SPDX, so CycloneDX is produced out-of-band. Unsigned and attached the same way for both public and private images, mirroring the inline SPDX SBOM — no cosign, no Rekor transparency log. Off by default, so existing consumers are unaffected. Requires `syft` and `oras` in the architect image.
+
+## [9.0.0] - 2026-06-01
+
+### Added
+
+- `tools-info`: New `show_gitsemver_version` parameter (default `true`). Prints the installed `gitsemver`
+  version at job start in any job that calls `tools-info`.
+
+### Changed
+
+- **Breaking**. `image-prepare-tag`: replace `architect project version` with `gitsemver version` to compute
+  the Docker image tag. Dev builds now produce a readable semver pre-release string
+  (`X.Y.(Z+1)-dev.<branch>.<date>.<time>`) instead of a raw 40-character commit SHA. `GS_GIT_TAG_PREFIX` is
+  honoured by `gitsemver` under the same env var name, so monorepo tag-prefix support is unchanged.
+  - `image-push-to-registries`, `image-build-and-push-multiarch`: update dev-build detection to match the new
+    `gitsemver` dev-version format (`-dev.` substring) instead of the old 40-char hex SHA pattern.
+  - `helm-chart-template`: remove `architect helm template` calls. The command now stamps `version` and
+    `appVersion` in `Chart.yaml` directly using `gitsemver version` output, on tag builds only (matching the
+    previous behaviour). Helm chart validation is expected to be handled by a separate tool.
+  - `push-to-app-catalog` (executor `app-build-suite`): compute the chart version with `gitsemver version` on
+    tag builds and pass it to `app_build_suite` via `--override-chart-version` / `--override-app-version`.
+    Required by app-build-suite v2.0.0, which replaced `HelmGitVersionSetter` with `HelmVersionSetter` and no
+    longer derives chart/app versions from git state automatically.
+- **Breaking**. `push-to-app-catalog`: `executor` parameter now only accepts `app-build-suite` (previously
+  `architect` was the default). Consumers using the default or `executor: architect` explicitly must remove the
+  parameter or set it to `app-build-suite`. The `architect`-executor code path (running `helm-chart-template`,
+  `helm-lint`, `kubeconform`, and `helm package` directly) has been removed; packaging is now always handled by
+  app-build-suite. The `executor` parameter is kept for backwards compatibility and will be removed in a future
+  version.
+- **Breaking**. `push-to-registries`: make tag-latest-branch opt-in with empty default
+- **Breaking.** `image-build-and-push-multiarch` command renamed to `image-build-and-push` — multi-arch is no
+  longer a distinguishing trait. Direct callers of the command need to update the name; consumers of the
+  `push-to-registries` job are unaffected.
+- **Breaking.** `go-build` default `architectures` is now `linux/amd64,linux/arm64` (previously
+  `linux/amd64`). Set `architectures: "linux/amd64"` explicitly to keep single-arch builds.
+- `architect` executor updated to `7.5.3`.
+- `app-build-suite` executor updated to `2.1.1-circleci` (v2 major).
+- `integration-test` job: default `kubernetes-version` updated to `v1.35.1`.
+
+### Removed
+
+- **Breaking.** `helm-lint`, `helm-chart-template`, and `kubeconform` commands — these were only used by the
+  `architect`-executor path in `push-to-app-catalog`, which has been removed. Consumers calling these commands
+  directly must replace them with equivalent tooling.
+- **Breaking.** `push-to-registries-multiarch` job (deprecated since v7.0). Migrate to `push-to-registries`.
+- **Breaking.** `multiarch:` parameter on `push-to-registries`. The job always uses `docker buildx` now;
+  consumers of the previous default (`multiarch: false`) get multi-arch builds automatically.
+- **Breaking.** `os` parameter on the `go-build` command and job (deprecated and ignored since v8.1). Use
+  `architectures` instead.
+- **Breaking.** Singular `architecture` parameter on the `go-build` command and job. Replaced entirely by
+  `architectures` (plural). Matrix-based callers must switch to a single job with a comma-separated list.
+- **Breaking.** `image-build-with-docker` and `image-push-to-registries` commands (the single-arch
+  `docker build` / `docker push` path). The single-arch path is collapsed into the buildx path; nothing else
+  in the orb referenced these commands.
+- **Breaking.** `registry_url`, `password_envar`, `username_envar` parameters from `push-to-app-catalog`.
+  The current OCI push flow uses `generate-github-token` + the giantswarm OCI authenticator instead.
+- `password_envar`, `username_envar`, `registry_url` parameters from `push-helm` and the two `[deprecated]`
+  legacy OCI auth/push run steps that used them.
+- `ct_config` parameter on `push-to-app-catalog` is now silently ignored — the `helm-lint` step it
+  controlled has been removed along with the `architect`-executor path.
+
+> **Upgrading from v8.x?** See [docs/migration-v8-to-v9.md](docs/migration-v8-to-v9.md) for breaking changes
+> and the defaults that change. See [docs/cosign-signing.md](docs/cosign-signing.md) for the supply-chain
+> model.
 
 ## [8.3.0] - 2026-05-20
 
 ### Added
 
-- New `cosign-sign-verify` command. Mints a sigstore-audience CircleCI OIDC token and signs + verifies a batch of artifacts read from a file (one per line). Supports OCI references (`kind: oci`, default — used by `push-helm` and `image-build-and-push-multiarch`) and blob files (`kind: blob` — used by `go-build` for Go binaries with `--bundle` sidecars). Single source of truth for the CircleCI OIDC issuer / identity regex pair so a future CircleCI URL-scheme rotation only needs updating in one place. Replaces the previous per-call duplication of the sign + verify block in all three signing sites.
+- New `cosign-sign-verify` command. Mints a sigstore-audience CircleCI OIDC token and signs + verifies a batch
+  of artifacts read from a file (one per line). Supports OCI references (`kind: oci`, default — used by
+  `push-helm` and `image-build-and-push-multiarch`) and blob files (`kind: blob` — used by `go-build` for Go
+  binaries with `--bundle` sidecars). Single source of truth for the CircleCI OIDC issuer / identity regex
+  pair so a future CircleCI URL-scheme rotation only needs updating in one place. Replaces the previous
+  per-call duplication of the sign + verify block in all three signing sites.
 
 ### Removed
 
-- `cosign-prepare` command. Its OIDC token-mint step is now folded into `cosign-sign-verify`, which is the only command callers need to invoke after staging refs.
+- `cosign-prepare` command. Its OIDC token-mint step is now folded into `cosign-sign-verify`, which is the
+  only command callers need to invoke after staging refs.
 
 ### Fixed
 
-- `push-helm`: derive the chart OCI repo path from `helm push` output (the `Pushed:` line) instead of `<<parameters.chart>>`. Consumers that set `explicit_allow_chart_name_mismatch: true` — where the Chart.yaml `name` differs from the orb `chart` parameter, e.g. `giantswarm/releases` pushing `release-aws` / `release-azure` / etc. under `chart: release-chart` — now sign the artifact at the path it was actually pushed to, instead of failing with `404 Not Found` on a non-existent `<chart-param>@<digest>` reference.
+- `push-helm`: derive the chart OCI repo path from `helm push` output (the `Pushed:` line) instead of
+  `<<parameters.chart>>`. Consumers that set `explicit_allow_chart_name_mismatch: true` — where the Chart.yaml
+  `name` differs from the orb `chart` parameter, e.g. `giantswarm/releases` pushing `release-aws` /
+  `release-azure` / etc. under `chart: release-chart` — now sign the artifact at the path it was actually
+  pushed to, instead of failing with `404 Not Found` on a non-existent `<chart-param>@<digest>` reference.
 
 ## [8.2.2] - 2026-05-19
 
@@ -1665,7 +1739,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.3.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.0.0...HEAD
+[9.0.0]: https://github.com/giantswarm/architect-orb/compare/v8.3.0...v9.0.0
 [8.3.0]: https://github.com/giantswarm/architect-orb/compare/v8.2.2...v8.3.0
 [8.2.2]: https://github.com/giantswarm/architect-orb/compare/v8.2.1...v8.2.2
 [8.2.1]: https://github.com/giantswarm/architect-orb/compare/v8.2.0...v8.2.1

@@ -47,11 +47,7 @@ It is an rare case so triggering again the build should solve the issue.
 
 ## Pushing to OCI Registries (`push_to_oci_registry: true`)
 
-This job assumes that App Catalog is hosted inside a suitable container
-registry specified by `registry_url` parameter, e.g.
-`giantswarmpublic.azurecr.io`. CircleCI environment variables (specified by
-`username_envar` and `password_envar`) will be used by `helm` to sign in to
-the registry.
+The job pushes Helm charts to Giant Swarm's App Catalog OCI registry — `gsoci.azurecr.io/charts/giantswarm` for public images, `gsociprivate.azurecr.io/charts/giantswarm` for private. Visibility is detected from the source GitHub repository (`force-public: true` overrides). Authentication uses the standard CircleCI context env vars (`ACR_GSOCI_USERNAME`/`ACR_GSOCI_PASSWORD` or `ACR_GSOCIPRIVATE_*`).
 
 You can read more about storing helm charts in OCI registries in the [helm
 documentation](https://helm.sh/blog/storing-charts-in-oci/).
@@ -60,16 +56,14 @@ documentation](https://helm.sh/blog/storing-charts-in-oci/).
 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [attach_workspace](#attach_workspace) (optional boolean, default=false)
-- [executor](#executor-optional-either-architect-or-app-build-suite-defaultarchitect) (optional, either `architect` or `app-build-suite`, default=`architect`)
+- [executor](#executor-optional-deprecated) (optional, deprecated, only `app-build-suite` accepted)
 - [chart](#chart) name of the directory containing the chart in `helm/`
 - [on_tag](#on_tag-optional-boolean-defaulttrue) only push tagged commits to `app_catalog`
 - [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
 - [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
 - [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaulttrue)
-- [registry_url](#registry_url-optional-string)
-- [username_envar](#username_envar-optional-string)
-- [password_envar](#password_envar-optional-string)
+- [sign](#sign-optional-boolean-defaulttrue)
 
 ### attach_workspace
 
@@ -83,12 +77,10 @@ When this is `false`, commits to `master` will be pushed to `app_catalog`
 instead of `app_catalog_test`. Set this to `false` for deployments that follow
 a master branch for production releases rather than using tags (the default).
 
-### executor (optional, either `architect` or `app-build-suite`, default=`architect`)
+### executor (optional, deprecated)
 
-Enables users to select the executor and control whether metadata should be generated.
-Selecting `app-build-suite` will execute chart linting, validating and packaging using
-[app-build-suite](https://github.com/giantswarm/app-build-suite). This also enables
-generation and publishing of metadata into the catalog.
+Kept for backwards compatibility. Only `app-build-suite` is accepted and is the default.
+Will be removed in a future version.
 
 ### chart
 
@@ -121,7 +113,6 @@ workflows:
           app_catalog: CATALOG-catalog
           app_catalog_test: CATALOG-test-catalog
           chart: REPOSITORY
-          executor: app-build-suite
           requires:
             # Make sure docker image is successfully built.
             - push-REPOSITORY
@@ -138,24 +129,21 @@ catalog.
 
 ### push_to_oci_registry (optional boolean, default=true)
 
-When set to `true`, the packaged chart will be pushed to the specified OCI
-registry.
+When set to `true`, the packaged chart will be pushed to the giantswarm OCI
+registry (`gsoci.azurecr.io/charts/giantswarm` for public charts,
+`gsociprivate.azurecr.io/charts/giantswarm` for private). The registry URL
+and authentication are not configurable — they're determined from the source
+repository's GitHub visibility and standard `ACR_GSOCI_*` /
+`ACR_GSOCIPRIVATE_*` context env vars.
 
-### registry_url (optional string)
+### sign (optional boolean, default=true)
 
-Defaults to `giantswarmpublic.azurecr.io`.
+When `true`, the pushed Helm chart is signed with cosign keyless OIDC.
+The signature lands as an OCI 1.1 referrer artifact on the chart and is
+queryable via the registry's referrers API.
 
-Hostname (and subdomain if applies) of the OCI registry to push to. `oci://`
-scheme is implied and should not be added to the URL.
+Skipped at runtime when the source repository is private (signing would
+publish digest + timestamp metadata to the public Rekor transparency log).
 
-### username_envar (optional string)
-
-Defaults to `AZURE_CLIENTID`.
-
-Specifies environment variable to use as OCI registry username.
-
-### password_envar (optional string)
-
-Defaults to `AZURE_CLIENTSECRET`.
-
-Specifies environment variable to use as OCI registry password.
+See [Cosign signing](../cosign-signing.md) for the verification command
+and the end-to-end identity model.

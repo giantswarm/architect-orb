@@ -18,20 +18,19 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
 - Making builds understandable without looking into [architect][architect]
   codebase.
 - Having one line binary call on each job step - to make the outputs grouped
-  and visible and keeping build configurations sane. Good example is
-  [helm-chart-template][helm-chart-template].
+  and visible and keeping build configurations sane.
 - Using [architect executor][architect-executor] with the latest
   [architect][architect] docker image most of time.
 - Using binaries other than `architect` when appropriate (they should be
   available inside [architect executor][architect-executor] most of the time).
   E.g. `docker`, `git`, `helm`, etc. Instead of wrapping existing well known
   functionality in [architect][architect] binary.
-- Using [architect][architect] commands for complex tasks. Good example is
-  `architect helm template` instead of awkward and error prone `sed` calls.
+- Using purpose-built binaries for complex tasks. For example, `gitsemver
+  version` computes chart/image versions from git state, replacing earlier
+  `architect`-driven version manipulation.
 
 [architect]: https://github.com/giantswarm/architect
 [architect-executor]: https://github.com/giantswarm/architect-orb/blob/main/src/executors/architect.yaml
-[helm-chart-template]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/helm-chart-template.yaml
 
 ## Coding Guidelines
 
@@ -39,8 +38,7 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
 - Jobs should call only commands and not have steps defined directly. I.e. no
   `run:` key in _/jobs_ directory.
 - Steps defined in commands should be named. Names should be [prefixed with
-  `architect/COMMAND_NAME` like here][step-prefix]. They should have imperative
-  format.
+  `architect/COMMAND_NAME` like here][step-prefix] and use imperative format.
 - Steps defined in commands should be small. Ideally single binary call. One
   exception is step skipping described later.
 - Steps should be described using the `name:` attribute, to make it as easy as
@@ -52,12 +50,10 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
 - Temporary information between steps should be carried in files prefixed with
   `.build_`.
 - Temporary `.build_*` files should be only used in scope of a single command.
-- A command using temporary files should clean them with [cleanup step in
-  format linked here][cleanup-step]. This should be the last step of the command.
+- A command using temporary files should clean them up as the last step.
 
-[cleanup-step]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/helm-chart-template.yaml
-[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/helm-chart-template.yaml
-[step-prefix]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/helm-chart-template.yaml
+[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/prepare-catalogbot-git-ssh.yaml
+[step-prefix]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/prepare-catalogbot-git-ssh.yaml
 [when-unless]: https://circleci.com/docs/2.0/configuration-reference/#the-when-step-requires-version-21
 
 ## Development

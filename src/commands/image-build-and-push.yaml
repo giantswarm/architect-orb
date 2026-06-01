@@ -65,11 +65,11 @@ parameters:
   sbom-cyclonedx:
     description: |
       Additionally generate a CycloneDX SBOM per architecture (with syft) and attach it
-      to each platform manifest as a keyless cosign attestation (predicate type
-      `cyclonedx`). BuildKit's `--attest type=sbom` only emits SPDX, so CycloneDX is
-      produced out-of-band and attached via `cosign attest`. Public images only — like
-      cosign signing, private images are skipped to avoid leaking digests/timestamps into
-      the public Rekor transparency log.
+      to each platform manifest as an unsigned OCI referrer (artifactType
+      `application/vnd.cyclonedx+json`) using oras. BuildKit's `--attest type=sbom` only
+      emits SPDX, so CycloneDX is produced out-of-band. Like the inline SPDX SBOM it is
+      unsigned and attached for both public and private images — no cosign, no Rekor
+      transparency log. Requires syft and oras in the architect image.
     type: boolean
     default: false
   sign:
@@ -188,7 +188,7 @@ steps:
         while IFS=' ' read -r access reg _ _ push_dev; do
           [[ -z "$reg" || "$reg" =~ ^# ]] && continue
           [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
-          if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ [a-f0-9]{40} ]]; then
+          if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ -dev\. ]]; then
             echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
             continue
           fi
@@ -340,8 +340,8 @@ steps:
               while IFS=' ' read -r access reg _ _ push_dev; do
                 [[ -z "$reg" || "$reg" =~ ^# ]] && continue
                 [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
-                if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ [a-f0-9]{40} ]]; then
-                  echo "Skipping cosign for $reg (push_dev=false, tag looks like a dev SHA)."
+                if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ -dev\. ]]; then
+                  echo "Skipping cosign for $reg (push_dev=false, tag is a dev build)."
                   continue
                 fi
                 [[ "$access" == *"public"* ]] || continue

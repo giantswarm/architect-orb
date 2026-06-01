@@ -7,9 +7,11 @@
 - [integration-test](job/integration-test.md)
 - [push-to-app-catalog](job/push-to-app-catalog.md)
 - [push-to-registries](job/push-to-registries.md)
-- [push-to-registries-multiarch](job/image-build-and-push-multiarch.md) (Deprecated)
 - [run-tests-with-ats](job/run-tests-with-ats.md) (Experimental)
+- [upload-release-assets](job/upload-release-assets.md)
 
 ## Guides
 
+- [Migrating from v8.x to v9](migration-v8-to-v9.md)
+- [Cosign signing](cosign-signing.md)
 - [Multi-arch Dockerfiles: avoiding QEMU emulation](multi-arch-dockerfiles.md)
