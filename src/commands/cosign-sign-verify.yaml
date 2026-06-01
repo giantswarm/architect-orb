@@ -38,6 +38,15 @@ parameters:
       `slsaprovenance`) or a custom predicate URI. Ignored for `oci` and `blob`.
     type: string
     default: cyclonedx
+  tlog-upload:
+    description: |
+      `kind=attest` only. When `"false"`, attest with `--tlog-upload=false` and verify
+      with `--insecure-ignore-tlog=true`, so nothing is recorded in the public Rekor
+      transparency log (used for private images, whose digests/timestamps must not leak).
+      Defaults to `"true"` (upload to Rekor). Callers that decide this at runtime pass an
+      env-var reference, e.g. `tlog-upload: "$COSIGN_ATTEST_TLOG_UPLOAD"`.
+    type: string
+    default: "true"
   refs_file:
     description: |
       Path to a file containing one entry per line. See the command header for the
@@ -98,6 +107,14 @@ steps:
             ;;
           attest)
             ptype="<<parameters.predicate-type>>"
+            # Private images attest without touching the public Rekor transparency log.
+            attest_tlog_flags=()
+            verify_tlog_flags=()
+            if [[ "<<parameters.tlog-upload>>" == "false" ]]; then
+              echo "tlog-upload disabled: attesting without uploading to the Rekor transparency log."
+              attest_tlog_flags+=("--tlog-upload=false")
+              verify_tlog_flags+=("--insecure-ignore-tlog=true")
+            fi
             while IFS=' ' read -r ref predicate; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               if [[ ! -s "$predicate" ]]; then
@@ -105,12 +122,14 @@ steps:
                 exit 1
               fi
               echo "cosign attest --type $ptype $ref (predicate=$predicate)"
-              cosign attest --yes --type "$ptype" --predicate "$predicate" "$ref"
+              cosign attest --yes --type "$ptype" --predicate "$predicate" \
+                "${attest_tlog_flags[@]}" "$ref"
               echo "cosign verify-attestation --type $ptype $ref"
               cosign verify-attestation \
                 --type "$ptype" \
                 --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
                 --certificate-identity-regexp "$IDENTITY_REGEX" \
+                "${verify_tlog_flags[@]}" \
                 "$ref" > /dev/null
             done < "$refs_file"
             ;;

@@ -201,7 +201,16 @@ cosign verify-attestation --type cyclonedx \
   <registry>/giantswarm/myapp@<platform-digest>
 ```
 
-Like cosign signing, this runs for **public images only** — private image digests are kept out of the public Rekor transparency log. It defaults to off, so existing consumers are unaffected.
+Like the inline SPDX SBOM, this runs for **both public and private images**. Public attestations are recorded in the public Rekor transparency log; **private** images are attested with `--tlog-upload=false` so their digests/timestamps never reach the public log (the keyless Fulcio certificate never sees the digest). Verify a private attestation by also ignoring the transparency log:
+
+```sh
+cosign verify-attestation --type cyclonedx --insecure-ignore-tlog \
+  --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
+  --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/.*' \
+  <registry>/giantswarm/myapp@<platform-digest>
+```
+
+It defaults to off, so existing consumers are unaffected.
 
 ## Migrating from `push-to-registries-multiarch`
 

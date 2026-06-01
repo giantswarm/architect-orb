@@ -364,16 +364,22 @@ steps:
               # BuildKit's --attest type=sbom only emits SPDX. To also publish a
               # CycloneDX SBOM we generate one per architecture with syft and attach it
               # to the individual platform manifests via cosign attest (consumed by the
-              # shared cosign-sign-verify command in kind=attest mode). The skip
-              # conditions mirror the cosign signing loop: public images only, and the
-              # same split-china-push / push_dev filters, so we never attest a manifest
-              # that isn't public or doesn't exist at that registry.
+              # shared cosign-sign-verify command in kind=attest mode). Like the inline
+              # SPDX SBOM, this runs for both public and private images. For private
+              # images we attest WITHOUT uploading to the public Rekor transparency log
+              # (set below) so we don't leak private digests/timestamps — the keyless
+              # Fulcio cert never sees the image digest, so privacy is preserved. The
+              # split-china-push / push_dev filters mirror the push loop so we never
+              # attest a manifest that doesn't exist at that registry.
               : > /tmp/.cosign_attestations
 
               IMAGE_ACCESS=$(cat /tmp/.image_access)
-              if [[ "$IMAGE_ACCESS" != "public" ]]; then
-                echo "Image is not public (IMAGE_ACCESS=$IMAGE_ACCESS); skipping CycloneDX attestation."
-                exit 0
+              # Public images go to the transparency log (as cosign signing does);
+              # private images skip it. cosign-sign-verify reads this via tlog-upload.
+              if [[ "$IMAGE_ACCESS" == "public" ]]; then
+                echo 'export COSIGN_ATTEST_TLOG_UPLOAD=true' >> "$BASH_ENV"
+              else
+                echo 'export COSIGN_ATTEST_TLOG_UPLOAD=false' >> "$BASH_ENV"
               fi
 
               if [[ ! -f /tmp/.buildx_metadata.json ]]; then
@@ -405,7 +411,8 @@ steps:
                   echo "Skipping CycloneDX attestation for $reg (push_dev=false, tag $TAG_VALUE is a dev version)."
                   continue
                 fi
-                [[ "$access" == *"public"* ]] || continue
+                # Only the registries the image was actually pushed to (matching its
+                # visibility); public and private are both attested.
                 [[ "$access" == *"$IMAGE_ACCESS"* ]] || continue
 
                 base="${reg}/<<parameters.image>>"
@@ -435,3 +442,6 @@ steps:
             kind: attest
             predicate-type: cyclonedx
             refs_file: /tmp/.cosign_attestations
+            # Runtime-decided: "true" for public images, "false" for private (set in the
+            # staging step above via BASH_ENV). Private attestations skip the Rekor log.
+            tlog-upload: "$COSIGN_ATTEST_TLOG_UPLOAD"
