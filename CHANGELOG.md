@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `tools-info`: New `show_gitsemver_version` parameter (default `true`). Prints the installed `gitsemver`
+  version at job start in any job that calls `tools-info`.
+
 ### Changed
 
 - **Breaking**. `image-prepare-tag`: replace `architect project version` with `gitsemver version` to compute
@@ -34,6 +39,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `push-to-registries` job are unaffected.
 - **Breaking.** `go-build` default `architectures` is now `linux/amd64,linux/arm64` (previously
   `linux/amd64`). Set `architectures: "linux/amd64"` explicitly to keep single-arch builds.
+- `architect` executor updated to `7.5.3`.
+- `app-build-suite` executor updated to `2.1.1-circleci` (v2 major).
+- `integration-test` job: default `kubernetes-version` updated to `v1.35.1`.
 
 ### Removed
 
@@ -50,9 +58,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Breaking.** `image-build-with-docker` and `image-push-to-registries` commands (the single-arch
   `docker build` / `docker push` path). The single-arch path is collapsed into the buildx path; nothing else
   in the orb referenced these commands.
-- `password_envar`, `username_envar`, `registry_url` parameters on `push-helm` and the two `[deprecated]`
-  legacy OCI auth/push run steps that used them. The current OCI push flow uses `generate-github-token` + the
-  giantswarm OCI authenticator instead.
+- **Breaking.** `registry_url`, `password_envar`, `username_envar` parameters from `push-to-app-catalog`.
+  The current OCI push flow uses `generate-github-token` + the giantswarm OCI authenticator instead.
+- `password_envar`, `username_envar`, `registry_url` parameters from `push-helm` and the two `[deprecated]`
+  legacy OCI auth/push run steps that used them.
+- `ct_config` parameter on `push-to-app-catalog` is now silently ignored — the `helm-lint` step it
+  controlled has been removed along with the `architect`-executor path.
 
 > **Upgrading from v8.x?** See [docs/migration-v8-to-v9.md](docs/migration-v8-to-v9.md) for breaking changes
 > and the defaults that change. See [docs/cosign-signing.md](docs/cosign-signing.md) for the supply-chain
