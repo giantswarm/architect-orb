@@ -37,6 +37,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 
+- **Breaking.** `helm-lint`, `helm-chart-template`, and `kubeconform` commands — these were only used by the
+  `architect`-executor path in `push-to-app-catalog`, which has been removed. Consumers calling these commands
+  directly must replace them with equivalent tooling.
 - **Breaking.** `push-to-registries-multiarch` job (deprecated since v7.0). Migrate to `push-to-registries`.
 - **Breaking.** `multiarch:` parameter on `push-to-registries`. The job always uses `docker buildx` now;
   consumers of the previous default (`multiarch: false`) get multi-arch builds automatically.
