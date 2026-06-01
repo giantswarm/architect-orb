@@ -420,7 +420,11 @@ steps:
                   echo "Generating CycloneDX SBOM for $plat_ref ($platform)"
                   syft "$plat_ref" -o cyclonedx-json="$sbom_file"
                   echo "Attaching CycloneDX SBOM to $plat_ref"
+                  # --disable-path-validation: the SBOM lives at an absolute /tmp path,
+                  # which oras rejects by default (the ':' file:mediaType separator is
+                  # ambiguous with absolute paths). Safe here — we control the path.
                   oras attach --artifact-type application/vnd.cyclonedx+json \
+                    --disable-path-validation \
                     "$plat_ref" \
                     "${sbom_file}:application/vnd.cyclonedx+json"
                 done < <(jq -r '
