@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `push-to-registries` (multi-arch path): new `sbom-cyclonedx` parameter (default `false`). When enabled, generates a CycloneDX SBOM **per architecture** with syft and attaches it to each platform manifest as a keyless cosign attestation (predicate type `cyclonedx`). BuildKit's `--attest type=sbom` only emits SPDX, so CycloneDX is produced out-of-band via `cosign attest`. Public images only, mirroring the cosign signing skip conditions. Off by default, so existing consumers are unaffected.
+- `cosign-sign-verify` command: new `kind: attest` mode (plus `predicate-type` parameter, default `cyclonedx`) that runs `cosign attest` / `cosign verify-attestation` over a file of `<oci-ref> <predicate-file>` pairs, reusing the single source of truth for the CircleCI OIDC issuer / identity regex pair.
+
 ## [8.3.0] - 2026-05-20
 
 ### Added

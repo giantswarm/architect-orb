@@ -89,6 +89,14 @@ parameters:
       on the multi-arch path (v8.x).
     type: boolean
     default: true
+  sbom-cyclonedx:
+    description: |
+      Additionally generate a CycloneDX SBOM per architecture (with syft) and attach it to
+      each platform manifest as a keyless cosign attestation. BuildKit's SBOM attestation
+      only emits SPDX, so CycloneDX is produced out-of-band. Public images only. Currently
+      effective only on the multi-arch path (v8.x). Defaults to off.
+    type: boolean
+    default: false
   sign:
     description: |
       Sign the pushed image with cosign keyless OIDC. Public images only — private
@@ -198,6 +206,7 @@ steps:
             oci-labels: <<parameters.oci-labels>>
             provenance: <<parameters.provenance>>
             sbom: <<parameters.sbom>>
+            sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
             sign: <<parameters.sign>>
             split-china-push: <<parameters.split-china-push>>
   - when:

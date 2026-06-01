@@ -11,8 +11,10 @@
 # invoked from within a shell loop.
 #
 # File format:
-#   kind=oci   — one OCI reference per line, e.g. `gsoci.azurecr.io/charts/giantswarm/cert-exporter@sha256:…`
-#   kind=blob  — one `<file> <bundle-path>` pair per line, e.g. `mybin-linux-amd64 mybin-linux-amd64.bundle`
+#   kind=oci    — one OCI reference per line, e.g. `gsoci.azurecr.io/charts/giantswarm/cert-exporter@sha256:…`
+#   kind=blob   — one `<file> <bundle-path>` pair per line, e.g. `mybin-linux-amd64 mybin-linux-amd64.bundle`
+#   kind=attest — one `<oci-ref> <predicate-file>` pair per line, e.g.
+#                 `gsoci.azurecr.io/giantswarm/foo@sha256:… /tmp/sbom.linux_amd64.cdx.json`
 # Blank lines and lines starting with `#` are ignored. If the file does not
 # exist or is empty, the step exits 0 without doing anything (so callers that
 # decide at runtime to skip signing — e.g. private artifacts — can do so by
@@ -22,16 +24,26 @@ parameters:
   kind:
     description: |
       Which cosign subcommand pair to invoke.
-      `oci`  → `cosign sign` / `cosign verify` on OCI references.
-      `blob` → `cosign sign-blob --bundle` / `cosign verify-blob --bundle` on files.
+      `oci`    → `cosign sign` / `cosign verify` on OCI references.
+      `blob`   → `cosign sign-blob --bundle` / `cosign verify-blob --bundle` on files.
+      `attest` → `cosign attest` / `cosign verify-attestation` on OCI references,
+                 attaching the per-line predicate file under `predicate-type`.
     type: enum
-    enum: [oci, blob]
+    enum: [oci, blob, attest]
     default: oci
+  predicate-type:
+    description: |
+      Predicate type passed to `cosign attest --type` / `cosign verify-attestation --type`
+      when `kind=attest`. Accepts the cosign well-known types (e.g. `cyclonedx`, `spdx`,
+      `slsaprovenance`) or a custom predicate URI. Ignored for `oci` and `blob`.
+    type: string
+    default: cyclonedx
   refs_file:
     description: |
       Path to a file containing one entry per line. See the command header for the
-      per-kind format. Defaults to `/tmp/.cosign_refs` for `oci` and
-      `/tmp/.cosign_blobs` is the conventional choice for `blob` (set explicitly).
+      per-kind format. Defaults to `/tmp/.cosign_refs` for `oci`;
+      `/tmp/.cosign_blobs` (blob) and `/tmp/.cosign_attestations` (attest) are the
+      conventional choices for the other kinds (set explicitly).
     type: string
     default: /tmp/.cosign_refs
 steps:
@@ -82,6 +94,24 @@ steps:
                 --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
                 --certificate-identity-regexp "$IDENTITY_REGEX" \
                 "$file" > /dev/null
+            done < "$refs_file"
+            ;;
+          attest)
+            ptype="<<parameters.predicate-type>>"
+            while IFS=' ' read -r ref predicate; do
+              [[ -z "$ref" || "$ref" =~ ^# ]] && continue
+              if [[ ! -s "$predicate" ]]; then
+                echo "Predicate file '$predicate' for $ref is missing or empty."
+                exit 1
+              fi
+              echo "cosign attest --type $ptype $ref (predicate=$predicate)"
+              cosign attest --yes --type "$ptype" --predicate "$predicate" "$ref"
+              echo "cosign verify-attestation --type $ptype $ref"
+              cosign verify-attestation \
+                --type "$ptype" \
+                --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
+                --certificate-identity-regexp "$IDENTITY_REGEX" \
+                "$ref" > /dev/null
             done < "$refs_file"
             ;;
         esac
