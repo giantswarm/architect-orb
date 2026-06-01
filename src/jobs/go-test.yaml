@@ -5,7 +5,6 @@ description: |
 
   - "buildTimestamp" in RFC-3339 format in UTC time zone.
   - "gitSHA" SHA of the built commit.
-  - "version" produced by `architect project version` command.
 
 parameters:
   path:
