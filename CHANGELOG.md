@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.0.0] - 2026-06-01
+
 ### Added
 
 - `tools-info`: New `show_gitsemver_version` parameter (default `true`). Prints the installed `gitsemver`
@@ -1733,7 +1735,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v8.3.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.0.0...HEAD
+[9.0.0]: https://github.com/giantswarm/architect-orb/compare/v8.3.0...v9.0.0
 [8.3.0]: https://github.com/giantswarm/architect-orb/compare/v8.2.2...v8.3.0
 [8.2.2]: https://github.com/giantswarm/architect-orb/compare/v8.2.1...v8.2.2
 [8.2.1]: https://github.com/giantswarm/architect-orb/compare/v8.2.0...v8.2.1
