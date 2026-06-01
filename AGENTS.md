@@ -1,5 +1,3 @@
-# CLAUDE.md
-
 This file provides guidance to AI agents working with code in this repository.
 
 ## What this repo is
@@ -55,15 +53,6 @@ which bundles all required tools: `architect`, `gitsemver`, `helm`, `go`, `cosig
 - **Version stamping** uses `gitsemver version` (not `architect project version`). This is the canonical way
   to get the current build version.
 - Always update the `CHANGELOG.md` with a summary of changes and notable features/fixes.
-
-## Key jobs and what they produce
-
-| Job                     | Output                                                                      |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `go-build`              | Binaries `<binary>-<GOOS>-<GOARCH>` + `.platforms` file in workspace        |
-| `push-to-registries`    | Multi-arch Docker image via `docker buildx`; cosign-signed for public repos |
-| `push-to-app-catalog`   | Helm chart to GitHub-hosted app catalog + OCI registry (`gsoci.azurecr.io`) |
-| `upload-release-assets` | Attaches workspace binaries + `.bundle` sidecars to the GitHub Release      |
 
 ## Versioning and signing (v9+)
 
