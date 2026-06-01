@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.0.1] - 2026-06-01
+
+### Fixed
+
+- `generate-github-token`: gracefully skip token generation when the required env vars
+  (`CIRCLECI_ARCHITECT_GITHUB_APP_PRIVATE_KEY_B64` etc.) are not set, instead of failing with a
+  PEM-parse error. Jobs that don't attach the `architect` CircleCI context now emit a clear warning
+  and continue without signing rather than hard-failing.
+- `go-build`: treat missing `GITHUB_TOKEN` after `generate-github-token` as "skip signing" (writes
+  `private` to the visibility marker file) instead of exiting with an error. This makes binary
+  signing opt-in by attaching the context, not a hard requirement.
+
 ## [9.0.0] - 2026-06-01
 
 ### Added
