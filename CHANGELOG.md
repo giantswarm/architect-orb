@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking**. Adapt to `gitsemver` v2.0.0, which renamed the `version` subcommand to `get` (to avoid
+  confusion with the `--version` flag). All `gitsemver version` invocations are now `gitsemver get`:
+  - `image-prepare-tag`: compute the Docker image tag with `gitsemver get`.
+  - `push-to-app-catalog` (executor `app-build-suite`): compute the chart/app version with `gitsemver get`.
+- Bump the `architect` executor image from `8.0.0` to `8.1.0`, which bundles `gitsemver` v2.0.0 (the version
+  that provides the `get` subcommand). Dev-build versions are now deterministic — they derive the timestamp
+  from the resolved commit's committer date (UTC) instead of wall-clock time, so the same commit always
+  produces an identical version string. The `tools-info` `gitsemver --version` call is unchanged (the
+  `--version` flag still works).
+
 ## [9.0.1] - 2026-06-01
 
 ### Fixed
