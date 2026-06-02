@@ -12,17 +12,27 @@ design.
 | Container image (manifest index) | `push-to-registries` | OCI 1.1 referrer tag on the image | `sign: true` |
 | Helm chart (OCI) | `push-to-app-catalog`, `push-helm` | OCI 1.1 referrer tag on the chart | `sign: true` |
 | Go binary | `go-build` | Sibling `<binary>-<GOOS>-<GOARCH>.bundle` Sigstore bundle | `sign: true` |
+| SPDX SBOM attestation (per platform) | `push-to-registries` | Signed cosign DSSE attestation (OCI referrer) on each platform manifest | `sign && sbom` |
+| CycloneDX SBOM attestation (per platform) | `push-to-registries` | Signed cosign DSSE attestation (OCI referrer) on each platform manifest | `sign && sbom-cyclonedx` |
 
 In addition, `push-to-registries` produces:
 
 - **SLSA provenance** attestation (`provenance: min` by default; `max` is
-  opt-in because it embeds `--build-arg` values verbatim).
-- **SPDX SBOM** attestation (`sbom: true` by default).
+  opt-in because it embeds `--build-arg` values verbatim). Stored **inline**
+  in the image index (as the `unknown/unknown` manifest entries you see in
+  `docker manifest inspect`); currently **unsigned**.
+- **SPDX SBOM** attestation (`sbom: true` by default). buildx stores it
+  **inline** too. On **public** images with `sign: true`, the *exact* SPDX
+  predicate buildx produced is additionally extracted and re-signed as a
+  cosign keyless attestation (`--type spdxjson`) so it can be verified
+  independently of the registry. The signed predicate is byte-identical to
+  the inline one — we extract `.predicate` from the buildx in-toto statement
+  rather than regenerating the SBOM.
 
-Both are stored **inline** in the image index (as the `unknown/unknown`
-manifest entries you see in `docker manifest inspect`) because BuildKit
-does not yet support OCI 1.1 referrer storage for attestations.
-`docker buildx imagetools inspect` displays them with proper labels.
+BuildKit does not yet support OCI 1.1 referrer storage for its own
+attestations, which is why the inline copies remain; `docker buildx
+imagetools inspect` displays them with proper labels. The cosign-signed
+copies use cosign's own referrer push path.
 
 ## Public-only
 
@@ -101,6 +111,32 @@ cosign verify-blob \
   myapp-linux-amd64
 ```
 
+### SBOM attestations (SPDX / CycloneDX)
+
+SBOMs are signed **per platform**, so verify against a platform digest (not
+the index tag). Resolve one with `docker buildx imagetools inspect`, then:
+
+```bash
+# SPDX
+cosign verify-attestation \
+  --type spdxjson \
+  --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
+  --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$' \
+  gsoci.azurecr.io/giantswarm/myapp@sha256:<platform-digest>
+
+# CycloneDX (when sbom-cyclonedx was enabled)
+cosign verify-attestation \
+  --type cyclonedx \
+  --certificate-oidc-issuer-regexp '^https://oidc\.circleci\.com' \
+  --certificate-identity-regexp '^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$' \
+  gsoci.azurecr.io/giantswarm/myapp@sha256:<platform-digest>
+```
+
+`verify-attestation` succeeds only if a matching signature exists and the
+signing identity matches; a substituted or tampered SBOM fails. To read the
+verified SBOM payload, pipe the output through
+`jq -r '.payload | @base64d | fromjson | .predicate'`.
+
 ## Identity model and the friendly-source-repo OID
 
 CircleCI's Fulcio integration sets the cert's SAN URI to a UUID-based
@@ -126,8 +162,9 @@ cosign exposing the newer Sigstore OIDs via flags.
 |---|---|---|
 | Cosign image signature | OCI 1.1 referrer | cosign's own implementation, registry-agnostic |
 | Cosign chart signature | OCI 1.1 referrer | same |
+| Signed SBOM attestation (SPDX / CycloneDX) | OCI 1.1 referrer (public images) | cosign attest uses its own referrer push path |
 | Provenance | Inline (`unknown/unknown` entry in index) | BuildKit doesn't yet support referrer storage for attestations |
-| SBOM | Inline (`unknown/unknown` entry in index) | same |
+| Inline SBOM (SPDX) | Inline (`unknown/unknown` entry in index) | buildx storage; the signed copy above mirrors this exact predicate |
 
 Inspect inline attestations with:
 
