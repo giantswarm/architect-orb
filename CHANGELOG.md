@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `push-to-registries`: new `sbom-cyclonedx` parameter (default `false`). When enabled, generates a CycloneDX SBOM **per architecture** with syft and attaches it to each platform manifest as an unsigned OCI 1.1 referrer (artifactType `application/vnd.cyclonedx+json`) using oras. BuildKit's `--attest type=sbom` only emits SPDX, so CycloneDX is produced out-of-band. Unsigned and attached the same way for both public and private images, mirroring the inline SPDX SBOM — no cosign, no Rekor transparency log. Off by default, so existing consumers are unaffected. Requires `syft` and `oras` in the architect image.
+
 ## [9.0.1] - 2026-06-02
 
 ### Changed

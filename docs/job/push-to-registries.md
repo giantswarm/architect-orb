@@ -167,6 +167,31 @@ See [Cosign signing](../cosign-signing.md) for the verification command,
 identity model (CircleCI's UUID-based SAN URI + the friendly source-repo
 OID), and verify-after-sign behavior.
 
+## CycloneDX SBOM
+
+BuildKit's SBOM attestation (`sbom: true`) only emits SPDX. If you also need a **CycloneDX** SBOM, set `sbom-cyclonedx: true`:
+
+```yaml
+      - architect/push-to-registries:
+          image: giantswarm/myapp
+          sbom-cyclonedx: true
+```
+
+When enabled, the job generates a CycloneDX SBOM **per architecture** with [syft](https://github.com/anchore/syft) and attaches it to each platform manifest as an unsigned OCI 1.1 referrer (artifactType `application/vnd.cyclonedx+json`) using [oras](https://oras.land). Like the inline SPDX SBOM it is **unsigned** and attached the same way for **both public and private images** — no cosign, no Rekor transparency log. It requires `syft` and `oras` in the architect image.
+
+List and pull the attached SBOMs via the referrers API:
+
+```sh
+# Resolve a platform digest, then list its referrers
+oras discover --artifact-type application/vnd.cyclonedx+json \
+  <registry>/giantswarm/myapp@<platform-digest>
+
+# Pull the SBOM blob
+oras pull <registry>/giantswarm/myapp@<sbom-referrer-digest>
+```
+
+Defaults to off, so existing consumers are unaffected.
+
 ## Migrating from v8.x
 
 See [Migrating from architect-orb v8.x to v9](../migration-v8-to-v9.md).

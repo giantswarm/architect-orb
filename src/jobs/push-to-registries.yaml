@@ -75,6 +75,15 @@ parameters:
     description: Generate and attach an SPDX SBOM attestation per platform.
     type: boolean
     default: true
+  sbom-cyclonedx:
+    description: |
+      Additionally generate a CycloneDX SBOM per architecture (with syft) and attach it to
+      each platform manifest as an unsigned OCI referrer (with oras). BuildKit's SBOM
+      attestation only emits SPDX, so CycloneDX is produced out-of-band. Like the inline
+      SPDX SBOM it is unsigned and attached for both public and private images. Defaults to
+      off. Requires syft and oras in the architect image.
+    type: boolean
+    default: false
   sign:
     description: |
       Sign the pushed image with cosign keyless OIDC. Public images only — private
@@ -157,6 +166,7 @@ steps:
       oci-labels: <<parameters.oci-labels>>
       provenance: <<parameters.provenance>>
       sbom: <<parameters.sbom>>
+      sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
       sign: <<parameters.sign>>
       split-china-push: <<parameters.split-china-push>>
   - when:
