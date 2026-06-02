@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.0.1] - 2026-06-01
+
+### Fixed
+
+- `generate-github-token`: fail with a clear, actionable error when the required env var
+  (`CIRCLECI_ARCHITECT_GITHUB_APP_PRIVATE_KEY_B64`) is not set, instead of a cryptic RSA/PEM
+  parse error. The new message tells users to add `context: architect` to the job in
+  `.circleci/config.yml`.
+
 ## [9.0.0] - 2026-06-01
 
 ### Added
