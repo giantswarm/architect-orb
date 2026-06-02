@@ -10,6 +10,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - `push-to-registries`: new `sbom-cyclonedx` parameter (default `false`). When enabled, generates a CycloneDX SBOM **per architecture** with syft and attaches it to each platform manifest as an unsigned OCI 1.1 referrer (artifactType `application/vnd.cyclonedx+json`) using oras. BuildKit's `--attest type=sbom` only emits SPDX, so CycloneDX is produced out-of-band. Unsigned and attached the same way for both public and private images, mirroring the inline SPDX SBOM — no cosign, no Rekor transparency log. Off by default, so existing consumers are unaffected. Requires `syft` and `oras` in the architect image.
+### Changed
+
+- Adapt to `gitsemver` v2.0.0, which renamed the `version` subcommand to `get` (to avoid confusion with the
+  `--version` flag). All `gitsemver version` invocations are now `gitsemver get`:
+  - `image-prepare-tag`: compute the Docker image tag with `gitsemver get`.
+  - `push-to-app-catalog` (executor `app-build-suite`): compute the chart/app version with `gitsemver get`.
+- Bump the `architect` executor image from `8.0.0` to `8.1.0`, which bundles `gitsemver` v2.0.0 (the version
+  that provides the `get` subcommand). Dev-build versions are now deterministic — they derive the timestamp
+  from the resolved commit's committer date (UTC) instead of wall-clock time, so the same commit always
+  produces an identical version string. The `tools-info` `gitsemver --version` call is unchanged (the
+  `--version` flag still works).
+
+## [9.0.1] - 2026-06-01
+
+### Fixed
+
+- `generate-github-token`: fail with a clear, actionable error when the required env var
+  (`CIRCLECI_ARCHITECT_GITHUB_APP_PRIVATE_KEY_B64`) is not set, instead of a cryptic RSA/PEM parse error. The
+  new message tells users to add `context: architect` to the job in `.circleci/config.yml`.
 
 ## [9.0.0] - 2026-06-01
 
@@ -34,11 +53,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     Required by app-build-suite v2.0.0, which replaced `HelmGitVersionSetter` with `HelmVersionSetter` and no
     longer derives chart/app versions from git state automatically.
 - **Breaking**. `push-to-app-catalog`: `executor` parameter now only accepts `app-build-suite` (previously
-  `architect` was the default). Consumers using the default or `executor: architect` explicitly must remove the
-  parameter or set it to `app-build-suite`. The `architect`-executor code path (running `helm-chart-template`,
-  `helm-lint`, `kubeconform`, and `helm package` directly) has been removed; packaging is now always handled by
-  app-build-suite. The `executor` parameter is kept for backwards compatibility and will be removed in a future
-  version.
+  `architect` was the default). Consumers using the default or `executor: architect` explicitly must remove
+  the parameter or set it to `app-build-suite`. The `architect`-executor code path (running
+  `helm-chart-template`, `helm-lint`, `kubeconform`, and `helm package` directly) has been removed; packaging
+  is now always handled by app-build-suite. The `executor` parameter is kept for backwards compatibility and
+  will be removed in a future version.
 - **Breaking**. `push-to-registries`: make tag-latest-branch opt-in with empty default
 - **Breaking.** `image-build-and-push-multiarch` command renamed to `image-build-and-push` — multi-arch is no
   longer a distinguishing trait. Direct callers of the command need to update the name; consumers of the
@@ -64,12 +83,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Breaking.** `image-build-with-docker` and `image-push-to-registries` commands (the single-arch
   `docker build` / `docker push` path). The single-arch path is collapsed into the buildx path; nothing else
   in the orb referenced these commands.
-- **Breaking.** `registry_url`, `password_envar`, `username_envar` parameters from `push-to-app-catalog`.
-  The current OCI push flow uses `generate-github-token` + the giantswarm OCI authenticator instead.
+- **Breaking.** `registry_url`, `password_envar`, `username_envar` parameters from `push-to-app-catalog`. The
+  current OCI push flow uses `generate-github-token` + the giantswarm OCI authenticator instead.
 - `password_envar`, `username_envar`, `registry_url` parameters from `push-helm` and the two `[deprecated]`
   legacy OCI auth/push run steps that used them.
-- `ct_config` parameter on `push-to-app-catalog` is now silently ignored — the `helm-lint` step it
-  controlled has been removed along with the `architect`-executor path.
+- `ct_config` parameter on `push-to-app-catalog` is now silently ignored — the `helm-lint` step it controlled
+  has been removed along with the `architect`-executor path.
 
 > **Upgrading from v8.x?** See [docs/migration-v8-to-v9.md](docs/migration-v8-to-v9.md) for breaking changes
 > and the defaults that change. See [docs/cosign-signing.md](docs/cosign-signing.md) for the supply-chain

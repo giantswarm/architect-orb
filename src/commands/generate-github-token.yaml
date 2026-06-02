@@ -12,6 +12,12 @@ steps:
   - run:
       name: Generate temporary GitHub token
       command: |
+        if [[ -z "${<< parameters.private_key_base64_env_var >>:-}" ]]; then
+          echo "ERROR: << parameters.private_key_base64_env_var >> is not set." >&2
+          echo "Add 'context: architect' to this job in .circleci/config.yml to enable artifact signing." >&2
+          exit 1
+        fi
+
         echo -n "${<< parameters.private_key_base64_env_var >>}" | base64 -d > /tmp/private-key.pem
 
         TOKEN=$(gh-token generate --key /tmp/private-key.pem --app-id "${<< parameters.app_id_env_var >>}" --installation-id "${<< parameters.installation_id_env_var >>}" --token-only)
