@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.1.0] - 2026-06-03
+
 ### Added
 
 - `push-to-registries`: **sign SBOM attestations** with cosign keyless OIDC on public images, so SBOMs become trustable, verifiable proof of image contents (not just unsigned metadata). For each platform manifest:
@@ -1789,7 +1791,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.0.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.1.0...HEAD
+[9.1.0]: https://github.com/giantswarm/architect-orb/compare/v9.0.2...v9.1.0
 [9.0.2]: https://github.com/giantswarm/architect-orb/compare/v9.0.1...v9.0.2
 [9.0.1]: https://github.com/giantswarm/architect-orb/compare/v9.0.0...v9.0.1
 [9.0.0]: https://github.com/giantswarm/architect-orb/compare/v8.3.0...v9.0.0
