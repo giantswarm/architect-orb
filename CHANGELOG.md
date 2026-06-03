@@ -15,11 +15,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Each signature is verified immediately after signing (`cosign verify-attestation`) with the same CircleCI OIDC issuer/identity assertions consumers use.
   - Signing is **public-only**, consistent with image/chart/binary signing — private images would leak digests/timestamps into the public Rekor transparency log.
   - SLSA provenance signing is intentionally out of scope for now (tracked separately).
-- `push-to-registries`: new `sbom-cyclonedx` parameter (default `false`). When enabled, generates a CycloneDX SBOM **per architecture** with syft (BuildKit's `--attest type=sbom` only emits SPDX). On public images with `sign: true` it is signed as described above; on private images (or `sign: false`) it falls back to an **unsigned** OCI 1.1 referrer (artifactType `application/vnd.cyclonedx+json`) attached with oras. Off by default, so existing consumers are unaffected. Requires `syft` and `oras` in the architect image.
+
+## [9.0.2] - 2026-06-02
 
 ### Changed
 
-- `cosign-sign-verify`: new `attest` kind alongside `oci`/`blob`. Reads a `<ref> <type> <predicate-file>` file and runs `cosign attest` + `cosign verify-attestation` for signed SBOM/in-toto attestations, keeping the CircleCI OIDC issuer/identity regex pair in one place.
+- Bumped `gitsemver` to v2.0.0
+- `push-to-registries`: new `sbom-cyclonedx` parameter (default `false`). When enabled, generates a CycloneDX
+  SBOM **per architecture** with syft and attaches it to each platform manifest as an unsigned OCI 1.1
+  referrer (artifactType `application/vnd.cyclonedx+json`) using oras. BuildKit's `--attest type=sbom` only
+  emits SPDX, so CycloneDX is produced out-of-band. Unsigned and attached the same way for both public and
+  private images, mirroring the inline SPDX SBOM — no cosign, no Rekor transparency log. Off by default, so
+  existing consumers are unaffected. Requires `syft` and `oras` in the architect image.
 
 ## [9.0.1] - 2026-06-02
 
@@ -1771,7 +1778,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.0.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.0.2...HEAD
+[9.0.2]: https://github.com/giantswarm/architect-orb/compare/v9.0.1...v9.0.2
 [9.0.1]: https://github.com/giantswarm/architect-orb/compare/v9.0.0...v9.0.1
 [9.0.0]: https://github.com/giantswarm/architect-orb/compare/v8.3.0...v9.0.0
 [8.3.0]: https://github.com/giantswarm/architect-orb/compare/v8.2.2...v8.3.0
