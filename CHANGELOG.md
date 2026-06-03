@@ -7,10 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `push-to-registries`: **sign SBOM attestations** with cosign keyless OIDC on public images, so SBOMs become trustable, verifiable proof of image contents (not just unsigned metadata). For each platform manifest:
+  - **SPDX** (`sbom: true`, default) — the *exact* SPDX predicate buildx produced is extracted from its inline in-toto attestation and re-signed as a cosign DSSE attestation (`cosign attest --type spdxjson`). The signed predicate is the same SBOM content as the inline one (extracted via `.predicate`, not regenerated; semantically identical, though re-serialized by jq/cosign so not byte-for-byte equal), so the signature covers the SBOM that actually ships on the image.
+  - **CycloneDX** (`sbom-cyclonedx: true`) — the syft-generated SBOM is signed as a cosign DSSE attestation (`cosign attest --type cyclonedx`).
+  - Each signature is verified immediately after signing (`cosign verify-attestation`) with the same CircleCI OIDC issuer/identity assertions consumers use.
+  - Signing is **public-only**, consistent with image/chart/binary signing — private images would leak digests/timestamps into the public Rekor transparency log.
+  - SLSA provenance signing is intentionally out of scope for now (tracked separately).
+
 ### Changed
 
-- `upload-release-assets`: new `github-token-env-var` parameter. Uses the GitHub App token by default; set the parameter to an env var name (e.g. `TAYLORBOT_GITHUB_ACTION`) to use a pre-minted token instead.
-- `generate-github-token`: new `token-env-var` parameter. When set to a non-empty env var name and that variable is populated at runtime, its value is exported as `GITHUB_TOKEN` and App token generation is skipped.
+- `cosign-sign-verify`: new `attest` kind alongside `oci`/`blob`. Reads a `<ref> <type> <predicate-file>` file and runs `cosign attest` + `cosign verify-attestation` for signed SBOM/in-toto attestations, keeping the CircleCI OIDC issuer/identity regex pair in one place.
+- `push-to-registries`: **behavior change for public CycloneDX SBOMs.** On public images with `sign: true`, the CycloneDX SBOM (`sbom-cyclonedx: true`) is now a *signed* cosign attestation (a sigstore-bundle referrer, `application/vnd.dev.sigstore.bundle.v0.3+json`) rather than the unsigned `application/vnd.cyclonedx+json` OCI referrer that v9.0.2 attached. Consumers discovering it via `oras discover --artifact-type application/vnd.cyclonedx+json` will no longer find it on public images — verify it with `cosign verify-attestation --type cyclonedx` instead (see [docs/cosign-signing.md](docs/cosign-signing.md)). Private images (and `sign: false`) are unchanged: still an unsigned `application/vnd.cyclonedx+json` referrer.
+- `upload-release-assets`: defaults to `TAYLORBOT_GITHUB_ACTION` (available org-wide in the `architect` context) for GitHub authentication instead of the GitHub App token. Falls back to the App token when the variable is absent or empty. The `github-token-env-var` parameter allows overriding the token source.
+- `generate-github-token`: new `token-env-var` parameter. When the named environment variable is non-empty at runtime, its value is exported as `GITHUB_TOKEN` and App token generation is skipped.
 
 ## [9.0.2] - 2026-06-02
 
