@@ -1,9 +1,10 @@
 # Command: cosign-sign-verify
 #
 # Mints a sigstore-audience OIDC token via `circleci run oidc get` and signs +
-# verifies one or more artifacts with cosign keyless OIDC. Supports both OCI
-# references (image / chart) and blob files (Go binaries) under a single command
-# so the CircleCI OIDC issuer/identity regex pair stays in one place.
+# verifies one or more artifacts with cosign keyless OIDC. Supports OCI
+# references (image / chart), blob files (Go binaries), and signed SBOM/in-toto
+# attestations under a single command so the CircleCI OIDC issuer/identity regex
+# pair stays in one place.
 #
 # Inputs are read from a file rather than passed as parameters because callers
 # produce them inside a runtime shell loop (per-registry refs from the image
@@ -11,8 +12,11 @@
 # invoked from within a shell loop.
 #
 # File format:
-#   kind=oci   — one OCI reference per line, e.g. `gsoci.azurecr.io/charts/giantswarm/cert-exporter@sha256:…`
-#   kind=blob  — one `<file> <bundle-path>` pair per line, e.g. `mybin-linux-amd64 mybin-linux-amd64.bundle`
+#   kind=oci    — one OCI reference per line, e.g. `gsoci.azurecr.io/charts/giantswarm/cert-exporter@sha256:…`
+#   kind=blob   — one `<file> <bundle-path>` pair per line, e.g. `mybin-linux-amd64 mybin-linux-amd64.bundle`
+#   kind=attest — one `<ref> <type> <predicate-file>` triple per line, e.g.
+#                 `gsoci.azurecr.io/giantswarm/myapp@sha256:… spdxjson /tmp/sbom.spdx.json`
+#                 (signs the predicate as a cosign DSSE attestation referrer on <ref>).
 # Blank lines and lines starting with `#` are ignored. If the file does not
 # exist or is empty, the step exits 0 without doing anything (so callers that
 # decide at runtime to skip signing — e.g. private artifacts — can do so by
@@ -22,16 +26,19 @@ parameters:
   kind:
     description: |
       Which cosign subcommand pair to invoke.
-      `oci`  → `cosign sign` / `cosign verify` on OCI references.
-      `blob` → `cosign sign-blob --bundle` / `cosign verify-blob --bundle` on files.
+      `oci`    → `cosign sign` / `cosign verify` on OCI references.
+      `blob`   → `cosign sign-blob --bundle` / `cosign verify-blob --bundle` on files.
+      `attest` → `cosign attest --predicate --type` / `cosign verify-attestation --type`
+                 on OCI references (signed SBOM / in-toto attestations).
     type: enum
-    enum: [oci, blob]
+    enum: [oci, blob, attest]
     default: oci
   refs_file:
     description: |
       Path to a file containing one entry per line. See the command header for the
-      per-kind format. Defaults to `/tmp/.cosign_refs` for `oci` and
-      `/tmp/.cosign_blobs` is the conventional choice for `blob` (set explicitly).
+      per-kind format. Defaults to `/tmp/.cosign_refs` for `oci`;
+      `/tmp/.cosign_blobs` (blob) and `/tmp/.cosign_attest` (attest) are the
+      conventional choices for the other kinds (set explicitly).
     type: string
     default: /tmp/.cosign_refs
 steps:
@@ -82,6 +89,26 @@ steps:
                 --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
                 --certificate-identity-regexp "$IDENTITY_REGEX" \
                 "$file" > /dev/null
+            done < "$refs_file"
+            ;;
+          attest)
+            # Large-SBOM dependency: real SBOM predicates routinely exceed public
+            # Rekor's 100 KB attestation limit (the live app-operator SPDX is ~465 KB).
+            # This only works because the pinned cosign writes new-format sigstore
+            # bundles (v0.3), whose Rekor `dsse` entries upload hashes rather than the
+            # full payload. If cosign ever defaults back to the legacy `intoto` upload
+            # path (or `--new-bundle-format=false` is added), every large-SBOM build
+            # starts failing here with a Rekor size-limit error.
+            while IFS=' ' read -r ref type predicate; do
+              [[ -z "$ref" || "$ref" =~ ^# ]] && continue
+              echo "cosign attest --type $type $ref (predicate: $predicate)"
+              cosign attest --yes --type "$type" --predicate "$predicate" "$ref"
+              echo "cosign verify-attestation --type $type $ref"
+              cosign verify-attestation \
+                --type "$type" \
+                --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
+                --certificate-identity-regexp "$IDENTITY_REGEX" \
+                "$ref" > /dev/null
             done < "$refs_file"
             ;;
         esac

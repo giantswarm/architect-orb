@@ -28,7 +28,7 @@ workflows:
 
 `go-build` defaults to `linux/amd64,linux/arm64` and writes a `.platforms` file to the workspace; `push-to-registries` reads it to set `--platform` automatically. No need to repeat the platform list.
 
-By default this also emits SLSA provenance, an SPDX SBOM, OCI labels, and a cosign keyless signature on public images. Each is individually controllable: `provenance: min|max|false`, `sbom: true|false`, `oci-labels: true|false`, `sign: true|false`.
+By default this also emits SLSA provenance, an SPDX SBOM, OCI labels, and — on public images — a cosign keyless signature on the image *and* on its SPDX SBOM attestation. Each is individually controllable: `provenance: min|max|false`, `sbom: true|false`, `oci-labels: true|false`, `sign: true|false`. Set `sbom-cyclonedx: true` to add a (signed, on public) CycloneDX SBOM.
 
 ### Restricting to release tags
 
@@ -161,15 +161,25 @@ file relative to the workspace; defaults to hadolint's built-in rules.
 ## Cosign signing
 
 `sign: true` (default) signs the pushed image manifest with cosign keyless
-OIDC. Public images only — private images are skipped at runtime.
+OIDC. On public images it **also signs the SBOM attestations** (SPDX, and
+CycloneDX when `sbom-cyclonedx: true`) so consumers can cryptographically
+verify their origin. Public images only — private images are skipped at
+runtime.
 
-See [Cosign signing](../cosign-signing.md) for the verification command,
-identity model (CircleCI's UUID-based SAN URI + the friendly source-repo
-OID), and verify-after-sign behavior.
+See [Cosign signing](../cosign-signing.md) for the verification commands
+(including `cosign verify-attestation` for SBOMs), the identity model
+(CircleCI's UUID-based SAN URI + the friendly source-repo OID), and
+verify-after-sign behavior.
 
-## CycloneDX SBOM
+## SBOMs (SPDX + CycloneDX) and signing
 
-BuildKit's SBOM attestation (`sbom: true`) only emits SPDX. If you also need a **CycloneDX** SBOM, set `sbom-cyclonedx: true`:
+`sbom: true` (default) makes buildx attach an **SPDX** SBOM per platform
+inline in the image index. On **public** images with `sign: true`, the exact
+SPDX predicate buildx produced is additionally signed as a cosign keyless
+attestation (`--type spdxjson`) — verifiable independently of the registry.
+
+BuildKit's SBOM attestation only emits SPDX. For a **CycloneDX** SBOM too,
+set `sbom-cyclonedx: true`:
 
 ```yaml
       - architect/push-to-registries:
@@ -177,9 +187,27 @@ BuildKit's SBOM attestation (`sbom: true`) only emits SPDX. If you also need a *
           sbom-cyclonedx: true
 ```
 
-When enabled, the job generates a CycloneDX SBOM **per architecture** with [syft](https://github.com/anchore/syft) and attaches it to each platform manifest as an unsigned OCI 1.1 referrer (artifactType `application/vnd.cyclonedx+json`) using [oras](https://oras.land). Like the inline SPDX SBOM it is **unsigned** and attached the same way for **both public and private images** — no cosign, no Rekor transparency log. It requires `syft` and `oras` in the architect image.
+When enabled, the job generates a CycloneDX SBOM **per architecture** with
+[syft](https://github.com/anchore/syft). Where it lands depends on visibility:
 
-List and pull the attached SBOMs via the referrers API:
+- **Public images with `sign: true`** — signed as a cosign keyless
+  attestation (`--type cyclonedx`), a verifiable OCI referrer. This is the
+  trustable, tamper-evident proof of image contents.
+- **Private images, or `sign: false`** — attached **unsigned** as an OCI 1.1
+  referrer (artifactType `application/vnd.cyclonedx+json`) using
+  [oras](https://oras.land), since signing private artifacts would leak their
+  digests/timestamps into the public Rekor transparency log.
+
+Both require `syft` and `oras` in the architect image. `sbom-cyclonedx`
+defaults to off, so existing consumers are unaffected.
+
+### Verifying / inspecting SBOMs as a consumer
+
+Signed attestations are verified **per platform** with cosign — see
+[Cosign signing → SBOM attestations](../cosign-signing.md#sbom-attestations-spdx--cyclonedx).
+
+Unsigned CycloneDX referrers (private images) are listed/pulled via the
+referrers API:
 
 ```sh
 # Resolve a platform digest, then list its referrers
@@ -189,8 +217,6 @@ oras discover --artifact-type application/vnd.cyclonedx+json \
 # Pull the SBOM blob
 oras pull <registry>/giantswarm/myapp@<sbom-referrer-digest>
 ```
-
-Defaults to off, so existing consumers are unaffected.
 
 ## Migrating from v8.x
 
