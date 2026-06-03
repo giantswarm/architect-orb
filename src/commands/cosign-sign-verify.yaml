@@ -92,6 +92,13 @@ steps:
             done < "$refs_file"
             ;;
           attest)
+            # Large-SBOM dependency: real SBOM predicates routinely exceed public
+            # Rekor's 100 KB attestation limit (the live app-operator SPDX is ~465 KB).
+            # This only works because the pinned cosign writes new-format sigstore
+            # bundles (v0.3), whose Rekor `dsse` entries upload hashes rather than the
+            # full payload. If cosign ever defaults back to the legacy `intoto` upload
+            # path (or `--new-bundle-format=false` is added), every large-SBOM build
+            # starts failing here with a Rekor size-limit error.
             while IFS=' ' read -r ref type predicate; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               echo "cosign attest --type $type $ref (predicate: $predicate)"

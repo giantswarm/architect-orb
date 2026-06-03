@@ -10,17 +10,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - `push-to-registries`: **sign SBOM attestations** with cosign keyless OIDC on public images, so SBOMs become trustable, verifiable proof of image contents (not just unsigned metadata). For each platform manifest:
-  - **SPDX** (`sbom: true`, default) — the *exact* SPDX predicate buildx produced is extracted from its inline in-toto attestation and re-signed as a cosign DSSE attestation (`cosign attest --type spdxjson`). The signed predicate is byte-identical to the inline one (extracted via `.predicate`, not regenerated), so the signature covers the SBOM that actually ships on the image.
+  - **SPDX** (`sbom: true`, default) — the *exact* SPDX predicate buildx produced is extracted from its inline in-toto attestation and re-signed as a cosign DSSE attestation (`cosign attest --type spdxjson`). The signed predicate is the same SBOM content as the inline one (extracted via `.predicate`, not regenerated; semantically identical, though re-serialized by jq/cosign so not byte-for-byte equal), so the signature covers the SBOM that actually ships on the image.
   - **CycloneDX** (`sbom-cyclonedx: true`) — the syft-generated SBOM is signed as a cosign DSSE attestation (`cosign attest --type cyclonedx`).
   - Each signature is verified immediately after signing (`cosign verify-attestation`) with the same CircleCI OIDC issuer/identity assertions consumers use.
   - Signing is **public-only**, consistent with image/chart/binary signing — private images would leak digests/timestamps into the public Rekor transparency log.
   - SLSA provenance signing is intentionally out of scope for now (tracked separately).
+
+### Changed
+
+- `cosign-sign-verify`: new `attest` kind alongside `oci`/`blob`. Reads a `<ref> <type> <predicate-file>` file and runs `cosign attest` + `cosign verify-attestation` for signed SBOM/in-toto attestations, keeping the CircleCI OIDC issuer/identity regex pair in one place.
+- `push-to-registries`: **behavior change for public CycloneDX SBOMs.** On public images with `sign: true`, the CycloneDX SBOM (`sbom-cyclonedx: true`) is now a *signed* cosign attestation (a sigstore-bundle referrer, `application/vnd.dev.sigstore.bundle.v0.3+json`) rather than the unsigned `application/vnd.cyclonedx+json` OCI referrer that v9.0.2 attached. Consumers discovering it via `oras discover --artifact-type application/vnd.cyclonedx+json` will no longer find it on public images — verify it with `cosign verify-attestation --type cyclonedx` instead (see [docs/cosign-signing.md](docs/cosign-signing.md)). Private images (and `sign: false`) are unchanged: still an unsigned `application/vnd.cyclonedx+json` referrer.
 
 ## [9.0.2] - 2026-06-02
 
 ### Changed
 
 - Bumped `gitsemver` to v2.0.0
+
+### Added
+
 - `push-to-registries`: new `sbom-cyclonedx` parameter (default `false`). When enabled, generates a CycloneDX
   SBOM **per architecture** with syft and attaches it to each platform manifest as an unsigned OCI 1.1
   referrer (artifactType `application/vnd.cyclonedx+json`) using oras. BuildKit's `--attest type=sbom` only

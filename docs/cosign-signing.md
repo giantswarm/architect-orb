@@ -25,9 +25,11 @@ In addition, `push-to-registries` produces:
   **inline** too. On **public** images with `sign: true`, the *exact* SPDX
   predicate buildx produced is additionally extracted and re-signed as a
   cosign keyless attestation (`--type spdxjson`) so it can be verified
-  independently of the registry. The signed predicate is byte-identical to
-  the inline one — we extract `.predicate` from the buildx in-toto statement
-  rather than regenerating the SBOM.
+  independently of the registry. The signed predicate is the same SBOM
+  content as the inline one — we extract `.predicate` from the buildx in-toto
+  statement rather than regenerating the SBOM. It is semantically identical
+  but re-serialized (jq and cosign re-marshal the JSON), so the two copies are
+  not byte-for-byte equal; compare predicate content, not raw bytes.
 
 BuildKit does not yet support OCI 1.1 referrer storage for its own
 attestations, which is why the inline copies remain; `docker buildx
@@ -136,6 +138,12 @@ cosign verify-attestation \
 signing identity matches; a substituted or tampered SBOM fails. To read the
 verified SBOM payload, pipe the output through
 `jq -r '.payload | @base64d | fromjson | .predicate'`.
+
+`verify-attestation` prints one DSSE envelope per matching attestation, and
+attestations accumulate when the same content-addressed digest is attested
+more than once (e.g. a rebuild of the same image). So that `jq` can emit
+several concatenated predicates — append `| jq -s 'last'` (or otherwise
+select) to pick a single one.
 
 ## Identity model and the friendly-source-repo OID
 

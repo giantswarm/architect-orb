@@ -190,17 +190,27 @@ steps:
           tags+=("<<parameters.image>>:latest$tag_suffix")
         fi
 
-        # Prepare all registry/image:tag combinations
+        # Prepare all registry/image:tag combinations. The registries this build is
+        # eligible to push to (visibility match, not skipped by split-china, and — for
+        # dev builds — push_dev=true) are recorded once in /tmp/.eligible_registries.
+        # The cosign and SBOM steps below consume that file instead of re-deriving the
+        # set, so the signed/attested set can never drift from the pushed set (this
+        # duplication used to live in three loops with subtly different filters).
+        : > /tmp/.eligible_registries
         all_tags=()
         while IFS=' ' read -r access reg _ _ push_dev; do
           [[ -z "$reg" || "$reg" =~ ^# ]] && continue
           [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
-          if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ -dev\. ]]; then
+          # Dev-build gate: `gitsemver validate --type dev` is the canonical dev-version
+          # check (anchored to the full X.Y.Z-dev.<branch>.<date>.<time> form). Used
+          # identically here and in the cosign/SBOM steps so they always agree.
+          if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
             echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
             continue
           fi
           if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
             echo -n ${reg} > /tmp/.docker_image_registry
+            echo "$reg" >> /tmp/.eligible_registries
             for tag in "${tags[@]}"; do
               echo -e "\nProcessing image push config for registry $reg."
               echo "Tag the image for $reg"
@@ -306,22 +316,35 @@ steps:
           exit 1
         fi
 
-        # Persist IMAGE_ACCESS for the cosign step to read.
+        # Persist state for the cosign + SBOM steps below.
         echo -n "$IMAGE_ACCESS" > /tmp/.image_access
+        # The manifest index digest is content-addressed — identical across every
+        # registry we pushed to — so compute it once here and let both downstream
+        # steps read it rather than re-deriving the same value from the metadata.
+        index_digest=$(jq -r '."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
+        if [[ -z "$index_digest" ]]; then
+          echo "Could not extract index digest from buildx metadata:"
+          cat /tmp/.buildx_metadata.json
+          exit 1
+        fi
+        echo -n "$index_digest" > /tmp/.index_digest
+        echo "Index digest: $index_digest"
   - when:
       condition: <<parameters.sign>>
       steps:
         - run:
             name: Stage cosign refs for pushed image
             command: |
-              # Resolve which registries we actually pushed to and write one OCI ref per
-              # line to /tmp/.cosign_refs. The shared cosign-sign-verify command consumes
-              # this file. Skip conditions mirror the push loop above (split-china-push,
-              # push_dev for dev builds, public-access filter) so we never try to sign a
-              # manifest that doesn't exist at that registry.
+              set -euo pipefail
+              # Write one OCI ref per line to /tmp/.cosign_refs for the shared
+              # cosign-sign-verify command. The eligible registries and the index digest
+              # were both computed once by the build step; we only consume them here, so
+              # the signed set can never drift from the pushed set.
               #
-              # Private images stay out of the file — the public Rekor transparency log
-              # would otherwise leak their digests + build times.
+              # Signing is public-only — the public Rekor transparency log would otherwise
+              # leak private images' digests + build times. Eligible registries for a
+              # public image are exactly its public targets, so no extra access filter is
+              # needed beyond the IMAGE_ACCESS gate.
               : > /tmp/.cosign_refs
 
               IMAGE_ACCESS=$(cat /tmp/.image_access)
@@ -330,32 +353,11 @@ steps:
                 exit 0
               fi
 
-              if [[ ! -f /tmp/.buildx_metadata.json ]]; then
-                echo "Buildx metadata file is missing — cannot resolve the index digest to sign."
-                exit 1
-              fi
-              index_digest=$(jq -r '."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
-              if [[ -z "$index_digest" || "$index_digest" == "null" ]]; then
-                echo "Could not extract index digest from buildx metadata:"
-                cat /tmp/.buildx_metadata.json
-                exit 1
-              fi
-              echo "Index digest: $index_digest"
-
-              # DOCKER_IMAGE_TAG is exported via BASH_ENV by image-prepare-tag.
-              TAG_VALUE="${DOCKER_IMAGE_TAG}"
-              while IFS=' ' read -r access reg _ _ push_dev; do
-                [[ -z "$reg" || "$reg" =~ ^# ]] && continue
-                [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
-                if [[ "$push_dev" == "false" && "$TAG_VALUE" =~ -dev\. ]]; then
-                  echo "Skipping cosign for $reg (push_dev=false, tag is a dev build)."
-                  continue
-                fi
-                [[ "$access" == *"public"* ]] || continue
-                if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
-                  echo "${reg}/<<parameters.image>>@${index_digest}" >> /tmp/.cosign_refs
-                fi
-              done < .registries_data
+              index_digest=$(cat /tmp/.index_digest)
+              while IFS= read -r reg; do
+                [[ -z "$reg" ]] && continue
+                echo "${reg}/<<parameters.image>>@${index_digest}" >> /tmp/.cosign_refs
+              done < /tmp/.eligible_registries
 
               echo "Staged refs for signing:"
               cat /tmp/.cosign_refs
@@ -378,41 +380,22 @@ steps:
               # Per-architecture SBOMs. Two formats, two destinations:
               #
               #   SPDX      — buildx already attached it inline (--attest type=sbom). We do
-              #               NOT regenerate it: to keep the signed copy byte-identical to
-              #               the shipped one, we extract the exact SPDX predicate buildx
-              #               produced and re-sign that with cosign attest.
+              #               NOT regenerate it: to keep the signed copy semantically
+              #               identical to the shipped one, we extract the exact SPDX
+              #               predicate buildx produced and re-sign that with cosign attest
+              #               (re-serialized, so not byte-for-byte equal, but same content).
               #   CycloneDX — buildx can't emit it, so syft generates it out-of-band.
               #
               # On PUBLIC images with sign=true, both are signed as cosign keyless DSSE
               # attestations (verifiable, trustable provenance — the point of this flow).
               # On PRIVATE images (or sign=false) signing is skipped (it would leak
               # digests/timestamps into the public Rekor log), and CycloneDX falls back to
-              # an unsigned oras referrer. The split-china-push / push_dev filters mirror
-              # the push loop so we never touch a manifest that doesn't exist at a registry.
-
-              if [[ ! -f /tmp/.buildx_metadata.json ]]; then
-                echo "Buildx metadata file is missing — cannot resolve the index digest."
-                exit 1
-              fi
-              index_digest=$(jq -r '."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
-              if [[ -z "$index_digest" || "$index_digest" == "null" ]]; then
-                echo "Could not extract index digest from buildx metadata:"
-                cat /tmp/.buildx_metadata.json
-                exit 1
-              fi
-
-              # syft generates CycloneDX, oras reads/attaches SBOM blobs. Both must be
-              # provided by the architect image; fail loudly rather than installing on the
-              # fly (this command runs many times a day, and a fallback install would hide
-              # a missing-dependency regression in the image).
-              for tool in syft oras; do
-                if ! command -v "$tool" >/dev/null 2>&1; then
-                  echo "ERROR: $tool not found on PATH. It must be installed in the architect image." >&2
-                  exit 1
-                fi
-              done
-              syft version
-              oras version
+              # an unsigned oras referrer.
+              #
+              # Per-platform artifacts (the SPDX predicate, the syft CycloneDX SBOM) are
+              # content-addressed and identical across every registry we pushed to, so we
+              # fetch/generate each ONCE per platform and stage a per-registry ref pointing
+              # at the same file — only the signing/attaching is genuinely per-registry.
 
               IMAGE_ACCESS=$(cat /tmp/.image_access)
 
@@ -429,72 +412,104 @@ steps:
               # Empty file → that command is a clean no-op (private / sign=false).
               : > /tmp/.cosign_attest
 
-              # Nothing to do when we're neither signing nor attaching CycloneDX.
+              # Nothing to do when we're neither signing nor attaching CycloneDX. Bail out
+              # before the tool checks below, so the default private build (which does no
+              # SBOM work) needs neither syft/oras nor the index digest.
               if [[ "$SIGN_SBOMS" != "true" && "<<parameters.sbom-cyclonedx>>" != "true" ]]; then
                 echo "No SBOM work: signing skipped (private or sign=false) and CycloneDX not requested."
                 exit 0
               fi
 
-              TAG_VALUE="${DOCKER_IMAGE_TAG}"
-              while IFS=' ' read -r access reg _ _ push_dev; do
-                [[ -z "$reg" || "$reg" =~ ^# ]] && continue
-                [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
-                if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
-                  echo "Skipping SBOMs for $reg (push_dev=false, tag $TAG_VALUE is a dev version)."
-                  continue
+              # Eligible registries + index digest were computed once by the build step.
+              mapfile -t ELIGIBLE_REGISTRIES < /tmp/.eligible_registries
+              if [[ ${#ELIGIBLE_REGISTRIES[@]} -eq 0 ]]; then
+                echo "No eligible registries recorded by the build step; nothing to do."
+                exit 0
+              fi
+              index_digest=$(cat /tmp/.index_digest)
+
+              # Tool dependencies, required only for the paths we will actually run:
+              #   oras  — always (SPDX blob fetch, and the unsigned CycloneDX oras-attach).
+              #   syft  — only when generating CycloneDX.
+              # Fail loudly rather than installing on the fly (this command runs many times
+              # a day, and a fallback install would hide a missing-dependency regression in
+              # the image).
+              required_tools=(oras)
+              if [[ "<<parameters.sbom-cyclonedx>>" == "true" ]]; then
+                required_tools+=(syft)
+              fi
+              for tool in "${required_tools[@]}"; do
+                if ! command -v "$tool" >/dev/null 2>&1; then
+                  echo "ERROR: $tool not found on PATH. It must be installed in the architect image." >&2
+                  exit 1
                 fi
-                # Only the registries the image was actually pushed to (matching its
-                # visibility); public and private are both handled.
-                [[ "$access" == *"$IMAGE_ACCESS"* ]] || continue
+              done
+              oras version
+              if [[ "<<parameters.sbom-cyclonedx>>" == "true" ]]; then
+                syft version
+              fi
 
-                base="${reg}/<<parameters.image>>"
-                index_ref="${base}@${index_digest}"
+              # Reference registry for content-addressed fetches — the blobs are identical
+              # at every eligible registry, so any one of them serves.
+              ref_base="${ELIGIBLE_REGISTRIES[0]}/<<parameters.image>>"
 
-                # Enumerate the per-platform manifest digests from the OCI index, skipping
-                # the buildx attestation manifests (platform os/arch == "unknown").
-                docker buildx imagetools inspect "$index_ref" --raw > /tmp/.index.json
-                while IFS=' ' read -r platform_digest platform; do
-                  [[ -z "$platform_digest" ]] && continue
-                  plat_ref="${base}@${platform_digest}"
-                  safe=$(echo "${reg}_${platform}" | tr '/:.' '___')
+              # Enumerate the per-platform manifest digests from the OCI index ONCE,
+              # skipping the buildx attestation manifests (platform os/arch == "unknown").
+              docker buildx imagetools inspect "${ref_base}@${index_digest}" --raw > /tmp/.index.json
+              while IFS=' ' read -r platform_digest platform; do
+                [[ -z "$platform_digest" ]] && continue
+                safe=$(echo "$platform" | tr '/:.' '___')
 
-                  # --- SPDX: sign the exact predicate buildx already attached ---
-                  if [[ "$SIGN_SBOMS" == "true" && "<<parameters.sbom>>" == "true" ]]; then
-                    # buildx links its SPDX attestation manifest to this platform manifest
-                    # via the vnd.docker.reference.* annotations on the index entry.
-                    attest_digest=$(jq -r --arg d "$platform_digest" '
-                      .manifests[]
-                      | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest"
-                               and .annotations["vnd.docker.reference.digest"] == $d)
-                      | .digest' /tmp/.index.json | head -n1)
-                    if [[ -z "$attest_digest" ]]; then
-                      echo "ERROR: no buildx attestation manifest found for $plat_ref (sbom=true expects an SPDX attestation)." >&2
-                      exit 1
-                    fi
-                    docker buildx imagetools inspect "${base}@${attest_digest}" --raw > /tmp/.attest_manifest.json
+                # --- SPDX: sign the exact predicate buildx already attached ---
+                if [[ "$SIGN_SBOMS" == "true" && "<<parameters.sbom>>" == "true" ]]; then
+                  # buildx links its SPDX attestation manifest to this platform manifest
+                  # via the vnd.docker.reference.* annotations on the index entry. A missing
+                  # manifest/layer is warn-and-skip, not fatal: the image + index are already
+                  # pushed and signed, so failing here would only leave a red build over
+                  # partially-published artifacts. (Live check: ACR preserves these, so this
+                  # warning should not fire in normal operation.)
+                  attest_digest=$(jq -r --arg d "$platform_digest" '
+                    .manifests[]
+                    | select(.annotations["vnd.docker.reference.type"] == "attestation-manifest"
+                             and .annotations["vnd.docker.reference.digest"] == $d)
+                    | .digest' /tmp/.index.json | head -n1)
+                  spdx_blob=""
+                  if [[ -z "$attest_digest" ]]; then
+                    echo "WARNING: no buildx attestation manifest for $platform; skipping SPDX signing for it." >&2
+                  else
+                    docker buildx imagetools inspect "${ref_base}@${attest_digest}" --raw > /tmp/.attest_manifest.json
                     spdx_blob=$(jq -r '
                       .layers[]
                       | select(.annotations["in-toto.io/predicate-type"] == "https://spdx.dev/Document")
                       | .digest' /tmp/.attest_manifest.json | head -n1)
-                    if [[ -z "$spdx_blob" ]]; then
-                      echo "ERROR: no SPDX layer in buildx attestation manifest for $plat_ref." >&2
-                      exit 1
-                    fi
-                    spdx_file="/tmp/sbom.${safe}.spdx.json"
-                    # The blob is an in-toto Statement; cosign attest re-wraps the
-                    # predicate in its own signed Statement, so we hand it just .predicate
-                    # — the SPDX document — keeping the signed copy byte-identical to the
-                    # one buildx shipped inline.
-                    oras blob fetch --output - "${base}@${spdx_blob}" | jq '.predicate' > "$spdx_file"
-                    echo "Staging signed SPDX attestation for $plat_ref ($platform)"
-                    echo "${plat_ref} spdxjson ${spdx_file}" >> /tmp/.cosign_attest
+                    [[ -z "$spdx_blob" ]] && echo "WARNING: no SPDX layer in buildx attestation manifest for $platform; skipping SPDX signing for it." >&2
                   fi
+                  if [[ -n "$spdx_blob" ]]; then
+                    spdx_file="/tmp/sbom.${safe}.spdx.json"
+                    # The blob is an in-toto Statement; cosign attest re-wraps the predicate
+                    # in its own signed Statement, so we hand it just .predicate — the SPDX
+                    # document buildx shipped inline. The signed copy is semantically
+                    # identical (same predicate content) but re-serialized: jq and cosign
+                    # re-marshal the JSON, so it is not byte-for-byte equal. jq -e fails the
+                    # pipeline (under pipefail) if .predicate is absent/null, rather than
+                    # silently signing a literal `null`. Fetched once; reused per registry.
+                    oras blob fetch --output - "${ref_base}@${spdx_blob}" | jq -e '.predicate' > "$spdx_file"
+                    for reg in "${ELIGIBLE_REGISTRIES[@]}"; do
+                      echo "Staging signed SPDX attestation for ${reg}/<<parameters.image>>@${platform_digest} ($platform)"
+                      echo "${reg}/<<parameters.image>>@${platform_digest} spdxjson ${spdx_file}" >> /tmp/.cosign_attest
+                    done
+                  fi
+                fi
 
-                  # --- CycloneDX: syft generates it; sign on public, oras-attach otherwise ---
-                  if [[ "<<parameters.sbom-cyclonedx>>" == "true" ]]; then
-                    cdx_file="/tmp/sbom.${safe}.cdx.json"
-                    echo "Generating CycloneDX SBOM for $plat_ref ($platform)"
-                    syft "$plat_ref" -o cyclonedx-json="$cdx_file"
+                # --- CycloneDX: syft generates it; sign on public, oras-attach otherwise ---
+                if [[ "<<parameters.sbom-cyclonedx>>" == "true" ]]; then
+                  cdx_file="/tmp/sbom.${safe}.cdx.json"
+                  echo "Generating CycloneDX SBOM for $platform"
+                  # Generated once from the reference registry; image bytes are identical
+                  # across registries, so the SBOM is too.
+                  syft "${ref_base}@${platform_digest}" -o cyclonedx-json="$cdx_file"
+                  for reg in "${ELIGIBLE_REGISTRIES[@]}"; do
+                    plat_ref="${reg}/<<parameters.image>>@${platform_digest}"
                     if [[ "$SIGN_SBOMS" == "true" ]]; then
                       echo "Staging signed CycloneDX attestation for $plat_ref"
                       echo "${plat_ref} cyclonedx ${cdx_file}" >> /tmp/.cosign_attest
@@ -508,13 +523,13 @@ steps:
                         "$plat_ref" \
                         "${cdx_file}:application/vnd.cyclonedx+json"
                     fi
-                  fi
-                done < <(jq -r '
-                  .manifests[]
-                  | select(.platform.os != "unknown" and .platform.architecture != "unknown")
-                  | "\(.digest) \(.platform.os)/\(.platform.architecture)\(if .platform.variant then "/"+.platform.variant else "" end)"
-                ' /tmp/.index.json)
-              done < .registries_data
+                  done
+                fi
+              done < <(jq -r '
+                .manifests[]
+                | select(.platform.os != "unknown" and .platform.architecture != "unknown")
+                | "\(.digest) \(.platform.os)/\(.platform.architecture)\(if .platform.variant then "/"+.platform.variant else "" end)"
+              ' /tmp/.index.json)
 
               echo "Staged SBOM attestations to sign:"
               cat /tmp/.cosign_attest
@@ -523,3 +538,17 @@ steps:
         - cosign-sign-verify:
             kind: attest
             refs_file: /tmp/.cosign_attest
+  - run:
+      name: Clean up signing / SBOM scratch files
+      # Remove the inter-step state this command produced. Runs on success and
+      # failure so a failed build doesn't leave stale predicates/digests behind
+      # for an unrelated rerun on the same runner. The split-china-push cache uses
+      # /tmp/.docker_image_* (not touched here), so it is unaffected.
+      when: always
+      command: |
+        rm -f /tmp/.cosign_refs /tmp/.cosign_attest \
+              /tmp/.index.json /tmp/.attest_manifest.json \
+              /tmp/.index_digest /tmp/.eligible_registries \
+              /tmp/.image_access /tmp/.buildx_metadata.json \
+              /tmp/.gh_response \
+              /tmp/sbom.*.spdx.json /tmp/sbom.*.cdx.json 2>/dev/null || true
