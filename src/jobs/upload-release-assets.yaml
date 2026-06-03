@@ -34,11 +34,20 @@ parameters:
       for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
+  github-token-env-var:
+    description: |
+      Name of an environment variable holding a GitHub token with contents:write
+      on the target repository. Defaults to TAYLORBOT_GITHUB_ACTION, which is
+      available in the architect CircleCI context org-wide. Falls back to the
+      GitHub App token when the variable is absent or empty.
+    type: string
+    default: "TAYLORBOT_GITHUB_ACTION"
 steps:
   - checkout
   - attach_workspace:
       at: .
-  - generate-github-token
+  - generate-github-token:
+      token-env-var: << parameters.github-token-env-var >>
   - run:
       name: Upload release assets to GitHub
       command: |

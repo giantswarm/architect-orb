@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `upload-release-assets`: defaults to `TAYLORBOT_GITHUB_ACTION` (available org-wide in the `architect` context) for GitHub authentication instead of the GitHub App token. Falls back to the App token when the variable is absent or empty. The `github-token-env-var` parameter allows overriding the token source.
+- `generate-github-token`: new `token-env-var` parameter. When the named environment variable is non-empty at runtime, its value is exported as `GITHUB_TOKEN` and App token generation is skipped.
+
 ## [9.0.2] - 2026-06-02
 
 ### Changed

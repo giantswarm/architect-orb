@@ -11,6 +11,7 @@ Helm charts and container images are not uploaded here — they live in the OCI 
 - `binary`: Binary name as passed to `go-build` (required). The job uploads all matching files from the workspace: `<binary>-<GOOS>-<GOARCH>` and any `<binary>-<GOOS>-<GOARCH>.bundle` cosign signature bundles.
 - `attempts`: Maximum number of upload attempts (default: `12`). Each attempt waits 5s before retrying.
 - `resource_class`: CircleCI resource class (default: `small`).
+- `github-token-env-var`: Name of the environment variable holding a GitHub token with `contents:write` on the target repository (default: `TAYLORBOT_GITHUB_ACTION`). Falls back to the GitHub App token when the variable is absent or empty.
 
 ## Example usage
 
@@ -48,7 +49,7 @@ workflows:
 ## Notes
 
 - The job requires a `CIRCLE_TAG` to be set — always pair it with a tag filter.
-- Uses the `GITHUB_TOKEN` minted by `generate-github-token`; no extra credentials needed.
+- By default uses `TAYLORBOT_GITHUB_ACTION` from the `architect` context (org-wide). Falls back to the GitHub App token if that variable is absent or empty.
 - If signing is disabled (`sign: false` on `go-build`), no `.bundle` files are present and only the bare binaries are uploaded.
 
 See [Cosign signing](../cosign-signing.md) for how to verify the `.bundle` files after download.
