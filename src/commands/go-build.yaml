@@ -86,13 +86,15 @@ steps:
           local goos="${arch%%/*}"
           local goarch="${arch##*/}"
           local binary_name="<<parameters.binary>>-${goos}-${goarch}"
+          local output_name="$binary_name"
+          [[ "$goos" == "windows" ]] && output_name="${binary_name}.exe"
 
-          echo "Building ${binary_name}..."
-          CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build "${build_flags[@]}" -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$binary_name" "<<parameters.path>>"
+          echo "Building ${output_name}..."
+          CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build "${build_flags[@]}" -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$output_name" "<<parameters.path>>"
 
           # If linux/amd64, also create/copy to <<parameters.binary>>
           if [[ "$goos" == "linux" && "$goarch" == "amd64" ]]; then
-            cp "$binary_name" "<<parameters.binary>>"
+            cp "$output_name" "<<parameters.binary>>"
           fi
         }
 

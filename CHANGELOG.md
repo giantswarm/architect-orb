@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- `go-build`: Windows targets now produce `<binary>-windows-<arch>.exe` instead of `<binary>-windows-<arch>`. The cosign signing glob and `upload-release-assets` glob both match `.exe` files without changes.
 - `cosign-sign-verify`: new `attest` kind alongside `oci`/`blob`. Reads a `<ref> <type> <predicate-file>` file and runs `cosign attest` + `cosign verify-attestation` for signed SBOM/in-toto attestations, keeping the CircleCI OIDC issuer/identity regex pair in one place.
 - `push-to-registries`: **behavior change for public CycloneDX SBOMs.** On public images with `sign: true`, the CycloneDX SBOM (`sbom-cyclonedx: true`) is now a *signed* cosign attestation (a sigstore-bundle referrer, `application/vnd.dev.sigstore.bundle.v0.3+json`) rather than the unsigned `application/vnd.cyclonedx+json` OCI referrer that v9.0.2 attached. Consumers discovering it via `oras discover --artifact-type application/vnd.cyclonedx+json` will no longer find it on public images — verify it with `cosign verify-attestation --type cyclonedx` instead (see [docs/cosign-signing.md](docs/cosign-signing.md)). Private images (and `sign: false`) are unchanged: still an unsigned `application/vnd.cyclonedx+json` referrer.
 - `upload-release-assets`: new `github-token-env-var` parameter. Uses the GitHub App token by default; set the parameter to an env var name (e.g. `TAYLORBOT_GITHUB_ACTION`) to use a pre-minted token instead.
