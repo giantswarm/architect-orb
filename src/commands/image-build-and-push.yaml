@@ -95,6 +95,10 @@ steps:
   - generate-github-token
   - run:
       name: Build and push multi-arch image to all registries
+
+      # Cross-platform builds may be slower (e.g. `GOARCH=arm64 go build` from another architecture)
+      no_output_timeout: 20m
+
       command: |
         # Determine tag value from tag_envvar or fallback
         TAG_VALUE="${DOCKER_IMAGE_TAG}"
