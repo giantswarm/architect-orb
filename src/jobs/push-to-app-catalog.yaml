@@ -108,7 +108,11 @@ steps:
   - run:
       name: "architect/package-helm-with-abs: Execute App Build Suite"
       command: |
-        VERSION=$(gitsemver get | tr -d "\n")
+        if [ -f .build_version ]; then
+          VERSION=$(tr -d "\n" < .build_version)
+        else
+          VERSION=$(gitsemver get | tr -d "\n")
+        fi
         OVERRIDES="--override-chart-version ${VERSION} --override-app-version ${VERSION}"
         mkdir build && python -m app_build_suite \
           --chart-dir ./helm/<< parameters.chart >> \
