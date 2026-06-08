@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `push-to-registries`: persists the computed image tag to `.build_version` in the workspace after `image-prepare-tag` runs.
+- `push-to-app-catalog`: reads `.build_version` from the workspace if present and uses it as the chart/app version instead of calling `gitsemver get`. Falls back to `gitsemver get` when the file is absent (no workspace attached, or `push-to-registries` did not run upstream). To use: set `attach_workspace: true` on `push-to-app-catalog` and add `push-to-registries` to its `requires` list — both jobs then stamp the same version, eliminating the wall-clock drift that caused `ImagePullBackoff` in ATS chart tests.
+
 ## [9.1.0] - 2026-06-03
 
 ### Added
