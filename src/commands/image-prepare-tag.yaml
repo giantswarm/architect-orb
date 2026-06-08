@@ -9,3 +9,10 @@ steps:
         gitsemver get | tr -d "\n" | tee /tmp/.docker_image_tag
         echo -n "<<parameters.tag-suffix>>" | tee -a /tmp/.docker_image_tag
         echo 'export DOCKER_IMAGE_TAG=$(cat /tmp/.docker_image_tag)' >> $BASH_ENV
+  - run:
+      name: "architect/image-prepare-tag: Write computed version to .build_version"
+      command: cp /tmp/.docker_image_tag .build_version
+  - persist_to_workspace:
+      root: .
+      paths:
+        - .build_version
