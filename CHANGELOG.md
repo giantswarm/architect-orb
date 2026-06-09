@@ -9,39 +9,79 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- `push-to-app-catalog`: new `override_chart_version` and `override_app_version` boolean parameters (both default `true`). When `true`, App Build Suite receives `--override-chart-version` / `--override-app-version` stamped with the `gitsemver`-computed version, which is the existing default behaviour. Set either to `false` to leave the corresponding version field in `Chart.yaml` unchanged.
-- `package-helm-with-abs`: new command that encapsulates the App Build Suite invocation extracted from `push-to-app-catalog`, accepting `chart`, `override_chart_version`, and `override_app_version` parameters. The command runs with `set -euo pipefail`, guards that `.app_catalog_name` exists before proceeding, skips version computation entirely when both override flags are false, validates that the resolved version string is non-empty, and uses `mkdir -p build` for idempotency.
+- `push-to-app-catalog`: new `override_chart_version` and `override_app_version` boolean parameters (both
+  default `true`). When `true`, App Build Suite receives `--override-chart-version` / `--override-app-version`
+  stamped with the `gitsemver`-computed version, which is the existing default behaviour. Set either to
+  `false` to leave the corresponding version field in `Chart.yaml` unchanged.
+- `package-helm-with-abs`: new command that encapsulates the App Build Suite invocation extracted from
+  `push-to-app-catalog`, accepting `chart`, `override_chart_version`, and `override_app_version` parameters.
+  The command runs with `set -euo pipefail`, guards that `.app_catalog_name` exists before proceeding, skips
+  version computation entirely when both override flags are false, validates that the resolved version string
+  is non-empty, and uses `mkdir -p build` for idempotency.
 
 ### Fixed
 
-- `cosign-sign-verify`: `oci` and `attest` signing loops no longer fail when Rekor rejects a duplicate entry ("an equivalent entry already exists in the transparency log"). This happens when a deterministic build produces the same image digest across two CI runs (e.g., a dev build followed by a release build with identical content). The duplicate is now treated as success and the verify step still runs.
+- `cosign-sign-verify`: `oci` and `attest` signing loops no longer fail when Rekor rejects a duplicate entry
+  ("an equivalent entry already exists in the transparency log"). This happens when a deterministic build
+  produces the same image digest across two CI runs (e.g., a dev build followed by a release build with
+  identical content). The duplicate is now treated as success and the verify step still runs.
+
+### Changed
+
+- `gitsemver` bumped to 2.0.1
 
 ## [9.2.0] - 2026-06-09
 
 ### Changed
 
-- `image-build-and-push`: raise `no_output_timeout` to 20m for the multi-arch build step to accommodate slower cross-platform Go builds.
-- `push-to-registries`: persists the computed image tag to `.build_version` in the workspace after `image-prepare-tag` runs.
-- `push-to-app-catalog`: reads `.build_version` from the workspace if present and uses it as the chart/app version instead of calling `gitsemver get`. Falls back to `gitsemver get` when the file is absent (no workspace attached, or `push-to-registries` did not run upstream). To use: set `attach_workspace: true` on `push-to-app-catalog` and add `push-to-registries` to its `requires` list — both jobs then stamp the same version, eliminating the wall-clock drift that caused `ImagePullBackoff` in ATS chart tests.
+- `image-build-and-push`: raise `no_output_timeout` to 20m for the multi-arch build step to accommodate slower
+  cross-platform Go builds.
+- `push-to-registries`: persists the computed image tag to `.build_version` in the workspace after
+  `image-prepare-tag` runs.
+- `push-to-app-catalog`: reads `.build_version` from the workspace if present and uses it as the chart/app
+  version instead of calling `gitsemver get`. Falls back to `gitsemver get` when the file is absent (no
+  workspace attached, or `push-to-registries` did not run upstream). To use: set `attach_workspace: true` on
+  `push-to-app-catalog` and add `push-to-registries` to its `requires` list — both jobs then stamp the same
+  version, eliminating the wall-clock drift that caused `ImagePullBackoff` in ATS chart tests.
 
 ## [9.1.0] - 2026-06-03
 
 ### Added
 
-- `push-to-registries`: **sign SBOM attestations** with cosign keyless OIDC on public images, so SBOMs become trustable, verifiable proof of image contents (not just unsigned metadata). For each platform manifest:
-  - **SPDX** (`sbom: true`, default) — the *exact* SPDX predicate buildx produced is extracted from its inline in-toto attestation and re-signed as a cosign DSSE attestation (`cosign attest --type spdxjson`). The signed predicate is the same SBOM content as the inline one (extracted via `.predicate`, not regenerated; semantically identical, though re-serialized by jq/cosign so not byte-for-byte equal), so the signature covers the SBOM that actually ships on the image.
-  - **CycloneDX** (`sbom-cyclonedx: true`) — the syft-generated SBOM is signed as a cosign DSSE attestation (`cosign attest --type cyclonedx`).
-  - Each signature is verified immediately after signing (`cosign verify-attestation`) with the same CircleCI OIDC issuer/identity assertions consumers use.
-  - Signing is **public-only**, consistent with image/chart/binary signing — private images would leak digests/timestamps into the public Rekor transparency log.
+- `push-to-registries`: **sign SBOM attestations** with cosign keyless OIDC on public images, so SBOMs become
+  trustable, verifiable proof of image contents (not just unsigned metadata). For each platform manifest:
+  - **SPDX** (`sbom: true`, default) — the _exact_ SPDX predicate buildx produced is extracted from its inline
+    in-toto attestation and re-signed as a cosign DSSE attestation (`cosign attest --type spdxjson`). The
+    signed predicate is the same SBOM content as the inline one (extracted via `.predicate`, not regenerated;
+    semantically identical, though re-serialized by jq/cosign so not byte-for-byte equal), so the signature
+    covers the SBOM that actually ships on the image.
+  - **CycloneDX** (`sbom-cyclonedx: true`) — the syft-generated SBOM is signed as a cosign DSSE attestation
+    (`cosign attest --type cyclonedx`).
+  - Each signature is verified immediately after signing (`cosign verify-attestation`) with the same CircleCI
+    OIDC issuer/identity assertions consumers use.
+  - Signing is **public-only**, consistent with image/chart/binary signing — private images would leak
+    digests/timestamps into the public Rekor transparency log.
   - SLSA provenance signing is intentionally out of scope for now (tracked separately).
 
 ### Changed
 
-- `go-build`: Windows targets now produce `<binary>-windows-<arch>.exe` instead of `<binary>-windows-<arch>`. The cosign signing glob and `upload-release-assets` glob both match `.exe` files without changes.
-- `cosign-sign-verify`: new `attest` kind alongside `oci`/`blob`. Reads a `<ref> <type> <predicate-file>` file and runs `cosign attest` + `cosign verify-attestation` for signed SBOM/in-toto attestations, keeping the CircleCI OIDC issuer/identity regex pair in one place.
-- `push-to-registries`: **behavior change for public CycloneDX SBOMs.** On public images with `sign: true`, the CycloneDX SBOM (`sbom-cyclonedx: true`) is now a *signed* cosign attestation (a sigstore-bundle referrer, `application/vnd.dev.sigstore.bundle.v0.3+json`) rather than the unsigned `application/vnd.cyclonedx+json` OCI referrer that v9.0.2 attached. Consumers discovering it via `oras discover --artifact-type application/vnd.cyclonedx+json` will no longer find it on public images — verify it with `cosign verify-attestation --type cyclonedx` instead (see [docs/cosign-signing.md](docs/cosign-signing.md)). Private images (and `sign: false`) are unchanged: still an unsigned `application/vnd.cyclonedx+json` referrer.
-- `upload-release-assets`: new `github-token-env-var` parameter. Uses the GitHub App token by default; set the parameter to an env var name (e.g. `TAYLORBOT_GITHUB_ACTION`) to use a pre-minted token instead.
-- `generate-github-token`: new `token-env-var` parameter. When the named environment variable is non-empty at runtime, its value is exported as `GITHUB_TOKEN` and App token generation is skipped.
+- `go-build`: Windows targets now produce `<binary>-windows-<arch>.exe` instead of `<binary>-windows-<arch>`.
+  The cosign signing glob and `upload-release-assets` glob both match `.exe` files without changes.
+- `cosign-sign-verify`: new `attest` kind alongside `oci`/`blob`. Reads a `<ref> <type> <predicate-file>` file
+  and runs `cosign attest` + `cosign verify-attestation` for signed SBOM/in-toto attestations, keeping the
+  CircleCI OIDC issuer/identity regex pair in one place.
+- `push-to-registries`: **behavior change for public CycloneDX SBOMs.** On public images with `sign: true`,
+  the CycloneDX SBOM (`sbom-cyclonedx: true`) is now a _signed_ cosign attestation (a sigstore-bundle
+  referrer, `application/vnd.dev.sigstore.bundle.v0.3+json`) rather than the unsigned
+  `application/vnd.cyclonedx+json` OCI referrer that v9.0.2 attached. Consumers discovering it via
+  `oras discover --artifact-type application/vnd.cyclonedx+json` will no longer find it on public images —
+  verify it with `cosign verify-attestation --type cyclonedx` instead (see
+  [docs/cosign-signing.md](docs/cosign-signing.md)). Private images (and `sign: false`) are unchanged: still
+  an unsigned `application/vnd.cyclonedx+json` referrer.
+- `upload-release-assets`: new `github-token-env-var` parameter. Uses the GitHub App token by default; set the
+  parameter to an env var name (e.g. `TAYLORBOT_GITHUB_ACTION`) to use a pre-minted token instead.
+- `generate-github-token`: new `token-env-var` parameter. When the named environment variable is non-empty at
+  runtime, its value is exported as `GITHUB_TOKEN` and App token generation is skipped.
 
 ## [9.0.2] - 2026-06-02
 
