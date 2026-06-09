@@ -70,7 +70,13 @@ steps:
             while IFS= read -r ref; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               echo "cosign sign $ref"
-              cosign sign --yes "$ref"
+              if ! out=$(cosign sign --yes "$ref" 2>&1); then
+                if echo "$out" | grep -q "an equivalent entry already exists"; then
+                  echo "Rekor: entry already exists for $ref, skipping sign."
+                else
+                  echo "$out" >&2; exit 1
+                fi
+              fi
               echo "cosign verify $ref"
               cosign verify \
                 --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
@@ -102,7 +108,13 @@ steps:
             while IFS=' ' read -r ref type predicate; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               echo "cosign attest --type $type $ref (predicate: $predicate)"
-              cosign attest --yes --type "$type" --predicate "$predicate" "$ref"
+              if ! out=$(cosign attest --yes --type "$type" --predicate "$predicate" "$ref" 2>&1); then
+                if echo "$out" | grep -q "an equivalent entry already exists"; then
+                  echo "Rekor: entry already exists for $ref ($type), skipping attest."
+                else
+                  echo "$out" >&2; exit 1
+                fi
+              fi
               echo "cosign verify-attestation --type $type $ref"
               cosign verify-attestation \
                 --type "$type" \
