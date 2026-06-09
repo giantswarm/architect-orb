@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `push-to-app-catalog`: new `override_chart_version` and `override_app_version` boolean parameters (both default `true`). When `true`, App Build Suite receives `--override-chart-version` / `--override-app-version` stamped with the `gitsemver`-computed version, which is the existing default behaviour. Set either to `false` to leave the corresponding version field in `Chart.yaml` unchanged.
+- `package-helm-with-abs`: new command that encapsulates the App Build Suite invocation extracted from `push-to-app-catalog`, accepting `chart`, `override_chart_version`, and `override_app_version` parameters. The command runs with `set -euo pipefail`, guards that `.app_catalog_name` exists before proceeding, skips version computation entirely when both override flags are false, validates that the resolved version string is non-empty, and uses `mkdir -p build` for idempotency.
+
 ### Fixed
 
 - `cosign-sign-verify`: `oci` and `attest` signing loops no longer fail when Rekor rejects a duplicate entry ("an equivalent entry already exists in the transparency log"). This happens when a deterministic build produces the same image digest across two CI runs (e.g., a dev build followed by a release build with identical content). The duplicate is now treated as success and the verify step still runs.
