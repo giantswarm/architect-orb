@@ -1,0 +1,54 @@
+parameters:
+  chart:
+    description: "Name of the chart inside helm directory to build."
+    type: "string"
+  override_chart_version:
+    type: boolean
+    default: true
+    description: |
+      When `true`, passes `--override-chart-version <version>` to App Build Suite,
+      stamping the chart version with the value computed by `gitsemver` (or read
+      from the `.build_version` workspace file).  Set to `false` to leave the
+      version declared in `Chart.yaml` unchanged.
+  override_app_version:
+    type: boolean
+    default: true
+    description: |
+      When `true`, passes `--override-app-version <version>` to App Build Suite,
+      stamping the app version with the value computed by `gitsemver` (or read
+      from the `.build_version` workspace file).  Set to `false` to leave the
+      appVersion declared in `Chart.yaml` unchanged.
+steps:
+  - run:
+      name: "architect/package-helm-with-abs: Execute App Build Suite"
+      command: |
+        set -euo pipefail
+        if [ ! -f .app_catalog_name ]; then
+          echo "ERROR: .app_catalog_name not found — run determine-catalog-name before this command"
+          exit 1
+        fi
+        OVERRIDES=""
+        if [ "<< parameters.override_chart_version >>" = "true" ] || [ "<< parameters.override_app_version >>" = "true" ]; then
+          if [ -f .build_version ]; then
+            VERSION=$(tr -d "\n" < .build_version)
+          else
+            VERSION=$(gitsemver get | tr -d "\n")
+          fi
+          if [ -z "${VERSION}" ]; then
+            echo "ERROR: could not determine build version (.build_version is empty and gitsemver returned nothing)"
+            exit 1
+          fi
+          if [ "<< parameters.override_chart_version >>" = "true" ]; then
+            OVERRIDES="${OVERRIDES} --override-chart-version ${VERSION}"
+          fi
+          if [ "<< parameters.override_app_version >>" = "true" ]; then
+            OVERRIDES="${OVERRIDES} --override-app-version ${VERSION}"
+          fi
+        fi
+        mkdir -p build && python -m app_build_suite \
+          --chart-dir ./helm/<< parameters.chart >> \
+          --destination build \
+          --generate-metadata \
+          --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" \
+          --keep-chart-changes \
+          ${OVERRIDES}
