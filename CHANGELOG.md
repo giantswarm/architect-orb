@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.2.0] - 2026-06-09
+
 ### Changed
 
 - `image-build-and-push`: raise `no_output_timeout` to 20m for the multi-arch build step to accommodate slower cross-platform Go builds.
@@ -1797,7 +1799,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.1.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.2.0...HEAD
+[9.2.0]: https://github.com/giantswarm/architect-orb/compare/v9.1.0...v9.2.0
 [9.1.0]: https://github.com/giantswarm/architect-orb/compare/v9.0.2...v9.1.0
 [9.0.2]: https://github.com/giantswarm/architect-orb/compare/v9.0.1...v9.0.2
 [9.0.1]: https://github.com/giantswarm/architect-orb/compare/v9.0.0...v9.0.1
