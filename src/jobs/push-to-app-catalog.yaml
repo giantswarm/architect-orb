@@ -74,6 +74,20 @@ parameters:
     description: |
       This parameter has no effect anymore, it is kept for backwards compatibility.
       Will be removed in a future version.
+  override_chart_version:
+    type: boolean
+    default: true
+    description: |
+      When `true` (the default), passes `--override-chart-version` to App Build Suite,
+      stamping the chart version with the value from `gitsemver` (or `.build_version`
+      workspace file).  Set to `false` to leave the version in `Chart.yaml` unchanged.
+  override_app_version:
+    type: boolean
+    default: true
+    description: |
+      When `true` (the default), passes `--override-app-version` to App Build Suite,
+      stamping the app version with the value from `gitsemver` (or `.build_version`
+      workspace file).  Set to `false` to leave the appVersion in `Chart.yaml` unchanged.
   persist_chart_archive:
     type: boolean
     default: false
@@ -105,22 +119,10 @@ steps:
       steps:
         - attach_workspace:
             at: .
-  - run:
-      name: "architect/package-helm-with-abs: Execute App Build Suite"
-      command: |
-        if [ -f .build_version ]; then
-          VERSION=$(tr -d "\n" < .build_version)
-        else
-          VERSION=$(gitsemver get | tr -d "\n")
-        fi
-        OVERRIDES="--override-chart-version ${VERSION} --override-app-version ${VERSION}"
-        mkdir build && python -m app_build_suite \
-          --chart-dir ./helm/<< parameters.chart >> \
-          --destination build \
-          --generate-metadata \
-          --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" \
-          --keep-chart-changes \
-          ${OVERRIDES}
+  - package-helm-with-abs:
+      chart: << parameters.chart >>
+      override_chart_version: << parameters.override_chart_version >>
+      override_app_version: << parameters.override_app_version >>
   - push-helm:
       push_to_appcatalog: << parameters.push_to_appcatalog >>
       push_to_oci_registry: << parameters.push_to_oci_registry >>

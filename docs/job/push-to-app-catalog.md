@@ -64,6 +64,8 @@ documentation](https://helm.sh/blog/storing-charts-in-oci/).
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
 - [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaulttrue)
 - [sign](#sign-optional-boolean-defaulttrue)
+- [override_chart_version](#override_chart_version-optional-boolean-defaulttrue)
+- [override_app_version](#override_app_version-optional-boolean-defaulttrue)
 
 ### attach_workspace
 
@@ -147,3 +149,16 @@ publish digest + timestamp metadata to the public Rekor transparency log).
 
 See [Cosign signing](../cosign-signing.md) for the verification command
 and the end-to-end identity model.
+
+### override_chart_version (optional boolean, default=true)
+
+When `true` (the default), passes `--override-chart-version` to App Build Suite, stamping the
+chart's `version` field with the value computed by `gitsemver` (or read from the `.build_version`
+workspace file). Set to `false` to leave the `version` field in `Chart.yaml` unchanged.
+
+### override_app_version (optional boolean, default=true)
+
+When `true` (the default), passes `--override-app-version` to App Build Suite, stamping the
+chart's `appVersion` field with the value computed by `gitsemver` (or read from the
+`.build_version` workspace file). Set to `false` to leave the `appVersion` field in `Chart.yaml`
+unchanged.
