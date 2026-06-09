@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `cosign-sign-verify`: `oci` and `attest` signing loops no longer fail when Rekor rejects a duplicate entry ("an equivalent entry already exists in the transparency log"). This happens when a deterministic build produces the same image digest across two CI runs (e.g., a dev build followed by a release build with identical content). The duplicate is now treated as success and the verify step still runs.
+
 ## [9.2.0] - 2026-06-09
 
 ### Changed
