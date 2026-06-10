@@ -75,16 +75,24 @@ steps:
         # keyless flow talks to Fulcio, Rekor and the OCI registry over HTTP/2,
         # and the public-good infrastructure intermittently aborts a stream
         # mid-request (e.g. `signing bundle: error signing bundle: stream error:
-        # stream ID 1; INTERNAL_ERROR; received from peer`) or returns a
-        # 5xx/timeout. These are unrelated to the artifact or our config, so a
-        # fresh attempt almost always succeeds. Without this, a single flake on
-        # any one of N per-arch signatures fails the whole publish job and forces
-        # a manual rerun. Auth/config 4xx (401/403/404) and bad refs are
-        # deliberately NOT listed, so genuine misconfiguration still fails fast;
-        # 408/425/429 are timeout/too-early/rate-limit codes and ARE transient.
-        TRANSIENT_PATTERN='INTERNAL_ERROR|stream error|connection reset|connection refused|broken pipe'
-        TRANSIENT_PATTERN+='|unexpected EOF|TLS handshake|i/o timeout|context deadline exceeded|timeout'
-        TRANSIENT_PATTERN+='|408 |425 |429 |500 |502 |503 |504 |Service Unavailable|Bad Gateway|Gateway Time-?out|too many requests'
+        # stream ID 1; INTERNAL_ERROR; received from peer`) or returns a 5xx/429.
+        # These are unrelated to the artifact or our config, so a fresh attempt
+        # almost always succeeds; without this a single flake on one of N per-arch
+        # signatures fails the whole publish job and forces a manual rerun.
+        #
+        # Every alternative below is a SPECIFIC network/transport signal or an
+        # HTTP status in a form Go actually emits — a 5xx/429/408 reason phrase
+        # (resp.Status from net/http & go-containerregistry) or an anchored
+        # `status NNN` (the go-openapi Rekor client). It deliberately avoids bare
+        # tokens like `timeout` or `500 `: those match permanent-error text too
+        # (a "timeout policy" message, or `500` inside a digest), which would burn
+        # the whole ~35s backoff budget retrying something doomed to fail anyway.
+        # Auth/config 4xx (401/403/404) and bad refs are NOT listed, so genuine
+        # misconfiguration still fails fast.
+        TRANSIENT_PATTERN='INTERNAL_ERROR|stream error|GOAWAY|connection reset|connection refused|broken pipe'
+        TRANSIENT_PATTERN+='|unexpected EOF|TLS handshake timeout|i/o timeout|context deadline exceeded|Client\.Timeout'
+        TRANSIENT_PATTERN+='|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Timeout|Too Many Requests|Request Timeout'
+        TRANSIENT_PATTERN+='|[Ss]tatus:? (408|425|429|5[0-9][0-9])'
 
         # Attempts per cosign network call (1 initial try + up to 3 retries).
         MAX_ATTEMPTS=4
