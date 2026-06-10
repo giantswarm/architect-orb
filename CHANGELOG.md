@@ -22,9 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   including these transient ones, fell straight through to `exit 1`, so a single flake on one of N per-arch
   signatures failed the job and forced a manual rerun. Every cosign network call (`sign`, `verify`,
   `sign-blob`, `verify-blob`, `attest`, `verify-attestation`) is now retried up to 4 times (backoff 5s, 10s,
-  20s) when the error matches a known transient pattern, with clear per-attempt logging. Permanent errors
-  (4xx auth/config, bad refs) are not retried and still fail fast; the existing HTTP 409 duplicate handling
-  is preserved.
+  20s) when the error matches a known transient pattern, with clear per-attempt logging. Auth/config 4xx
+  (401/403/404) and bad refs are not retried and still fail fast (408/425/429 and 5xx are treated as
+  transient); the existing HTTP 409 duplicate handling is preserved.
 - `cosign-sign-verify`: the `blob` signing loop no longer fails when Rekor rejects the upload with
   "an equivalent entry already exists in the transparency log" (HTTP 409). This extends the v9.3.0 fix
   for `oci`/`attest` to binaries. Unlike OCI signing, the duplicate cannot simply be skipped because

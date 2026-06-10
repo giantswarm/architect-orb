@@ -95,9 +95,10 @@ a single such flake used to fail the whole job and force a manual rerun.
 Every cosign network call (`sign`, `verify`, `sign-blob`, `verify-blob`,
 `attest`, `verify-attestation`) is therefore retried up to `MAX_ATTEMPTS` (4)
 times with exponential backoff (5s, 10s, 20s) when the error matches a known
-transient pattern. Permanent errors — 4xx auth/config failures, a bad
-reference — are deliberately **not** retried, so genuine misconfiguration still
-fails fast. Rekor duplicate-entry conflicts (HTTP 409) keep their existing
+transient pattern. Auth/config 4xx (401/403/404) and bad references are
+deliberately **not** retried, so genuine misconfiguration still fails fast;
+408/425/429 (timeout / too-early / rate-limit) and 5xx, by contrast, are
+treated as transient. Rekor duplicate-entry conflicts (HTTP 409) keep their existing
 handling: skipped for `oci`/`attest` (the signature already exists), retried
 with fresh ephemeral keys for `blob` (where the bundle file must be produced
 locally).

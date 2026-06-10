@@ -79,8 +79,9 @@ steps:
         # 5xx/timeout. These are unrelated to the artifact or our config, so a
         # fresh attempt almost always succeeds. Without this, a single flake on
         # any one of N per-arch signatures fails the whole publish job and forces
-        # a manual rerun. Permanent errors (4xx auth/config, bad ref) are NOT
-        # listed here on purpose, so they still fail fast.
+        # a manual rerun. Auth/config 4xx (401/403/404) and bad refs are
+        # deliberately NOT listed, so genuine misconfiguration still fails fast;
+        # 408/425/429 are timeout/too-early/rate-limit codes and ARE transient.
         TRANSIENT_PATTERN='INTERNAL_ERROR|stream error|connection reset|connection refused|broken pipe'
         TRANSIENT_PATTERN+='|unexpected EOF|TLS handshake|i/o timeout|context deadline exceeded|timeout'
         TRANSIENT_PATTERN+='|408 |425 |429 |500 |502 |503 |504 |Service Unavailable|Bad Gateway|Gateway Time-?out|too many requests'
@@ -95,25 +96,34 @@ steps:
           sleep "$delay"
         }
 
-        # cosign_retry <label> <cmd…> — run a cosign network operation, retrying
-        # ONLY transient backend errors (see TRANSIENT_PATTERN) with exponential
-        # backoff. Output is captured rather than streamed so it can be
-        # classified; on success it is discarded to keep happy-path logs quiet
-        # (matching the previous behaviour). Exit status:
+        # cosign_retry <label> <on_success: quiet|show> <cmd…> — run a cosign
+        # network operation, retrying ONLY transient backend errors (see
+        # TRANSIENT_PATTERN) with exponential backoff. The command's stdout is
+        # discarded — it is the signature/attestation payload (e.g. a ~465 KB
+        # SBOM for verify-attestation) which we never want in the log, exactly as
+        # the old `… > /dev/null` did. Its stderr is captured so it can be
+        # classified, and with on_success=show it is re-emitted on success: this
+        # preserves the `cosign verify*` "Verification for <ref> …" summary that
+        # the verify-after-sign step deliberately surfaces as audit evidence.
+        # on_success=quiet keeps sign/attest happy paths silent (their stderr is
+        # noise on success). Exit status:
         #   0  success
         #   42 Rekor reports the entry already exists (caller decides to skip)
-        #   1  permanent failure (captured output already printed to stderr)
+        #   1  permanent failure (captured stderr already printed)
         cosign_retry() {
-          local label="$1"; shift
+          local label="$1" on_success="$2"; shift 2
           local attempt out
           for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
-            if out=$("$@" 2>&1); then
+            if out=$("$@" 2>&1 1>/dev/null); then
+              if [[ "$on_success" == show && -n "$out" ]]; then
+                printf '%s\n' "$out" >&2
+              fi
               return 0
             fi
-            if printf '%s' "$out" | grep -Eq "$REKOR_DUP_PATTERN"; then
+            if grep -Eq "$REKOR_DUP_PATTERN" <<<"$out"; then
               return 42
             fi
-            if printf '%s' "$out" | grep -Eq "$TRANSIENT_PATTERN" && [[ "$attempt" -lt "$MAX_ATTEMPTS" ]]; then
+            if grep -Eq "$TRANSIENT_PATTERN" <<<"$out" && [[ "$attempt" -lt "$MAX_ATTEMPTS" ]]; then
               echo "WARNING: ${label}: transient signing-backend error (attempt ${attempt}/${MAX_ATTEMPTS})" >&2
               printf '%s\n' "$out" | sed 's/^/    │ /' >&2
               backoff "$attempt"
@@ -130,18 +140,17 @@ steps:
             while IFS= read -r ref; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               echo "cosign sign $ref"
-              rc=0; cosign_retry "sign $ref" cosign sign --yes "$ref" || rc=$?
+              rc=0; cosign_retry "sign $ref" quiet cosign sign --yes "$ref" || rc=$?
               if [[ "$rc" -eq 42 ]]; then
                 echo "Rekor: entry already exists for $ref, skipping sign."
               elif [[ "$rc" -ne 0 ]]; then
                 exit 1
               fi
               echo "cosign verify $ref"
-              rc=0; cosign_retry "verify $ref" cosign verify \
+              cosign_retry "verify $ref" show cosign verify \
                 --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
                 --certificate-identity-regexp "$IDENTITY_REGEX" \
-                "$ref" || rc=$?
-              [[ "$rc" -eq 0 ]] || exit 1
+                "$ref" || exit 1
             done < "$refs_file"
             ;;
           blob)
@@ -164,9 +173,9 @@ steps:
                 if [[ "$attempt" -ge "$MAX_ATTEMPTS" ]]; then
                   printf '%s\n' "$out" >&2; exit 1
                 fi
-                if printf '%s' "$out" | grep -Eq "$REKOR_DUP_PATTERN"; then
+                if grep -Eq "$REKOR_DUP_PATTERN" <<<"$out"; then
                   echo "Rekor: duplicate entry for $file (attempt ${attempt}/${MAX_ATTEMPTS}), retrying with fresh keys."
-                elif printf '%s' "$out" | grep -Eq "$TRANSIENT_PATTERN"; then
+                elif grep -Eq "$TRANSIENT_PATTERN" <<<"$out"; then
                   echo "WARNING: sign-blob $file: transient signing-backend error (attempt ${attempt}/${MAX_ATTEMPTS})" >&2
                   printf '%s\n' "$out" | sed 's/^/    │ /' >&2
                   backoff "$attempt"
@@ -175,12 +184,11 @@ steps:
                 fi
               done
               echo "cosign verify-blob $file"
-              rc=0; cosign_retry "verify-blob $file" cosign verify-blob \
+              cosign_retry "verify-blob $file" show cosign verify-blob \
                 --bundle "$bundle" \
                 --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
                 --certificate-identity-regexp "$IDENTITY_REGEX" \
-                "$file" || rc=$?
-              [[ "$rc" -eq 0 ]] || exit 1
+                "$file" || exit 1
             done < "$refs_file"
             ;;
           attest)
@@ -194,7 +202,7 @@ steps:
             while IFS=' ' read -r ref type predicate; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               echo "cosign attest --type $type $ref (predicate: $predicate)"
-              rc=0; cosign_retry "attest $ref ($type)" \
+              rc=0; cosign_retry "attest $ref ($type)" quiet \
                 cosign attest --yes --type "$type" --predicate "$predicate" "$ref" || rc=$?
               if [[ "$rc" -eq 42 ]]; then
                 echo "Rekor: entry already exists for $ref ($type), skipping attest."
@@ -202,12 +210,11 @@ steps:
                 exit 1
               fi
               echo "cosign verify-attestation --type $type $ref"
-              rc=0; cosign_retry "verify-attestation $ref ($type)" cosign verify-attestation \
+              cosign_retry "verify-attestation $ref ($type)" show cosign verify-attestation \
                 --type "$type" \
                 --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
                 --certificate-identity-regexp "$IDENTITY_REGEX" \
-                "$ref" || rc=$?
-              [[ "$rc" -eq 0 ]] || exit 1
+                "$ref" || exit 1
             done < "$refs_file"
             ;;
         esac
