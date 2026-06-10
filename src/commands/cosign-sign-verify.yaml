@@ -128,10 +128,10 @@ steps:
               fi
               return 0
             fi
-            if grep -Eq "$REKOR_DUP_PATTERN" <<<"$out"; then
+            if printf '%s' "$out" | grep -Eq "$REKOR_DUP_PATTERN"; then
               return 42
             fi
-            if grep -Eq "$TRANSIENT_PATTERN" <<<"$out" && [[ "$attempt" -lt "$MAX_ATTEMPTS" ]]; then
+            if printf '%s' "$out" | grep -Eq "$TRANSIENT_PATTERN" && [[ "$attempt" -lt "$MAX_ATTEMPTS" ]]; then
               echo "WARNING: ${label}: transient signing-backend error (attempt ${attempt}/${MAX_ATTEMPTS})" >&2
               printf '%s\n' "$out" | sed 's/^/    │ /' >&2
               backoff "$attempt"
@@ -181,9 +181,9 @@ steps:
                 if [[ "$attempt" -ge "$MAX_ATTEMPTS" ]]; then
                   printf '%s\n' "$out" >&2; exit 1
                 fi
-                if grep -Eq "$REKOR_DUP_PATTERN" <<<"$out"; then
+                if printf '%s' "$out" | grep -Eq "$REKOR_DUP_PATTERN"; then
                   echo "Rekor: duplicate entry for $file (attempt ${attempt}/${MAX_ATTEMPTS}), retrying with fresh keys."
-                elif grep -Eq "$TRANSIENT_PATTERN" <<<"$out"; then
+                elif printf '%s' "$out" | grep -Eq "$TRANSIENT_PATTERN"; then
                   echo "WARNING: sign-blob $file: transient signing-backend error (attempt ${attempt}/${MAX_ATTEMPTS})" >&2
                   printf '%s\n' "$out" | sed 's/^/    │ /' >&2
                   backoff "$attempt"
