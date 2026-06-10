@@ -83,6 +83,25 @@ signature isn't actually verifiable (wrong audience, wrong issuer, identity
 mismatch). Without it we'd ship "signed" artifacts that no consumer can
 verify and only find out from a downstream report.
 
+## Resilience to transient backend errors
+
+The keyless flow talks to Fulcio, Rekor and the OCI registry over HTTP/2, and
+the public-good Sigstore infrastructure intermittently aborts a stream
+mid-request (e.g. `signing bundle: error signing bundle: stream error: stream
+ID 1; INTERNAL_ERROR; received from peer`) or returns a 5xx/timeout. Because a
+publish job signs many artifacts (each registry, each architecture, each SBOM),
+a single such flake used to fail the whole job and force a manual rerun.
+
+Every cosign network call (`sign`, `verify`, `sign-blob`, `verify-blob`,
+`attest`, `verify-attestation`) is therefore retried up to `MAX_ATTEMPTS` (4)
+times with exponential backoff (5s, 10s, 20s) when the error matches a known
+transient pattern. Permanent errors — 4xx auth/config failures, a bad
+reference — are deliberately **not** retried, so genuine misconfiguration still
+fails fast. Rekor duplicate-entry conflicts (HTTP 409) keep their existing
+handling: skipped for `oci`/`attest` (the signature already exists), retried
+with fresh ephemeral keys for `blob` (where the bundle file must be produced
+locally).
+
 ## Verifying signatures as a consumer
 
 ### Container image
