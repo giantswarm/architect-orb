@@ -11,14 +11,17 @@ binaries, Docker images, and Helm charts to Giant Swarm's image and chart regist
 There are no local build or test commands — the orb is developed by pushing branches and testing against
 CircleCI.
 
-**Testing changes**: Reference the dev version in a consuming repo's `.circleci/config.yml`:
+**Testing changes**: Each branch push publishes the dev orb under three tags: `dev:<branch-name>`,
+`dev:<full-commit-sha>`, and `dev:alpha` (latest dev publish of any branch). Reference the branch-name
+tag in a consuming repo's `.circleci/config.yml` — it always points at the latest push of the branch:
 
 ```yaml
 orbs:
-  architect: giantswarm/architect@dev:your-branch-name
+  architect: giantswarm/architect@dev:my-branch-name
 ```
 
-Dev versions are mutable and auto-deleted after 90 days.
+Use the commit-SHA tag instead when a run must be pinned to an exact revision. Dev versions are mutable
+and auto-deleted after 90 days.
 
 **CI pipeline** (`.circleci/config.yml`):
 

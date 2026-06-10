@@ -12,6 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - CI: branch pushes now additionally publish the dev orb as `dev:<branch-name>` (alongside the existing
   `dev:<commit-sha>` and `dev:alpha`), giving a stable per-branch reference for testing in consuming repos.
 
+### Fixed
+
+- `cosign-sign-verify`: the `blob` signing loop no longer fails when Rekor rejects the upload with
+  "an equivalent entry already exists in the transparency log" (HTTP 409). This extends the v9.3.0 fix
+  for `oci`/`attest` to binaries. Unlike OCI signing, the duplicate cannot simply be skipped because
+  the local bundle file (needed by `verify-blob` and uploaded as a release asset) is only written on
+  success — instead `cosign sign-blob` is retried up to 3 times, which succeeds because each invocation
+  generates fresh ephemeral keys and thus a new, non-equivalent Rekor entry.
+
 ## [9.3.0] - 2026-06-09
 
 ### Added
