@@ -85,10 +85,27 @@ steps:
             done < "$refs_file"
             ;;
           blob)
+            # Rekor can reject the upload with "an equivalent entry already
+            # exists" (HTTP 409) when its client retries a POST that already
+            # succeeded server-side. Unlike `oci`/`attest`, the duplicate cannot
+            # be skipped: the bundle file is only written on success, and
+            # verify-blob needs it. But sign-blob mints fresh ephemeral keys per
+            # invocation — a retry produces a new, non-equivalent entry — so a
+            # full re-run resolves the conflict.
             while IFS=' ' read -r file bundle; do
               [[ -z "$file" || "$file" =~ ^# ]] && continue
               echo "cosign sign-blob $file → $bundle"
-              cosign sign-blob --yes --bundle "$bundle" "$file"
+              for attempt in 1 2 3; do
+                rm -f "$bundle"
+                if out=$(cosign sign-blob --yes --bundle "$bundle" "$file" 2>&1); then
+                  break
+                fi
+                if echo "$out" | grep -q "an equivalent entry already exists" && [[ "$attempt" -lt 3 ]]; then
+                  echo "Rekor: duplicate entry conflict for $file (attempt $attempt), retrying with fresh keys."
+                else
+                  echo "$out" >&2; exit 1
+                fi
+              done
               echo "cosign verify-blob $file"
               cosign verify-blob \
                 --bundle "$bundle" \
