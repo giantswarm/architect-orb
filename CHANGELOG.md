@@ -14,11 +14,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `cosign-sign-verify`: transient signing-backend failures are now retried with exponential backoff instead
+  of failing the whole publish job. The keyless flow talks to Fulcio, Rekor and the OCI registry over HTTP/2,
+  and the public-good Sigstore infrastructure intermittently aborts a stream mid-request (e.g. `signing
+  bundle: error signing bundle: stream error: stream ID 1; INTERNAL_ERROR; received from peer`) or returns a
+  5xx/timeout. Previously only Rekor duplicate-entry conflicts (HTTP 409) were handled — any other error,
+  including these transient ones, fell straight through to `exit 1`, so a single flake on one of N per-arch
+  signatures failed the job and forced a manual rerun. Every cosign network call (`sign`, `verify`,
+  `sign-blob`, `verify-blob`, `attest`, `verify-attestation`) is now retried up to 4 times (backoff 5s, 10s,
+  20s) when the error matches a known transient pattern, with clear per-attempt logging. Auth/config 4xx
+  (401/403/404) and bad refs are not retried and still fail fast (408/425/429 and 5xx are treated as
+  transient); the existing HTTP 409 duplicate handling is preserved.
 - `cosign-sign-verify`: the `blob` signing loop no longer fails when Rekor rejects the upload with
   "an equivalent entry already exists in the transparency log" (HTTP 409). This extends the v9.3.0 fix
   for `oci`/`attest` to binaries. Unlike OCI signing, the duplicate cannot simply be skipped because
   the local bundle file (needed by `verify-blob` and uploaded as a release asset) is only written on
-  success — instead `cosign sign-blob` is retried up to 3 times, which succeeds because each invocation
+  success — instead `cosign sign-blob` is retried up to 4 times, which succeeds because each invocation
   generates fresh ephemeral keys and thus a new, non-equivalent Rekor entry.
 
 ## [9.3.0] - 2026-06-09
