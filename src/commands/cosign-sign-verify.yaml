@@ -65,13 +65,19 @@ steps:
         ISSUER_REGEX='^https://oidc\.circleci\.com'
         IDENTITY_REGEX='^https://circleci\.com/api/v2/projects/[a-f0-9-]+/pipeline-definitions/[a-f0-9-]+$'
 
+        # Rekor duplicate-entry rejection (HTTP 409). Matched with `grep -E`.
+        # The structured token (createLogEntryConflict) appears in sign-blob
+        # errors; the prose is all the `oci`/`attest` errors carry, so both
+        # alternatives are needed.
+        REKOR_DUP_PATTERN='createLogEntryConflict|an equivalent entry already exists'
+
         case "<<parameters.kind>>" in
           oci)
             while IFS= read -r ref; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               echo "cosign sign $ref"
               if ! out=$(cosign sign --yes "$ref" 2>&1); then
-                if echo "$out" | grep -q "an equivalent entry already exists"; then
+                if echo "$out" | grep -Eq "$REKOR_DUP_PATTERN"; then
                   echo "Rekor: entry already exists for $ref, skipping sign."
                 else
                   echo "$out" >&2; exit 1
@@ -95,12 +101,13 @@ steps:
             while IFS=' ' read -r file bundle; do
               [[ -z "$file" || "$file" =~ ^# ]] && continue
               echo "cosign sign-blob $file → $bundle"
-              for attempt in 1 2 3; do
+              attempts=3
+              for attempt in $(seq 1 "$attempts"); do
                 rm -f "$bundle"
                 if out=$(cosign sign-blob --yes --bundle "$bundle" "$file" 2>&1); then
                   break
                 fi
-                if echo "$out" | grep -q "an equivalent entry already exists" && [[ "$attempt" -lt 3 ]]; then
+                if echo "$out" | grep -Eq "$REKOR_DUP_PATTERN" && [[ "$attempt" -lt "$attempts" ]]; then
                   echo "Rekor: duplicate entry conflict for $file (attempt $attempt), retrying with fresh keys."
                 else
                   echo "$out" >&2; exit 1
@@ -126,7 +133,7 @@ steps:
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               echo "cosign attest --type $type $ref (predicate: $predicate)"
               if ! out=$(cosign attest --yes --type "$type" --predicate "$predicate" "$ref" 2>&1); then
-                if echo "$out" | grep -q "an equivalent entry already exists"; then
+                if echo "$out" | grep -Eq "$REKOR_DUP_PATTERN"; then
                   echo "Rekor: entry already exists for $ref ($type), skipping attest."
                 else
                   echo "$out" >&2; exit 1
