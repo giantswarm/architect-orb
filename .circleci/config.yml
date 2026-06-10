@@ -27,6 +27,9 @@ workflows:
           vcs_type: github
           enable_pr_comment: false
           circleci_token: CIRCLECI_DEV_API_TOKEN
+          # Tags are expanded with `circleci env subst`; dev:${CIRCLE_BRANCH}
+          # gives a stable per-branch reference for testing in consuming repos.
+          dev_tags: dev:${CIRCLE_SHA1},dev:alpha,dev:${CIRCLE_BRANCH}
           requires:
             - "orb-tools/pack"
           filters:

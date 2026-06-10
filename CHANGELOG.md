@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- CI: branch pushes now additionally publish the dev orb as `dev:<branch-name>` (alongside the existing
+  `dev:<commit-sha>` and `dev:alpha`), giving a stable per-branch reference for testing in consuming repos.
+
 ## [9.3.0] - 2026-06-09
 
 ### Added
