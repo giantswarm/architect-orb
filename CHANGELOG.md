@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.3.1] - 2026-06-10
+
 ### Changed
 
 - CI: branch pushes now additionally publish the dev orb as `dev:<branch-name>` (alongside the existing
@@ -1875,7 +1877,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.3.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.3.1...HEAD
+[9.3.1]: https://github.com/giantswarm/architect-orb/compare/v9.3.0...v9.3.1
 [9.3.0]: https://github.com/giantswarm/architect-orb/compare/v9.2.0...v9.3.0
 [9.2.0]: https://github.com/giantswarm/architect-orb/compare/v9.1.0...v9.2.0
 [9.1.0]: https://github.com/giantswarm/architect-orb/compare/v9.0.2...v9.1.0
