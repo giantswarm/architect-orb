@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `image-build-and-push`: revert the `no_output_timeout: 20m` raise. Instead, projects should pre-build Go binaries and `COPY mybinary-${TARGETOS}-${TARGETARCH} /my/destination` in their Dockerfile rather than building the Go binary inside Docker.
+
 ## [9.3.1] - 2026-06-10
 
 ### Changed

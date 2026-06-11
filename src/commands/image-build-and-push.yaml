@@ -96,8 +96,13 @@ steps:
   - run:
       name: Build and push multi-arch image to all registries
 
-      # Cross-platform builds may be slower (e.g. `GOARCH=arm64 go build` from another architecture)
-      no_output_timeout: 20m
+      # If you get the error "Too long with no output (exceeded 10m0s): context deadline exceeded", don't consider
+      # bumping `no_output_timeout` here. The default of 10 minutes is already a lot.
+      # The multi-architecture build, for example in Go, is too slow in Docker, so instead of building in Docker,
+      # depend on `architect/go-build` and use something like
+      # `COPY mybinary-${TARGETOS}-${TARGETARCH} /my/destination`.
+      # ---
+      # no_output_timeout: ...
 
       command: |
         # Determine tag value from tag_envvar or fallback
