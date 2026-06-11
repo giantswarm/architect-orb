@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.4.0] - 2026-06-11
+
 ### Added
 
 - `push-to-registries`: new `push` parameter (default `true`). With `push: false` the job becomes a
@@ -1886,7 +1888,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.3.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.4.0...HEAD
+[9.4.0]: https://github.com/giantswarm/architect-orb/compare/v9.3.1...v9.4.0
 [9.3.1]: https://github.com/giantswarm/architect-orb/compare/v9.3.0...v9.3.1
 [9.3.0]: https://github.com/giantswarm/architect-orb/compare/v9.2.0...v9.3.0
 [9.2.0]: https://github.com/giantswarm/architect-orb/compare/v9.1.0...v9.2.0
