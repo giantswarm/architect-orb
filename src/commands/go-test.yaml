@@ -97,7 +97,7 @@ steps:
         CGO_ENABLED: "0"
       command: |
         set +e
-        go list -json -deps ./... \
+        go list -json -m all \
           | nancy sleuth --skip-update-check \
             --quiet --exclude-vulnerability-file ./.nancy-ignore \
             --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
