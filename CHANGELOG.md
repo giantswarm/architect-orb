@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Nancy: Use `go list -json -m all` for producing the dependency list.
+
 ## [9.4.0] - 2026-06-11
 
 ### Added
