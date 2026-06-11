@@ -2,7 +2,6 @@
 
 ## Jobs
 
-- [build-image](job/build-image.md)
 - [go-build](job/go-build.md)
 - [go-test](job/go-test.md)
 - [integration-test](job/integration-test.md)

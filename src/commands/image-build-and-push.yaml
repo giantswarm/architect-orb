@@ -91,10 +91,24 @@ parameters:
     description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
     type: boolean
     default: false
+  push:
+    description: |
+      Push the built image to the configured registries (default). Set to false to only
+      validate that the image builds for every target platform: the result stays in the
+      BuildKit cache (multi-platform images cannot be loaded into the docker image store),
+      no registry credentials are needed, and signing / provenance / SBOM generation are
+      skipped — those only make sense on a published image.
+    type: boolean
+    default: true
 steps:
-  - generate-github-token
+  - when:
+      # The GitHub token is only needed for the repo-visibility check, which only
+      # matters when registries are selected for pushing.
+      condition: <<parameters.push>>
+      steps:
+        - generate-github-token
   - run:
-      name: Build and push multi-arch image to all registries
+      name: Build multi-arch image (pushed to all registries unless push=false)
 
       # Cross-platform builds may be slower (e.g. `GOARCH=arm64 go build` from another architecture)
       no_output_timeout: 20m
@@ -137,98 +151,109 @@ steps:
           fi
         fi
 
-        # If image is forced to be pushed as a public one,
-        # we shouldn't check whether the source is public
-        # if repo is private, push to private only
-        # if repo is public or force-public is set push to public only
-        if [[ "<< parameters.force-public >>" = "true" ]]; then
-          echo -e "'force-public' flag is set, treating the image as public.\n"
-          IMAGE_ACCESS=public
+        if [[ "<<parameters.push>>" == "false" ]]; then
+          # Build-only mode: no registry selection, no credentials, a single local
+          # (discarded) tag. The visibility check and registries data are irrelevant
+          # because nothing leaves the BuildKit cache.
+          echo "push=false: build-only validation, nothing will be pushed."
+          all_tags=("--tag" "<<parameters.image>>:${TAG_VALUE}")
+          push_flags=()
         else
-          GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-          HTTP_STATUS=$(curl -s -o /tmp/.gh_response -w "%{http_code}" \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "${GITHUB_API_URL}")
+          push_flags=(--push)
 
-          if [[ "${HTTP_STATUS}" != "200" ]]; then
-            echo "GitHub API call to ${GITHUB_API_URL} failed (HTTP ${HTTP_STATUS}):"
-            cat /tmp/.gh_response
-            exit 1
-          fi
-
-          REPO_PRIVATE=$(jq -r '.private' < /tmp/.gh_response)
-          if [[ "${REPO_PRIVATE}" != "true" && "${REPO_PRIVATE}" != "false" ]]; then
-            echo "Unexpected GitHub API response (could not parse .private):"
-            cat /tmp/.gh_response
-            exit 1
-          fi
-
-          if [[ "${REPO_PRIVATE}" = "false" ]]; then
-            echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"
+          # If image is forced to be pushed as a public one,
+          # we shouldn't check whether the source is public
+          # if repo is private, push to private only
+          # if repo is public or force-public is set push to public only
+          if [[ "<< parameters.force-public >>" = "true" ]]; then
+            echo -e "'force-public' flag is set, treating the image as public.\n"
             IMAGE_ACCESS=public
           else
-            echo -e "The GitHub repository is not detected as public, treating the image as a private one.\n"
-            IMAGE_ACCESS=private
-          fi
-        fi
+            GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+            HTTP_STATUS=$(curl -s -o /tmp/.gh_response -w "%{http_code}" \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "${GITHUB_API_URL}")
 
-        if ! [[ -f .registries_data ]]; then
-          if [[ "<<parameters.registries-data>>" ]]; then
-            echo "Using registries data from the circle.ci job parameters."
-            REGISTRIES_DATA="<<parameters.registries-data>>"
-          else
-            echo "Using registries data from the circle.ci environment variable settings."
-            if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
-              echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
+            if [[ "${HTTP_STATUS}" != "200" ]]; then
+              echo "GitHub API call to ${GITHUB_API_URL} failed (HTTP ${HTTP_STATUS}):"
+              cat /tmp/.gh_response
               exit 1
             fi
-            REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
-          fi
-          echo "${REGISTRIES_DATA}" > .registries_data
-        fi
 
-        # Collect all tags
-        tags=("<<parameters.image>>:${TAG_VALUE}")
-        if [[ "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
-          tags+=("<<parameters.image>>:latest$tag_suffix")
-        fi
+            REPO_PRIVATE=$(jq -r '.private' < /tmp/.gh_response)
+            if [[ "${REPO_PRIVATE}" != "true" && "${REPO_PRIVATE}" != "false" ]]; then
+              echo "Unexpected GitHub API response (could not parse .private):"
+              cat /tmp/.gh_response
+              exit 1
+            fi
 
-        # Prepare all registry/image:tag combinations. The registries this build is
-        # eligible to push to (visibility match, not skipped by split-china, and — for
-        # dev builds — push_dev=true) are recorded once in /tmp/.eligible_registries.
-        # The cosign and SBOM steps below consume that file instead of re-deriving the
-        # set, so the signed/attested set can never drift from the pushed set (this
-        # duplication used to live in three loops with subtly different filters).
-        : > /tmp/.eligible_registries
-        all_tags=()
-        while IFS=' ' read -r access reg _ _ push_dev; do
-          [[ -z "$reg" || "$reg" =~ ^# ]] && continue
-          [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
-          # Dev-build gate: `gitsemver validate --type dev` is the canonical dev-version
-          # check (anchored to the full X.Y.Z-dev.<branch>.<date>.<time> form). Used
-          # identically here and in the cosign/SBOM steps so they always agree.
-          if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
-            echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
-            continue
+            if [[ "${REPO_PRIVATE}" = "false" ]]; then
+              echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"
+              IMAGE_ACCESS=public
+            else
+              echo -e "The GitHub repository is not detected as public, treating the image as a private one.\n"
+              IMAGE_ACCESS=private
+            fi
           fi
-          if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
-            echo -n ${reg} > /tmp/.docker_image_registry
-            echo "$reg" >> /tmp/.eligible_registries
-            for tag in "${tags[@]}"; do
-              echo -e "\nProcessing image push config for registry $reg."
-              echo "Tag the image for $reg"
-              echo "Preparing tag for $reg: <<parameters.image>>:${tag##*:}"
-              all_tags+=("--tag" "$reg/<<parameters.image>>:${tag##*:}")
-            done
-          else
-            echo "Registry $reg is not configured for $IMAGE_ACCESS images, skipping"
-          fi
-        done < .registries_data
 
-        if [[ ${#all_tags[@]} -eq 0 ]]; then
-          echo "No valid registry/tag combinations found for push. Exiting."
-          exit 1
+          if ! [[ -f .registries_data ]]; then
+            if [[ "<<parameters.registries-data>>" ]]; then
+              echo "Using registries data from the circle.ci job parameters."
+              REGISTRIES_DATA="<<parameters.registries-data>>"
+            else
+              echo "Using registries data from the circle.ci environment variable settings."
+              if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
+                echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
+                exit 1
+              fi
+              REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
+            fi
+            echo "${REGISTRIES_DATA}" > .registries_data
+          fi
+
+          # Collect all tags
+          tags=("<<parameters.image>>:${TAG_VALUE}")
+          if [[ "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
+            tags+=("<<parameters.image>>:latest$tag_suffix")
+          fi
+
+          # Prepare all registry/image:tag combinations. The registries this build is
+          # eligible to push to (visibility match, not skipped by split-china, and — for
+          # dev builds — push_dev=true) are recorded once in /tmp/.eligible_registries.
+          # The cosign and SBOM steps below consume that file instead of re-deriving the
+          # set, so the signed/attested set can never drift from the pushed set (this
+          # duplication used to live in three loops with subtly different filters).
+          : > /tmp/.eligible_registries
+          all_tags=()
+          while IFS=' ' read -r access reg _ _ push_dev; do
+            [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+            [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
+            # Dev-build gate: `gitsemver validate --type dev` is the canonical dev-version
+            # check (anchored to the full X.Y.Z-dev.<branch>.<date>.<time> form). Used
+            # identically here and in the cosign/SBOM steps so they always agree.
+            if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
+              echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
+              continue
+            fi
+            if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
+              echo -n ${reg} > /tmp/.docker_image_registry
+              echo "$reg" >> /tmp/.eligible_registries
+              for tag in "${tags[@]}"; do
+                echo -e "\nProcessing image push config for registry $reg."
+                echo "Tag the image for $reg"
+                echo "Preparing tag for $reg: <<parameters.image>>:${tag##*:}"
+                all_tags+=("--tag" "$reg/<<parameters.image>>:${tag##*:}")
+              done
+            else
+              echo "Registry $reg is not configured for $IMAGE_ACCESS images, skipping"
+            fi
+          done < .registries_data
+
+          if [[ ${#all_tags[@]} -eq 0 ]]; then
+            echo "No valid registry/tag combinations found for push. Exiting."
+            exit 1
+          fi
         fi
 
         # Register QEMU/binfmt handlers in the kernel so buildx can execute
@@ -280,15 +305,21 @@ steps:
         # attestation manifests if the registry doesn't advertise referrer
         # support.
         attest_flags=()
-        case "<<parameters.provenance>>" in
-          "min")   attest_flags+=("--attest" "type=provenance,mode=min") ;;
-          "max")   attest_flags+=("--attest" "type=provenance,mode=max") ;;
-          "false") attest_flags+=("--provenance=false") ;;
-        esac
-        if [[ "<<parameters.sbom>>" == "true" ]]; then
-          attest_flags+=("--attest" "type=sbom")
+        if [[ "<<parameters.push>>" == "false" ]]; then
+          # Attestations only make sense on a published image; in build-only mode
+          # they would be computed and immediately discarded with the cache.
+          attest_flags+=("--provenance=false" "--sbom=false")
         else
-          attest_flags+=("--sbom=false")
+          case "<<parameters.provenance>>" in
+            "min")   attest_flags+=("--attest" "type=provenance,mode=min") ;;
+            "max")   attest_flags+=("--attest" "type=provenance,mode=max") ;;
+            "false") attest_flags+=("--provenance=false") ;;
+          esac
+          if [[ "<<parameters.sbom>>" == "true" ]]; then
+            attest_flags+=("--attest" "type=sbom")
+          else
+            attest_flags+=("--sbom=false")
+          fi
         fi
 
         # Single buildx build/push for all tags/registries.
@@ -306,8 +337,7 @@ steps:
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
             --progress=plain \
-            --push; then
-            echo "Image is pushed to all registries."
+            "${push_flags[@]}"; then
             SUCCESS=true
             break
           fi
@@ -316,9 +346,15 @@ steps:
         done
 
         if [[ "$SUCCESS" == "false" ]]; then
-          echo "Some images couldn't be pushed. Check buildx output above."
+          echo "buildx build failed. Check buildx output above."
           exit 1
         fi
+
+        if [[ "<<parameters.push>>" == "false" ]]; then
+          echo "Image built successfully for all platforms; nothing was pushed (push=false)."
+          exit 0
+        fi
+        echo "Image is pushed to all registries."
 
         # Persist state for the cosign + SBOM steps below.
         echo -n "$IMAGE_ACCESS" > /tmp/.image_access
@@ -334,7 +370,10 @@ steps:
         echo -n "$index_digest" > /tmp/.index_digest
         echo "Index digest: $index_digest"
   - when:
-      condition: <<parameters.sign>>
+      condition:
+        and:
+          - <<parameters.push>>
+          - <<parameters.sign>>
       steps:
         - run:
             name: Stage cosign refs for pushed image
@@ -369,12 +408,16 @@ steps:
   - when:
       # Runs when there's any per-arch SBOM work to do: a CycloneDX SBOM was
       # requested, or SPDX SBOMs are produced (sbom) and signing is on (sign).
+      # Never in build-only mode (push=false) — there is no published image to
+      # attest.
       condition:
-        or:
-          - <<parameters.sbom-cyclonedx>>
-          - and:
-              - <<parameters.sbom>>
-              - <<parameters.sign>>
+        and:
+          - <<parameters.push>>
+          - or:
+              - <<parameters.sbom-cyclonedx>>
+              - and:
+                  - <<parameters.sbom>>
+                  - <<parameters.sign>>
       steps:
         - run:
             name: Generate and stage per-arch SBOMs (sign on public, attach unsigned on private)
