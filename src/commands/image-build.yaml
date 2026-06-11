@@ -1,0 +1,76 @@
+description: |
+  Build a multi-arch container image with `docker buildx` WITHOUT pushing it
+  anywhere. The build result stays in the BuildKit cache — multi-platform
+  images cannot be loaded into the docker image store — so this command exists
+  purely to validate that the Dockerfile builds for every target platform.
+  No registry credentials, signing, or SBOM generation are involved.
+parameters:
+  image:
+    description: Name used for the (discarded) local image tag.
+    type: string
+    default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
+  build-context:
+    type: string
+    default: "."
+  dockerfile:
+    type: string
+    default: "./Dockerfile"
+  platforms:
+    description: |
+      Comma-separated list of platforms for the buildx build. When empty, the list is
+      auto-derived from the `.platforms` file written by `go-build` to the workspace.
+      Falls back to `linux/amd64,linux/arm64` if neither is available.
+    type: string
+    default: ""
+steps:
+  - run:
+      name: "architect/image-build: Build multi-arch image (no push)"
+
+      # Cross-platform builds may be slower (e.g. `GOARCH=arm64 go build` from another architecture)
+      no_output_timeout: 20m
+
+      command: |
+        # Resolve platforms: explicit param > .platforms in workspace > built-in default
+        platforms="<<parameters.platforms>>"
+        if [[ -z "$platforms" && -f .platforms ]]; then
+          platforms=$(paste -sd, .platforms | tr -d '[:space:]')
+        fi
+        if [[ -z "$platforms" ]]; then
+          platforms="linux/amd64,linux/arm64"
+        fi
+        if [[ ! "$platforms" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
+          echo "ERROR: The 'platforms' parameter, if set, must be a comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
+          exit 1
+        fi
+        echo "Building for platforms: $platforms"
+
+        # Register QEMU/binfmt handlers in the kernel so buildx can execute
+        # non-host-arch RUN steps. Required for plain Dockerfiles that don't
+        # gate RUN with --platform=$BUILDPLATFORM. Image is pinned via tag and
+        # bumped by Renovate.
+        # renovate: datasource=docker depName=tonistiigi/binfmt
+        docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
+
+        # Reuse the builder if it already exists; create otherwise. Bootstrap
+        # ensures the buildkit container is up before the first build.
+        if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then
+          docker buildx create --name multiarch-builder --driver docker-container --use
+        else
+          docker buildx use multiarch-builder
+        fi
+        docker buildx inspect --bootstrap
+
+        # No --push and no --load: the result intentionally stays in the
+        # BuildKit cache. Provenance/SBOM attestations are disabled — they only
+        # make sense on a published image and `push-to-registries` produces
+        # them on the release path.
+        docker buildx build \
+          --platform "$platforms" \
+          --tag "<<parameters.image>>:${CIRCLE_SHA1}" \
+          --provenance=false \
+          --sbom=false \
+          -f "<<parameters.dockerfile>>" \
+          "<<parameters.build-context>>" \
+          --progress=plain
+
+        echo "Image built successfully for all platforms (nothing was pushed)."

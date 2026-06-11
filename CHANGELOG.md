@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- New `build-image` job: validates that the container image builds for every target platform with
+  `docker buildx` — including hadolint linting and QEMU emulation for foreign architectures — **without
+  pushing anything**. The build result stays in the BuildKit cache; no registry credentials, signing,
+  provenance, or SBOMs are involved. Intended for the branch/PR path of workflows whose
+  `push-to-registries` is restricted to release tags, so Dockerfile regressions surface on the PR
+  instead of at tag time. Like `push-to-registries`, it attaches the workspace and auto-derives
+  `--platform` from the `.platforms` file written by `go-build`.
+
+### Changed
+
+- The hadolint Dockerfile lint step was extracted from `push-to-registries` into a shared `hadolint`
+  command, now used by both `push-to-registries` and `build-image`. No behaviour change.
+
 ## [9.3.1] - 2026-06-10
 
 ### Changed
