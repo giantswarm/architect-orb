@@ -110,6 +110,16 @@ parameters:
       hadolint uses its built-in defaults.
     type: string
     default: ""
+  push:
+    description: |
+      Push the built image to the configured registries (default). Set to false to only
+      validate that the image builds for every target platform — same Dockerfile lint,
+      same multi-arch buildx build (QEMU, `.platforms` auto-derivation, workspace attach),
+      but the result stays in the BuildKit cache. No registry credentials are used and
+      signing / provenance / SBOM generation are skipped. Useful on the branch/PR path of
+      workflows that push images only on release tags.
+    type: boolean
+    default: true
 steps:
   - checkout
   - setup_remote_docker:
@@ -147,8 +157,12 @@ steps:
                 exit "$rc"
               fi
               echo "hadolint reported findings (mode=warn); continuing build."
-  - image-login-to-registries:
-      registries-data: <<parameters.registries-data>>
+  - when:
+      # Build-only mode needs no registry credentials.
+      condition: <<parameters.push>>
+      steps:
+        - image-login-to-registries:
+            registries-data: <<parameters.registries-data>>
   - run:
       name: Validate platforms parameter
       command: |
@@ -172,8 +186,12 @@ steps:
       sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
       sign: <<parameters.sign>>
       split-china-push: <<parameters.split-china-push>>
+      push: <<parameters.push>>
   - when:
-      condition: <<parameters.split-china-push>>
+      condition:
+        and:
+          - <<parameters.split-china-push>>
+          - <<parameters.push>>
       steps:
         - save_cache:
             key: image-data-{{.Environment.CIRCLE_PIPELINE_ID}}

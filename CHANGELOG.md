@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `push-to-registries`: new `push` parameter (default `true`). With `push: false` the job becomes a
+  build-only validation: same hadolint lint, same multi-arch `docker buildx` build (QEMU emulation,
+  `.platforms` auto-derivation, workspace attach for CI-built binaries), but nothing is pushed — the
+  result stays in the BuildKit cache. No registry credentials are used and signing, provenance, and
+  SBOM generation are skipped. Intended for the branch/PR path of workflows that push images only on
+  release tags, so Dockerfile regressions surface on the PR instead of at tag time.
+
 ## [9.3.1] - 2026-06-10
 
 ### Changed

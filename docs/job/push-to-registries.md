@@ -41,6 +41,31 @@ By default this also emits SLSA provenance, an SPDX SBOM, OCI labels, and — on
         ignore: /.*/
 ```
 
+### Build-only validation on branches (`push: false`)
+
+Validates that the image builds for every target platform without pushing anything: same hadolint lint, same multi-arch buildx build (QEMU emulation, `.platforms` auto-derivation, workspace attach for CI-built binaries), but the result stays in the BuildKit cache. No registry credentials are used; signing, provenance, and SBOM generation are skipped — those only make sense on a published image. Useful on the branch/PR path of workflows that push images only on release tags, so Dockerfile regressions surface on the PR instead of at tag time:
+
+```yaml
+# Branches: validate the image build, push nothing.
+- architect/push-to-registries:
+    name: build-image
+    push: false
+    requires: [go-build]
+    filters:
+      branches:
+        ignore: main
+
+# Tags: build and push for real.
+- architect/push-to-registries:
+    name: push-to-registries-release
+    requires: [go-build]
+    filters:
+      tags:
+        only: /^v.*/
+      branches:
+        ignore: /.*/
+```
+
 ### Custom OCI manifest annotations
 
 ```yaml
