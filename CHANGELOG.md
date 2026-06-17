@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [9.4.2] - 2026-06-17
 
+### Changed
+
+- Update `architect` to v8.2.1.
+
 ## [9.4.1] - 2026-06-11
 
 ### Changed
