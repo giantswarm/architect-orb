@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.4.2] - 2026-06-17
+
+### Changed
+
+- Update `architect` to v8.2.1.
+
 ## [9.4.1] - 2026-06-11
 
 ### Changed
@@ -1894,7 +1900,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.4.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.4.2...HEAD
+[9.4.2]: https://github.com/giantswarm/architect-orb/compare/v9.4.1...v9.4.2
 [9.4.1]: https://github.com/giantswarm/architect-orb/compare/v9.4.0...v9.4.1
 [9.4.0]: https://github.com/giantswarm/architect-orb/compare/v9.3.1...v9.4.0
 [9.3.1]: https://github.com/giantswarm/architect-orb/compare/v9.3.0...v9.3.1
