@@ -3,8 +3,8 @@ parameters:
     description: "Prefix for the chart archive file to execute tests for."
     type: string
     default: ""
-  app-test-suite_container_tag:
-    description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
+  app-test-suite_version:
+    description: "app-test-suite container image tag to run (check gsoci.azurecr.io/giantswarm/app-test-suite)"
     type: string
   additional_app-test-suite_flags:
     description: "Additional app-test-suite flags to use"
@@ -32,5 +32,5 @@ steps:
           -v "$(pwd):/ats/workdir" \
           -v /var/run/docker.sock:/var/run/docker.sock \
           --network host \
-          "gsoci.azurecr.io/giantswarm/app-test-suite:<< parameters.app-test-suite_container_tag >>" \
+          "gsoci.azurecr.io/giantswarm/app-test-suite:<< parameters.app-test-suite_version >>" \
           --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>

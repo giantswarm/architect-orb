@@ -3,10 +3,10 @@ parameters:
     description: "Prefix for the chart archive file to execute tests for."
     type: string
     default: ""
-  app-test-suite_container_tag:
-    description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
+  app-test-suite_version:
+    description: "app-test-suite container image tag to run (check gsoci.azurecr.io/giantswarm/app-test-suite)"
     type: string
-    default: "0.15.0"
+    default: "1.0.0"
   additional_app-test-suite_flags:
     description: "Additional app-test-suite flags to use"
     type: string
@@ -25,5 +25,5 @@ steps:
   - checkout
   - run-tests-with-ats:
       chart_archive_prefix: << parameters.chart_archive_prefix >>
-      app-test-suite_container_tag: << parameters.app-test-suite_container_tag >>
+      app-test-suite_version: << parameters.app-test-suite_version >>
       additional_app-test-suite_flags: << parameters.additional_app-test-suite_flags >>
