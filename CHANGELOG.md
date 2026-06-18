@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** `run-tests-with-ats` runs the `app-test-suite` container directly with `docker run` instead of
+  downloading and executing the `dats.sh` wrapper, which has been removed from the `app-test-suite` repository.
+  The `app-test-suite_container_tag` parameter is renamed to `app-test-suite_version` and now selects the
+  container image tag (previously it selected the `dats.sh` git ref). Its default is `"1.0.0"`.
+  Requires a new major version.
+
 ## [9.4.2] - 2026-06-17
 
 ### Changed
