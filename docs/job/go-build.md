@@ -16,6 +16,7 @@ Builds Go binaries for one or more target architectures in a single job and pers
 - `pre_test_target`: Makefile target to run before tests/lints (optional).
 - `tags`: Additional Go build tags (optional).
 - `test_target`: Makefile target to run for tests (optional).
+- `build_concurrency`: Maximum number of architectures to compile concurrently. `"1"` (default) builds sequentially; `"auto"` uses the number of available CPUs; an integer caps it. See [Build speed and concurrency](#build-speed-and-concurrency).
 - `resource_class`: CircleCI resource class for the job.
 - `clone_depth`: Commits to keep in local git history after checkout (default: `1`, i.e. CircleCI's default shallow clone). Use `0` for full history. Greater than `1` deepens to that many commits. Set to `0` when build steps rely on `git log` / `git rev-list` (e.g. `go generate` embedding the commit SHA of the last change to a template).
 - `sign`: Sign each produced binary with cosign keyless OIDC (default: `true`). Public repos only — private repos are skipped at runtime. See [Signing](#signing).
@@ -71,6 +72,39 @@ ENTRYPOINT ["/myapp"]
 A Dockerfile that does `COPY myapp myapp` (no per-arch selector) will silently ship the same binary for both architectures and the arm64 variant will crash with `exec format error` on arm64 hosts.
 
 See [`push-to-registries`](./push-to-registries.md) for the full Dockerfile contract, including the compile-in-Dockerfile pattern (`--platform=$BUILDPLATFORM` builder).
+
+## Build speed and concurrency
+
+The job persists two caches across runs: the Go module cache (`/go/pkg/mod`,
+keyed on `go.sum`) and the Go build cache (`GOCACHE`, keyed on `go.sum` plus
+branch and revision with prefix fallbacks). The build cache holds compiled
+stdlib and dependency objects for every GOOS/GOARCH, so a warm cache only
+recompiles packages that actually changed. This is the largest single factor in
+build time; the first run after a `go.sum` change is cold and slower.
+
+Cross-compiling each architecture is independent work. `build_concurrency`
+controls how many run at once:
+
+- `"1"` (default): sequential, one `go build` at a time. A single `go build`
+  already saturates both cores of a `medium` executor (2 vCPU), so on `medium`
+  parallelism buys little and risks OOM.
+- `"auto"` or an integer `> 1`: compile that many architectures concurrently.
+  Worth it only with spare CPU and RAM, i.e. a larger `resource_class`.
+
+For three or more architectures, set `resource_class: large` (4 vCPU) or
+`xlarge` (8 vCPU) and `build_concurrency` to roughly the vCPU count. CircleCI
+Docker credit rates scale with the class (medium 10/min, large 20/min, xlarge
+40/min), so a larger class that finishes proportionally faster is often cheaper
+as well as quicker: a 10-minute `medium` build (100 credits) that drops to 4
+minutes on `large` costs 80 credits.
+
+```yaml
+- architect/go-build:
+    binary: myapp
+    architectures: "linux/amd64,linux/arm64,darwin/amd64,darwin/arm64"
+    resource_class: large
+    build_concurrency: "4"
+```
 
 ## Signing
 
