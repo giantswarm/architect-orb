@@ -10,6 +10,4 @@ steps:
   - restore_cache:
       name: Restore Go build cache
       keys:
-        - go-build-cache-v1-{{ checksum "go.sum" }}-{{ .Branch }}-{{ .Revision }}
-        - go-build-cache-v1-{{ checksum "go.sum" }}-{{ .Branch }}-
-        - go-build-cache-v1-{{ checksum "go.sum" }}-
+        - go-build-cache-v1-{{ checksum "go.sum" }}
