@@ -3,9 +3,6 @@ parameters:
     description: "Prefix for the chart archive file to execute tests for."
     type: string
     default: ""
-  app-test-suite_version:
-    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit)"
-    type: string
   app-test-suite_container_tag:
     description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
     type: string
@@ -17,21 +14,23 @@ steps:
   - attach_workspace:
       at: build
   - run:
-      name: "Download dats.sh script"
-      command: |
-        wget -O dats.sh "https://raw.githubusercontent.com/giantswarm/app-test-suite/<< parameters.app-test-suite_version >>/dats.sh"
-        chmod +x dats.sh
-  - run:
-      name: "Execute app-test-suite with dats.sh wrapper"
+      name: "Execute app-test-suite"
       command: |
         set -x
 
-        export DATS_TAG=<< parameters.app-test-suite_container_tag >>
         # find the chart archive file name
         chart_archive=$(find build -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit)
         # move chart archive from build directory to root
         # we're doing this to make sure .ats/main.yaml is picked up
         cp "$chart_archive" "${chart_archive##*/}"
 
-        # execute dats wrapper
-        ./dats.sh --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>
+        # run the app-test-suite container directly
+        docker run --rm \
+          -e USE_UID="$(id -u)" \
+          -e USE_GID="$(id -g)" \
+          -e DOCKER_GID="$(getent group docker | cut -d: -f3)" \
+          -v "$(pwd):/ats/workdir" \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          --network host \
+          "gsoci.azurecr.io/giantswarm/app-test-suite:<< parameters.app-test-suite_container_tag >>" \
+          --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>
