@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Add new error from OSS index/Sonatype API
+
 ## [9.4.2] - 2026-06-17
 
 ### Changed
