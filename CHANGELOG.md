@@ -15,6 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - `go-build`: persist the Go build cache (`GOCACHE`) across runs in addition to the module cache, so warm builds only recompile changed packages.
 
+## [9.4.3] - 2026-06-19
+
+### Fixed
+
+- Add new error from OSS index/Sonatype API
+
 ## [9.4.2] - 2026-06-17
 
 ### Changed
@@ -1908,7 +1914,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.4.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.4.3...HEAD
+[9.4.3]: https://github.com/giantswarm/architect-orb/compare/v9.4.2...v9.4.3
 [9.4.2]: https://github.com/giantswarm/architect-orb/compare/v9.4.1...v9.4.2
 [9.4.1]: https://github.com/giantswarm/architect-orb/compare/v9.4.0...v9.4.1
 [9.4.0]: https://github.com/giantswarm/architect-orb/compare/v9.3.1...v9.4.0
