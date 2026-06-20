@@ -20,6 +20,18 @@ parameters:
       the workspace for downstream auto-discovery in `push-to-registries`.
     type: string
     default: "linux/amd64,linux/arm64"
+  build_concurrency:
+    default: "1"
+    description: |
+      Maximum number of architectures to compile concurrently. "1" builds
+      sequentially (the default). "auto" uses the number of available CPUs.
+      Raise it alongside `resource_class` (roughly to the vCPU count) when
+      building three or more architectures. CircleCI Docker credit rates scale
+      with the resource class (medium 10/min, large 20/min, xlarge 40/min), so a
+      larger class that finishes proportionally faster is often cheaper as well
+      as quicker: a 10-minute `medium` build (100 credits) that drops to 4
+      minutes on `large` costs 80 credits.
+    type: string
   path:
     default: "."
     description: |
@@ -100,6 +112,7 @@ steps:
       tags: << parameters.tags >>
       test_target: << parameters.test_target >>
       architectures: << parameters.architectures >>
+      build_concurrency: << parameters.build_concurrency >>
       sign: << parameters.sign >>
       trimpath: << parameters.trimpath >>
   - persist_to_workspace:

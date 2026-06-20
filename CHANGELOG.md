@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `go-build`: `build_concurrency` parameter to compile multiple architectures concurrently (`"1"` sequential by default, `"auto"`, or an integer).
+
+### Changed
+
+- `go-build`: persist the Go build cache (`GOCACHE`) across runs in addition to the module cache, so warm builds only recompile changed packages.
+
 ## [9.4.3] - 2026-06-19
 
 ### Fixed
