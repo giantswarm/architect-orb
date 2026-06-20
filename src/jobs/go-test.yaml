@@ -30,6 +30,12 @@ parameters:
     description: |
       Executes the requested Makefile target.
     type: string
+  run_nancy:
+    default: true
+    description: |
+      Whether to scan dependencies for known vulnerabilities with nancy. Set to false when the scan
+      runs elsewhere (e.g. a GitHub Actions merge-queue check) to avoid scanning on every build.
+    type: boolean
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 steps:
@@ -40,4 +46,5 @@ steps:
       path: << parameters.path >>
       pre_test_target: <<parameters.pre_test_target>>
       test_target: <<parameters.test_target>>
+      run_nancy: <<parameters.run_nancy>>
   - go-cache-save

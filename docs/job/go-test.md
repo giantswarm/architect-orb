@@ -8,7 +8,7 @@ This job:
 - Checks if filenames contain non-ASCII characters.
 - Runs `go vet` against the codebase.
 - Runs `go test` against the codebase.
-- Runs `nancy` against the codebase to check for known vulnerabilities in code dependencies.
+- Runs `nancy` against the codebase to check for known vulnerabilities in code dependencies. Set `run_nancy: false` to skip this when the scan runs elsewhere (e.g. a GitHub Actions merge-queue check).
 
 Example usage:
 

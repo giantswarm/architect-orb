@@ -14,6 +14,12 @@ parameters:
     description: |
       Executes the requested Makefile target.
     type: string
+  run_nancy:
+    default: true
+    description: |
+      Whether to scan dependencies for known vulnerabilities with nancy. Set to false when the scan
+      runs elsewhere (e.g. a GitHub Actions merge-queue check) to avoid scanning on every build.
+    type: boolean
 steps:
   # We set `CGO_ENABLED=0` because the `architect` Docker image does not have a C compiler. Most cases
   # should work without cgo.
@@ -91,25 +97,28 @@ steps:
               CGO_ENABLED: "0"
             command: |
               go test -ldflags "$(cat .ldflags)" ./...
-  - run:
-      name: Check if dependencies have known security vulnerabilities
-      environment:
-        CGO_ENABLED: "0"
-      command: |
-        set +e
-        go list -json -m all \
-          | nancy sleuth --skip-update-check \
-            --quiet --exclude-vulnerability-file ./.nancy-ignore \
-            --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
-            | tee ./nancy-results.txt ; nancy_result=(${PIPESTATUS[1]})
-        grep -qF \
-            -e 'error accessing OSS Index' \
-            -e 'Error: guide API request failed' \
-            nancy-results.txt; grep_result=$?
-        set -e
-        # If nancy gave us a bad exit code AND grep found an OSS index error in the output, then we don't fail the build.
-        if [[ $nancy_result -ne 0 && $grep_result -eq 0 ]]; then
-          echo Ignoring failed scan due to problem with the external scanner.
-          exit 0
-        fi
-        exit $nancy_result
+  - when:
+      condition: <<parameters.run_nancy>>
+      steps:
+        - run:
+            name: Check if dependencies have known security vulnerabilities
+            environment:
+              CGO_ENABLED: "0"
+            command: |
+              set +e
+              go list -json -m all \
+                | nancy sleuth --skip-update-check \
+                  --quiet --exclude-vulnerability-file ./.nancy-ignore \
+                  --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
+                  | tee ./nancy-results.txt ; nancy_result=(${PIPESTATUS[1]})
+              grep -qF \
+                  -e 'error accessing OSS Index' \
+                  -e 'Error: guide API request failed' \
+                  nancy-results.txt; grep_result=$?
+              set -e
+              # If nancy gave us a bad exit code AND grep found an OSS index error in the output, then we don't fail the build.
+              if [[ $nancy_result -ne 0 && $grep_result -eq 0 ]]; then
+                echo Ignoring failed scan due to problem with the external scanner.
+                exit 0
+              fi
+              exit $nancy_result

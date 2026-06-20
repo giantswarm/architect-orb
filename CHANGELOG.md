@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `go-test`: `run_nancy` parameter (boolean, default `true`). Set it to `false` to skip the nancy vulnerability scan, for repos that run the scan elsewhere (e.g. a GitHub Actions merge-queue check). The default preserves existing behaviour.
+
 ## [9.4.3] - 2026-06-19
 
 ### Fixed
