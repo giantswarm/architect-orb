@@ -202,24 +202,50 @@ steps:
           attest)
             # Large-SBOM dependency: real SBOM predicates routinely exceed public
             # Rekor's 100 KB attestation limit (the live app-operator SPDX is ~465 KB).
-            # This only works because the pinned cosign writes new-format sigstore
-            # bundles (v0.3), whose Rekor `dsse` entries upload hashes rather than the
-            # full payload. If cosign ever defaults back to the legacy `intoto` upload
-            # path (or `--new-bundle-format=false` is added), every large-SBOM build
-            # starts failing here with a Rekor size-limit error.
+            # The common case works because the pinned cosign writes new-format
+            # sigstore bundles (v0.3), whose Rekor `dsse` entries upload hashes rather
+            # than the full payload. But the `cosign attest` request still POSTs the
+            # full DSSE envelope (the base64 SBOM) to Rekor, and a multi-MB predicate
+            # (e.g. the vllm CUDA image SBOM) overruns the public Rekor gateway's
+            # request limit — it returns 502, not a clean size error, so the transient
+            # retry loop above exhausts and the call fails.
+            #
+            # The image signature is already in the transparency log (the `oci` kind
+            # above signs it strictly). Rather than fail the whole release on the
+            # supplementary SBOM attestation, fall back to attesting WITHOUT the tlog
+            # upload (--tlog-upload=false): the signed attestation is still attached as
+            # an OCI referrer on the image, it just gets no public Rekor entry. The
+            # follow-up verify then runs with --insecure-ignore-tlog (the Fulcio cert
+            # is still inside its short validity window this same job). This degrades
+            # gracefully for oversized SBOMs and never blocks a publish; the normal
+            # (sub-limit) path is unchanged and keeps its Rekor entry.
             while IFS=' ' read -r ref type predicate; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
               echo "cosign attest --type $type $ref (predicate: $predicate)"
+              no_tlog=0
               rc=0; cosign_retry "attest $ref ($type)" quiet \
                 cosign attest --yes --type "$type" --predicate "$predicate" "$ref" || rc=$?
               if [[ "$rc" -eq 42 ]]; then
                 echo "Rekor: entry already exists for $ref ($type), skipping attest."
               elif [[ "$rc" -ne 0 ]]; then
-                exit 1
+                # The only failure --tlog-upload=false can rescue is the transparency-log
+                # upload itself; Fulcio/registry/auth errors recur and still exit 1 below.
+                echo "WARNING: attest $ref ($type): transparency-log upload failed after retries (typically an oversized SBOM the public Rekor gateway rejects). Re-attesting without the tlog upload — the SBOM attestation stays signed and attached as an OCI referrer, but has no public Rekor entry." >&2
+                no_tlog=1
+                rc=0; cosign_retry "attest $ref ($type, no-tlog)" quiet \
+                  cosign attest --yes --tlog-upload=false --type "$type" --predicate "$predicate" "$ref" || rc=$?
+                if [[ "$rc" -eq 42 ]]; then
+                  echo "Rekor: entry already exists for $ref ($type), skipping attest."
+                elif [[ "$rc" -ne 0 ]]; then
+                  exit 1
+                fi
               fi
               echo "cosign verify-attestation --type $type $ref"
+              verify_tlog_args=()
+              if [[ "$no_tlog" -eq 1 ]]; then verify_tlog_args+=("--insecure-ignore-tlog"); fi
               cosign_retry "verify-attestation $ref ($type)" show cosign verify-attestation \
                 --type "$type" \
+                "${verify_tlog_args[@]+"${verify_tlog_args[@]}"}" \
                 --certificate-oidc-issuer-regexp "$ISSUER_REGEX" \
                 --certificate-identity-regexp "$IDENTITY_REGEX" \
                 "$ref" || exit 1
