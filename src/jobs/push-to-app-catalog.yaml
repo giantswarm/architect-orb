@@ -104,7 +104,9 @@ steps:
             name: "architect/push-to-app-catalog: Verify chart name"
             command: |
               CHART_NAME="<< parameters.chart >>"
-              [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]] && exit 0 || echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app" ; exit 1
+              if [[ ${CHART_NAME%-app} == ${CIRCLE_PROJECT_REPONAME%-app} ]]; then exit 0; fi
+              echo "chart parameter value should match ${CIRCLE_PROJECT_REPONAME%-app} or ${CIRCLE_PROJECT_REPONAME%-app}-app"
+              exit 1
   - checkout
   - tools-info:
       show_architect_version: false
