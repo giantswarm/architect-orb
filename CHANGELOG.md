@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.5.2] - 2026-06-21
+
 ### Fixed
 
 - `push-to-registries` (cosign SBOM attestation, follow-up to 9.5.1): the 9.5.1 fallback used `cosign attest --tlog-upload=false`, which cosign v3 rejects (`--tlog-upload=false is not supported with --signing-config`), so oversized-SBOM releases (e.g. `vllm`) still failed at the attest step. The fallback now opts out of the transparency log the v3 way: it builds a signing config from the public Sigstore signing config with `rekorTlogUrls`/`rekorTlogConfig` removed (keeping the TSA), then re-attests with `--signing-config <file> --new-bundle-format`. The attestation keeps a trusted RFC3161 timestamp (the TSA timestamps only a hash, so no Rekor body-size limit) and stays attached as an OCI referrer; it just gets no public Rekor entry. The follow-up verify on this degraded path uses `--use-signed-timestamps --insecure-ignore-tlog` and is best-effort (the image signature already carries the strict, tlog-backed guarantee). Image signing and the normal sub-limit attest path are unchanged.
@@ -1926,7 +1928,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.2...HEAD
+[9.5.2]: https://github.com/giantswarm/architect-orb/compare/v9.5.1...v9.5.2
 [9.5.1]: https://github.com/giantswarm/architect-orb/compare/v9.5.0...v9.5.1
 [9.5.0]: https://github.com/giantswarm/architect-orb/compare/v9.4.3...v9.5.0
 [9.4.3]: https://github.com/giantswarm/architect-orb/compare/v9.4.2...v9.4.3
