@@ -241,7 +241,10 @@ steps:
               elif [[ "$rc" -ne 0 ]]; then
                 # The only failure the no-Rekor path can rescue is the transparency-log
                 # upload itself; Fulcio/registry/auth errors recur and still exit 1 below.
-                echo "WARNING: attest $ref ($type): transparency-log upload failed after retries (typically an oversized SBOM the public Rekor gateway rejects). Re-attesting via a signing config without Rekor (TSA timestamp retained) — the SBOM attestation stays signed and attached as an OCI referrer, but has no public Rekor entry." >&2
+                echo "WARNING: attest $ref ($type): transparency-log upload failed after retries." >&2
+                echo "  This is typically an oversized SBOM the public Rekor gateway rejects." >&2
+                echo "  Re-attesting via a signing config without Rekor (TSA timestamp retained):" >&2
+                echo "  the SBOM stays signed and attached as an OCI referrer, with no public Rekor entry." >&2
                 no_tlog=1
                 if [[ ! -s "$no_rekor_signing_config" ]]; then
                   curl -fsSL https://raw.githubusercontent.com/sigstore/root-signing/refs/heads/main/targets/signing_config.v0.2.json \
