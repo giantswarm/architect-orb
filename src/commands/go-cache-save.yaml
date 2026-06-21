@@ -1,5 +1,11 @@
 steps:
   - save_cache:
+      name: Save Go module cache
       key: go-build-go-mod-v1-{{ checksum "go.sum" }}
       paths:
         - "/go/pkg/mod"
+  - save_cache:
+      name: Save Go build cache
+      key: go-build-cache-v1-{{ checksum "go.sum" }}
+      paths:
+        - "/go/cache/go-build"
