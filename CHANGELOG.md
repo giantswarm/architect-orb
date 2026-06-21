@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.5.0] - 2026-06-21
+
 ### Added
 
 - `go-build`: `build_concurrency` parameter to compile multiple architectures concurrently (`"1"` sequential by default, `"auto"`, or an integer).
@@ -1914,7 +1916,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.4.3...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.0...HEAD
+[9.5.0]: https://github.com/giantswarm/architect-orb/compare/v9.4.3...v9.5.0
 [9.4.3]: https://github.com/giantswarm/architect-orb/compare/v9.4.2...v9.4.3
 [9.4.2]: https://github.com/giantswarm/architect-orb/compare/v9.4.1...v9.4.2
 [9.4.1]: https://github.com/giantswarm/architect-orb/compare/v9.4.0...v9.4.1
