@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `push-to-registries` (cosign SBOM attestation): an oversized SBOM predicate (e.g. the `vllm` CUDA image, whose multi-MB SPDX overruns the public Rekor gateway and returns `502`) no longer fails the whole release. When the `cosign attest` transparency-log upload fails persistently after retries, the orb re-attests with `--tlog-upload=false` so the SBOM attestation stays signed and attached as an OCI referrer (without a public Rekor entry) and verifies it with `--insecure-ignore-tlog`. Image signing stays strict and the normal sub-limit path is unchanged (keeps its Rekor entry).
+
 ## [9.5.0] - 2026-06-21
 
 ### Added
