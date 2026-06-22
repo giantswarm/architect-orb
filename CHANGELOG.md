@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.5.3] - 2026-06-22
+
 ### Fixed
 
 - `go-cache-restore`/`go-cache-save`: use `$HOME/.cache/go-build` for `GOCACHE` instead of `/go/cache/go-build`. `/go` only exists in Docker images derived from the official `golang` image; machine executors and other non-Go base images do not have it, causing `mkdir /go: permission denied` at build time.
@@ -1932,7 +1934,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...HEAD
+[9.5.3]: https://github.com/giantswarm/architect-orb/compare/v9.5.2...v9.5.3
 [9.5.2]: https://github.com/giantswarm/architect-orb/compare/v9.5.1...v9.5.2
 [9.5.1]: https://github.com/giantswarm/architect-orb/compare/v9.5.0...v9.5.1
 [9.5.0]: https://github.com/giantswarm/architect-orb/compare/v9.4.3...v9.5.0
