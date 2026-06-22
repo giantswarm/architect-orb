@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `go-cache-restore`/`go-cache-save`: use `$HOME/.cache/go-build` for `GOCACHE` instead of `/go/cache/go-build`. `/go` only exists in Docker images derived from the official `golang` image; machine executors and other non-Go base images do not have it, causing `mkdir /go: permission denied` at build time.
+
 ## [9.5.2] - 2026-06-21
 
 ### Fixed
