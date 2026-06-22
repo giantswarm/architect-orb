@@ -2,7 +2,7 @@ steps:
   - run:
       name: Pin GOCACHE
       command: |
-        echo 'export GOCACHE=/go/cache/go-build' >> "$BASH_ENV"
+        echo "export GOCACHE=${HOME}/.cache/go-build" >> "$BASH_ENV"
   - restore_cache:
       name: Restore Go module cache
       keys:

@@ -8,4 +8,4 @@ steps:
       name: Save Go build cache
       key: go-build-cache-v1-{{ checksum "go.sum" }}
       paths:
-        - "/go/cache/go-build"
+        - "~/.cache/go-build"
