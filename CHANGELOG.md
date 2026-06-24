@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.5.4] - 2026-06-24
+
 ### Fixed
 
 - `go-test` (nancy step): write the scan log to `/tmp/nancy-results.txt` instead of `./nancy-results.txt` in the repo root. The step runs between `make test` and the binary link, so the stray untracked file made Go's buildvcs stamp `vcs.modified=true`, and every release binary built by `go-build` reported `vX.Y.Z+dirty` (observed on `devctl` and `muster`). This also broke consumers that key off the version string — e.g. the `align-files` workflow's `DEVCTL_UNSAFE_FORCE_VERSION` self-update bypass, which compares against a `+dirty`-stripped version and so never matched. The scan log now lives outside the working tree like the other orb scratch files.
@@ -1938,7 +1940,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.4...HEAD
+[9.5.4]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...v9.5.4
 [9.5.3]: https://github.com/giantswarm/architect-orb/compare/v9.5.2...v9.5.3
 [9.5.2]: https://github.com/giantswarm/architect-orb/compare/v9.5.1...v9.5.2
 [9.5.1]: https://github.com/giantswarm/architect-orb/compare/v9.5.0...v9.5.1
