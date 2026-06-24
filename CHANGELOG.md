@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `go-test` (nancy step): write the scan log to `/tmp/nancy-results.txt` instead of `./nancy-results.txt` in the repo root. The step runs between `make test` and the binary link, so the stray untracked file made Go's buildvcs stamp `vcs.modified=true`, and every release binary built by `go-build` reported `vX.Y.Z+dirty` (observed on `devctl` and `muster`). This also broke consumers that key off the version string — e.g. the `align-files` workflow's `DEVCTL_UNSAFE_FORCE_VERSION` self-update bypass, which compares against a `+dirty`-stripped version and so never matched. The scan log now lives outside the working tree like the other orb scratch files.
+
 ## [9.5.3] - 2026-06-22
 
 ### Fixed
