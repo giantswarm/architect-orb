@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.5.5] - 2026-06-24
+
+### Fixed
+
+- `go-cache-restore`/`go-cache-save`: bump the build-cache key from `go-build-cache-v1-` to `go-build-cache-v2-`. 9.5.3 moved `GOCACHE` from `/go/cache/go-build` to `$HOME/.cache/go-build` without changing the key, but CircleCI cache keys are immutable, so `restore_cache` kept matching the archive saved by 9.5.2 builds under the `v1` key (containing the old `/go/cache/go-build` path) and unpacked it where `GOCACHE` no longer points — a permanent cold compile, with `save_cache` a no-op against the existing key so it never self-corrected until the next `go.sum` change. On 6-arch repos with `build_concurrency` enabled this turned every build into parallel cold cross-compiles and OOM-killed memory-heavy builds (observed on `mcp-kubernetes`). The `v2` key opens a fresh namespace matching the new path so warm caching actually takes effect. The module-cache key (`go-build-go-mod-v1-`, path unchanged) is left as-is.
+
+## [9.5.4] - 2026-06-24
+
+### Fixed
+
+- `go-test` (nancy step): write the scan log to `/tmp/nancy-results.txt` instead of `./nancy-results.txt` in the repo root. The step runs between `make test` and the binary link, so the stray untracked file made Go's buildvcs stamp `vcs.modified=true`, and every release binary built by `go-build` reported `vX.Y.Z+dirty` (observed on `devctl` and `muster`). This also broke consumers that key off the version string — e.g. the `align-files` workflow's `DEVCTL_UNSAFE_FORCE_VERSION` self-update bypass, which compares against a `+dirty`-stripped version and so never matched. The scan log now lives outside the working tree like the other orb scratch files.
+
 ## [9.5.3] - 2026-06-22
 
 ### Fixed
@@ -1934,7 +1946,9 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.5...HEAD
+[9.5.5]: https://github.com/giantswarm/architect-orb/compare/v9.5.4...v9.5.5
+[9.5.4]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...v9.5.4
 [9.5.3]: https://github.com/giantswarm/architect-orb/compare/v9.5.2...v9.5.3
 [9.5.2]: https://github.com/giantswarm/architect-orb/compare/v9.5.1...v9.5.2
 [9.5.1]: https://github.com/giantswarm/architect-orb/compare/v9.5.0...v9.5.1
