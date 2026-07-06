@@ -13,7 +13,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   downloading and executing the `dats.sh` wrapper, which has been removed from the `app-test-suite` repository.
   The `app-test-suite_container_tag` parameter is renamed to `app-test-suite_version` and now selects the
   container image tag (previously it selected the `dats.sh` git ref). Its default is `"1.0.0"`.
-  Requires a new major version.
+
+## [9.5.5] - 2026-06-24
+
+### Fixed
+
+- `go-cache-restore`/`go-cache-save`: bump the build-cache key from `go-build-cache-v1-` to `go-build-cache-v2-`. 9.5.3 moved `GOCACHE` from `/go/cache/go-build` to `$HOME/.cache/go-build` without changing the key, but CircleCI cache keys are immutable, so `restore_cache` kept matching the archive saved by 9.5.2 builds under the `v1` key (containing the old `/go/cache/go-build` path) and unpacked it where `GOCACHE` no longer points — a permanent cold compile, with `save_cache` a no-op against the existing key so it never self-corrected until the next `go.sum` change. On 6-arch repos with `build_concurrency` enabled this turned every build into parallel cold cross-compiles and OOM-killed memory-heavy builds (observed on `mcp-kubernetes`). The `v2` key opens a fresh namespace matching the new path so warm caching actually takes effect. The module-cache key (`go-build-go-mod-v1-`, path unchanged) is left as-is.
+
+## [9.5.4] - 2026-06-24
+
+### Fixed
+
+- `go-test` (nancy step): write the scan log to `/tmp/nancy-results.txt` instead of `./nancy-results.txt` in the repo root. The step runs between `make test` and the binary link, so the stray untracked file made Go's buildvcs stamp `vcs.modified=true`, and every release binary built by `go-build` reported `vX.Y.Z+dirty` (observed on `devctl` and `muster`). This also broke consumers that key off the version string — e.g. the `align-files` workflow's `DEVCTL_UNSAFE_FORCE_VERSION` self-update bypass, which compares against a `+dirty`-stripped version and so never matched. The scan log now lives outside the working tree like the other orb scratch files.
+
+## [9.5.3] - 2026-06-22
+
+### Fixed
+
+- `go-cache-restore`/`go-cache-save`: use `$HOME/.cache/go-build` for `GOCACHE` instead of `/go/cache/go-build`. `/go` only exists in Docker images derived from the official `golang` image; machine executors and other non-Go base images do not have it, causing `mkdir /go: permission denied` at build time.
+
+## [9.5.2] - 2026-06-21
+
+### Fixed
+
+- `push-to-registries` (cosign SBOM attestation, follow-up to 9.5.1): the 9.5.1 fallback used `cosign attest --tlog-upload=false`, which cosign v3 rejects (`--tlog-upload=false is not supported with --signing-config`), so oversized-SBOM releases (e.g. `vllm`) still failed at the attest step. The fallback now opts out of the transparency log the v3 way: it builds a signing config from the public Sigstore signing config with `rekorTlogUrls`/`rekorTlogConfig` removed (keeping the TSA), then re-attests with `--signing-config <file> --new-bundle-format`. The attestation keeps a trusted RFC3161 timestamp (the TSA timestamps only a hash, so no Rekor body-size limit) and stays attached as an OCI referrer; it just gets no public Rekor entry. The follow-up verify on this degraded path uses `--use-signed-timestamps --insecure-ignore-tlog` and is best-effort (the image signature already carries the strict, tlog-backed guarantee). Image signing and the normal sub-limit attest path are unchanged.
+
+## [9.5.1] - 2026-06-21
+
+### Fixed
+
+- `push-to-registries` (cosign SBOM attestation): an oversized SBOM predicate (e.g. the `vllm` CUDA image, whose multi-MB SPDX overruns the public Rekor gateway and returns `502`) no longer fails the whole release. When the `cosign attest` transparency-log upload fails persistently after retries, the orb re-attests with `--tlog-upload=false` so the SBOM attestation stays signed and attached as an OCI referrer (without a public Rekor entry) and verifies it with `--insecure-ignore-tlog`. Image signing stays strict and the normal sub-limit path is unchanged (keeps its Rekor entry).
+
+## [9.5.0] - 2026-06-21
+
+### Added
+
+- `go-build`: `build_concurrency` parameter to compile multiple architectures concurrently (`"1"` sequential by default, `"auto"`, or an integer).
+
+### Changed
+
+- `go-build`: persist the Go build cache (`GOCACHE`) across runs in addition to the module cache, so warm builds only recompile changed packages.
+
+## [9.4.3] - 2026-06-19
+
+### Fixed
+
+- Add new error from OSS index/Sonatype API
 
 ## [9.4.2] - 2026-06-17
 
@@ -1908,7 +1953,14 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.4.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.5...HEAD
+[9.5.5]: https://github.com/giantswarm/architect-orb/compare/v9.5.4...v9.5.5
+[9.5.4]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...v9.5.4
+[9.5.3]: https://github.com/giantswarm/architect-orb/compare/v9.5.2...v9.5.3
+[9.5.2]: https://github.com/giantswarm/architect-orb/compare/v9.5.1...v9.5.2
+[9.5.1]: https://github.com/giantswarm/architect-orb/compare/v9.5.0...v9.5.1
+[9.5.0]: https://github.com/giantswarm/architect-orb/compare/v9.4.3...v9.5.0
+[9.4.3]: https://github.com/giantswarm/architect-orb/compare/v9.4.2...v9.4.3
 [9.4.2]: https://github.com/giantswarm/architect-orb/compare/v9.4.1...v9.4.2
 [9.4.1]: https://github.com/giantswarm/architect-orb/compare/v9.4.0...v9.4.1
 [9.4.0]: https://github.com/giantswarm/architect-orb/compare/v9.3.1...v9.4.0

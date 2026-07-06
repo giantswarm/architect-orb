@@ -16,6 +16,7 @@
 #   pre_test_target: Makefile target to run before tests/lints (optional).
 #   tags: Additional Go build tags (optional).
 #   test_target: Makefile target to run for tests (optional).
+#   build_concurrency: Max architectures to compile concurrently ("1" = sequential, "auto" = nproc).
 
 parameters:
   binary:
@@ -44,6 +45,17 @@ parameters:
       Comma-separated list of target architectures to build in this job (e.g.,
       "linux/amd64,linux/arm64"). The resolved list is written to `.platforms` in the
       workspace for downstream auto-discovery in `push-to-registries`.
+    type: string
+  build_concurrency:
+    default: "1"
+    description: |
+      Maximum number of architectures to compile concurrently. "1" builds
+      sequentially (the default; no extra CPU/RAM pressure on a `medium`
+      executor). "auto" uses the number of available CPUs. Raise it alongside
+      `resource_class` (roughly to the vCPU count) when building three or more
+      architectures: each concurrent `go build` can occupy ~1 vCPU and a
+      significant amount of RAM, so an under-provisioned executor will thrash
+      or OOM.
     type: string
   sign:
     description: |
@@ -90,7 +102,13 @@ steps:
           [[ "$goos" == "windows" ]] && output_name="${binary_name}.exe"
 
           echo "Building ${output_name}..."
-          CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build "${build_flags[@]}" -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$output_name" "<<parameters.path>>"
+          # Return the build's real status: relying on the trailing `if` would
+          # mask a failed `go build` (the `if` returns 0 when the condition is
+          # false), and `set -e` is suppressed both for backgrounded builds and
+          # inside `|| fail=1`.
+          if ! CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build "${build_flags[@]}" -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$output_name" "<<parameters.path>>"; then
+            return 1
+          fi
 
           # If linux/amd64, also create/copy to <<parameters.binary>>
           if [[ "$goos" == "linux" && "$goarch" == "amd64" ]]; then
@@ -108,13 +126,46 @@ steps:
           echo "ERROR: 'architectures' must match ^[a-zA-Z0-9/_,-]+\$ (got: $architectures)."
           exit 1
         fi
+        concurrency="<<parameters.build_concurrency>>"
+        [[ "$concurrency" == "auto" ]] && concurrency="$(nproc)"
+        if [[ ! "$concurrency" =~ ^[0-9]+$ ]] || (( concurrency < 1 )); then
+          echo "ERROR: 'build_concurrency' must be a positive integer or \"auto\" (got: $concurrency)."
+          exit 1
+        fi
+
+        # Backgrounded builds do not fail the step on their own; aggregate exit
+        # codes into $fail and propagate at the end. Each PID is waited exactly
+        # once so a fast-failing build's status is never dropped.
+        fail=0
+        pids=()
+        drain() {
+          local pid
+          for pid in "${pids[@]}"; do
+            wait "$pid" || fail=1
+          done
+          pids=()
+        }
+
         # Replace commas with spaces; bash word-splitting handles the rest.
         for raw in ${architectures//,/ }; do
           arch="$(echo "$raw" | tr -d '[:space:]')"
           [[ -z "$arch" ]] && continue
-          build_one "$arch"
+          # .platforms is written here, serially, so parallel builds never
+          # interleave the file.
           echo "$arch" >> .platforms
+          if (( concurrency <= 1 )); then
+            build_one "$arch" || fail=1
+          else
+            build_one "$arch" &
+            pids+=("$!")
+            # Once a wave reaches the concurrency limit, wait for all of it
+            # before launching the next.
+            (( ${#pids[@]} >= concurrency )) && drain
+          fi
         done
+        (( ${#pids[@]} > 0 )) && drain
+
+        exit $fail
   - when:
       condition: <<parameters.sign>>
       steps:
