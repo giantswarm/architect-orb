@@ -36,7 +36,6 @@ workflows:
 - [common parameters](common.md#parameters) shared in all jobs.
 - [chart_archive_prefix](#chart_archive_prefix-optional-string-default)
 - [app-test-suite_version](#app-test-suite_version)
-- [app-test-suite_container_tag](#app-test-suite_container_tag)
 - [additional_app-test-suite_flags](#additional_app-test-suite_flags)
 
 ### chart_archive_prefix (optional string, default="")
@@ -51,21 +50,10 @@ find -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit
 
 ### app-test-suite_version
 
-Version of app-test-suite `dabs.sh` container wrapper to use (git tag or commit).
-Use this parameter if you have some changes lined up in `dats.sh` which is not released yet.
-For git tags, the same container tag of app-test-suite will be used.
+app-test-suite container image tag to run (check gsoci.azurecr.io/giantswarm/app-test-suite).
+The job runs this container image directly with `docker run`.
 
-**Attention:** For git commits or branches, `latest` will be used as container tag.
-This can be circumvented by also setting the parameter [`app-test-suite_container_tag`](#app-test-suite_container_tag).
-
-(Default: "v0.10.6")
-
-### app-test-suite_container_tag
-
-Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite).
-This parameter allows to specify the used container tag of app-test-suite.
-
-(Default: "0.10.6")
+(Default: "1.0.0")
 
 ### additional_app-test-suite_flags
 
