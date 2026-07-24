@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Bump the `app-build-suite` executor image to `2.2.0-circleci` (was `2.1.3-circleci`), picking up abs v2.2.0: package-time Artifact Hub metadata injection and the `HelmTemplateValidator` build step ([giantswarm/roadmap#3940](https://github.com/giantswarm/roadmap/issues/3940)).
+
 ## [9.5.5] - 2026-06-24
 
 ### Fixed
