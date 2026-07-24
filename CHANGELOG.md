@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.6.0] - 2026-07-24
+
 ### Changed
 
 - Bump the `app-build-suite` executor image to `2.2.0-circleci` (was `2.1.3-circleci`), picking up abs v2.2.0: package-time Artifact Hub metadata injection and the `HelmTemplateValidator` build step ([giantswarm/roadmap#3940](https://github.com/giantswarm/roadmap/issues/3940)).
@@ -1950,7 +1952,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.5...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.6.0...HEAD
+[9.6.0]: https://github.com/giantswarm/architect-orb/compare/v9.5.5...v9.6.0
 [9.5.5]: https://github.com/giantswarm/architect-orb/compare/v9.5.4...v9.5.5
 [9.5.4]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...v9.5.4
 [9.5.3]: https://github.com/giantswarm/architect-orb/compare/v9.5.2...v9.5.3
