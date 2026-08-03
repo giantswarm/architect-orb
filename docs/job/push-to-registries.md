@@ -85,6 +85,35 @@ When the job runs, `--platform` is resolved in this order:
 2. `.platforms` file in the workspace (written by `go-build`).
 3. Built-in default `linux/amd64,linux/arm64`.
 
+Since v9.7, QEMU/binfmt handlers are registered only when at least one resolved platform differs from the build host. A single-platform build matching the host (`platforms: linux/amd64`) skips the privileged `tonistiigi/binfmt` pull entirely — nothing can be emulated, so it bought nothing. See [Multi-arch Dockerfiles](../multi-arch-dockerfiles.md).
+
+## Build cache
+
+Each run of this job gets a fresh `setup_remote_docker` VM and creates a fresh `docker-container` buildx builder, so by default (`cache: off`) **the entire Dockerfile is re-executed from scratch on every build**. The `RUN --mount=type=cache` mounts in your Dockerfile do not help here — they live in the builder's state, which is destroyed with the VM. They only speed up local rebuilds.
+
+`cache: registry` persists BuildKit's layer cache as an OCI artifact in the registry the image is pushed to, so the next build imports it instead of rebuilding:
+
+```yaml
+- architect/push-to-registries:
+    image: giantswarm/myapp
+    dockerfile: packages/backend/Dockerfile
+    platforms: linux/amd64
+    cache: registry
+```
+
+By default the cache ref is `<first-eligible-registry>/<image>:buildcache<tag-suffix>` — one shared cache per image, written by every build of the repo. Override with `cache-ref:` to scope it differently (e.g. per branch). The ref holds a cache manifest and blobs, not a runnable image, so it will show up as an extra tag in the repository listing.
+
+This pays off most for Dockerfiles that do expensive work in `RUN` steps whose inputs rarely change — `apt-get install`, `pip install`, `npm`/`yarn install`. Order the Dockerfile so those layers sit above anything that changes every commit, or the cache will miss.
+
+Notes and limits:
+
+- **Requires `push: true`.** The cache export reuses the registry credentials the push path sets up; with `push: false` the parameter is ignored and the build logs why.
+- **Cache mounts are not exported.** Only layers are. A layer cache _hit_ skips the `RUN` entirely, so its `--mount=type=cache` is irrelevant. A _miss_ re-runs the step against a cold mount — so a lockfile bump costs full price, as before.
+- **`cache-mode` defaults to `max`**, which exports intermediate layers too. `min` exports only layers present in the final image and is rarely what you want here, since the expensive `RUN` steps are usually intermediate.
+- **Export failures never fail the build.** `--cache-to` is set with `ignore-error=true`; the image is already pushed by the time the cache is written, and the job's retry loop must not rebuild four times over a cache-write problem.
+- **The cache is shared and mutable.** Concurrent builds race on the tag (last write wins, which only costs a later cache miss), and any build with push access can write it. Use `cache-ref` to isolate if that matters for your repo.
+- ACR (`gsoci`/`gsociprivate`) rejects the exporter's default manifest-list format, so the cache is pushed with `image-manifest=true,oci-mediatypes=true`.
+
 ## Dockerfile requirements
 
 The Dockerfile must select the right binary per platform. Two patterns work; pick whichever fits:

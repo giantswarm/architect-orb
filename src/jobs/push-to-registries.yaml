@@ -120,6 +120,31 @@ parameters:
       workflows that push images only on release tags.
     type: boolean
     default: true
+  cache:
+    description: |
+      BuildKit layer-cache backend. "off" (default) keeps the pre-9.7 behaviour: the
+      builder is created fresh on a fresh remote-docker VM every job, so the whole
+      Dockerfile is re-executed from scratch on every build. "registry" imports and
+      exports the layer cache as an OCI artifact in the registry the image is pushed
+      to. Requires `push: true`. `RUN --mount=type=cache` mounts are not part of the
+      exported cache — only layers are.
+    type: enum
+    enum: ["off", "registry"]
+    default: "off"
+  cache-ref:
+    description: |
+      Explicit OCI ref for the `cache: registry` artifact. Defaults to
+      `<first-eligible-registry>/<image>:buildcache<tag-suffix>`.
+    type: string
+    default: ""
+  cache-mode:
+    description: |
+      `mode` of the `--cache-to` exporter. "max" (default) exports intermediate layers
+      too, which is what makes heavy-`RUN` Dockerfiles cache well; "min" exports only
+      layers in the final image.
+    type: enum
+    enum: ["min", "max"]
+    default: "max"
 steps:
   - checkout
   - setup_remote_docker:
@@ -187,6 +212,9 @@ steps:
       sign: <<parameters.sign>>
       split-china-push: <<parameters.split-china-push>>
       push: <<parameters.push>>
+      cache: <<parameters.cache>>
+      cache-ref: <<parameters.cache-ref>>
+      cache-mode: <<parameters.cache-mode>>
   - when:
       condition:
         and:

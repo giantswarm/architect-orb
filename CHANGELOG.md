@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `push-to-registries`: new `cache` parameter to persist BuildKit's layer cache across jobs. Every run gets a fresh `setup_remote_docker` VM and creates a fresh `docker-container` builder, so until now the whole Dockerfile was re-executed from scratch on every build — and a Dockerfile's own `RUN --mount=type=cache` mounts could not help, because they live in the builder state that is destroyed with the VM. `cache: registry` adds `--cache-from`/`--cache-to type=registry`, storing the layer cache as an OCI artifact at `<first-eligible-registry>/<image>:buildcache<tag-suffix>` (override with `cache-ref`). Defaults to `off`, so existing consumers are unaffected. `cache-mode` (default `max`) sets the exporter's `mode`; `max` is what makes intermediate `RUN` layers — `apt-get install`, `pip install`, `yarn install` — cache at all. Requires `push: true` for the registry credentials. The exporter is configured `image-manifest=true,oci-mediatypes=true` (ACR rejects the default manifest-list cache format) and `ignore-error=true`, so a failed cache _write_ can never fail a build whose image is already pushed, nor trigger the surrounding four-attempt retry loop.
+
+### Changed
+
+- `push-to-registries`: register QEMU/binfmt handlers only when at least one target platform differs from the build host. Single-arch repos (`platforms: linux/amd64`) were paying a privileged `tonistiigi/binfmt --install all` image pull on every build for handlers that could never be used, since no `RUN` step is emulated when the target matches the host. Multi-arch builds are unchanged, and if the host platform cannot be determined the handlers are registered as before rather than risking an un-emulated cross build.
+
 ## [9.6.0] - 2026-07-24
 
 ### Changed

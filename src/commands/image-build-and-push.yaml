@@ -100,6 +100,39 @@ parameters:
       skipped — those only make sense on a published image.
     type: boolean
     default: true
+  cache:
+    description: |
+      BuildKit layer-cache backend for the buildx build.
+      - "off" (default): no cache import/export. Every job gets a fresh
+        `setup_remote_docker` VM and a fresh `docker-container` builder, so the whole
+        Dockerfile is re-executed from scratch on every build.
+      - "registry": import and export the layer cache as an OCI artifact in the same
+        registry the image is pushed to (`--cache-from` / `--cache-to type=registry`).
+        Requires `push: true`, because the export reuses the registry credentials the
+        push path already set up.
+      Note: `RUN --mount=type=cache` mounts are NOT part of the exported cache — only
+      layers are. A layer cache *hit* skips the `RUN` entirely (so its cache mount is
+      irrelevant); a *miss* re-runs it against a cold mount.
+    type: enum
+    enum: ["off", "registry"]
+    default: "off"
+  cache-ref:
+    description: |
+      Explicit OCI ref for the `cache: registry` cache artifact. When empty (default),
+      it is derived as `<first-eligible-registry>/<image>:buildcache<tag-suffix>` — one
+      shared cache per image, written by every build of the repo. Set this to scope the
+      cache differently (e.g. per branch). The ref holds a cache manifest and blobs, not
+      a runnable image.
+    type: string
+    default: ""
+  cache-mode:
+    description: |
+      `mode` attribute of the `--cache-to` exporter. "max" (default) exports every
+      intermediate layer, which is what makes multi-stage and heavy-`RUN` Dockerfiles
+      cache well. "min" exports only the layers present in the final image.
+    type: enum
+    enum: ["min", "max"]
+    default: "max"
 steps:
   - when:
       # The GitHub token is only needed for the repo-visibility check, which only
@@ -258,10 +291,36 @@ steps:
 
         # Register QEMU/binfmt handlers in the kernel so buildx can execute
         # non-host-arch RUN steps. Required for plain Dockerfiles that don't
-        # gate RUN with --platform=$BUILDPLATFORM. Image is pinned via tag and
-        # bumped by Renovate.
-        # renovate: datasource=docker depName=tonistiigi/binfmt
-        docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
+        # gate RUN with --platform=$BUILDPLATFORM.
+        #
+        # Skipped when every target platform already matches the build host: no RUN
+        # step can be emulated then, so registering binfmt only costs a privileged
+        # image pull. Single-arch repos (`platforms: linux/amd64`) paid this on every
+        # build. If the host platform can't be determined we register anyway, keeping
+        # the pre-9.7 behaviour rather than risking an un-emulated cross build.
+        host_platform="$(docker version --format '{{.Server.Os}}/{{.Server.Arch}}' 2>/dev/null || true)"
+        needs_emulation=false
+        if [[ -z "$host_platform" ]]; then
+          echo "Could not determine the build host platform; registering QEMU/binfmt to be safe."
+          needs_emulation=true
+        else
+          # Comma-to-space word splitting rather than a bash herestring: the herestring
+          # operator is also CircleCI's parameter-substitution token and cannot appear
+          # unescaped in an orb command. Platform strings never contain spaces or globs.
+          for target_platform in ${platforms//,/ }; do
+            if [[ "$target_platform" != "$host_platform" ]]; then
+              needs_emulation=true
+            fi
+          done
+        fi
+
+        if [[ "$needs_emulation" == "true" ]]; then
+          # Image is pinned via tag and bumped by Renovate.
+          # renovate: datasource=docker depName=tonistiigi/binfmt
+          docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
+        else
+          echo "All target platforms match the build host ($host_platform); skipping QEMU/binfmt registration."
+        fi
 
         # Reuse the builder if it already exists; create otherwise. Bootstrap
         # ensures the buildkit container is up before the first build.
@@ -322,6 +381,31 @@ steps:
           fi
         fi
 
+        # BuildKit layer cache. The builder is created fresh on a fresh remote-docker
+        # VM every job, so without an external cache backend the entire Dockerfile is
+        # re-executed every build. The registry exporter persists the layer cache as an
+        # OCI artifact alongside the image.
+        cache_flags=()
+        if [[ "<<parameters.cache>>" == "registry" ]]; then
+          if [[ "<<parameters.push>>" != "true" ]]; then
+            echo "cache=registry needs push=true for registry credentials; continuing without a layer cache."
+          else
+            cache_ref="<<parameters.cache-ref>>"
+            if [[ -z "$cache_ref" ]]; then
+              cache_ref="$(head -n1 /tmp/.eligible_registries)/<<parameters.image>>:buildcache${tag_suffix}"
+            fi
+            echo "Using registry layer cache: $cache_ref (mode=<<parameters.cache-mode>>)"
+            # image-manifest + oci-mediatypes: ACR (gsoci/gsociprivate) rejects the
+            # exporter's default manifest-list format, so the cache must be pushed as a
+            # plain OCI image manifest.
+            # ignore-error: a failed *export* must never fail the build — the image
+            # itself is already pushed by then, and the outer retry loop would otherwise
+            # rebuild four times over a cache write problem.
+            cache_flags+=("--cache-from" "type=registry,ref=${cache_ref}")
+            cache_flags+=("--cache-to" "type=registry,ref=${cache_ref},mode=<<parameters.cache-mode>>,image-manifest=true,oci-mediatypes=true,ignore-error=true")
+          fi
+        fi
+
         # Single buildx build/push for all tags/registries.
         # --metadata-file captures the manifest index digest for downstream cosign signing.
         SUCCESS=false
@@ -333,6 +417,7 @@ steps:
             "${annotation_flags[@]}" \
             "${oci_label_flags[@]}" \
             "${attest_flags[@]}" \
+            "${cache_flags[@]}" \
             --metadata-file=/tmp/.buildx_metadata.json \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
