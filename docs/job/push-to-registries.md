@@ -85,6 +85,90 @@ When the job runs, `--platform` is resolved in this order:
 2. `.platforms` file in the workspace (written by `go-build`).
 3. Built-in default `linux/amd64,linux/arm64`.
 
+QEMU/binfmt handlers are registered only when at least one resolved platform differs from the build host. A single-platform build matching the host (`platforms: linux/amd64`) skips the privileged `tonistiigi/binfmt` pull entirely — nothing can be emulated, so it bought nothing. See [Multi-arch Dockerfiles](../multi-arch-dockerfiles.md).
+
+## Build cache
+
+Each run of this job gets a fresh `setup_remote_docker` VM and creates a fresh `docker-container` buildx builder, so by default (`cache: off`) **the entire Dockerfile is re-executed from scratch on every build**. The `RUN --mount=type=cache` mounts in your Dockerfile do not help here — they live in the builder's state, which is destroyed with the VM. They only speed up local rebuilds.
+
+`cache: registry` persists BuildKit's layer cache as an OCI artifact in the registry the image is pushed to, so the next build imports it instead of rebuilding:
+
+```yaml
+- architect/push-to-registries:
+    name: push-to-registries # branch builds
+    image: giantswarm/myapp
+    dockerfile: packages/backend/Dockerfile
+    platforms: linux/amd64
+    cache: registry
+    filters:
+      branches:
+        ignore: main
+```
+
+**Recommended: enable it on the branch/PR job only, and leave release-tag jobs on `cache: off`.** Branch builds are the frequent ones, so they capture nearly all the time saving, while release artifacts — the ones that get cosign-signed and carry a provenance attestation — are then never assembled from a shared mutable cache. See [Trust model](#trust-model) below.
+
+This pays off most for Dockerfiles that do expensive work in `RUN` steps whose inputs rarely change — `apt-get install`, `pip install`, `npm`/`yarn install`. Order the Dockerfile so those layers sit above anything that changes every commit, or the cache will miss.
+
+### Pin your base image, or the cache goes cold on its own
+
+**A floating base tag defeats this entirely whenever upstream republishes it.** `FROM node:24-trixie-slim` resolves to whatever digest that tag points at today; when the publisher pushes a new one (Debian security updates land in `-slim` tags often — sometimes weekly), the `FROM` layer changes and **every layer beneath it is invalidated**. The build is fully cold, and the next export rewrites the whole cache.
+
+This was observed while validating the feature: two builds of an unchanged `yarn.lock` three days apart, where the second was fully cold purely because `node:24-trixie-slim` had been republished that morning.
+
+If you want consistent hits, pin by digest and let Renovate move it:
+
+```dockerfile
+FROM node:24-trixie-slim@sha256:0711b541c1c33a8a53...
+```
+
+Without a pin, treat the speedup as "fast between base-image republishes" rather than "fast every build", and discount the benefit accordingly when weighing it against the storage and egress cost.
+
+### Prerequisite: untagged-manifest retention
+
+**Enable untagged-manifest retention on the target registry before opting a repo in.** Every export PUTs a new cache manifest and moves the `:buildcache` tag; the previous manifest becomes untagged rather than deleted, and ACR does not garbage-collect untagged manifests by default. Referenced blobs dedupe, so the growth per build is the changed-layer delta — but the layers that change are usually the big ones, and it accrues on every build of every opted-in repo.
+
+```bash
+az acr config retention update --registry gsoci --type UntaggedManifests --days 7 --status enabled
+```
+
+(Retention is a Premium feature and is configured per registry; a scheduled purge task works too.) The `:buildcache` tag itself is also permanent — it is not cleaned up if a repo later stops using `cache: registry` or renames its image, so remove it by hand in that case.
+
+### Cache ref derivation
+
+The default ref is `<registry>/<image>:buildcache<tag-suffix>`. `<registry>` is chosen to be identical for every build of a repo, regardless of build type:
+
+1. Entries whose visibility does not match the image are skipped. Visibility _is_ part of the key, so a private image's layers are never cached in a public registry. (A repo that flips visibility gets a cold cache once and orphans the old ref.)
+2. The China mirror (`*.cr.aliyuncs.com`) is skipped **unconditionally** — not gated on `split-china-push` the way the image push is, because that parameter varies by build type. A build cache is a throwaway optimisation artifact; it must never cross the Pacific on the build's critical path.
+3. `gsoci.azurecr.io` / `gsociprivate.azurecr.io` are preferred by name, so the ref does not depend on the ordering of `REGISTRIES_DATA_BASE64`. Otherwise the first remaining match wins.
+
+The `push_dev` filter is deliberately _not_ applied. It is the filter that varies between dev/branch and release builds, so keying off the fully filtered eligible-registry list would resolve to different registries per build type — forking the cache in two, leaving release builds unable to reuse what the more frequent branch builds paid to write, and accumulating both refs forever.
+
+If no registry survives, the build proceeds without a cache and logs why.
+
+`cache-ref` overrides the derivation entirely — use it to scope per branch, or to point at a dedicated cache repository.
+
+### Trust model
+
+**The layer cache sits inside the trust boundary of every repo that shares the push credentials.** `image-login-to-registries` logs in with shared context credentials, so any CI job in the org that can push images can also write any other image's `:buildcache`. `--cache-from` then imports that content into builds that get cosign-signed and carry `--attest type=provenance`.
+
+The capability is not new — those credentials could already push image tags. What is new is the _stealth_: cache content can change without any tag anyone inspects moving, and the resulting provenance attestation becomes a false statement about how the image was built.
+
+This is why the recommendation above is to keep `cache: off` on release-tag jobs. If you do enable it on a signed release path, treat a poisoned cache as a realistic threat rather than a nuisance, and consider a dedicated `cache-ref` in a repository with narrower write access.
+
+### Other notes and limits
+
+- **Requires `push: true`.** The cache export reuses the registry credentials the push path sets up; with `push: false` the parameter is ignored and the build logs why.
+- **Cache mounts are not exported.** Only layers are. A layer cache _hit_ skips the `RUN` entirely, so its `--mount=type=cache` is irrelevant. A _miss_ re-runs the step against a cold mount — so a lockfile bump costs full price, as before.
+- **`cache-mode` defaults to `max`**, which exports intermediate layers too. `min` exports only layers present in the final image and is rarely what you want here, since the expensive `RUN` steps are usually intermediate.
+- **Export failures never fail the build**, but they are reported. `--cache-to` carries `ignore-error=true`, because the image is already pushed by the time the cache is written and the job's retry loop must not rebuild four times over a cache-write problem. Since that would otherwise make a permanently broken cache invisible — and the exporter retries with escalating backoff, so it costs time as well — the job greps the build output for a failed export and emits a loud non-fatal `WARNING`.
+- **Concurrent builds race on the tag.** Last write wins. That is usually just a later cache miss, but it is not always benign: a build using `cache-mode: min`, or one whose Dockerfile dropped a stage, replaces the richer cache wholesale and orphans the loser's blobs.
+- **Egress is not free.** Warm builds pull cache blobs from the registry that previously were produced locally. The wall-clock win on `giantswarm/backstage` was large (see below), but if you are opting in many repos, account for standing storage plus per-build egress, not just CI minutes.
+- ACR (`gsoci`/`gsociprivate`) rejects the exporter's default manifest-list format, so the cache is pushed with `image-manifest=true,oci-mediatypes=true`.
+
+### Measured effect
+
+On `giantswarm/backstage` (single-arch amd64, Node monorepo with `apt` + `pip` + `yarn workspaces focus` in the Dockerfile): `push-to-registries` went from ~5m32s uncached to **2m03s** warm, with a 554 MB cache artifact. Repos whose Dockerfile is a single `COPY` of a prebuilt binary have nothing to gain and should stay on `cache: off`.
+
 ## Dockerfile requirements
 
 The Dockerfile must select the right binary per platform. Two patterns work; pick whichever fits:
@@ -93,10 +177,10 @@ The Dockerfile must select the right binary per platform. Two patterns work; pic
 
 `go-build` produces `myapp-linux-amd64` and `myapp-linux-arm64` in the workspace; the Dockerfile selects on `TARGETARCH`:
 
-> Since v8.2, the job registers QEMU/binfmt handlers before building, so
-> a plain Dockerfile (`RUN apk add …`, `RUN go build …`) also produces a
-> working multi-arch image — but its `RUN` steps run **emulated and 5–20×
-> slower** for non-host architectures. See
+> For a cross-architecture build the job registers QEMU/binfmt handlers
+> beforehand, so a plain Dockerfile (`RUN apk add …`, `RUN go build …`) also
+> produces a working multi-arch image — but its `RUN` steps run **emulated
+> and 5–20× slower** for non-host architectures. See
 > [Multi-arch Dockerfiles: avoiding QEMU emulation](../multi-arch-dockerfiles.md)
 > for the three Dockerfile patterns and how to migrate.
 
