@@ -7,7 +7,7 @@ first, so any Dockerfile will produce a working multi-arch image — but
 Dockerfiles that don't follow one of the patterns below execute their
 `RUN` steps under emulation, which is **5–20× slower** than native.
 
-Since **v9.7**, single-platform builds that match the build host (e.g.
+Single-platform builds that match the build host (e.g.
 `platforms: linux/amd64`) skip binfmt registration entirely — nothing can
 be emulated, so the privileged image pull bought nothing. If your build is
 single-arch, **this document does not apply to you**: emulation is not your
@@ -51,7 +51,6 @@ USER 65532:65532
 ENTRYPOINT ["/myapp"]
 ```
 
-
 CircleCI side:
 
 ```yaml
@@ -68,7 +67,7 @@ auto-derives `--platform` from it.
 
 ## Pattern B — cross-compile inside the Dockerfile with `$BUILDPLATFORM`
 
-Use this when the binary is *not* pre-built outside Docker (e.g. you build
+Use this when the binary is _not_ pre-built outside Docker (e.g. you build
 inside the image from sources). The build stage is pinned to the host
 platform; the Go toolchain cross-compiles via `GOOS`/`GOARCH`. No
 emulation.

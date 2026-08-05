@@ -392,17 +392,44 @@ steps:
           else
             cache_ref="<<parameters.cache-ref>>"
             if [[ -z "$cache_ref" ]]; then
-              cache_ref="$(head -n1 /tmp/.eligible_registries)/<<parameters.image>>:buildcache${tag_suffix}"
+              # The cache ref must resolve identically for every build of a repo, so it
+              # is derived from the visibility filter ONLY.
+              #
+              # Deliberately NOT from /tmp/.eligible_registries: that list also has the
+              # `push_dev` and split-china filters applied, which differ by build type.
+              # If the first visibility-eligible registry has push_dev=false, dev/branch
+              # builds would resolve to registry #2 and release builds to registry #1 —
+              # forking the cache in two, so release builds never reuse what the far more
+              # frequent branch builds paid to write, and both refs accumulate forever.
+              #
+              # Visibility is intentionally still part of the key: a private image's
+              # layers must not be cached in a public registry.
+              cache_registry=""
+              while IFS=' ' read -r access reg _ _ _; do
+                [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+                if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
+                  cache_registry="$reg"
+                  break
+                fi
+              done < .registries_data
+              if [[ -n "$cache_registry" ]]; then
+                cache_ref="${cache_registry}/<<parameters.image>>:buildcache${tag_suffix}"
+              else
+                echo "No $IMAGE_ACCESS registry found to host the layer cache; continuing without one."
+              fi
             fi
-            echo "Using registry layer cache: $cache_ref (mode=<<parameters.cache-mode>>)"
-            # image-manifest + oci-mediatypes: ACR (gsoci/gsociprivate) rejects the
-            # exporter's default manifest-list format, so the cache must be pushed as a
-            # plain OCI image manifest.
-            # ignore-error: a failed *export* must never fail the build — the image
-            # itself is already pushed by then, and the outer retry loop would otherwise
-            # rebuild four times over a cache write problem.
-            cache_flags+=("--cache-from" "type=registry,ref=${cache_ref}")
-            cache_flags+=("--cache-to" "type=registry,ref=${cache_ref},mode=<<parameters.cache-mode>>,image-manifest=true,oci-mediatypes=true,ignore-error=true")
+            if [[ -n "$cache_ref" ]]; then
+              echo "Using registry layer cache: $cache_ref (mode=<<parameters.cache-mode>>)"
+              # image-manifest + oci-mediatypes: ACR (gsoci/gsociprivate) rejects the
+              # exporter's default manifest-list format, so the cache must be pushed as a
+              # plain OCI image manifest.
+              # ignore-error: a failed *export* must never fail the build — the image
+              # itself is already pushed by then, and the outer retry loop would otherwise
+              # rebuild four times over a cache write problem. The trade-off is that the
+              # failure is invisible, so it is detected and warned about after the build.
+              cache_flags+=("--cache-from" "type=registry,ref=${cache_ref}")
+              cache_flags+=("--cache-to" "type=registry,ref=${cache_ref},mode=<<parameters.cache-mode>>,image-manifest=true,oci-mediatypes=true,ignore-error=true")
+            fi
           fi
         fi
 
@@ -422,7 +449,7 @@ steps:
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
             --progress=plain \
-            "${push_flags[@]}"; then
+            "${push_flags[@]}" 2>&1 | tee /tmp/.buildx_output; then
             SUCCESS=true
             break
           fi
@@ -433,6 +460,25 @@ steps:
         if [[ "$SUCCESS" == "false" ]]; then
           echo "buildx build failed. Check buildx output above."
           exit 1
+        fi
+
+        # `ignore-error=true` on the cache exporter means a rejected export (registry
+        # policy, quota, an auth scope that covers image push but not the cache repo)
+        # leaves the build green while every later build silently reverts to full cost.
+        # Worse, the exporter retries with escalating backoff before giving up, so a
+        # persistently failing cache registry adds minutes per build and reports nothing.
+        #
+        # buildx prints a fenced `> exporting cache to registry:` section only when that
+        # vertex failed; a successful export never emits it. Verified against both a
+        # rejected export (ACR `insufficient_scope`) and a successful one.
+        if [[ ${#cache_flags[@]} -gt 0 ]] && grep -qE '^[[:space:]]*> exporting cache to registry:' /tmp/.buildx_output; then
+          echo ""
+          echo "WARNING: the image was pushed, but the BuildKit cache export FAILED."
+          echo "WARNING: ignore-error=true kept this build green. Every subsequent build"
+          echo "WARNING: will pay the full uncached cost until this is fixed."
+          echo "WARNING: cache ref: ${cache_ref:-<unset>}"
+          echo "WARNING: see the 'exporting cache to registry' section in the build output."
+          echo ""
         fi
 
         if [[ "<<parameters.push>>" == "false" ]]; then
@@ -682,5 +728,5 @@ steps:
               /tmp/.index.json /tmp/.attest_manifest.json \
               /tmp/.index_digest /tmp/.eligible_registries \
               /tmp/.image_access /tmp/.buildx_metadata.json \
-              /tmp/.gh_response \
+              /tmp/.gh_response /tmp/.buildx_output \
               /tmp/sbom.*.spdx.json /tmp/sbom.*.cdx.json 2>/dev/null || true

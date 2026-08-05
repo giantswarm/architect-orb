@@ -195,6 +195,16 @@ steps:
           echo "ERROR: The 'platforms' parameter, if set, must be a comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
           exit 1
         fi
+  - run:
+      name: Validate cache-ref parameter
+      command: |
+        # Interpolated straight into a --cache-to/--cache-from attribute list, so keep it
+        # to the OCI reference charset (host[:port]/path:tag). A `,` would silently inject
+        # a further exporter attribute.
+        if [ -n "<<parameters.cache-ref>>" ] && [[ ! "<<parameters.cache-ref>>" =~ ^[a-zA-Z0-9._:/-]+$ ]]; then
+          echo "ERROR: 'cache-ref', if set, must be a plain OCI reference (e.g. registry.example.com/org/image:buildcache)."
+          exit 1
+        fi
   - image-build-and-push:
       image: <<parameters.image>>
       build-context: <<parameters.build-context>>
