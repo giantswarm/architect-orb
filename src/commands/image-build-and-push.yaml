@@ -392,26 +392,41 @@ steps:
           else
             cache_ref="<<parameters.cache-ref>>"
             if [[ -z "$cache_ref" ]]; then
-              # The cache ref must resolve identically for every build of a repo, so it
-              # is derived from the visibility filter ONLY.
+              # The cache ref must resolve identically for every build of a repo, and
+              # must never land in a geographically remote mirror.
               #
-              # Deliberately NOT from /tmp/.eligible_registries: that list also has the
-              # `push_dev` and split-china filters applied, which differ by build type.
-              # If the first visibility-eligible registry has push_dev=false, dev/branch
-              # builds would resolve to registry #2 and release builds to registry #1 —
-              # forking the cache in two, so release builds never reuse what the far more
-              # frequent branch builds paid to write, and both refs accumulate forever.
+              # Deliberately NOT /tmp/.eligible_registries: that list also has the
+              # `push_dev` filter applied, which varies by build type. If the first
+              # visibility-eligible registry has push_dev=false, dev/branch builds would
+              # resolve to registry #2 and release builds to registry #1 — forking the
+              # cache in two, so release builds never reuse what the far more frequent
+              # branch builds paid to write, and both refs accumulate forever.
               #
-              # Visibility is intentionally still part of the key: a private image's
-              # layers must not be cached in a public registry.
+              # Visibility IS part of the key: a private image's layers must not be
+              # cached in a public registry.
+              #
+              # The China mirror is excluded unconditionally — not gated on
+              # `split-china-push` like the image push is, because that parameter also
+              # varies by build type and would reintroduce the same fork. A build cache
+              # is a throwaway optimisation artifact; it belongs next to the primary
+              # registry and must never cross the Pacific on the build's critical path.
+              # The canonical Giant Swarm registries are preferred by name so the ref
+              # does not depend on the ordering of REGISTRIES_DATA_BASE64.
               cache_registry=""
+              cache_fallback=""
               while IFS=' ' read -r access reg _ _ _; do
                 [[ -z "$reg" || "$reg" =~ ^# ]] && continue
-                if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
-                  cache_registry="$reg"
-                  break
-                fi
+                [[ "$reg" == *".cr.aliyuncs.com" ]] && continue
+                [[ "$access" != *"$IMAGE_ACCESS"* ]] && continue
+                case "$reg" in
+                  gsoci.azurecr.io|gsociprivate.azurecr.io)
+                    cache_registry="$reg"
+                    break
+                    ;;
+                esac
+                [[ -z "$cache_fallback" ]] && cache_fallback="$reg"
               done < .registries_data
+              cache_registry="${cache_registry:-$cache_fallback}"
               if [[ -n "$cache_registry" ]]; then
                 cache_ref="${cache_registry}/<<parameters.image>>:buildcache${tag_suffix}"
               else

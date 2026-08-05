@@ -28,7 +28,7 @@ workflows:
 
 `go-build` defaults to `linux/amd64,linux/arm64` and writes a `.platforms` file to the workspace; `push-to-registries` reads it to set `--platform` automatically. No need to repeat the platform list.
 
-By default this also emits SLSA provenance, an SPDX SBOM, OCI labels, and — on public images — a cosign keyless signature on the image _and_ on its SPDX SBOM attestation. Each is individually controllable: `provenance: min|max|false`, `sbom: true|false`, `oci-labels: true|false`, `sign: true|false`. Set `sbom-cyclonedx: true` to add a (signed, on public) CycloneDX SBOM.
+By default this also emits SLSA provenance, an SPDX SBOM, OCI labels, and — on public images — a cosign keyless signature on the image *and* on its SPDX SBOM attestation. Each is individually controllable: `provenance: min|max|false`, `sbom: true|false`, `oci-labels: true|false`, `sign: true|false`. Set `sbom-cyclonedx: true` to add a (signed, on public) CycloneDX SBOM.
 
 ### Restricting to release tags
 
@@ -109,6 +109,20 @@ Each run of this job gets a fresh `setup_remote_docker` VM and creates a fresh `
 
 This pays off most for Dockerfiles that do expensive work in `RUN` steps whose inputs rarely change — `apt-get install`, `pip install`, `npm`/`yarn install`. Order the Dockerfile so those layers sit above anything that changes every commit, or the cache will miss.
 
+### Pin your base image, or the cache goes cold on its own
+
+**A floating base tag defeats this entirely whenever upstream republishes it.** `FROM node:24-trixie-slim` resolves to whatever digest that tag points at today; when the publisher pushes a new one (Debian security updates land in `-slim` tags often — sometimes weekly), the `FROM` layer changes and **every layer beneath it is invalidated**. The build is fully cold, and the next export rewrites the whole cache.
+
+This was observed while validating the feature: two builds of an unchanged `yarn.lock` three days apart, where the second was fully cold purely because `node:24-trixie-slim` had been republished that morning.
+
+If you want consistent hits, pin by digest and let Renovate move it:
+
+```dockerfile
+FROM node:24-trixie-slim@sha256:0711b541c1c33a8a53...
+```
+
+Without a pin, treat the speedup as "fast between base-image republishes" rather than "fast every build", and discount the benefit accordingly when weighing it against the storage and egress cost.
+
 ### Prerequisite: untagged-manifest retention
 
 **Enable untagged-manifest retention on the target registry before opting a repo in.** Every export PUTs a new cache manifest and moves the `:buildcache` tag; the previous manifest becomes untagged rather than deleted, and ACR does not garbage-collect untagged manifests by default. Referenced blobs dedupe, so the growth per build is the changed-layer delta — but the layers that change are usually the big ones, and it accrues on every build of every opted-in repo.
@@ -121,9 +135,15 @@ az acr config retention update --registry gsoci --type UntaggedManifests --days 
 
 ### Cache ref derivation
 
-The default ref is `<registry>/<image>:buildcache<tag-suffix>`, where `<registry>` is the first entry in the registries data whose visibility matches the image. Only the visibility filter is applied, deliberately: the `push_dev` and split-china filters differ between dev/branch and release builds, so keying off the fully filtered list would resolve to different registries for different build types — forking the cache in two, and leaving release builds unable to reuse what the more frequent branch builds paid to write.
+The default ref is `<registry>/<image>:buildcache<tag-suffix>`. `<registry>` is chosen to be identical for every build of a repo, regardless of build type:
 
-Visibility _is_ part of the key, so that a private image's layers are never cached in a public registry. A repo that flips visibility gets a cold cache once and orphans the old ref.
+1. Entries whose visibility does not match the image are skipped. Visibility _is_ part of the key, so a private image's layers are never cached in a public registry. (A repo that flips visibility gets a cold cache once and orphans the old ref.)
+2. The China mirror (`*.cr.aliyuncs.com`) is skipped **unconditionally** — not gated on `split-china-push` the way the image push is, because that parameter varies by build type. A build cache is a throwaway optimisation artifact; it must never cross the Pacific on the build's critical path.
+3. `gsoci.azurecr.io` / `gsociprivate.azurecr.io` are preferred by name, so the ref does not depend on the ordering of `REGISTRIES_DATA_BASE64`. Otherwise the first remaining match wins.
+
+The `push_dev` filter is deliberately _not_ applied. It is the filter that varies between dev/branch and release builds, so keying off the fully filtered eligible-registry list would resolve to different registries per build type — forking the cache in two, leaving release builds unable to reuse what the more frequent branch builds paid to write, and accumulating both refs forever.
+
+If no registry survives, the build proceeds without a cache and logs why.
 
 `cache-ref` overrides the derivation entirely — use it to scope per branch, or to point at a dedicated cache repository.
 
@@ -271,9 +291,9 @@ BuildKit's SBOM attestation only emits SPDX. For a **CycloneDX** SBOM too,
 set `sbom-cyclonedx: true`:
 
 ```yaml
-- architect/push-to-registries:
-    image: giantswarm/myapp
-    sbom-cyclonedx: true
+      - architect/push-to-registries:
+          image: giantswarm/myapp
+          sbom-cyclonedx: true
 ```
 
 When enabled, the job generates a CycloneDX SBOM **per architecture** with

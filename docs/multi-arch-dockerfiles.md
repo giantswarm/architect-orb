@@ -67,7 +67,7 @@ auto-derives `--platform` from it.
 
 ## Pattern B — cross-compile inside the Dockerfile with `$BUILDPLATFORM`
 
-Use this when the binary is _not_ pre-built outside Docker (e.g. you build
+Use this when the binary is *not* pre-built outside Docker (e.g. you build
 inside the image from sources). The build stage is pinned to the host
 platform; the Go toolchain cross-compiles via `GOOS`/`GOARCH`. No
 emulation.
