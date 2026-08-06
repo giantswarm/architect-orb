@@ -7,6 +7,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking.** `skip_conftest_deprek8ion` parameter on `push-to-app-catalog`. It has been ignored since
+  v6.3.2, when the `helm-conftest` step it controlled was removed. The third-party
+  [deprek8ion](https://github.com/swade1987/deprek8ion) policies that step ran have been unmaintained since
+  2021 and only covered Kubernetes API deprecations up to 1.22; app-build-suite runs kube-linter over the
+  same manifests. `conftest` is also gone from the architect, app-build-suite, and app-test-suite images.
+- **Breaking.** `ct_config` parameter on `push-to-app-catalog`. It has been ignored since v9.0.0, when the
+  `helm-lint` step it controlled was removed along with the `architect`-executor path. Chart-testing config
+  is still honoured by app-build-suite via `ct-config` in `.abs/main.yaml` — only the orb parameter is gone,
+  so no `ct-config.yaml` files need to change.
+
+### Changed
+
+- `executor` parameter on `push-to-app-catalog` is now **permanently retained** rather than pending removal.
+  It accepts only `app-build-suite`, which is also the default, so passing it is already a no-op — but ~275
+  repos set it explicitly and removing it would break all of them for no benefit.
+
+> **Upgrading from v9.x?** See [docs/migration-v9-to-v10.md](docs/migration-v9-to-v10.md).
+
 ## [9.6.0] - 2026-07-24
 
 ### Changed
