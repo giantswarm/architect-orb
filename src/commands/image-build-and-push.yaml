@@ -140,6 +140,13 @@ steps:
       no_output_timeout: 20m
 
       command: |
+        # The buildx invocation below is piped through `tee`, so the build's exit status
+        # only survives with pipefail. CircleCI's default shell already sets it and no
+        # executor here overrides `shell:`; setting it explicitly keeps this script from
+        # depending on that default, since losing it would mask every build failure
+        # behind tee's exit 0.
+        set -o pipefail
+
         # Determine tag value from tag_envvar or fallback
         TAG_VALUE="${DOCKER_IMAGE_TAG}"
         tag_suffix="<<parameters.tag-suffix>>"
