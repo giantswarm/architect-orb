@@ -115,17 +115,19 @@ This pays off most for Dockerfiles that do expensive work in `RUN` steps whose i
 
 This was observed while validating the feature: two builds of an unchanged `yarn.lock` three days apart, where the second was fully cold purely because `node:24-trixie-slim` had been republished that morning.
 
-If you want consistent hits, pin by digest and let Renovate move it:
+If you want consistent hits, pin a full version *and* the digest, and let Renovate move both:
 
 ```dockerfile
-FROM node:24-trixie-slim@sha256:0711b541c1c33a8a53...
+FROM node:24.19.0-trixie-slim@sha256:0711b541c1c33a8a53...
 ```
 
 Without a pin, treat the speedup as "fast between base-image republishes" rather than "fast every build", and discount the benefit accordingly when weighing it against the storage and egress cost.
 
 ### Prerequisite: untagged-manifest retention
 
-**Enable untagged-manifest retention on the target registry before opting a repo in.** Every export PUTs a new cache manifest and moves the `:buildcache` tag; the previous manifest becomes untagged rather than deleted, and ACR does not garbage-collect untagged manifests by default. Referenced blobs dedupe, so the growth per build is the changed-layer delta — but the layers that change are usually the big ones, and it accrues on every build of every opted-in repo.
+**Enable untagged-manifest retention on the target registry before opting a repo in.** An export whose content differs PUTs a new cache manifest and moves the `:buildcache` tag; the previous manifest becomes untagged rather than deleted, and ACR does not garbage-collect untagged manifests by default. Referenced blobs dedupe, so the growth is the changed-layer delta — and the layers that change are usually the big ones.
+
+**This accrues per content change, not per build.** A fully warm build re-exports byte-identical content, so the manifest digest does not move and no orphan is created — two consecutive warm builds on `giantswarm/backstage` both left the same digest in place. What creates an orphan is a build whose layers actually differ: a base-image bump, a lockfile change, a Dockerfile edit. On a repo with a digest-pinned base and stable dependencies that is a handful per month rather than one per build.
 
 ```bash
 az acr config retention update --registry gsoci --type UntaggedManifests --days 7 --status enabled
@@ -159,15 +161,15 @@ This is why the recommendation above is to keep `cache: off` on release-tag jobs
 
 - **Requires `push: true`.** The cache export reuses the registry credentials the push path sets up; with `push: false` the parameter is ignored and the build logs why.
 - **Cache mounts are not exported.** Only layers are. A layer cache _hit_ skips the `RUN` entirely, so its `--mount=type=cache` is irrelevant. A _miss_ re-runs the step against a cold mount — so a lockfile bump costs full price, as before.
-- **`cache-mode` defaults to `max`**, which exports intermediate layers too. `min` exports only layers present in the final image and is rarely what you want here, since the expensive `RUN` steps are usually intermediate.
+- **The exporter always runs `mode=max`**, so intermediate layers are exported too. That is not configurable: BuildKit's default `min` exports only layers present in the final image, i.e. precisely not the expensive intermediate `RUN` steps this exists for.
 - **Export failures never fail the build**, but they are reported. `--cache-to` carries `ignore-error=true`, because the image is already pushed by the time the cache is written and the job's retry loop must not rebuild four times over a cache-write problem. Since that would otherwise make a permanently broken cache invisible — and the exporter retries with escalating backoff, so it costs time as well — the job greps the build output for a failed export and emits a loud non-fatal `WARNING`.
-- **Concurrent builds race on the tag.** Last write wins. That is usually just a later cache miss, but it is not always benign: a build using `cache-mode: min`, or one whose Dockerfile dropped a stage, replaces the richer cache wholesale and orphans the loser's blobs.
+- **Concurrent builds race on the tag.** Last write wins. That is usually just a later cache miss, but it is not always benign: a build whose Dockerfile dropped a stage replaces the richer cache wholesale and orphans the loser's blobs.
 - **Egress is not free.** Warm builds pull cache blobs from the registry that previously were produced locally. The wall-clock win on `giantswarm/backstage` was large (see below), but if you are opting in many repos, account for standing storage plus per-build egress, not just CI minutes.
 - ACR (`gsoci`/`gsociprivate`) rejects the exporter's default manifest-list format, so the cache is pushed with `image-manifest=true,oci-mediatypes=true`.
 
 ### Measured effect
 
-On `giantswarm/backstage` (single-arch amd64, Node monorepo with `apt` + `pip` + `yarn workspaces focus` in the Dockerfile): `push-to-registries` went from ~5m32s uncached to **2m03s** warm, with a 554 MB cache artifact. Repos whose Dockerfile is a single `COPY` of a prebuilt binary have nothing to gain and should stay on `cache: off`.
+On `giantswarm/backstage` (single-arch amd64, Node monorepo with `apt` + `pip` + `yarn workspaces focus` in the Dockerfile): `push-to-registries` went from ~5m32s uncached to **~2m05s** warm (2m03s and 2m08s on two runs), with a 554 MB cache artifact. Repos whose Dockerfile is a single `COPY` of a prebuilt binary have nothing to gain and should stay on `cache: off`.
 
 ## Dockerfile requirements
 

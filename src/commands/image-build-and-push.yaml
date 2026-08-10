@@ -119,20 +119,13 @@ parameters:
   cache-ref:
     description: |
       Explicit OCI ref for the `cache: registry` cache artifact. When empty (default),
-      it is derived as `<first-eligible-registry>/<image>:buildcache<tag-suffix>` — one
-      shared cache per image, written by every build of the repo. Set this to scope the
-      cache differently (e.g. per branch). The ref holds a cache manifest and blobs, not
-      a runnable image.
+      it is derived as `<registry>/<image>:buildcache<tag-suffix>`, where `<registry>` is
+      the visibility-matched entry, preferring gsoci/gsociprivate and never the China
+      mirror (see the derivation comment in the build step). That is one shared cache per
+      image, written by every build of the repo; set this to scope it differently (e.g.
+      per branch). The ref holds a cache manifest and blobs, not a runnable image.
     type: string
     default: ""
-  cache-mode:
-    description: |
-      `mode` attribute of the `--cache-to` exporter. "max" (default) exports every
-      intermediate layer, which is what makes multi-stage and heavy-`RUN` Dockerfiles
-      cache well. "min" exports only the layers present in the final image.
-    type: enum
-    enum: ["min", "max"]
-    default: "max"
 steps:
   - when:
       # The GitHub token is only needed for the repo-visibility check, which only
@@ -257,10 +250,32 @@ steps:
           # The cosign and SBOM steps below consume that file instead of re-deriving the
           # set, so the signed/attested set can never drift from the pushed set (this
           # duplication used to live in three loops with subtly different filters).
+          # The same pass also picks the registry that will host the layer cache, so the
+          # one filter that differs between the two is visible in one place.
           : > /tmp/.eligible_registries
           all_tags=()
+          cache_registry=""
+          cache_fallback=""
           while IFS=' ' read -r access reg _ _ push_dev; do
             [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+
+            # Layer-cache host. Evaluated here, BEFORE the push_dev gate below, on
+            # purpose: push_dev varies by build type, so selecting after it would send
+            # dev/branch builds to one registry and release builds to another — forking
+            # the cache so release builds never reuse what branch builds paid to write.
+            # Visibility stays in the filter (a private image's layers must not be cached
+            # in a public registry); the China mirror is excluded unconditionally rather
+            # than gated on split-china-push, since that parameter varies by build type
+            # too and a throwaway cache has no business crossing the Pacific. gsoci /
+            # gsociprivate win by name so the ref is independent of registries-data order.
+            if [[ "$access" == *"$IMAGE_ACCESS"* && "$reg" != *".cr.aliyuncs.com" ]]; then
+              case "$reg" in
+                gsoci.azurecr.io|gsociprivate.azurecr.io)
+                  [[ -z "$cache_registry" ]] && cache_registry="$reg" ;;
+              esac
+              [[ -z "$cache_fallback" ]] && cache_fallback="$reg"
+            fi
+
             [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
             # Dev-build gate: `gitsemver validate --type dev` is the canonical dev-version
             # check (anchored to the full X.Y.Z-dev.<branch>.<date>.<time> form). Used
@@ -282,6 +297,7 @@ steps:
               echo "Registry $reg is not configured for $IMAGE_ACCESS images, skipping"
             fi
           done < .registries_data
+          cache_registry="${cache_registry:-$cache_fallback}"
 
           if [[ ${#all_tags[@]} -eq 0 ]]; then
             echo "No valid registry/tag combinations found for push. Exiting."
@@ -297,7 +313,8 @@ steps:
         # step can be emulated then, so registering binfmt only costs a privileged
         # image pull. Single-arch repos (`platforms: linux/amd64`) paid this on every
         # build. If the host platform can't be determined we register anyway, keeping
-        # the pre-9.7 behaviour rather than risking an un-emulated cross build.
+        # the previous unconditional behaviour rather than risking an un-emulated
+        # cross build.
         host_platform="$(docker version --format '{{.Server.Os}}/{{.Server.Arch}}' 2>/dev/null || true)"
         needs_emulation=false
         if [[ -z "$host_platform" ]]; then
@@ -390,51 +407,20 @@ steps:
           if [[ "<<parameters.push>>" != "true" ]]; then
             echo "cache=registry needs push=true for registry credentials; continuing without a layer cache."
           else
+            # cache_registry is picked in the single pass over .registries_data above.
             cache_ref="<<parameters.cache-ref>>"
             if [[ -z "$cache_ref" ]]; then
-              # The cache ref must resolve identically for every build of a repo, and
-              # must never land in a geographically remote mirror.
-              #
-              # Deliberately NOT /tmp/.eligible_registries: that list also has the
-              # `push_dev` filter applied, which varies by build type. If the first
-              # visibility-eligible registry has push_dev=false, dev/branch builds would
-              # resolve to registry #2 and release builds to registry #1 — forking the
-              # cache in two, so release builds never reuse what the far more frequent
-              # branch builds paid to write, and both refs accumulate forever.
-              #
-              # Visibility IS part of the key: a private image's layers must not be
-              # cached in a public registry.
-              #
-              # The China mirror is excluded unconditionally — not gated on
-              # `split-china-push` like the image push is, because that parameter also
-              # varies by build type and would reintroduce the same fork. A build cache
-              # is a throwaway optimisation artifact; it belongs next to the primary
-              # registry and must never cross the Pacific on the build's critical path.
-              # The canonical Giant Swarm registries are preferred by name so the ref
-              # does not depend on the ordering of REGISTRIES_DATA_BASE64.
-              cache_registry=""
-              cache_fallback=""
-              while IFS=' ' read -r access reg _ _ _; do
-                [[ -z "$reg" || "$reg" =~ ^# ]] && continue
-                [[ "$reg" == *".cr.aliyuncs.com" ]] && continue
-                [[ "$access" != *"$IMAGE_ACCESS"* ]] && continue
-                case "$reg" in
-                  gsoci.azurecr.io|gsociprivate.azurecr.io)
-                    cache_registry="$reg"
-                    break
-                    ;;
-                esac
-                [[ -z "$cache_fallback" ]] && cache_fallback="$reg"
-              done < .registries_data
-              cache_registry="${cache_registry:-$cache_fallback}"
               if [[ -n "$cache_registry" ]]; then
                 cache_ref="${cache_registry}/<<parameters.image>>:buildcache${tag_suffix}"
               else
-                echo "No $IMAGE_ACCESS registry found to host the layer cache; continuing without one."
+                echo "No $IMAGE_ACCESS registry eligible to host the layer cache; continuing without one."
               fi
             fi
             if [[ -n "$cache_ref" ]]; then
-              echo "Using registry layer cache: $cache_ref (mode=<<parameters.cache-mode>>)"
+              echo "Using registry layer cache: $cache_ref"
+              # mode=max exports intermediate layers too. That is the whole point here —
+              # the expensive steps (apt/pip/npm installs) are intermediate, and the
+              # default `min` would export only final-image layers, so it is not offered.
               # image-manifest + oci-mediatypes: ACR (gsoci/gsociprivate) rejects the
               # exporter's default manifest-list format, so the cache must be pushed as a
               # plain OCI image manifest.
@@ -443,7 +429,7 @@ steps:
               # rebuild four times over a cache write problem. The trade-off is that the
               # failure is invisible, so it is detected and warned about after the build.
               cache_flags+=("--cache-from" "type=registry,ref=${cache_ref}")
-              cache_flags+=("--cache-to" "type=registry,ref=${cache_ref},mode=<<parameters.cache-mode>>,image-manifest=true,oci-mediatypes=true,ignore-error=true")
+              cache_flags+=("--cache-to" "type=registry,ref=${cache_ref},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true")
             fi
           fi
         fi

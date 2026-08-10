@@ -122,7 +122,7 @@ parameters:
     default: true
   cache:
     description: |
-      BuildKit layer-cache backend. "off" (default) keeps the pre-9.7 behaviour: the
+      BuildKit layer-cache backend. "off" (default) keeps the previous behaviour: the
       builder is created fresh on a fresh remote-docker VM every job, so the whole
       Dockerfile is re-executed from scratch on every build. "registry" imports and
       exports the layer cache as an OCI artifact in the registry the image is pushed
@@ -134,17 +134,10 @@ parameters:
   cache-ref:
     description: |
       Explicit OCI ref for the `cache: registry` artifact. Defaults to
-      `<first-eligible-registry>/<image>:buildcache<tag-suffix>`.
+      `<registry>/<image>:buildcache<tag-suffix>`, where `<registry>` is the
+      visibility-matched entry, preferring gsoci/gsociprivate and never the China mirror.
     type: string
     default: ""
-  cache-mode:
-    description: |
-      `mode` of the `--cache-to` exporter. "max" (default) exports intermediate layers
-      too, which is what makes heavy-`RUN` Dockerfiles cache well; "min" exports only
-      layers in the final image.
-    type: enum
-    enum: ["min", "max"]
-    default: "max"
 steps:
   - checkout
   - setup_remote_docker:
@@ -224,7 +217,6 @@ steps:
       push: <<parameters.push>>
       cache: <<parameters.cache>>
       cache-ref: <<parameters.cache-ref>>
-      cache-mode: <<parameters.cache-mode>>
   - when:
       condition:
         and:
