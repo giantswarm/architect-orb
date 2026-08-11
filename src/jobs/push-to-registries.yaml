@@ -120,6 +120,24 @@ parameters:
       workflows that push images only on release tags.
     type: boolean
     default: true
+  cache:
+    description: |
+      BuildKit layer-cache backend. "off" (default) keeps the previous behaviour: the
+      builder is created fresh on a fresh remote-docker VM every job, so the whole
+      Dockerfile is re-executed from scratch on every build. "registry" imports and
+      exports the layer cache as an OCI artifact in the registry the image is pushed
+      to. Requires `push: true`. `RUN --mount=type=cache` mounts are not part of the
+      exported cache — only layers are.
+    type: enum
+    enum: ["off", "registry"]
+    default: "off"
+  cache-ref:
+    description: |
+      Explicit OCI ref for the `cache: registry` artifact. Defaults to
+      `<registry>/<image>:buildcache<tag-suffix>`, where `<registry>` is the
+      visibility-matched entry, preferring gsoci/gsociprivate and never the China mirror.
+    type: string
+    default: ""
 steps:
   - checkout
   - setup_remote_docker:
@@ -170,6 +188,16 @@ steps:
           echo "ERROR: The 'platforms' parameter, if set, must be a comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
           exit 1
         fi
+  - run:
+      name: Validate cache-ref parameter
+      command: |
+        # Interpolated straight into a --cache-to/--cache-from attribute list, so keep it
+        # to the OCI reference charset (host[:port]/path:tag). A `,` would silently inject
+        # a further exporter attribute.
+        if [ -n "<<parameters.cache-ref>>" ] && [[ ! "<<parameters.cache-ref>>" =~ ^[a-zA-Z0-9._:/-]+$ ]]; then
+          echo "ERROR: 'cache-ref', if set, must be a plain OCI reference (e.g. registry.example.com/org/image:buildcache)."
+          exit 1
+        fi
   - image-build-and-push:
       image: <<parameters.image>>
       build-context: <<parameters.build-context>>
@@ -187,6 +215,8 @@ steps:
       sign: <<parameters.sign>>
       split-china-push: <<parameters.split-china-push>>
       push: <<parameters.push>>
+      cache: <<parameters.cache>>
+      cache-ref: <<parameters.cache-ref>>
   - when:
       condition:
         and:

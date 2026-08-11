@@ -1,11 +1,19 @@
 # Multi-arch Dockerfiles: avoiding QEMU emulation
 
 Starting with architect-orb **v9.0**, `push-to-registries` is always a
-multi-arch buildx build. Before each build the job registers QEMU/binfmt
-handlers (`tonistiigi/binfmt --install all`), so any Dockerfile will
-produce a working multi-arch image — but Dockerfiles that don't follow
-one of the patterns below execute their `RUN` steps under emulation,
-which is **5–20× slower** than native.
+buildx build. When any target platform differs from the build host, the
+job registers QEMU/binfmt handlers (`tonistiigi/binfmt --install all`)
+first, so any Dockerfile will produce a working multi-arch image — but
+Dockerfiles that don't follow one of the patterns below execute their
+`RUN` steps under emulation, which is **5–20× slower** than native.
+
+Single-platform builds that match the build host (e.g.
+`platforms: linux/amd64`) skip binfmt registration entirely — nothing can
+be emulated, so the privileged image pull bought nothing. If your build is
+single-arch, **this document does not apply to you**: emulation is not your
+bottleneck. See [`push-to-registries`](job/push-to-registries.md#build-cache)
+for the layer-cache knob, which is usually what a slow single-arch build
+actually needs.
 
 This document covers how to identify which pattern your Dockerfile uses
 today and how to migrate to a non-emulated build.
@@ -42,7 +50,6 @@ COPY myapp-linux-${TARGETARCH} /myapp
 USER 65532:65532
 ENTRYPOINT ["/myapp"]
 ```
-
 
 CircleCI side:
 
