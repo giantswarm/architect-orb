@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.7.0] - 2026-08-11
+
 ### Added
 
 - `push-to-registries`: new `cache` parameter to persist BuildKit's layer cache across jobs. Every run gets a fresh `setup_remote_docker` VM and creates a fresh `docker-container` builder, so until now the whole Dockerfile was re-executed from scratch on every build — and a Dockerfile's own `RUN --mount=type=cache` mounts could not help, because they live in the builder state that is destroyed with the VM. `cache: registry` adds `--cache-from`/`--cache-to type=registry`, storing the layer cache as an OCI artifact at `<registry>/<image>:buildcache<tag-suffix>` (override with `cache-ref`; see the derivation below). Defaults to `off`, so existing consumers are unaffected. The exporter always runs `mode=max`, which is what makes the intermediate `RUN` layers — `apt-get install`, `pip install`, `yarn install` — cache at all; `min` would export only final-image layers, so it is not offered. Requires `push: true` for the registry credentials. Measured on `giantswarm/backstage`: ~5m32s → 2m03s warm.
@@ -1966,7 +1968,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.6.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.7.0...HEAD
+[9.7.0]: https://github.com/giantswarm/architect-orb/compare/v9.6.0...v9.7.0
 [9.6.0]: https://github.com/giantswarm/architect-orb/compare/v9.5.5...v9.6.0
 [9.5.5]: https://github.com/giantswarm/architect-orb/compare/v9.5.4...v9.5.5
 [9.5.4]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...v9.5.4
