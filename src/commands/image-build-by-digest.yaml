@@ -1,0 +1,341 @@
+# Command: image-build-by-digest
+#
+# Builds ONE platform and pushes it by digest, setting no tag. The counterpart to
+# image-build-and-push, for the split build: each architecture is built on a host
+# of its own architecture, so no RUN step is emulated, and image-merge-manifests
+# assembles the tagged index afterwards.
+#
+# Why push by digest rather than a per-architecture tag: a single-architecture
+# manifest is not independently useful, and tagging one would publish an artifact
+# consumers could pull by accident. The digest is recorded in the workspace for
+# the merge job instead. The trade-off is that a failed pipeline can leave
+# untagged manifests in the registry, so untagged-manifest retention wants to be
+# enabled on the target registries.
+#
+# Attestations are produced here, per leg, not at the merge. That is deliberate:
+# BuildKit can only attest what it built, and `imagetools create` carries the
+# attestation manifests into the merged index (unlike `docker manifest create`,
+# which silently strips them).
+#
+# Requires image-select-registries to have run when pushing, and DOCKER_IMAGE_TAG
+# in the environment (image-prepare-tag exports it).
+#
+# KEEP IN SYNC with image-build-and-push. These two commands share roughly ninety
+# lines by copy: the OCI label flags, the annotation parser, the attest flags, the
+# builder create/bootstrap, the four-attempt retry loop and the cache-export
+# failure check. They are duplicated rather than shared because they build bash
+# arrays inside a single `run:` step, and an orb command cannot return shell
+# state — factoring them out would mean serialising flag arrays to files and
+# reading them back, which is worse than the duplication. A fix to any of those
+# blocks belongs in both files. Folding this command into image-build-and-push as
+# a push-by-digest mode would remove the duplication at the cost of five more
+# branch points in that script; worth doing once the split build has run for real.
+#
+# Writes:
+#   .image-digests/<platform>   the pushed index digest for this platform, for
+#                               the merge job to read out of the workspace
+parameters:
+  image:
+    description: Name of the container repository and image. Must not contain registry host name!
+    type: string
+  platform:
+    description: |
+      The single platform to build, e.g. `linux/arm64`. One platform only — the
+      whole point of this command is that the host is native for it.
+    type: string
+  build-context:
+    type: string
+    default: "."
+  dockerfile:
+    type: string
+    default: "./Dockerfile"
+  tag-suffix:
+    type: string
+    default: ""
+  annotations:
+    description: |
+      Newline-separated OCI annotations passed to 'docker buildx build --annotation'.
+
+      Note the scoping: `manifest:`-prefixed annotations land on this platform's
+      manifest and survive into the merged index. `index:`-prefixed ones annotate
+      this leg's own index, which the merge discards — set those on the
+      merge-image-manifests job instead.
+    type: string
+    default: ""
+  oci-labels:
+    description: |
+      Emit standard OCI image labels
+      (org.opencontainers.image.{source,revision,version,created}) derived from
+      the CircleCI build context. Labels are image-config level, so unlike index
+      annotations they survive the merge untouched.
+    type: boolean
+    default: true
+  provenance:
+    type: enum
+    enum: ["min", "max", "false"]
+    default: "min"
+  sbom:
+    description: Generate and attach an SPDX SBOM attestation for this platform.
+    type: boolean
+    default: true
+  push:
+    description: |
+      Push this platform by digest (default). False builds only, to validate that
+      the Dockerfile still builds for this architecture — the result stays in the
+      BuildKit cache, no credentials are used, and no digest is recorded, so no
+      merge is possible or needed.
+    type: boolean
+    default: true
+  cache:
+    type: enum
+    enum: ["off", "registry"]
+    default: "off"
+  cache-ref:
+    description: |
+      Explicit OCI ref for the `cache: registry` artifact. The platform is
+      appended to whatever is used, explicit or derived: two legs exporting to one
+      ref run concurrently and would race, leaving whichever finished last as the
+      only surviving cache manifest.
+    type: string
+    default: ""
+steps:
+  - run:
+      name: Build <<parameters.platform>> and push it by digest
+      # A native leg should be far quicker than this, but the timeout also covers
+      # the emulated fallback below, which is not.
+      no_output_timeout: 20m
+      command: |
+        # The buildx invocation is piped through `tee`, so its exit status only
+        # survives with pipefail.
+        set -o pipefail
+
+        TAG_VALUE="${DOCKER_IMAGE_TAG}"
+        tag_suffix="<<parameters.tag-suffix>>"
+        platform="<<parameters.platform>>"
+        # Platform strings contain a `/`, which cannot appear in a filename.
+        safe_platform=$(echo "$platform" | tr '/:.' '___')
+
+        if [[ "$platform" == *,* ]]; then
+          echo "ERROR: 'platform' takes a single platform, got '${platform}'."
+          echo "Use one build-image-arch job per architecture and merge them."
+          exit 1
+        fi
+        if [[ ! "$platform" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+          echo "ERROR: 'platform' must be a valid platform string (e.g. linux/arm64)."
+          exit 1
+        fi
+        # Interpolated straight into a --cache-to/--cache-from attribute list, so keep
+        # it to the OCI reference charset (host[:port]/path:tag). A `,` would silently
+        # inject a further exporter attribute.
+        if [[ -n "<<parameters.cache-ref>>" && ! "<<parameters.cache-ref>>" =~ ^[a-zA-Z0-9._:/-]+$ ]]; then
+          echo "ERROR: 'cache-ref', if set, must be a plain OCI reference."
+          exit 1
+        fi
+
+        # The reason this job exists is that host == target, so say so loudly when
+        # it isn't. We still register the handlers and build: refusing would turn a
+        # slow build into a broken one, and there are legitimate reasons to run a
+        # single-architecture leg emulated. But a silently emulated leg looks like
+        # a working native build and is the outcome most likely to waste a day.
+        host_platform="$(docker version --format '{{.Server.Os}}/{{.Server.Arch}}' 2>/dev/null || true)"
+        needs_emulation=false
+        if [[ -z "$host_platform" ]]; then
+          echo "Could not determine the build host platform; registering QEMU/binfmt to be safe."
+          needs_emulation=true
+        elif [[ "$platform" != "$host_platform" ]]; then
+          echo ""
+          echo "WARNING: this leg targets ${platform} on a ${host_platform} build host."
+          echo "WARNING: every RUN step will run under QEMU, 5-20x slower than native."
+          echo "WARNING: set resource_class to an arm.* class for a linux/arm64 leg."
+          echo ""
+          needs_emulation=true
+        else
+          echo "Build host matches the target (${host_platform}); no emulation, skipping QEMU/binfmt registration."
+        fi
+
+        if [[ "$needs_emulation" == "true" ]]; then
+          # Image is pinned via tag and bumped by Renovate.
+          # renovate: datasource=docker depName=tonistiigi/binfmt
+          docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
+        fi
+
+        oci_label_flags=()
+        if [[ "<<parameters.oci-labels>>" == "true" ]]; then
+          oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          # Prefer the commit timestamp so rebuilds of the same SHA produce identical labels.
+          oci_created="$(git show -s --format=%cI "$CIRCLE_SHA1" 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
+          oci_label_flags+=(
+            --label "org.opencontainers.image.source=${oci_source}"
+            --label "org.opencontainers.image.revision=${CIRCLE_SHA1}"
+            --label "org.opencontainers.image.created=${oci_created}"
+          )
+          if [[ -n "${TAG_VALUE:-}" ]]; then
+            oci_label_flags+=(--label "org.opencontainers.image.version=${TAG_VALUE}")
+          fi
+        fi
+
+        if [[ "<<parameters.push>>" == "false" ]]; then
+          # Build-only mode: a single local (discarded) tag, no credentials, no
+          # digest. Nothing leaves the BuildKit cache, so there is nothing to merge.
+          echo "push=false: build-only validation, nothing will be pushed."
+          output_flags=()
+          tag_flags=("--tag" "<<parameters.image>>:${TAG_VALUE}")
+        else
+          # One name per eligible registry, in one exporter. The digest is
+          # content-addressed, so every registry ends up with the same one and the
+          # merge job needs to record only a single value per platform.
+          names=""
+          while IFS= read -r reg; do
+            [[ -z "$reg" ]] && continue
+            names="${names:+${names},}${reg}/<<parameters.image>>"
+          done < /tmp/.eligible_registries
+          if [[ -z "$names" ]]; then
+            echo "No eligible registries recorded by image-select-registries. Exiting."
+            exit 1
+          fi
+          echo "Pushing ${platform} by digest to: ${names}"
+          # `name` takes a comma-separated list, but commas also separate the
+          # exporter's own CSV fields, so the list has to be quoted inside the
+          # --output value. push-by-digest sets no tag; name-canonical records the
+          # digest-based name in the metadata.
+          output_flags=("--output" "type=image,\"name=${names}\",push-by-digest=true,name-canonical=true,push=true")
+          tag_flags=()
+        fi
+
+        annotation_flags=()
+        annotations_input="<<parameters.annotations>>"
+        if [[ -n "$annotations_input" ]]; then
+          printf '%s\n' "$annotations_input" > .annotations_input
+          while IFS= read -r line; do
+            line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            [[ -z "$line" || "$line" =~ ^# ]] && continue
+            annotation_flags+=("--annotation" "$line")
+          done < .annotations_input
+          rm -f .annotations_input
+        fi
+
+        # Attestations are per platform and are carried into the merged index by
+        # imagetools create, so they belong here rather than at the merge.
+        attest_flags=()
+        if [[ "<<parameters.push>>" == "false" ]]; then
+          attest_flags+=("--provenance=false" "--sbom=false")
+        else
+          case "<<parameters.provenance>>" in
+            "min")   attest_flags+=("--attest" "type=provenance,mode=min") ;;
+            "max")   attest_flags+=("--attest" "type=provenance,mode=max") ;;
+            "false") attest_flags+=("--provenance=false") ;;
+          esac
+          if [[ "<<parameters.sbom>>" == "true" ]]; then
+            attest_flags+=("--attest" "type=sbom")
+          else
+            attest_flags+=("--sbom=false")
+          fi
+        fi
+
+        cache_flags=()
+        if [[ "<<parameters.cache>>" == "registry" ]]; then
+          if [[ "<<parameters.push>>" != "true" ]]; then
+            echo "cache=registry needs push=true for registry credentials; continuing without a layer cache."
+          else
+            cache_ref="<<parameters.cache-ref>>"
+            if [[ -n "$cache_ref" ]]; then
+              cache_ref="${cache_ref}-${safe_platform}"
+            else
+              cache_registry="$(cat /tmp/.cache_registry)"
+              if [[ -n "$cache_registry" ]]; then
+                cache_ref="${cache_registry}/<<parameters.image>>:buildcache${tag_suffix}-${safe_platform}"
+              else
+                echo "No eligible registry to host the layer cache; continuing without one."
+              fi
+            fi
+            if [[ -n "$cache_ref" ]]; then
+              echo "Using registry layer cache: $cache_ref"
+              # See image-build-and-push for why mode=max, image-manifest and
+              # ignore-error are what they are; the only difference here is that the
+              # ref is per platform, because the legs run concurrently.
+              cache_flags+=("--cache-from" "type=registry,ref=${cache_ref}")
+              cache_flags+=("--cache-to" "type=registry,ref=${cache_ref},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true")
+            fi
+          fi
+        fi
+
+        # Reuse the builder if it already exists; create otherwise.
+        if ! docker buildx inspect multiarch-builder >/dev/null 2>&1; then
+          docker buildx create --name multiarch-builder --driver docker-container --use
+        else
+          docker buildx use multiarch-builder
+        fi
+        docker buildx inspect --bootstrap
+
+        SUCCESS=false
+        for i in {1..4}; do
+          echo "attempt: $i for ${platform}"
+          if docker buildx build \
+            --platform "$platform" \
+            "${tag_flags[@]}" \
+            "${annotation_flags[@]}" \
+            "${oci_label_flags[@]}" \
+            "${attest_flags[@]}" \
+            "${cache_flags[@]}" \
+            "${output_flags[@]}" \
+            --metadata-file=/tmp/.buildx_metadata.json \
+            -f "<<parameters.dockerfile>>" \
+            "<<parameters.build-context>>" \
+            --progress=plain 2>&1 | tee /tmp/.buildx_output; then
+            SUCCESS=true
+            break
+          fi
+          echo "Waiting 5 seconds before the next attempt."
+          sleep 5
+        done
+
+        if [[ "$SUCCESS" == "false" ]]; then
+          echo "buildx build failed. Check buildx output above."
+          exit 1
+        fi
+
+        # See image-build-and-push: buildx prints this fenced section only when the
+        # cache-export vertex failed, and ignore-error=true would otherwise hide it.
+        if [[ ${#cache_flags[@]} -gt 0 ]] && grep -qE '^[[:space:]]*> exporting cache to registry:' /tmp/.buildx_output; then
+          echo ""
+          echo "WARNING: ${platform} was pushed, but the BuildKit cache export FAILED."
+          echo "WARNING: ignore-error=true kept this build green. Every subsequent build"
+          echo "WARNING: of this architecture will pay the full uncached cost until fixed."
+          echo "WARNING: cache ref: ${cache_ref:-<unset>}"
+          echo ""
+        fi
+
+        if [[ "<<parameters.push>>" == "false" ]]; then
+          echo "Image built successfully for ${platform}; nothing was pushed (push=false)."
+          exit 0
+        fi
+
+        # With attestations enabled buildx wraps even a single-platform build in an
+        # index (the image manifest plus its attestation manifest), so this is an
+        # index digest. That is exactly what imagetools create takes as a source,
+        # and why the attestations survive the merge.
+        digest=$(jq -r '."containerimage.digest" // ."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
+        if [[ -z "$digest" ]]; then
+          echo "Could not extract the pushed digest from buildx metadata:"
+          cat /tmp/.buildx_metadata.json
+          exit 1
+        fi
+        # Namespaced by image and tag-suffix, not just platform: two independent
+        # split builds in one pipeline (a mono-repo with two Dockerfiles, or a
+        # test matrix) would otherwise persist the same workspace path and
+        # overwrite each other. image-merge-manifests derives the same directory.
+        digest_dir=".image-digests/$(echo "<<parameters.image>>${tag_suffix}" | tr '/:' '__')"
+        mkdir -p "$digest_dir"
+        echo -n "$digest" > "${digest_dir}/${safe_platform}"
+        echo "${platform} digest: ${digest}"
+        echo "recorded in ${digest_dir}/${safe_platform}"
+  - run:
+      name: Clean up build scratch files
+      # Runs on success and failure, so a failed leg leaves no stale metadata or
+      # registry set behind for an unrelated rerun on the same runner. The digest
+      # file is NOT removed — it is this command's output, and the job persists it.
+      when: always
+      command: |
+        rm -f /tmp/.buildx_metadata.json /tmp/.buildx_output \
+              /tmp/.gh_response /tmp/.image_access \
+              /tmp/.eligible_registries /tmp/.cache_registry 2>/dev/null || true

@@ -1,0 +1,122 @@
+environment:
+  DOCKER_BUILDKIT: "1"
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
+parameters:
+  image:
+    description: Name of the container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
+    type: string
+    default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
+  platforms:
+    description: |
+      The platforms that were built. Every one must have left a digest in the
+      workspace, or the merge fails rather than publishing an index that is
+      quietly missing an architecture. Must match the set of build-image-arch
+      legs this job requires.
+    type: string
+    default: "linux/amd64,linux/arm64"
+  resource_class:
+    description: |
+      This job does no building — it assembles manifests, signs, and fetches SBOM
+      blobs. `small` is the right default; raise it only if a very large SBOM makes
+      the signing steps memory-bound.
+    type: enum
+    enum: ["small", "medium", "medium+", "large", "xlarge", "arm.medium", "arm.large", "arm.xlarge", "arm.2xlarge"]
+    default: small
+  tag-latest-branch:
+    description: 'Name of the branch on which the image will be additionally tagged as "latest".'
+    type: string
+    default: ""
+  git-tag-prefix:
+    type: string
+    default: ""
+  tag-suffix:
+    type: string
+    default: ""
+  force-public:
+    description: Skip the repo visibility check and push the image to public registries
+    type: boolean
+    default: false
+  registries-data:
+    default: ""
+    type: string
+  split-china-push:
+    description: |
+      Use a self-hosted CircleCI runner in China for pushing to Aliyun. Must match
+      the value on the build-image-arch legs, or they and this job disagree about
+      which registries hold the per-architecture digests.
+    type: boolean
+    default: false
+  annotations:
+    description: |
+      Newline-separated OCI annotations for the merged index. Only `index:`,
+      `index-descriptor:` and `manifest-descriptor:` prefixes are accepted.
+    type: string
+    default: ""
+  oci-labels:
+    type: boolean
+    default: true
+  sbom:
+    type: boolean
+    default: true
+  sbom-cyclonedx:
+    type: boolean
+    default: false
+  sign:
+    type: boolean
+    default: true
+steps:
+  - checkout
+  # Only `docker login` needs this. Everything else in the job talks to the
+  # registry client-side: imagetools create/inspect, oras, cosign and syft all
+  # read credentials from ~/.docker/config.json and never touch a daemon
+  # (measured — imagetools works with no daemon at all). So the spin-up could be
+  # dropped by swapping image-login-to-registries for `oras login`, which writes
+  # the same file. Left as a follow-up: that command is shared with
+  # sync-china-registry, so changing it is not free, and this change already
+  # restructures the release path.
+  - setup_remote_docker:
+      version: default
+  - attach_workspace:
+      at: .
+  - run:
+      name: Set git tag prefix (empty if not set, only used on mono repos)
+      command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
+  - image-prepare-tag:
+      tag-suffix: <<parameters.tag-suffix>>
+  - image-login-to-registries:
+      registries-data: <<parameters.registries-data>>
+  - generate-github-token
+  # The legs each resolved the same set to decide where to push; this resolves it
+  # again to decide where to merge, sign and attest. Same command, same inputs,
+  # same answer — the visibility check and the push_dev gate are deterministic for
+  # a given commit and tag.
+  - image-select-registries:
+      force-public: <<parameters.force-public>>
+      registries-data: <<parameters.registries-data>>
+      split-china-push: <<parameters.split-china-push>>
+  - image-merge-manifests:
+      image: <<parameters.image>>
+      platforms: <<parameters.platforms>>
+      tag-latest-branch: <<parameters.tag-latest-branch>>
+      tag-suffix: <<parameters.tag-suffix>>
+      annotations: <<parameters.annotations>>
+      oci-labels: <<parameters.oci-labels>>
+  # Unchanged from the single-job path. It works purely from /tmp/.index_digest and
+  # /tmp/.eligible_registries, so it neither knows nor cares that the index was
+  # assembled by imagetools rather than pushed by one buildx.
+  - image-sign-and-attest:
+      image: <<parameters.image>>
+      push: true
+      sign: <<parameters.sign>>
+      sbom: <<parameters.sbom>>
+      sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
+  - when:
+      # sync-china-registry restores this to learn what to mirror.
+      condition: <<parameters.split-china-push>>
+      steps:
+        - save_cache:
+            key: image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
+            paths:
+              - /tmp/.docker_image_registry
+              - /tmp/.docker_image_tag

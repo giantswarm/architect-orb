@@ -1,0 +1,193 @@
+# Command: image-merge-manifests
+#
+# Joins the per-architecture digests recorded by image-build-by-digest into one
+# tagged OCI index per eligible registry, using `docker buildx imagetools create`.
+#
+# Why imagetools and not `docker manifest create`: each leg pushed an index
+# containing its image manifest AND its attestation manifest. imagetools copies
+# the whole child index, preserving the attestation manifests and the
+# vnd.docker.reference.* annotations that link each one to the platform manifest
+# it describes. `docker manifest create` strips them, which would silently break
+# the SPDX signing in image-sign-and-attest.
+#
+# Why once per registry: imagetools create builds a manifest by reference and
+# requires its sources to already exist in the registry it writes to — it relies
+# on same-host cross-repository blob mounting and has no cross-registry
+# equivalent. Each leg therefore pushes its digest to every eligible registry,
+# and this runs once per registry against digests that are identical everywhere.
+#
+# Requires image-select-registries and a workspace containing .image-digests/
+# from every leg.
+#
+# Writes:
+#   /tmp/.index_digest   the merged index digest, verified identical at every
+#                        registry, for image-sign-and-attest to consume
+parameters:
+  image:
+    description: Name of the container repository and image. Must not contain registry host name!
+    type: string
+  platforms:
+    description: |
+      Comma-separated list of the platforms that were built, e.g.
+      `linux/amd64,linux/arm64`. Every one of them must have left a digest in the
+      workspace; the merge refuses to run otherwise rather than quietly
+      publishing an index that is missing an architecture.
+    type: string
+    default: "linux/amd64,linux/arm64"
+  tag-latest-branch:
+    description: 'Name of the branch on which the image will be additionally tagged as "latest".'
+    type: string
+    default: ""
+  tag-suffix:
+    type: string
+    default: ""
+  annotations:
+    description: |
+      Newline-separated OCI annotations for the merged index. Only the prefixes
+      `imagetools create` accepts are allowed: `index:`, `index-descriptor:` and
+      `manifest-descriptor:`. A bare key or a `manifest:` prefix is rejected by
+      buildx with a cryptic error, so this command rejects them with a clear one.
+    type: string
+    default: ""
+  oci-labels:
+    description: |
+      Emit org.opencontainers.image.{source,revision,version,created} as index
+      annotations. The matching image *labels* are set per leg by
+      image-build-by-digest; index annotations have to be re-applied here, because
+      the merge builds a new index and the per-leg ones are discarded with the
+      per-leg indexes.
+    type: boolean
+    default: true
+steps:
+  - run:
+      name: Merge the per-architecture digests into a tagged index per registry
+      command: |
+        set -o pipefail
+
+        TAG_VALUE="${DOCKER_IMAGE_TAG}"
+        tag_suffix="<<parameters.tag-suffix>>"
+        tag_latest_branch="<<parameters.tag-latest-branch>>"
+
+        # Sources: one digest per expected platform. A missing digest means a leg
+        # did not run, did not push, or did not persist its workspace -- all of
+        # which would otherwise produce a perfectly valid index that is quietly
+        # missing an architecture, published under the release tag.
+        sources=()
+        # Comma-to-space word splitting rather than a herestring: the herestring
+        # operator is also CircleCI's parameter-substitution token and cannot appear
+        # unescaped in an orb command. Platform strings never contain spaces or globs.
+        platforms_list="<<parameters.platforms>>"
+        # Must match the namespacing in image-build-by-digest: image plus
+        # tag-suffix, so two split builds in one pipeline stay separate.
+        digest_dir=".image-digests/$(echo "<<parameters.image>>${tag_suffix}" | tr '/:' '__')"
+        for platform in ${platforms_list//,/ }; do
+          safe_platform=$(echo "$platform" | tr '/:.' '___')
+          digest_file="${digest_dir}/${safe_platform}"
+          if [[ ! -s "$digest_file" ]]; then
+            echo "ERROR: no digest recorded for ${platform} (expected ${digest_file})."
+            echo "Every platform in 'platforms' needs a build-image-arch leg that pushed"
+            echo "and persisted its workspace. Refusing to publish a partial index."
+            echo "Digests present:"
+            find .image-digests -type f 2>/dev/null || echo "  (none)"
+            exit 1
+          fi
+          echo "${platform}: $(cat "$digest_file")"
+          sources+=("$(cat "$digest_file")")
+        done
+
+        # Index annotations. imagetools create only accepts these prefixes; a bare
+        # key or `manifest:` fails with `"" annotations are not supported yet`.
+        annotation_flags=()
+        if [[ "<<parameters.oci-labels>>" == "true" ]]; then
+          oci_source="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          oci_created="$(git show -s --format=%cI "$CIRCLE_SHA1" 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
+          annotation_flags+=(
+            --annotation "index:org.opencontainers.image.source=${oci_source}"
+            --annotation "index:org.opencontainers.image.revision=${CIRCLE_SHA1}"
+            --annotation "index:org.opencontainers.image.created=${oci_created}"
+          )
+          if [[ -n "${TAG_VALUE:-}" ]]; then
+            annotation_flags+=(--annotation "index:org.opencontainers.image.version=${TAG_VALUE}")
+          fi
+        fi
+
+        annotations_input="<<parameters.annotations>>"
+        if [[ -n "$annotations_input" ]]; then
+          printf '%s\n' "$annotations_input" > .annotations_input
+          while IFS= read -r line; do
+            line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            [[ -z "$line" || "$line" =~ ^# ]] && continue
+            case "$line" in
+              index:*|index-descriptor:*|manifest-descriptor:*) ;;
+              *)
+                echo "ERROR: annotation '${line}' is not usable on a merged index."
+                echo "imagetools create accepts only index:, index-descriptor: and"
+                echo "manifest-descriptor: prefixes. Per-platform manifest annotations"
+                echo "belong on the build-image-arch legs instead."
+                rm -f .annotations_input
+                exit 1
+                ;;
+            esac
+            annotation_flags+=("--annotation" "$line")
+          done < .annotations_input
+          rm -f .annotations_input
+        fi
+
+        # Tags, same shape as the single-job path.
+        tags=("${TAG_VALUE}")
+        if [[ "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
+          tags+=("latest${tag_suffix}")
+        fi
+
+        : > /tmp/.index_digests
+        while IFS= read -r reg; do
+          [[ -z "$reg" ]] && continue
+          ref="${reg}/<<parameters.image>>"
+
+          tag_flags=()
+          for tag in "${tags[@]}"; do
+            tag_flags+=("--tag" "${ref}:${tag}")
+          done
+
+          source_refs=()
+          for digest in "${sources[@]}"; do
+            source_refs+=("${ref}@${digest}")
+          done
+
+          echo ""
+          echo "Creating ${ref}:${tags[0]} from ${#source_refs[@]} platform digests"
+          docker buildx imagetools create \
+            "${annotation_flags[@]}" \
+            "${tag_flags[@]}" \
+            "${source_refs[@]}"
+
+          idx=$(docker buildx imagetools inspect "${ref}:${tags[0]}" --format '{{json .Manifest}}' | jq -r '.digest')
+          if [[ -z "$idx" || "$idx" == "null" ]]; then
+            echo "Could not read the merged index digest for ${ref}:${tags[0]}."
+            exit 1
+          fi
+          echo "${reg} ${idx}" >> /tmp/.index_digests
+        done < /tmp/.eligible_registries
+
+        if [[ ! -s /tmp/.index_digests ]]; then
+          echo "No eligible registries recorded by image-select-registries. Exiting."
+          exit 1
+        fi
+        cat /tmp/.index_digests
+
+        # image-sign-and-attest signs one digest against every registry, on the
+        # grounds that an index is content-addressed and therefore identical
+        # everywhere. That holds only if each merge produced byte-identical
+        # content, so assert it here rather than discovering a per-registry digest
+        # inside the signing code.
+        distinct=$(cut -d' ' -f2 /tmp/.index_digests | sort -u | wc -l)
+        if [[ "$distinct" -ne 1 ]]; then
+          echo "ERROR: the merged index digest differs between registries:"
+          cat /tmp/.index_digests
+          exit 1
+        fi
+
+        index_digest=$(cut -d' ' -f2 /tmp/.index_digests | head -n1)
+        echo -n "$index_digest" > /tmp/.index_digest
+        rm -f /tmp/.index_digests
+        echo "Index digest: ${index_digest}"

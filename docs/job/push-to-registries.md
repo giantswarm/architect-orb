@@ -101,7 +101,7 @@ Set this **only for a single-architecture arm64 image**:
 
 That combination makes the host match the target, so the binfmt registration above is skipped and no `RUN` step is emulated.
 
-It does **not** help a multi-arch build. A host is native for one architecture at a time, so `platforms: linux/amd64,linux/arm64` on an Arm class simply swaps which leg runs under QEMU — usually for the worse, since the emulated leg is then the one most images spend the most time in. Removing QEMU from a multi-arch build requires one job per architecture and a manifest merge, which this job does not do.
+It does **not** help a multi-arch build. A host is native for one architecture at a time, so `platforms: linux/amd64,linux/arm64` on an Arm class simply swaps which leg runs under QEMU — usually for the worse, since the emulated leg is then the one most images spend the most time in. Removing QEMU from a multi-arch build requires one job per architecture and a manifest merge: see [build-image-arch / merge-image-manifests](build-image-arch.md).
 
 ## Build cache
 

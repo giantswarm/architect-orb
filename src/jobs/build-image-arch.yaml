@@ -1,0 +1,162 @@
+environment:
+  DOCKER_BUILDKIT: "1"
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
+parameters:
+  image:
+    description: Name of the container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
+    type: string
+    default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
+  platform:
+    description: |
+      The single platform this job builds, e.g. `linux/arm64`. Run one job per
+      architecture and join them with `merge-image-manifests`.
+    type: string
+  resource_class:
+    description: |
+      Set this to a class whose architecture matches `platform`, which is the
+      entire point of splitting the build: `arm.medium` for a `linux/arm64` leg,
+      `medium` for a `linux/amd64` one. A mismatch still builds, but under QEMU,
+      and the job says so loudly.
+    type: enum
+    enum: ["small", "medium", "medium+", "large", "xlarge", "arm.medium", "arm.large", "arm.xlarge", "arm.2xlarge"]
+    default: medium
+  build-context:
+    type: string
+    default: "."
+  dockerfile:
+    type: string
+    default: "./Dockerfile"
+  git-tag-prefix:
+    type: string
+    default: ""
+  tag-suffix:
+    type: string
+    default: ""
+  force-public:
+    description: Skip the repo visibility check and push the image to public registries
+    type: boolean
+    default: false
+  registries-data:
+    default: ""
+    type: string
+  split-china-push:
+    description: |
+      Exclude the Aliyun registry from this leg's push set, because the
+      sync-china-registry job mirrors the merged index separately. Must match the
+      value on the merge job, or the legs and the merge disagree about the set.
+    type: boolean
+    default: false
+  annotations:
+    description: |
+      Newline-separated OCI annotations for this platform's manifest. Only
+      `manifest:`-scoped annotations survive the merge; index-scoped ones belong
+      on `merge-image-manifests`.
+    type: string
+    default: ""
+  oci-labels:
+    type: boolean
+    default: true
+  provenance:
+    type: enum
+    enum: ["min", "max", "false"]
+    default: "min"
+  sbom:
+    type: boolean
+    default: true
+  push:
+    description: |
+      Push this platform by digest (default). Set to false to only validate that
+      the Dockerfile builds for this architecture — no credentials, no digest, and
+      no merge job downstream.
+    type: boolean
+    default: true
+  cache:
+    type: enum
+    enum: ["off", "registry"]
+    default: "off"
+  cache-ref:
+    type: string
+    default: ""
+  hadolint:
+    type: enum
+    enum: ["warn", "fail", "skip"]
+    default: "warn"
+  hadolint-config:
+    type: string
+    default: ""
+steps:
+  - checkout
+  - setup_remote_docker:
+      version: default
+  - attach_workspace:
+      at: .
+  - run:
+      name: Set git tag prefix (empty if not set, only used on mono repos)
+      command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
+  - image-prepare-tag:
+      tag-suffix: <<parameters.tag-suffix>>
+  # Copied from push-to-registries rather than shared through a command, to keep
+  # this change from touching that job at all. The lint is a property of the
+  # source, not the architecture, so running it on every leg is redundant — but it
+  # costs about a second and fails fast, in the job that would otherwise go on to
+  # spend minutes building past a broken Dockerfile.
+  - unless:
+      condition:
+        equal: ["<<parameters.hadolint>>", "skip"]
+      steps:
+        - run:
+            name: "hadolint: lint <<parameters.dockerfile>>"
+            command: |
+              set -uo pipefail
+              if ! command -v hadolint >/dev/null 2>&1; then
+                echo "hadolint not found on PATH; the architect image should provide it." >&2
+                if [[ "<<parameters.hadolint>>" == "fail" ]]; then exit 1; fi
+                exit 0
+              fi
+              args=()
+              if [[ -n "<<parameters.hadolint-config>>" ]]; then
+                args+=("--config" "<<parameters.hadolint-config>>")
+              fi
+              if hadolint "${args[@]}" "<<parameters.dockerfile>>"; then
+                echo "hadolint: no findings."
+                exit 0
+              fi
+              rc=$?
+              if [[ "<<parameters.hadolint>>" == "fail" ]]; then
+                exit "$rc"
+              fi
+              echo "hadolint reported findings (mode=warn); continuing build."
+  - when:
+      # Build-only mode needs no registry credentials and has no push set.
+      condition: <<parameters.push>>
+      steps:
+        - image-login-to-registries:
+            registries-data: <<parameters.registries-data>>
+        - generate-github-token
+        - image-select-registries:
+            force-public: <<parameters.force-public>>
+            registries-data: <<parameters.registries-data>>
+            split-china-push: <<parameters.split-china-push>>
+  - image-build-by-digest:
+      image: <<parameters.image>>
+      platform: <<parameters.platform>>
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      tag-suffix: <<parameters.tag-suffix>>
+      annotations: <<parameters.annotations>>
+      oci-labels: <<parameters.oci-labels>>
+      provenance: <<parameters.provenance>>
+      sbom: <<parameters.sbom>>
+      push: <<parameters.push>>
+      cache: <<parameters.cache>>
+      cache-ref: <<parameters.cache-ref>>
+  - when:
+      condition: <<parameters.push>>
+      steps:
+        # One file per platform, so both legs can persist into the same directory
+        # without colliding and the merge job attaches one workspace.
+        - persist_to_workspace:
+            root: .
+            paths:
+              - .image-digests

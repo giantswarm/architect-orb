@@ -2,6 +2,7 @@
 
 ## Jobs
 
+- [build-image-arch / merge-image-manifests](job/build-image-arch.md)
 - [go-build](job/go-build.md)
 - [go-test](job/go-test.md)
 - [integration-test](job/integration-test.md)
