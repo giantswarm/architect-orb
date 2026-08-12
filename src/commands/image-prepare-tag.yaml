@@ -2,6 +2,22 @@ parameters:
   tag-suffix:
     type: "string"
     default: ""
+  persist:
+    description: |
+      Publish the computed version to the workspace as `.build_version`, where
+      `package-helm-with-abs` picks it up to stamp chart versions.
+
+      Set to false when several jobs that call this command run CONCURRENTLY:
+      CircleCI refuses to attach a workspace that two concurrent jobs persisted
+      the same path into, so the per-architecture build legs would otherwise
+      break the manifest merge downstream of them. Exactly one job in a pipeline
+      should persist it, and the value is deterministic for a given commit and
+      tag-suffix, so it does not matter which.
+
+      Callers that skip the persist still get DOCKER_IMAGE_TAG in their own
+      environment, which is all the build itself needs.
+    type: boolean
+    default: true
 steps:
   - run:
       name: Generate container tag from 'gitsemver get' and tag-suffix parameter
@@ -9,10 +25,13 @@ steps:
         gitsemver get | tr -d "\n" | tee /tmp/.docker_image_tag
         echo -n "<<parameters.tag-suffix>>" | tee -a /tmp/.docker_image_tag
         echo 'export DOCKER_IMAGE_TAG=$(cat /tmp/.docker_image_tag)' >> $BASH_ENV
-  - run:
-      name: "architect/image-prepare-tag: Write computed version to .build_version"
-      command: cp /tmp/.docker_image_tag .build_version
-  - persist_to_workspace:
-      root: .
-      paths:
-        - .build_version
+  - when:
+      condition: <<parameters.persist>>
+      steps:
+        - run:
+            name: "architect/image-prepare-tag: Write computed version to .build_version"
+            command: cp /tmp/.docker_image_tag .build_version
+        - persist_to_workspace:
+            root: .
+            paths:
+              - .build_version

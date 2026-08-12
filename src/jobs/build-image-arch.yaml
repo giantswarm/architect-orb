@@ -94,8 +94,14 @@ steps:
   - run:
       name: Set git tag prefix (empty if not set, only used on mono repos)
       command: echo 'export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"' >> "$BASH_ENV"
+  # persist: false because the legs run concurrently. CircleCI refuses to attach a
+  # workspace that two concurrent jobs persisted the same path into, and both legs
+  # would otherwise write `.build_version` -- which fails the merge job, not the
+  # legs, so it surfaces as a confusing downstream error. merge-image-manifests
+  # computes and persists the identical value.
   - image-prepare-tag:
       tag-suffix: <<parameters.tag-suffix>>
+      persist: false
   # Copied from push-to-registries rather than shared through a command, to keep
   # this change from touching that job at all. The lint is a property of the
   # source, not the architecture, so running it on every leg is redundant — but it
