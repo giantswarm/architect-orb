@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `push-to-registries`: `resource_class` now accepts CircleCI's Arm classes — `arm.medium`, `arm.large`, `arm.xlarge` and `arm.2xlarge` — alongside the existing x86 ones. The default is unchanged (`small`). See [docs/job/push-to-registries.md](docs/job/push-to-registries.md#building-on-arm) for when they help.
+
 - `push-to-app-catalog`: new `comment_on_pr` parameter (default `true`). Posts a sticky comment on
   the pull request with the published chart name, version, OCI reference and digest, updated in
   place on later pushes. Off-tag versions (`X.Y.Z-dev.<branch>.<date>.<time>`) are not guessable, so

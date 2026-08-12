@@ -18,7 +18,7 @@ parameters:
       https://circleci.com/docs/2.0/configuration-reference/#docker-executor
       for details.
     type: enum
-    enum: ["small", "medium", "medium+", "large", "xlarge"]
+    enum: ["small", "medium", "medium+", "large", "xlarge", "arm.medium", "arm.large", "arm.xlarge", "arm.2xlarge"]
   build-context:
     type: string
     default: "."
