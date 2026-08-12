@@ -17,8 +17,23 @@ parameters:
       Configures the amount of CPU and RAM for the job. See
       https://circleci.com/docs/2.0/configuration-reference/#docker-executor
       for details.
+
+      The `arm.*` classes put the job — and, with it, the `setup_remote_docker`
+      VM that actually runs the build — on arm64 silicon. The architect image is
+      multi-arch, so the same executor is used; only the class changes. There is
+      no `arm.small`: `arm.medium` (2 vCPU / 8 GB) is the floor, and it matches
+      what `small` gets today, since a `small` docker executor is already given a
+      medium remote-docker VM.
+
+      Only set one of these when EVERY target platform is arm64 (`platforms:
+      linux/arm64`). The build host can be native for one architecture at a time,
+      so putting a `linux/amd64,linux/arm64` build on an arm64 class does not
+      remove QEMU — it just moves the emulated leg from arm64 to amd64, and
+      usually makes the job slower rather than faster. Removing QEMU from a
+      genuinely multi-arch build needs one job per architecture and a manifest
+      merge, which this job does not do.
     type: enum
-    enum: ["small", "medium", "medium+", "large", "xlarge"]
+    enum: ["small", "medium", "medium+", "large", "xlarge", "arm.medium", "arm.large", "arm.xlarge", "arm.2xlarge"]
   build-context:
     type: string
     default: "."

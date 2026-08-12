@@ -87,6 +87,22 @@ When the job runs, `--platform` is resolved in this order:
 
 QEMU/binfmt handlers are registered only when at least one resolved platform differs from the build host. A single-platform build matching the host (`platforms: linux/amd64`) skips the privileged `tonistiigi/binfmt` pull entirely — nothing can be emulated, so it bought nothing. See [Multi-arch Dockerfiles](../multi-arch-dockerfiles.md).
 
+## Building on Arm
+
+`resource_class` accepts CircleCI's Arm classes (`arm.medium`, `arm.large`, `arm.xlarge`, `arm.2xlarge`) as well as the x86 ones. The class applies to the `setup_remote_docker` VM as well as the job container — CircleCI matches the remote Docker environment's architecture to the primary container's — so the build genuinely runs on arm64 silicon. The architect image is multi-arch, so no separate executor is needed. There is no `arm.small`; `arm.medium` is the smallest.
+
+Set this **only for a single-architecture arm64 image**:
+
+```yaml
+- architect/push-to-registries:
+    platforms: linux/arm64
+    resource_class: arm.medium
+```
+
+That combination makes the host match the target, so the binfmt registration above is skipped and no `RUN` step is emulated.
+
+It does **not** help a multi-arch build. A host is native for one architecture at a time, so `platforms: linux/amd64,linux/arm64` on an Arm class simply swaps which leg runs under QEMU — usually for the worse, since the emulated leg is then the one most images spend the most time in. Removing QEMU from a multi-arch build requires one job per architecture and a manifest merge, which this job does not do.
+
 ## Build cache
 
 Each run of this job gets a fresh `setup_remote_docker` VM and creates a fresh `docker-container` buildx builder, so by default (`cache: off`) **the entire Dockerfile is re-executed from scratch on every build**. The `RUN --mount=type=cache` mounts in your Dockerfile do not help here — they live in the builder's state, which is destroyed with the VM. They only speed up local rebuilds.
