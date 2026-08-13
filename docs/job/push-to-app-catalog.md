@@ -52,6 +52,21 @@ The job pushes Helm charts to Giant Swarm's App Catalog OCI registry — `gsoci.
 You can read more about storing helm charts in OCI registries in the [helm
 documentation](https://helm.sh/blog/storing-charts-in-oci/).
 
+## Chart version safety
+
+Unlike the GitHub catalog — which is split into `app_catalog` for releases and `app_catalog_test`
+for everything else — the OCI registry path is **not** split by build type. Every build pushes to
+`<registry>/charts/giantswarm`, and `helm push` replaces whatever the chart's version tag currently
+points at. Publishing a plain release version such as `1.2.3` from a branch build therefore
+overwrites the released chart in place, and anything tracking that version — Flux most notably —
+reconciles the digest change and rolls out the branch's code.
+
+What prevents this is that the chart version is **always** stamped from `gitsemver`. Off-tag that
+yields an `X.Y.Z-dev.<branch>.<date>.<time>` pre-release, which cannot collide with a release. This
+is why [override_chart_version](#override_chart_version-optional-deprecated) is deprecated and
+ignored — leaving the version from `Chart.yaml` in place let a branch build that had not bumped the
+version by hand republish, and so overwrite, the released chart.
+
 ## Parameters
 
 - [common parameters](common.md#parameters) shared in all jobs.
@@ -64,7 +79,7 @@ documentation](https://helm.sh/blog/storing-charts-in-oci/).
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
 - [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaulttrue)
 - [sign](#sign-optional-boolean-defaulttrue)
-- [override_chart_version](#override_chart_version-optional-boolean-defaulttrue)
+- [override_chart_version](#override_chart_version-optional-deprecated) (optional, deprecated, always treated as `true`)
 - [override_app_version](#override_app_version-optional-boolean-defaulttrue)
 
 ### attach_workspace
@@ -150,11 +165,19 @@ publish digest + timestamp metadata to the public Rekor transparency log).
 See [Cosign signing](../cosign-signing.md) for the verification command
 and the end-to-end identity model.
 
-### override_chart_version (optional boolean, default=true)
+### override_chart_version (optional, deprecated)
 
-When `true` (the default), passes `--override-chart-version` to App Build Suite, stamping the
-chart's `version` field with the value computed by `gitsemver` (or read from the `.build_version`
-workspace file). Set to `false` to leave the `version` field in `Chart.yaml` unchanged.
+**Deprecated.** This parameter has no effect anymore and is always treated as `true`. It is kept
+for backwards compatibility and will be removed in a future version.
+
+The chart's `version` field is always stamped with the value computed by `gitsemver` (or read from
+the `.build_version` workspace file). Setting the parameter to `false` used to leave the `version`
+field in `Chart.yaml` unchanged — see [Chart version safety](#chart-version-safety) for why that is
+no longer allowed.
+
+Note that [override_app_version](#override_app_version-optional-boolean-defaulttrue) is *not*
+deprecated and still works as documented: `appVersion` does not determine the published tag, so
+pinning it cannot overwrite a release.
 
 ### override_app_version (optional boolean, default=true)
 
