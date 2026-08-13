@@ -27,6 +27,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - `override_app_version` is **unchanged** and still honoured. `appVersion` does not determine the
     published tag, so pinning it cannot overwrite a release.
 
+### Added
+
+- `push-to-registries`: new `cache` parameter to persist BuildKit's layer cache across jobs. Every run gets a fresh `setup_remote_docker` VM and creates a fresh `docker-container` builder, so until now the whole Dockerfile was re-executed from scratch on every build — and a Dockerfile's own `RUN --mount=type=cache` mounts could not help, because they live in the builder state that is destroyed with the VM. `cache: registry` adds `--cache-from`/`--cache-to type=registry`, storing the layer cache as an OCI artifact at `<registry>/<image>:buildcache<tag-suffix>` (override with `cache-ref`; see the derivation below). Defaults to `off`, so existing consumers are unaffected. The exporter always runs `mode=max`, which is what makes the intermediate `RUN` layers — `apt-get install`, `pip install`, `yarn install` — cache at all; `min` would export only final-image layers, so it is not offered. Requires `push: true` for the registry credentials. Measured on `giantswarm/backstage`: ~5m32s → 2m03s warm.
+
+  The exporter is configured `image-manifest=true,oci-mediatypes=true` (ACR rejects the default manifest-list cache format) and `ignore-error=true`, so a failed cache _write_ can never fail a build whose image is already pushed, nor trigger the surrounding four-attempt retry loop. Because that would otherwise make a permanently broken cache invisible — and the exporter retries with escalating backoff, so it costs wall-clock too — the job now greps the build output for a failed export and emits a loud non-fatal warning. Capturing that output puts the buildx invocation behind a pipe, so the step sets `set -o pipefail` explicitly rather than relying on CircleCI's default shell — without it, `tee`'s exit status would mask a failed build.
+
+  The cache ref must resolve identically for every build of a repo, so `<registry>` is **not** taken from the fully filtered eligible-registry list — `push_dev` filtering varies by build type, and keying off that list would resolve to different registries per build type, forking the cache in two and leaving release builds unable to reuse what branch builds paid to write. Instead the registry is selected in the same pass over the registries data, applying: visibility must match (so a private image's layers are never cached in a public registry); the China mirror is **never** selected (unconditionally, not gated on `split-china-push`, which also varies by build type — a throwaway cache must not cross the Pacific on the build's critical path); and `gsoci`/`gsociprivate` win by name, so the ref does not depend on the ordering of `REGISTRIES_DATA_BASE64`. Any other visibility-matching registry is the fallback; if none survives, the build proceeds without a cache and logs why.
+
+  Two operational prerequisites are documented rather than implied: untagged-manifest retention must be enabled on the target registry (a cache export whose content changed orphans the previous manifest, and ACR does not GC untagged manifests by default — note a fully warm build re-exports byte-identical content and orphans nothing, so this accrues per content change, not per build), and the layer cache sits inside the trust boundary of every repo sharing the push credentials — so the recommended setup is to enable it on branch/PR jobs and leave release-tag jobs on `cache: off`, keeping signed, provenance-attested artifacts off a shared mutable cache.
+
+### Changed
+
+- `push-to-registries`: register QEMU/binfmt handlers only when at least one target platform differs from the build host. Single-arch repos (`platforms: linux/amd64`) were paying a privileged `tonistiigi/binfmt --install all` image pull on every build for handlers that could never be used, since no `RUN` step is emulated when the target matches the host. Multi-arch builds are unchanged, and if the host platform cannot be determined the handlers are registered as before rather than risking an un-emulated cross build.
+- `executor` parameter on `push-to-app-catalog` is now **permanently retained** rather than pending removal.
+  It accepts only `app-build-suite`, which is also the default, so passing it is already a no-op — but ~275
+  repos set it explicitly and removing it would break all of them for no benefit.
+
+### Removed
+
+- **Breaking.** `skip_conftest_deprek8ion` parameter on `push-to-app-catalog`. It has been ignored since
+  v6.3.2, when the `helm-conftest` step it controlled was removed. The third-party
+  [deprek8ion](https://github.com/swade1987/deprek8ion) policies that step ran have been unmaintained since
+  2021 and only covered Kubernetes API deprecations up to 1.22; app-build-suite runs kube-linter over the
+  same manifests. `conftest` is also gone from the architect, app-build-suite, and app-test-suite images.
+- **Breaking.** `ct_config` parameter on `push-to-app-catalog`. It has been ignored since v9.0.0, when the
+  `helm-lint` step it controlled was removed along with the `architect`-executor path. Chart-testing config
+  is still honoured by app-build-suite via `ct-config` in `.abs/main.yaml` — only the orb parameter is gone,
+  so no `ct-config.yaml` files need to change.
+
+> **Upgrading from v9.x?** See [docs/migration-v9-to-v10.md](docs/migration-v9-to-v10.md).
+
+## [9.6.0] - 2026-07-24
+
+### Changed
+
+- Bump the `app-build-suite` executor image to `2.2.0-circleci` (was `2.1.3-circleci`), picking up abs v2.2.0: package-time Artifact Hub metadata injection and the `HelmTemplateValidator` build step ([giantswarm/roadmap#3940](https://github.com/giantswarm/roadmap/issues/3940)).
+
 ## [9.5.5] - 2026-06-24
 
 ### Fixed
@@ -1966,7 +2003,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.5.5...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.6.0...HEAD
+[9.6.0]: https://github.com/giantswarm/architect-orb/compare/v9.5.5...v9.6.0
 [9.5.5]: https://github.com/giantswarm/architect-orb/compare/v9.5.4...v9.5.5
 [9.5.4]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...v9.5.4
 [9.5.3]: https://github.com/giantswarm/architect-orb/compare/v9.5.2...v9.5.3

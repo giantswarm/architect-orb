@@ -8,7 +8,7 @@ description: |
   See [docs](docs/integration_test.md) for more details.
 parameters:
   apptestctl-version:
-    default: "v0.25.1"
+    default: "v0.26.0"
     description: "apptestctl version for bootstrapping app platform."
     type: string
   env-file:
@@ -16,7 +16,7 @@ parameters:
     description: "File of environment variables to set."
     type: string
   helm-version:
-    default: "v3.21.2"
+    default: "v3.21.3"
     description: "Helm version to install."
     type: string
   install-app-platform:

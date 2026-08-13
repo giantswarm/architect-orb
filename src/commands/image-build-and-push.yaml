@@ -100,6 +100,32 @@ parameters:
       skipped — those only make sense on a published image.
     type: boolean
     default: true
+  cache:
+    description: |
+      BuildKit layer-cache backend for the buildx build.
+      - "off" (default): no cache import/export. Every job gets a fresh
+        `setup_remote_docker` VM and a fresh `docker-container` builder, so the whole
+        Dockerfile is re-executed from scratch on every build.
+      - "registry": import and export the layer cache as an OCI artifact in the same
+        registry the image is pushed to (`--cache-from` / `--cache-to type=registry`).
+        Requires `push: true`, because the export reuses the registry credentials the
+        push path already set up.
+      Note: `RUN --mount=type=cache` mounts are NOT part of the exported cache — only
+      layers are. A layer cache *hit* skips the `RUN` entirely (so its cache mount is
+      irrelevant); a *miss* re-runs it against a cold mount.
+    type: enum
+    enum: ["off", "registry"]
+    default: "off"
+  cache-ref:
+    description: |
+      Explicit OCI ref for the `cache: registry` cache artifact. When empty (default),
+      it is derived as `<registry>/<image>:buildcache<tag-suffix>`, where `<registry>` is
+      the visibility-matched entry, preferring gsoci/gsociprivate and never the China
+      mirror (see the derivation comment in the build step). That is one shared cache per
+      image, written by every build of the repo; set this to scope it differently (e.g.
+      per branch). The ref holds a cache manifest and blobs, not a runnable image.
+    type: string
+    default: ""
 steps:
   - when:
       # The GitHub token is only needed for the repo-visibility check, which only
@@ -114,6 +140,13 @@ steps:
       no_output_timeout: 20m
 
       command: |
+        # The buildx invocation below is piped through `tee`, so the build's exit status
+        # only survives with pipefail. CircleCI's default shell already sets it and no
+        # executor here overrides `shell:`; setting it explicitly keeps this script from
+        # depending on that default, since losing it would mask every build failure
+        # behind tee's exit 0.
+        set -o pipefail
+
         # Determine tag value from tag_envvar or fallback
         TAG_VALUE="${DOCKER_IMAGE_TAG}"
         tag_suffix="<<parameters.tag-suffix>>"
@@ -224,10 +257,32 @@ steps:
           # The cosign and SBOM steps below consume that file instead of re-deriving the
           # set, so the signed/attested set can never drift from the pushed set (this
           # duplication used to live in three loops with subtly different filters).
+          # The same pass also picks the registry that will host the layer cache, so the
+          # one filter that differs between the two is visible in one place.
           : > /tmp/.eligible_registries
           all_tags=()
+          cache_registry=""
+          cache_fallback=""
           while IFS=' ' read -r access reg _ _ push_dev; do
             [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+
+            # Layer-cache host. Evaluated here, BEFORE the push_dev gate below, on
+            # purpose: push_dev varies by build type, so selecting after it would send
+            # dev/branch builds to one registry and release builds to another — forking
+            # the cache so release builds never reuse what branch builds paid to write.
+            # Visibility stays in the filter (a private image's layers must not be cached
+            # in a public registry); the China mirror is excluded unconditionally rather
+            # than gated on split-china-push, since that parameter varies by build type
+            # too and a throwaway cache has no business crossing the Pacific. gsoci /
+            # gsociprivate win by name so the ref is independent of registries-data order.
+            if [[ "$access" == *"$IMAGE_ACCESS"* && "$reg" != *".cr.aliyuncs.com" ]]; then
+              case "$reg" in
+                gsoci.azurecr.io|gsociprivate.azurecr.io)
+                  [[ -z "$cache_registry" ]] && cache_registry="$reg" ;;
+              esac
+              [[ -z "$cache_fallback" ]] && cache_fallback="$reg"
+            fi
+
             [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
             # Dev-build gate: `gitsemver validate --type dev` is the canonical dev-version
             # check (anchored to the full X.Y.Z-dev.<branch>.<date>.<time> form). Used
@@ -249,6 +304,7 @@ steps:
               echo "Registry $reg is not configured for $IMAGE_ACCESS images, skipping"
             fi
           done < .registries_data
+          cache_registry="${cache_registry:-$cache_fallback}"
 
           if [[ ${#all_tags[@]} -eq 0 ]]; then
             echo "No valid registry/tag combinations found for push. Exiting."
@@ -258,10 +314,37 @@ steps:
 
         # Register QEMU/binfmt handlers in the kernel so buildx can execute
         # non-host-arch RUN steps. Required for plain Dockerfiles that don't
-        # gate RUN with --platform=$BUILDPLATFORM. Image is pinned via tag and
-        # bumped by Renovate.
-        # renovate: datasource=docker depName=tonistiigi/binfmt
-        docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
+        # gate RUN with --platform=$BUILDPLATFORM.
+        #
+        # Skipped when every target platform already matches the build host: no RUN
+        # step can be emulated then, so registering binfmt only costs a privileged
+        # image pull. Single-arch repos (`platforms: linux/amd64`) paid this on every
+        # build. If the host platform can't be determined we register anyway, keeping
+        # the previous unconditional behaviour rather than risking an un-emulated
+        # cross build.
+        host_platform="$(docker version --format '{{.Server.Os}}/{{.Server.Arch}}' 2>/dev/null || true)"
+        needs_emulation=false
+        if [[ -z "$host_platform" ]]; then
+          echo "Could not determine the build host platform; registering QEMU/binfmt to be safe."
+          needs_emulation=true
+        else
+          # Comma-to-space word splitting rather than a bash herestring: the herestring
+          # operator is also CircleCI's parameter-substitution token and cannot appear
+          # unescaped in an orb command. Platform strings never contain spaces or globs.
+          for target_platform in ${platforms//,/ }; do
+            if [[ "$target_platform" != "$host_platform" ]]; then
+              needs_emulation=true
+            fi
+          done
+        fi
+
+        if [[ "$needs_emulation" == "true" ]]; then
+          # Image is pinned via tag and bumped by Renovate.
+          # renovate: datasource=docker depName=tonistiigi/binfmt
+          docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
+        else
+          echo "All target platforms match the build host ($host_platform); skipping QEMU/binfmt registration."
+        fi
 
         # Reuse the builder if it already exists; create otherwise. Bootstrap
         # ensures the buildkit container is up before the first build.
@@ -322,6 +405,42 @@ steps:
           fi
         fi
 
+        # BuildKit layer cache. The builder is created fresh on a fresh remote-docker
+        # VM every job, so without an external cache backend the entire Dockerfile is
+        # re-executed every build. The registry exporter persists the layer cache as an
+        # OCI artifact alongside the image.
+        cache_flags=()
+        if [[ "<<parameters.cache>>" == "registry" ]]; then
+          if [[ "<<parameters.push>>" != "true" ]]; then
+            echo "cache=registry needs push=true for registry credentials; continuing without a layer cache."
+          else
+            # cache_registry is picked in the single pass over .registries_data above.
+            cache_ref="<<parameters.cache-ref>>"
+            if [[ -z "$cache_ref" ]]; then
+              if [[ -n "$cache_registry" ]]; then
+                cache_ref="${cache_registry}/<<parameters.image>>:buildcache${tag_suffix}"
+              else
+                echo "No $IMAGE_ACCESS registry eligible to host the layer cache; continuing without one."
+              fi
+            fi
+            if [[ -n "$cache_ref" ]]; then
+              echo "Using registry layer cache: $cache_ref"
+              # mode=max exports intermediate layers too. That is the whole point here —
+              # the expensive steps (apt/pip/npm installs) are intermediate, and the
+              # default `min` would export only final-image layers, so it is not offered.
+              # image-manifest + oci-mediatypes: ACR (gsoci/gsociprivate) rejects the
+              # exporter's default manifest-list format, so the cache must be pushed as a
+              # plain OCI image manifest.
+              # ignore-error: a failed *export* must never fail the build — the image
+              # itself is already pushed by then, and the outer retry loop would otherwise
+              # rebuild four times over a cache write problem. The trade-off is that the
+              # failure is invisible, so it is detected and warned about after the build.
+              cache_flags+=("--cache-from" "type=registry,ref=${cache_ref}")
+              cache_flags+=("--cache-to" "type=registry,ref=${cache_ref},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true")
+            fi
+          fi
+        fi
+
         # Single buildx build/push for all tags/registries.
         # --metadata-file captures the manifest index digest for downstream cosign signing.
         SUCCESS=false
@@ -333,11 +452,12 @@ steps:
             "${annotation_flags[@]}" \
             "${oci_label_flags[@]}" \
             "${attest_flags[@]}" \
+            "${cache_flags[@]}" \
             --metadata-file=/tmp/.buildx_metadata.json \
             -f "<<parameters.dockerfile>>" \
             "<<parameters.build-context>>" \
             --progress=plain \
-            "${push_flags[@]}"; then
+            "${push_flags[@]}" 2>&1 | tee /tmp/.buildx_output; then
             SUCCESS=true
             break
           fi
@@ -348,6 +468,25 @@ steps:
         if [[ "$SUCCESS" == "false" ]]; then
           echo "buildx build failed. Check buildx output above."
           exit 1
+        fi
+
+        # `ignore-error=true` on the cache exporter means a rejected export (registry
+        # policy, quota, an auth scope that covers image push but not the cache repo)
+        # leaves the build green while every later build silently reverts to full cost.
+        # Worse, the exporter retries with escalating backoff before giving up, so a
+        # persistently failing cache registry adds minutes per build and reports nothing.
+        #
+        # buildx prints a fenced `> exporting cache to registry:` section only when that
+        # vertex failed; a successful export never emits it. Verified against both a
+        # rejected export (ACR `insufficient_scope`) and a successful one.
+        if [[ ${#cache_flags[@]} -gt 0 ]] && grep -qE '^[[:space:]]*> exporting cache to registry:' /tmp/.buildx_output; then
+          echo ""
+          echo "WARNING: the image was pushed, but the BuildKit cache export FAILED."
+          echo "WARNING: ignore-error=true kept this build green. Every subsequent build"
+          echo "WARNING: will pay the full uncached cost until this is fixed."
+          echo "WARNING: cache ref: ${cache_ref:-<unset>}"
+          echo "WARNING: see the 'exporting cache to registry' section in the build output."
+          echo ""
         fi
 
         if [[ "<<parameters.push>>" == "false" ]]; then
@@ -597,5 +736,5 @@ steps:
               /tmp/.index.json /tmp/.attest_manifest.json \
               /tmp/.index_digest /tmp/.eligible_registries \
               /tmp/.image_access /tmp/.buildx_metadata.json \
-              /tmp/.gh_response \
+              /tmp/.gh_response /tmp/.buildx_output \
               /tmp/sbom.*.spdx.json /tmp/sbom.*.cdx.json 2>/dev/null || true

@@ -20,10 +20,6 @@ parameters:
     description: |
       If 'explicit_allow_chart_name_mismatch' is set to true, the name of the chart can be anything.
       Otherwise the name set in the 'chart' parameter must start with the repository name and optionally continue with '-app'.
-  ct_config:
-    description: "Chart Testing Config file path"
-    type: "string"
-    default: ""
   on_tag:
     type: boolean
     default: true
@@ -36,8 +32,9 @@ parameters:
     enum: ["app-build-suite"]
     default: "app-build-suite"
     description: |
-      Kept for backwards compatibility. Only `app-build-suite` is accepted.
-      Will be removed in a future version.
+      Kept for backwards compatibility. Only `app-build-suite` is accepted, and it is the default,
+      so passing this parameter has no effect. Retained permanently: ~275 repos still set it
+      explicitly, and removing it would break every one of them for no benefit.
   push_to_appcatalog:
     default: true
     description: |
@@ -68,12 +65,6 @@ parameters:
       for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
-  skip_conftest_deprek8ion:
-    type: boolean
-    default: false
-    description: |
-      This parameter has no effect anymore, it is kept for backwards compatibility.
-      Will be removed in a future version.
   override_chart_version:
     type: boolean
     default: true
