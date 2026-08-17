@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Internal, no behaviour change: the cosign signing, SBOM staging and scratch-file cleanup steps move out of `image-build-and-push` into a new `image-sign-and-attest` command. The 230 moved lines are byte-identical — they already communicated with the build step only through files (`/tmp/.image_access`, `/tmp/.eligible_registries`, `/tmp/.index_digest`), which is what makes the lift possible. It also means the command works against any pushed index, including one assembled by `docker buildx imagetools create` rather than pushed by a single `buildx` invocation.
 - `push-to-registries`: register QEMU/binfmt handlers only when at least one target platform differs from the build host. Single-arch repos (`platforms: linux/amd64`) were paying a privileged `tonistiigi/binfmt --install all` image pull on every build for handlers that could never be used, since no `RUN` step is emulated when the target matches the host. Multi-arch builds are unchanged, and if the host platform cannot be determined the handlers are registered as before rather than risking an un-emulated cross build.
 - `executor` parameter on `push-to-app-catalog` is now **permanently retained** rather than pending removal.
   It accepts only `app-build-suite`, which is also the default, so passing it is already a no-op — but ~275
