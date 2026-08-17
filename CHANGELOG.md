@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Internal, no behaviour change: the cosign signing, SBOM staging and scratch-file cleanup steps move out of `image-build-and-push` into a new `image-sign-and-attest` command. The 230 moved lines are byte-identical — they already communicated with the build step only through files (`/tmp/.image_access`, `/tmp/.eligible_registries`, `/tmp/.index_digest`), which is what makes the lift possible. It also means the command works against any pushed index, including one assembled by `docker buildx imagetools create` rather than pushed by a single `buildx` invocation.
+
 - `generate-github-token`: check `gh-token`'s exit status and the token it returns, and route the
   private key decode through the same path, so `non_fatal` is honoured.
 
