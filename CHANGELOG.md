@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Internal, no behaviour change: `image-build-and-push` now delegates registry selection to a new `image-select-registries` command and image/SBOM signing to a new `image-sign-and-attest` command. The code is moved verbatim and `push-to-registries` is unaffected. The two commands exist so that a per-architecture split build can resolve the push set and sign the published index with exactly the same code as the single-job path, instead of growing a second copy that could drift from it.
 - `push-to-registries`: register QEMU/binfmt handlers only when at least one target platform differs from the build host. Single-arch repos (`platforms: linux/amd64`) were paying a privileged `tonistiigi/binfmt --install all` image pull on every build for handlers that could never be used, since no `RUN` step is emulated when the target matches the host. Multi-arch builds are unchanged, and if the host platform cannot be determined the handlers are registered as before rather than risking an un-emulated cross build.
 - `executor` parameter on `push-to-app-catalog` is now **permanently retained** rather than pending removal.
   It accepts only `app-build-suite`, which is also the default, so passing it is already a no-op — but ~275
