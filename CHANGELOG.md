@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Internal, no behaviour change: registry selection moves out of `image-build-and-push` into a new `image-select-registries` command — the repo-visibility check, the registries-data load, and the pass that resolves both the eligible push set and the layer-cache host. It records its answer in `/tmp/.image_access`, `/tmp/.eligible_registries` and `/tmp/.cache_registry`, which the caller now reads instead of re-deriving. Building `--tag` flags stays in `image-build-and-push`, since it is a pure cross-product of the eligible set with the tag list. One derivation, consumed from files, is what guarantees the signed and attested set can never drift from the pushed set — and it lets per-architecture build legs and a manifest merge resolve that set with exactly the same code.
+
 - Internal, no behaviour change: the cosign signing, SBOM staging and scratch-file cleanup steps move out of `image-build-and-push` into a new `image-sign-and-attest` command. The 230 moved lines are byte-identical — they already communicated with the build step only through files (`/tmp/.image_access`, `/tmp/.eligible_registries`, `/tmp/.index_digest`), which is what makes the lift possible. It also means the command works against any pushed index, including one assembled by `docker buildx imagetools create` rather than pushed by a single `buildx` invocation.
 
 - `generate-github-token`: check `gh-token`'s exit status and the token it returns, and route the

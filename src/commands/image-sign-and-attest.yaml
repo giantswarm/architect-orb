@@ -273,6 +273,7 @@ steps:
         rm -f /tmp/.cosign_refs /tmp/.cosign_attest \
               /tmp/.index.json /tmp/.attest_manifest.json \
               /tmp/.index_digest /tmp/.eligible_registries \
-              /tmp/.image_access /tmp/.buildx_metadata.json \
+              /tmp/.image_access /tmp/.cache_registry \
+              /tmp/.buildx_metadata.json \
               /tmp/.gh_response /tmp/.buildx_output \
               /tmp/sbom.*.spdx.json /tmp/sbom.*.cdx.json 2>/dev/null || true
