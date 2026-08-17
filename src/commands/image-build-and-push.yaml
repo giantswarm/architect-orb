@@ -133,6 +133,10 @@ steps:
       condition: <<parameters.push>>
       steps:
         - generate-github-token
+        - image-select-registries:
+            force-public: <<parameters.force-public>>
+            registries-data: <<parameters.registries-data>>
+            split-china-push: <<parameters.split-china-push>>
   - run:
       name: Build multi-arch image (pushed to all registries unless push=false)
 
@@ -194,56 +198,10 @@ steps:
         else
           push_flags=(--push)
 
-          # If image is forced to be pushed as a public one,
-          # we shouldn't check whether the source is public
-          # if repo is private, push to private only
-          # if repo is public or force-public is set push to public only
-          if [[ "<< parameters.force-public >>" = "true" ]]; then
-            echo -e "'force-public' flag is set, treating the image as public.\n"
-            IMAGE_ACCESS=public
-          else
-            GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-            HTTP_STATUS=$(curl -s -o /tmp/.gh_response -w "%{http_code}" \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github.v3+json" \
-              "${GITHUB_API_URL}")
-
-            if [[ "${HTTP_STATUS}" != "200" ]]; then
-              echo "GitHub API call to ${GITHUB_API_URL} failed (HTTP ${HTTP_STATUS}):"
-              cat /tmp/.gh_response
-              exit 1
-            fi
-
-            REPO_PRIVATE=$(jq -r '.private' < /tmp/.gh_response)
-            if [[ "${REPO_PRIVATE}" != "true" && "${REPO_PRIVATE}" != "false" ]]; then
-              echo "Unexpected GitHub API response (could not parse .private):"
-              cat /tmp/.gh_response
-              exit 1
-            fi
-
-            if [[ "${REPO_PRIVATE}" = "false" ]]; then
-              echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"
-              IMAGE_ACCESS=public
-            else
-              echo -e "The GitHub repository is not detected as public, treating the image as a private one.\n"
-              IMAGE_ACCESS=private
-            fi
-          fi
-
-          if ! [[ -f .registries_data ]]; then
-            if [[ "<<parameters.registries-data>>" ]]; then
-              echo "Using registries data from the circle.ci job parameters."
-              REGISTRIES_DATA="<<parameters.registries-data>>"
-            else
-              echo "Using registries data from the circle.ci environment variable settings."
-              if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
-                echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
-                exit 1
-              fi
-              REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
-            fi
-            echo "${REGISTRIES_DATA}" > .registries_data
-          fi
+          # Read these, never re-derive them: a second derivation can disagree with
+          # the pushed set, and the signing steps read these same files.
+          IMAGE_ACCESS=$(cat /tmp/.image_access)
+          cache_registry=$(cat /tmp/.cache_registry)
 
           # Collect all tags
           tags=("<<parameters.image>>:${TAG_VALUE}")
@@ -251,60 +209,17 @@ steps:
             tags+=("<<parameters.image>>:latest$tag_suffix")
           fi
 
-          # Prepare all registry/image:tag combinations. The registries this build is
-          # eligible to push to (visibility match, not skipped by split-china, and — for
-          # dev builds — push_dev=true) are recorded once in /tmp/.eligible_registries.
-          # The cosign and SBOM steps below consume that file instead of re-deriving the
-          # set, so the signed/attested set can never drift from the pushed set (this
-          # duplication used to live in three loops with subtly different filters).
-          # The same pass also picks the registry that will host the layer cache, so the
-          # one filter that differs between the two is visible in one place.
-          : > /tmp/.eligible_registries
+          # Any filter that decides the set belongs in image-select-registries, not here.
           all_tags=()
-          cache_registry=""
-          cache_fallback=""
-          while IFS=' ' read -r access reg _ _ push_dev; do
-            [[ -z "$reg" || "$reg" =~ ^# ]] && continue
-
-            # Layer-cache host. Evaluated here, BEFORE the push_dev gate below, on
-            # purpose: push_dev varies by build type, so selecting after it would send
-            # dev/branch builds to one registry and release builds to another — forking
-            # the cache so release builds never reuse what branch builds paid to write.
-            # Visibility stays in the filter (a private image's layers must not be cached
-            # in a public registry); the China mirror is excluded unconditionally rather
-            # than gated on split-china-push, since that parameter varies by build type
-            # too and a throwaway cache has no business crossing the Pacific. gsoci /
-            # gsociprivate win by name so the ref is independent of registries-data order.
-            if [[ "$access" == *"$IMAGE_ACCESS"* && "$reg" != *".cr.aliyuncs.com" ]]; then
-              case "$reg" in
-                gsoci.azurecr.io|gsociprivate.azurecr.io)
-                  [[ -z "$cache_registry" ]] && cache_registry="$reg" ;;
-              esac
-              [[ -z "$cache_fallback" ]] && cache_fallback="$reg"
-            fi
-
-            [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
-            # Dev-build gate: `gitsemver validate --type dev` is the canonical dev-version
-            # check (anchored to the full X.Y.Z-dev.<branch>.<date>.<time> form). Used
-            # identically here and in the cosign/SBOM steps so they always agree.
-            if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
-              echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
-              continue
-            fi
-            if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
-              echo -n ${reg} > /tmp/.docker_image_registry
-              echo "$reg" >> /tmp/.eligible_registries
-              for tag in "${tags[@]}"; do
-                echo -e "\nProcessing image push config for registry $reg."
-                echo "Tag the image for $reg"
-                echo "Preparing tag for $reg: <<parameters.image>>:${tag##*:}"
-                all_tags+=("--tag" "$reg/<<parameters.image>>:${tag##*:}")
-              done
-            else
-              echo "Registry $reg is not configured for $IMAGE_ACCESS images, skipping"
-            fi
-          done < .registries_data
-          cache_registry="${cache_registry:-$cache_fallback}"
+          while IFS= read -r reg; do
+            [[ -z "$reg" ]] && continue
+            for tag in "${tags[@]}"; do
+              echo -e "\nProcessing image push config for registry $reg."
+              echo "Tag the image for $reg"
+              echo "Preparing tag for $reg: <<parameters.image>>:${tag##*:}"
+              all_tags+=("--tag" "$reg/<<parameters.image>>:${tag##*:}")
+            done
+          done < /tmp/.eligible_registries
 
           if [[ ${#all_tags[@]} -eq 0 ]]; then
             echo "No valid registry/tag combinations found for push. Exiting."
@@ -495,8 +410,7 @@ steps:
         fi
         echo "Image is pushed to all registries."
 
-        # Persist state for the cosign + SBOM steps below.
-        echo -n "$IMAGE_ACCESS" > /tmp/.image_access
+        # Persist the index digest for image-sign-and-attest.
         # The manifest index digest is content-addressed — identical across every
         # registry we pushed to — so compute it once here and let both downstream
         # steps read it rather than re-deriving the same value from the metadata.
