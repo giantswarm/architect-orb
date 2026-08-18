@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.0.0] - 2026-08-18
+
 ### Deprecated
 
 - `push-to-app-catalog`, `package-helm-with-abs`: `override_chart_version` is deprecated and now
@@ -2006,7 +2008,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v9.6.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.0.0...HEAD
+[10.0.0]: https://github.com/giantswarm/architect-orb/compare/v9.6.0...v10.0.0
 [9.6.0]: https://github.com/giantswarm/architect-orb/compare/v9.5.5...v9.6.0
 [9.5.5]: https://github.com/giantswarm/architect-orb/compare/v9.5.4...v9.5.5
 [9.5.4]: https://github.com/giantswarm/architect-orb/compare/v9.5.3...v9.5.4
