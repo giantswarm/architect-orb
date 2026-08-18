@@ -45,6 +45,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 
+- **Breaking.** The `image-build-and-push` command is renamed to `image-build`, and its `platforms`
+  parameter to `platform`. Commands are internal to the orb, so a config that does not define its own jobs
+  is unaffected.
 - **Breaking.** `image-build-and-push`: the multi-platform tagged build path is removed, and with it the
   `push-by-digest` parameter that selected between the two, plus `tag-latest-branch`, `sign` and
   `sbom-cyclonedx`, which belong to the job that now tags and signs. Building one platform and pushing it

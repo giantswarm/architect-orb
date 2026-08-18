@@ -1,4 +1,4 @@
-# Command: image-build-and-push
+# Command: image-build
 #
 # Builds ONE platform and pushes it by digest, setting no tag, and records the
 # digest at .image-digests/<image><tag-suffix>/<platform> in the workspace for
@@ -25,7 +25,7 @@ parameters:
   force-public:
     type: boolean
     default: false
-  platforms:
+  platform:
     description: |
       The single platform to build, e.g. `linux/arm64`. One platform only — the
       whole point of this command is that the host is native for it.
@@ -130,17 +130,17 @@ steps:
         TAG_VALUE="${DOCKER_IMAGE_TAG}"
         tag_suffix="<<parameters.tag-suffix>>"
 
-        platforms="<<parameters.platforms>>"
-        echo "Building for platform: $platforms"
+        platform="<<parameters.platform>>"
+        echo "Building for platform: $platform"
 
         # Platform strings contain a `/`, which cannot appear in a filename.
-        safe_platform=$(echo "$platforms" | tr '/:.' '___')
-        if [[ "$platforms" == *,* ]]; then
-          echo "ERROR: this command builds a single platform, got '${platforms}'."
+        safe_platform=$(echo "$platform" | tr '/:.' '___')
+        if [[ "$platform" == *,* ]]; then
+          echo "ERROR: this command builds a single platform, got '${platform}'."
           exit 1
         fi
-        if [[ ! "$platforms" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
-          echo "ERROR: 'platforms' must be a valid platform string (e.g. linux/arm64)."
+        if [[ ! "$platform" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          echo "ERROR: 'platform' must be a valid platform string (e.g. linux/arm64)."
           exit 1
         fi
         # Interpolated straight into a --cache-to/--cache-from attribute list, so keep
@@ -193,7 +193,7 @@ steps:
             echo "No eligible registries recorded by image-select-registries. Exiting."
             exit 1
           fi
-          echo "Pushing ${platforms} by digest to: ${names}"
+          echo "Pushing ${platform} by digest to: ${names}"
           # `name` takes a comma-separated list, but commas also separate the
           # exporter's own CSV fields, so the list is quoted inside --output.
           all_tags=()
@@ -207,8 +207,8 @@ steps:
           echo "ERROR: could not determine the build host platform."
           exit 1
         fi
-        if [[ "$platforms" != "$host_platform" ]]; then
-          echo "ERROR: platform ${platforms} does not match the build host ${host_platform}."
+        if [[ "$platform" != "$host_platform" ]]; then
+          echo "ERROR: platform ${platform} does not match the build host ${host_platform}."
           echo "Set resource_class to a class of that architecture."
           exit 1
         fi
@@ -327,9 +327,9 @@ steps:
         # --metadata-file captures the manifest index digest for downstream cosign signing.
         SUCCESS=false
         for i in {1..4}; do
-          echo "attempt: $i for ${platforms}"
+          echo "attempt: $i for ${platform}"
           if docker buildx build \
-            --platform "$platforms" \
+            --platform "$platform" \
             "${all_tags[@]}" \
             "${annotation_flags[@]}" \
             "${oci_label_flags[@]}" \
@@ -372,7 +372,7 @@ steps:
         fi
 
         if [[ "<<parameters.push>>" == "false" ]]; then
-          echo "Image built successfully for ${platforms}; nothing was pushed (push=false)."
+          echo "Image built successfully for ${platform}; nothing was pushed (push=false)."
           exit 0
         fi
 
@@ -394,10 +394,10 @@ steps:
         digest_dir=".image-digests/$(echo "<<parameters.image>>${tag_suffix}" | tr '/:' '__')"
         mkdir -p "$digest_dir"
         echo -n "$digest" > "${digest_dir}/${safe_platform}"
-        echo "${platforms} digest: ${digest}"
+        echo "${platform} digest: ${digest}"
         echo "recorded in ${digest_dir}/${safe_platform}"
   - run:
-      name: "architect/image-build-and-push: Clean up build scratch files"
+      name: "architect/image-build: Clean up build scratch files"
       # Runs on success and failure, so a failed build leaves no stale metadata or
       # registry set behind for an unrelated rerun on the same runner. The digest
       # file is NOT removed -- it is this command's output, and the job persists it.
