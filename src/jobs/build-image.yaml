@@ -156,7 +156,6 @@ steps:
   - image-build-and-push:
       image: <<parameters.image>>
       platforms: <<parameters.platform>>
-      push-by-digest: true
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
       tag-suffix: <<parameters.tag-suffix>>

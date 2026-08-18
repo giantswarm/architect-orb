@@ -1,9 +1,11 @@
+# Command: image-build-and-push
+#
+# Builds ONE platform and pushes it by digest, setting no tag, and records the
+# digest at .image-digests/<image><tag-suffix>/<platform> in the workspace for
+# image-merge-manifests to join. Requires DOCKER_IMAGE_TAG in the environment.
 parameters:
   image:
     type: string
-  tag-latest-branch:
-    type: string
-    default: ""
   tag-suffix:
     type: string
     default: ""
@@ -23,30 +25,11 @@ parameters:
   force-public:
     type: boolean
     default: false
-  push-by-digest:
-    description: |
-      Build ONE platform and push it by digest, setting no tag, and record the
-      digest in the workspace at `.image-digests/<image><tag-suffix>/<platform>`.
-      `platforms` must then name exactly one platform, and the build host must be
-      native for it -- the point of the mode is that no RUN step is emulated.
-
-      The manifest is a build intermediate, so it carries no tag: tagging it
-      would publish a second artifact under the same version that works on one
-      architecture only.
-
-      Nothing is signed or attested in this mode -- there is no tagged index
-      yet -- though attestations are still produced, because BuildKit can only
-      attest what it built.
-    type: boolean
-    default: false
   platforms:
     description: |
-      Comma-separated list of platforms for multi-arch image build (e.g.,
-      'linux/amd64,linux/arm64'). When empty, the list is auto-derived from the `.platforms`
-      file written by `go-build` to the workspace. Falls back to 'linux/amd64,linux/arm64'
-      if neither is available.
+      The single platform to build, e.g. `linux/arm64`. One platform only — the
+      whole point of this command is that the host is native for it.
     type: string
-    default: ""
   annotations:
     description: |
       Newline-separated OCI annotations passed to 'docker buildx build --annotation'.
@@ -75,32 +58,8 @@ parameters:
     default: "min"
   sbom:
     description: |
-      Generate and attach a Software Bill of Materials (SPDX) attestation per platform.
-      On public images, when `sign` is true, the exact SPDX predicate buildx produced is
-      additionally signed as a cosign keyless attestation (`--type spdxjson`) so consumers
-      can cryptographically verify its origin (see `sign`).
-    type: boolean
-    default: true
-  sbom-cyclonedx:
-    description: |
-      Additionally generate a CycloneDX SBOM per architecture (with syft). BuildKit's
-      `--attest type=sbom` only emits SPDX, so CycloneDX is produced out-of-band.
-      - Public images with `sign: true`: the SBOM is signed as a cosign keyless
-        attestation (`--type cyclonedx`) — a verifiable, trustable referrer.
-      - Otherwise (private images, or `sign: false`): the SBOM is attached unsigned as an
-        OCI referrer (artifactType `application/vnd.cyclonedx+json`) using oras, since
-        signing private artifacts would leak their digests/timestamps into the public
-        Rekor transparency log.
-      Requires syft and oras in the architect image.
-    type: boolean
-    default: false
-  sign:
-    description: |
-      Sign the pushed image manifest — and its SPDX / CycloneDX SBOM attestations — with
-      cosign keyless OIDC. Public images only — private images are skipped at runtime to
-      avoid leaking digests/timestamps into the public Rekor transparency log. Mints a
-      fresh CircleCI OIDC token with audience=sigstore via `circleci run oidc get` so
-      Fulcio's federation accepts it.
+      Generate and attach a Software Bill of Materials (SPDX) attestation for this
+      platform. `push-to-registries` signs it on public images.
     type: boolean
     default: true
   split-china-push:
@@ -170,31 +129,26 @@ steps:
         # Determine tag value from tag_envvar or fallback
         TAG_VALUE="${DOCKER_IMAGE_TAG}"
         tag_suffix="<<parameters.tag-suffix>>"
-        tag_latest_branch="<<parameters.tag-latest-branch>>"
 
-        # Resolve platforms: explicit param > .platforms in workspace > built-in default
         platforms="<<parameters.platforms>>"
-        if [[ -z "$platforms" && -f .platforms ]]; then
-          platforms=$(paste -sd, .platforms | tr -d '[:space:]')
-        fi
-        if [[ -z "$platforms" ]]; then
-          platforms="linux/amd64,linux/arm64"
-        fi
-        echo "Building for platforms: $platforms"
+        echo "Building for platform: $platforms"
 
-        push_by_digest="<<parameters.push-by-digest>>"
         # Platform strings contain a `/`, which cannot appear in a filename.
         safe_platform=$(echo "$platforms" | tr '/:.' '___')
-        # Digest builds run one per architecture, concurrently, so they cannot
-        # share a layer-cache ref: whichever finished last would be the only
-        # surviving cache manifest.
-        cache_suffix=""
-        if [[ "$push_by_digest" == "true" ]]; then
-          cache_suffix="-${safe_platform}"
-          if [[ "$platforms" == *,* ]]; then
-            echo "ERROR: push-by-digest builds a single platform, got '${platforms}'."
-            exit 1
-          fi
+        if [[ "$platforms" == *,* ]]; then
+          echo "ERROR: this command builds a single platform, got '${platforms}'."
+          exit 1
+        fi
+        if [[ ! "$platforms" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          echo "ERROR: 'platforms' must be a valid platform string (e.g. linux/arm64)."
+          exit 1
+        fi
+        # Interpolated straight into a --cache-to/--cache-from attribute list, so keep
+        # it to the OCI reference charset. A `,` would silently inject a further
+        # exporter attribute. The push-to-registries job used to check this.
+        if [[ -n "<<parameters.cache-ref>>" && ! "<<parameters.cache-ref>>" =~ ^[a-zA-Z0-9._:/-]+$ ]]; then
+          echo "ERROR: 'cache-ref', if set, must be a plain OCI reference."
+          exit 1
         fi
 
         oci_label_flags=()
@@ -210,20 +164,6 @@ steps:
           )
           if [[ -n "$oci_version" ]]; then
             oci_label_flags+=(--label "org.opencontainers.image.version=${oci_version}")
-          fi
-          # Labels are image-config level and survive a later merge untouched.
-          # Index annotations do not: a merge builds a new index and discards the
-          # per-platform one, so in digest mode they would go nowhere. Whatever
-          # assembles the index re-applies them.
-          if [[ "$push_by_digest" != "true" ]]; then
-            oci_label_flags+=(
-              --annotation "index:org.opencontainers.image.source=${oci_source}"
-              --annotation "index:org.opencontainers.image.revision=${CIRCLE_SHA1}"
-              --annotation "index:org.opencontainers.image.created=${oci_created}"
-            )
-            if [[ -n "$oci_version" ]]; then
-              oci_label_flags+=(--annotation "index:org.opencontainers.image.version=${oci_version}")
-            fi
           fi
         fi
 
@@ -242,93 +182,37 @@ steps:
           IMAGE_ACCESS=$(cat /tmp/.image_access)
           cache_registry=$(cat /tmp/.cache_registry)
 
-          # Collect all tags
-          tags=("<<parameters.image>>:${TAG_VALUE}")
-          if [[ "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
-            tags+=("<<parameters.image>>:latest$tag_suffix")
-          fi
-
-          # Any filter that decides the set belongs in image-select-registries, not here.
-          all_tags=()
+          # One name per eligible registry, in one exporter, no tag. The digest
+          # is content-addressed, so every registry ends up with the same one.
+          names=""
           while IFS= read -r reg; do
             [[ -z "$reg" ]] && continue
-            for tag in "${tags[@]}"; do
-              echo -e "\nProcessing image push config for registry $reg."
-              echo "Tag the image for $reg"
-              echo "Preparing tag for $reg: <<parameters.image>>:${tag##*:}"
-              all_tags+=("--tag" "$reg/<<parameters.image>>:${tag##*:}")
-            done
+            names="${names:+${names},}${reg}/<<parameters.image>>"
           done < /tmp/.eligible_registries
-
-          if [[ "$push_by_digest" == "true" ]]; then
-            # One name per eligible registry, in one exporter, no tag. The digest
-            # is content-addressed, so every registry ends up with the same one.
-            names=""
-            while IFS= read -r reg; do
-              [[ -z "$reg" ]] && continue
-              names="${names:+${names},}${reg}/<<parameters.image>>"
-            done < /tmp/.eligible_registries
-            if [[ -z "$names" ]]; then
-              echo "No eligible registries recorded by image-select-registries. Exiting."
-              exit 1
-            fi
-            echo "Pushing ${platforms} by digest to: ${names}"
-            # `name` takes a comma-separated list, but commas also separate the
-            # exporter's own CSV fields, so the list is quoted inside --output.
-            all_tags=()
-            push_flags=("--output" "type=image,\"name=${names}\",push-by-digest=true,name-canonical=true,push=true")
-          elif [[ ${#all_tags[@]} -eq 0 ]]; then
-            echo "No valid registry/tag combinations found for push. Exiting."
+          if [[ -z "$names" ]]; then
+            echo "No eligible registries recorded by image-select-registries. Exiting."
             exit 1
           fi
+          echo "Pushing ${platforms} by digest to: ${names}"
+          # `name` takes a comma-separated list, but commas also separate the
+          # exporter's own CSV fields, so the list is quoted inside --output.
+          all_tags=()
+          push_flags=("--output" "type=image,\"name=${names}\",push-by-digest=true,name-canonical=true,push=true")
         fi
 
-        # Register QEMU/binfmt handlers in the kernel so buildx can execute
-        # non-host-arch RUN steps. Required for plain Dockerfiles that don't
-        # gate RUN with --platform=$BUILDPLATFORM.
-        #
-        # Skipped when every target platform already matches the build host: no RUN
-        # step can be emulated then, so registering binfmt only costs a privileged
-        # image pull. Single-arch repos (`platforms: linux/amd64`) paid this on every
-        # build. If the host platform can't be determined we register anyway, keeping
-        # the previous unconditional behaviour rather than risking an un-emulated
-        # cross build.
+        # This command exists to build natively, so a mismatch is refused rather
+        # than emulated.
         host_platform="$(docker version --format '{{.Server.Os}}/{{.Server.Arch}}' 2>/dev/null || true)"
-        needs_emulation=false
-        if [[ "$push_by_digest" == "true" ]]; then
-          # This mode exists to be native, so a mismatch is refused rather than
-          # emulated.
-          if [[ -z "$host_platform" ]]; then
-            echo "ERROR: could not determine the build host platform."
-            exit 1
-          fi
-          if [[ "$platforms" != "$host_platform" ]]; then
-            echo "ERROR: platform ${platforms} does not match the build host ${host_platform}."
-            echo "Set resource_class to a class of that architecture."
-            exit 1
-          fi
-          echo "Build host matches the target (${host_platform})."
-        elif [[ -z "$host_platform" ]]; then
-          echo "Could not determine the build host platform; registering QEMU/binfmt to be safe."
-          needs_emulation=true
-        else
-          # Comma-to-space word splitting rather than a bash herestring: the herestring
-          # operator is also CircleCI's parameter-substitution token and cannot appear
-          # unescaped in an orb command. Platform strings never contain spaces or globs.
-          for target_platform in ${platforms//,/ }; do
-            if [[ "$target_platform" != "$host_platform" ]]; then
-              needs_emulation=true
-            fi
-          done
+        if [[ -z "$host_platform" ]]; then
+          echo "ERROR: could not determine the build host platform."
+          exit 1
         fi
-
-        if [[ "$needs_emulation" == "true" ]]; then
-          # Image is pinned via tag and bumped by Renovate.
-          # renovate: datasource=docker depName=tonistiigi/binfmt
-          docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
-        elif [[ "$push_by_digest" != "true" ]]; then
-          echo "All target platforms match the build host ($host_platform); skipping QEMU/binfmt registration."
+        if [[ "$platforms" != "$host_platform" ]]; then
+          echo "ERROR: platform ${platforms} does not match the build host ${host_platform}."
+          echo "Set resource_class to a class of that architecture."
+          exit 1
         fi
+        echo "Build host matches the target (${host_platform})."
 
         # Reuse the builder if it already exists; create otherwise. Bootstrap
         # ensures the buildkit container is up before the first build.
@@ -360,19 +244,17 @@ steps:
           while IFS= read -r line; do
             line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
             [[ -z "$line" || "$line" =~ ^# ]] && continue
-            if [[ "$push_by_digest" == "true" ]]; then
-              case "$line" in
-                index:*|index-descriptor:*|manifest-descriptor:*)
-                  echo "ERROR: annotation '${line}' is index-scoped."
-                  echo "This build's own index is discarded when the platforms are merged, so"
-                  echo "the annotation would never reach the published image. Set index:,"
-                  echo "index-descriptor: and manifest-descriptor: annotations on the job that"
-                  echo "assembles the index instead."
-                  rm -f .annotations_input
-                  exit 1
-                  ;;
-              esac
-            fi
+            case "$line" in
+              index:*|index-descriptor:*|manifest-descriptor:*)
+                echo "ERROR: annotation '${line}' is index-scoped."
+                echo "This build's own index is discarded when the platforms are merged, so"
+                echo "the annotation would never reach the published image. Set index:,"
+                echo "index-descriptor: and manifest-descriptor: annotations on the job that"
+                echo "assembles the index instead."
+                rm -f .annotations_input
+                exit 1
+                ;;
+            esac
             annotation_flags+=("--annotation" "$line")
           done < .annotations_input
           rm -f .annotations_input
@@ -420,7 +302,9 @@ steps:
                 echo "No $IMAGE_ACCESS registry eligible to host the layer cache; continuing without one."
               fi
             fi
-            cache_ref="${cache_ref:+${cache_ref}${cache_suffix}}"
+                # Per platform: these builds run concurrently, and two exporting to
+            # one ref would race.
+            cache_ref="${cache_ref:+${cache_ref}-${safe_platform}}"
             if [[ -n "$cache_ref" ]]; then
               echo "Using registry layer cache: $cache_ref"
               # mode=max exports intermediate layers too. That is the whole point here —
@@ -443,7 +327,7 @@ steps:
         # --metadata-file captures the manifest index digest for downstream cosign signing.
         SUCCESS=false
         for i in {1..4}; do
-          echo "attempt: $i for all registries/tags"
+          echo "attempt: $i for ${platforms}"
           if docker buildx build \
             --platform "$platforms" \
             "${all_tags[@]}" \
@@ -488,68 +372,37 @@ steps:
         fi
 
         if [[ "<<parameters.push>>" == "false" ]]; then
-          echo "Image built successfully for all platforms; nothing was pushed (push=false)."
-          exit 0
-        fi
-        echo "Image is pushed to all registries."
-
-        if [[ "$push_by_digest" == "true" ]]; then
-          # With attestations enabled buildx wraps even a single-platform build in
-          # an index (the image manifest plus its attestation manifest), so this is
-          # an index digest. That is exactly what `imagetools create` takes as a
-          # source, and why the attestations survive a merge.
-          digest=$(jq -r '."containerimage.digest" // ."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
-          if [[ -z "$digest" ]]; then
-            echo "Could not extract the pushed digest from buildx metadata:"
-            cat /tmp/.buildx_metadata.json
-            exit 1
-          fi
-          # Only our own file may be persisted: CircleCI refuses to attach a
-          # workspace two concurrent jobs persisted the same path into.
-          rm -rf .image-digests
-          # Namespaced by image and tag-suffix so two builds in one pipeline
-          # (a mono-repo with two Dockerfiles) do not overwrite each other.
-          digest_dir=".image-digests/$(echo "<<parameters.image>>${tag_suffix}" | tr '/:' '__')"
-          mkdir -p "$digest_dir"
-          echo -n "$digest" > "${digest_dir}/${safe_platform}"
-          echo "${platforms} digest: ${digest}"
-          echo "recorded in ${digest_dir}/${safe_platform}"
+          echo "Image built successfully for ${platforms}; nothing was pushed (push=false)."
           exit 0
         fi
 
-        # Persist the index digest for image-sign-and-attest.
-        # The manifest index digest is content-addressed — identical across every
-        # registry we pushed to — so compute it once here and let both downstream
-        # steps read it rather than re-deriving the same value from the metadata.
-        index_digest=$(jq -r '."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
-        if [[ -z "$index_digest" ]]; then
-          echo "Could not extract index digest from buildx metadata:"
+        # With attestations enabled buildx wraps even a single-platform build in
+        # an index (the image manifest plus its attestation manifest), so this is
+        # an index digest. That is exactly what `imagetools create` takes as a
+        # source, and why the attestations survive a merge.
+        digest=$(jq -r '."containerimage.digest" // ."containerimage.descriptor".digest // empty' /tmp/.buildx_metadata.json)
+        if [[ -z "$digest" ]]; then
+          echo "Could not extract the pushed digest from buildx metadata:"
           cat /tmp/.buildx_metadata.json
           exit 1
         fi
-        echo -n "$index_digest" > /tmp/.index_digest
-        echo "Index digest: $index_digest"
-  # Signs the index, signs or attaches the per-architecture SBOMs, and clears the
-  # inter-step scratch files. Invoked unconditionally: the signing work carries
-  # its own conditions, and the cleanup inside runs `when: always`, so build-only
-  # and failed runs still leave nothing behind for an unrelated rerun.
-  #
-  # A digest build passes push=false, which makes it cleanup-only: there is no
-  # tagged index to sign yet, and no /tmp/.index_digest for it to read. The
-  # per-platform attestations were produced by the build above; whatever
-  # assembles the index signs them.
-  - when:
-      condition: <<parameters.push-by-digest>>
-      steps:
-        - image-sign-and-attest:
-            image: <<parameters.image>>
-            push: false
-  - unless:
-      condition: <<parameters.push-by-digest>>
-      steps:
-        - image-sign-and-attest:
-            image: <<parameters.image>>
-            push: <<parameters.push>>
-            sign: <<parameters.sign>>
-            sbom: <<parameters.sbom>>
-            sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
+        # Only our own file may be persisted: CircleCI refuses to attach a
+        # workspace two concurrent jobs persisted the same path into.
+        rm -rf .image-digests
+        # Namespaced by image and tag-suffix so two builds in one pipeline
+        # (a mono-repo with two Dockerfiles) do not overwrite each other.
+        digest_dir=".image-digests/$(echo "<<parameters.image>>${tag_suffix}" | tr '/:' '__')"
+        mkdir -p "$digest_dir"
+        echo -n "$digest" > "${digest_dir}/${safe_platform}"
+        echo "${platforms} digest: ${digest}"
+        echo "recorded in ${digest_dir}/${safe_platform}"
+  - run:
+      name: "architect/image-build-and-push: Clean up build scratch files"
+      # Runs on success and failure, so a failed build leaves no stale metadata or
+      # registry set behind for an unrelated rerun on the same runner. The digest
+      # file is NOT removed -- it is this command's output, and the job persists it.
+      when: always
+      command: |
+        rm -f /tmp/.buildx_metadata.json /tmp/.buildx_output \
+              /tmp/.gh_response /tmp/.image_access \
+              /tmp/.eligible_registries /tmp/.cache_registry 2>/dev/null || true
