@@ -69,9 +69,14 @@ parameters:
     type: boolean
     default: true
     description: |
-      When `true` (the default), passes `--override-chart-version` to App Build Suite,
-      stamping the chart version with the value from `gitsemver` (or `.build_version`
-      workspace file).  Set to `false` to leave the version in `Chart.yaml` unchanged.
+      **Deprecated.** This parameter has no effect anymore and is always treated as
+      `true`; it is kept for backwards compatibility and will be removed in a future
+      version.  The chart version is always stamped with the value from `gitsemver`
+      (or the `.build_version` workspace file).
+
+      Setting it to `false` used to leave the version in `Chart.yaml` unchanged, which
+      allowed a branch build to publish a plain release version and overwrite the
+      already-published chart at that version in the OCI registry.
   override_app_version:
     type: boolean
     default: true

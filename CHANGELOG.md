@@ -7,6 +7,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Deprecated
+
+- `push-to-app-catalog`, `package-helm-with-abs`: `override_chart_version` is deprecated and now
+  ignored — the chart version is always stamped from `gitsemver` via `--override-chart-version`.
+  The parameter is kept, still defaults to `true`, and passing `false` logs a notice rather than
+  failing. It will be removed in a future version.
+
+  Setting it to `false` left the version from `Chart.yaml` in place. Unlike the GitHub catalog —
+  which `determine-catalog-name` splits into `app_catalog` and `app_catalog_test` — the OCI path is
+  the same `<registry>/charts/giantswarm` repo for every build, and `helm push` replaces the version
+  tag in place. So a branch build that did not bump `Chart.yaml` by hand republished the released
+  version and overwrote the published chart, and consumers pinned to it (Flux, most notably)
+  reconciled the digest change and rolled out the branch's code. Always stamping the version means
+  an off-tag build resolves to an `X.Y.Z-dev.<branch>.<date>.<time>` pre-release, which cannot
+  collide with a release.
+
+  This is not a breaking change, as no repository in the organization passes `false`.
+  - `override_app_version` is **unchanged** and still honoured. `appVersion` does not determine the
+    published tag, so pinning it cannot overwrite a release.
+
 ### Added
 
 - `push-to-registries`: new `cache` parameter to persist BuildKit's layer cache across jobs. Every run gets a fresh `setup_remote_docker` VM and creates a fresh `docker-container` builder, so until now the whole Dockerfile was re-executed from scratch on every build — and a Dockerfile's own `RUN --mount=type=cache` mounts could not help, because they live in the builder state that is destroyed with the VM. `cache: registry` adds `--cache-from`/`--cache-to type=registry`, storing the layer cache as an OCI artifact at `<registry>/<image>:buildcache<tag-suffix>` (override with `cache-ref`; see the derivation below). Defaults to `off`, so existing consumers are unaffected. The exporter always runs `mode=max`, which is what makes the intermediate `RUN` layers — `apt-get install`, `pip install`, `yarn install` — cache at all; `min` would export only final-image layers, so it is not offered. Requires `push: true` for the registry credentials. Measured on `giantswarm/backstage`: ~5m32s → 2m03s warm.
