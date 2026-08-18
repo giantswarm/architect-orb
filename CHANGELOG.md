@@ -39,6 +39,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Bump the `app-build-suite` executor image to `2.3.0-circleci` (was `2.2.0-circleci`), picking up abs v2.3.0:
+  `HelmTemplateValidator` now skips Helm library charts instead of failing, and explains how to get past a
+  failed render ([roadmap#4066](https://github.com/giantswarm/roadmap/issues/4066)).
 - `push-to-registries`: register QEMU/binfmt handlers only when at least one target platform differs from the build host. Single-arch repos (`platforms: linux/amd64`) were paying a privileged `tonistiigi/binfmt --install all` image pull on every build for handlers that could never be used, since no `RUN` step is emulated when the target matches the host. Multi-arch builds are unchanged, and if the host platform cannot be determined the handlers are registered as before rather than risking an un-emulated cross build.
 - `executor` parameter on `push-to-app-catalog` is now **permanently retained** rather than pending removal.
   It accepts only `app-build-suite`, which is also the default, so passing it is already a no-op — but ~275
