@@ -1,0 +1,182 @@
+environment:
+  DOCKER_BUILDKIT: "1"
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
+parameters:
+  image:
+    description: Name of the container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
+    type: string
+    default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
+  platform:
+    description: |
+      The single platform this job builds, e.g. `linux/arm64`. Run one job per
+      architecture and join them with `push-to-registries`.
+    type: string
+  resource_class:
+    description: |
+      Must be a class whose architecture matches `platform`, which is the entire
+      point of building one architecture per job: `arm.medium` for a
+      `linux/arm64` build, `small` or `medium` for a `linux/amd64` one. CircleCI
+      gives the remote Docker VM the architecture of this class.
+
+      A mismatch fails the job; there is no emulated fallback.
+    type: enum
+    enum: ["small", "medium", "medium+", "large", "xlarge", "arm.medium", "arm.large", "arm.xlarge", "arm.2xlarge"]
+    default: medium
+  build-context:
+    type: string
+    default: "."
+  dockerfile:
+    type: string
+    default: "./Dockerfile"
+  git-tag-prefix:
+    type: string
+    default: ""
+  tag-suffix:
+    type: string
+    default: ""
+  persist-build-version:
+    description: |
+      Publish the computed version to the workspace as `.build_version`, where
+      `package-helm-with-abs` picks it up to stamp chart versions.
+
+      Defaults to false, because these jobs run concurrently and CircleCI refuses
+      to attach a workspace that two concurrent jobs persisted the same path
+      into. Set it on EXACTLY ONE job per path. On the release path
+      `push-to-registries` already persists it, so leave it false there.
+    type: boolean
+    default: false
+  force-public:
+    description: Skip the repo visibility check and push the image to public registries.
+    type: boolean
+    default: false
+  registries-data:
+    type: string
+    default: ""
+  split-china-push:
+    description: |
+      Exclude the Aliyun registry from this build's push set, because the
+      sync-china-registry job mirrors the merged index separately. Must match the
+      value on the `push-to-registries` job, or they disagree about the set.
+    type: boolean
+    default: false
+  annotations:
+    description: |
+      Newline-separated OCI annotations for this platform's manifest. Only
+      `manifest:`-scoped annotations are accepted; index-scoped ones belong on
+      `push-to-registries` and are rejected here.
+    type: string
+    default: ""
+  oci-labels:
+    description: |
+      Emit standard OCI image labels
+      (org.opencontainers.image.{source,revision,version,created}) derived from
+      the CircleCI build context. Labels are image-config level, so they survive
+      the merge; the matching index annotations are set by `push-to-registries`.
+    type: boolean
+    default: true
+  provenance:
+    description: |
+      Buildx SLSA provenance attestation mode.
+      - "min" (default): minimal provenance, attached as inline attestation manifest.
+      - "max": rich provenance with full BuildKit args / source provenance.
+      - "false": disable provenance attestation entirely (cleaner manifest list).
+    type: enum
+    enum: ["min", "max", "false"]
+    default: "min"
+  sbom:
+    description: |
+      Generate and attach an SPDX SBOM attestation for this platform.
+      `push-to-registries` signs it on public images.
+    type: boolean
+    default: true
+  push:
+    description: |
+      Push this platform by digest (default). Set to false to only validate that
+      the Dockerfile builds for this architecture — no credentials, no digest, and
+      no `push-to-registries` job downstream.
+    type: boolean
+    default: true
+  cache:
+    description: |
+      BuildKit layer-cache backend. "off" (default) re-executes the whole
+      Dockerfile on every build, because the builder is created fresh on a fresh
+      remote-docker VM. "registry" persists the layer cache as an OCI artifact in
+      the registry the image is pushed to. Requires `push: true`. See
+      [docs/job/build-image.md](https://github.com/giantswarm/architect-orb/blob/main/docs/job/build-image.md#build-cache).
+    type: enum
+    enum: ["off", "registry"]
+    default: "off"
+  cache-ref:
+    description: |
+      Explicit OCI ref for the `cache: registry` artifact. Defaults to
+      `<registry>/<image>:buildcache<tag-suffix>`. The platform is appended
+      either way, because these jobs run concurrently and would otherwise race
+      on one ref.
+    type: string
+    default: ""
+  hadolint:
+    description: |
+      Lint the Dockerfile with hadolint before building.
+      - "warn" (default): run hadolint, print findings, never fail the job.
+      - "fail": run hadolint and fail the job on any finding.
+      - "skip": don't run hadolint at all.
+    type: enum
+    enum: ["warn", "fail", "skip"]
+    default: "warn"
+  hadolint-config:
+    description: |
+      Optional path to a `.hadolint.yaml` configuration file. When empty,
+      hadolint uses its built-in defaults.
+    type: string
+    default: ""
+steps:
+  - checkout
+  - setup_remote_docker:
+      version: default
+  - attach_workspace:
+      at: .
+  - image-prepare-tag:
+      git-tag-prefix: <<parameters.git-tag-prefix>>
+      tag-suffix: <<parameters.tag-suffix>>
+      persist-build-version: <<parameters.persist-build-version>>
+  # The lint is a property of the source, not the architecture, so running it in
+  # every architecture's job is redundant. It costs about a second and fails
+  # fast, before minutes of building past a broken Dockerfile.
+  - dockerfile-lint:
+      dockerfile: <<parameters.dockerfile>>
+      mode: <<parameters.hadolint>>
+      config: <<parameters.hadolint-config>>
+  - when:
+      # Build-only mode needs no registry credentials and has no push set.
+      condition: <<parameters.push>>
+      steps:
+        - image-login-to-registries:
+            registries-data: <<parameters.registries-data>>
+  - image-build-and-push:
+      image: <<parameters.image>>
+      platforms: <<parameters.platform>>
+      push-by-digest: true
+      build-context: <<parameters.build-context>>
+      dockerfile: <<parameters.dockerfile>>
+      tag-suffix: <<parameters.tag-suffix>>
+      force-public: <<parameters.force-public>>
+      registries-data: <<parameters.registries-data>>
+      split-china-push: <<parameters.split-china-push>>
+      annotations: <<parameters.annotations>>
+      oci-labels: <<parameters.oci-labels>>
+      provenance: <<parameters.provenance>>
+      sbom: <<parameters.sbom>>
+      push: <<parameters.push>>
+      cache: <<parameters.cache>>
+      cache-ref: <<parameters.cache-ref>>
+  - when:
+      condition: <<parameters.push>>
+      steps:
+        # One file per platform, so every architecture's job can persist into the
+        # same directory without colliding and push-to-registries attaches one
+        # workspace.
+        - persist_to_workspace:
+            root: .
+            paths:
+              - .image-digests

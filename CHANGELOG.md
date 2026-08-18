@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `build-image` job: builds the image for one architecture, on a machine of that architecture, and pushes it by digest. Run one per architecture; nothing is emulated and they run concurrently. See [docs/job/build-image.md](docs/job/build-image.md).
+
 - `push-to-registries`: `resource_class` now accepts CircleCI's Arm classes — `arm.medium`, `arm.large`, `arm.xlarge` and `arm.2xlarge` — alongside the existing x86 ones. The default is unchanged (`small`). See [docs/job/push-to-registries.md](docs/job/push-to-registries.md#building-on-arm) for when they help.
 
 - `push-to-registries`: new `cache` parameter to persist BuildKit's layer cache across jobs. Every run gets a fresh `setup_remote_docker` VM and creates a fresh `docker-container` builder, so until now the whole Dockerfile was re-executed from scratch on every build — and a Dockerfile's own `RUN --mount=type=cache` mounts could not help, because they live in the builder state that is destroyed with the VM. `cache: registry` adds `--cache-from`/`--cache-to type=registry`, storing the layer cache as an OCI artifact at `<registry>/<image>:buildcache<tag-suffix>` (override with `cache-ref`; see the derivation below). Defaults to `off`, so existing consumers are unaffected. The exporter always runs `mode=max`, which is what makes the intermediate `RUN` layers — `apt-get install`, `pip install`, `yarn install` — cache at all; `min` would export only final-image layers, so it is not offered. Requires `push: true` for the registry credentials. Measured on `giantswarm/backstage`: ~5m32s → 2m03s warm.
