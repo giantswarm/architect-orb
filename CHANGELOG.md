@@ -36,6 +36,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   is still honoured by app-build-suite via `ct-config` in `.abs/main.yaml` — only the orb parameter is gone,
   so no `ct-config.yaml` files need to change.
 
+### Fixed
+
+- `docs/job/integration-test.md` documented stale defaults for `apptestctl-version` (`v0.24.0`),
+  `helm-version` (`v3.18.6`) and `kubernetes-version` (`v1.31.12`). Renovate bumps the values in
+  `src/jobs/integration-test.yaml` but does not touch the prose, so the three had drifted to `v0.26.0`,
+  `v3.21.4` and `v1.36.1`.
+
 > **Upgrading from v9.x?** See [docs/migration-v9-to-v10.md](docs/migration-v9-to-v10.md).
 
 ## [9.6.0] - 2026-07-24

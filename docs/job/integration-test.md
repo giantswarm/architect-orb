@@ -26,12 +26,12 @@ workflows:
 
 - [common parameters](common.md#parameters) shared in all jobs.
 - [test-dir](#attach_workspace) (required string)
-- [apptestctl-version](#apptestctl-version) (optional string, default="v0.24.0")
+- [apptestctl-version](#apptestctl-version) (optional string, default="v0.26.0")
 - [env-file](#env-file) (optional string, default="")
-- [helm-version](#helm-version) (optional string, default="v3.18.6")
+- [helm-version](#helm-version) (optional string, default="v3.21.4")
 - [install-app-platform](#install-app-platform) (optional boolean, default=false)
 - [kind-config](#kind-config) (optional string, default="")
-- [kubernetes-version](#kubernetes-version) (optional string, default="v1.31.12")
+- [kubernetes-version](#kubernetes-version) (optional string, default="v1.36.1")
 - [setup-script](#setup-script) (optional string, default="")
 - [test-dir](#test-dir) (required string)
 - [test-timeout](#test-timeout) (optional string, default="20m")
