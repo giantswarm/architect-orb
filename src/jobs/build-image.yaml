@@ -153,9 +153,9 @@ steps:
       steps:
         - image-login-to-registries:
             registries-data: <<parameters.registries-data>>
-  - image-build-and-push:
+  - image-build:
       image: <<parameters.image>>
-      platforms: <<parameters.platform>>
+      platform: <<parameters.platform>>
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
       tag-suffix: <<parameters.tag-suffix>>
