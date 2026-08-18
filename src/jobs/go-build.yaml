@@ -6,8 +6,7 @@ description: |
 
   The job produces static binaries named `<binary>-<GOOS>-<GOARCH>` for each
   entry in `architectures`, persists them to the workspace, and writes the
-  resolved architecture list to `.platforms` so downstream `push-to-registries`
-  can auto-derive `--platform`.
+  resolved architecture list to `.platforms`, as a record of what was built.
 
 parameters:
   binary:
@@ -17,7 +16,7 @@ parameters:
     description: |
       Comma-separated list of target architectures to build (e.g.,
       "linux/amd64,linux/arm64"). The resolved list is written to `.platforms` in
-      the workspace for downstream auto-discovery in `push-to-registries`.
+      the workspace, as a record of what was built.
     type: string
     default: "linux/amd64,linux/arm64"
   build_concurrency:

@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Internal, no behaviour change: registry selection moves out of `image-build-and-push` into a new `image-select-registries` command — the repo-visibility check, the registries-data load, and the pass that resolves both the eligible push set and the layer-cache host. It records its answer in `/tmp/.image_access`, `/tmp/.eligible_registries` and `/tmp/.cache_registry`, which the caller now reads instead of re-deriving. Building `--tag` flags stays in `image-build-and-push`, since it is a pure cross-product of the eligible set with the tag list. One derivation, consumed from files, is what guarantees the signed and attested set can never drift from the pushed set — and it lets per-architecture build legs and a manifest merge resolve that set with exactly the same code.
 - Internal, no behaviour change: the cosign signing, SBOM staging and scratch-file cleanup steps move out of `image-build-and-push` into a new `image-sign-and-attest` command. The 230 moved lines are byte-identical — they already communicated with the build step only through files (`/tmp/.image_access`, `/tmp/.eligible_registries`, `/tmp/.index_digest`), which is what makes the lift possible. It also means the command works against any pushed index, including one assembled by `docker buildx imagetools create` rather than pushed by a single `buildx` invocation.
+- `go-build` still writes `.platforms`, but nothing derives the image platform list from it. The set is the
+  list of `build-image` jobs, and the `platforms` parameter of `push-to-registries` must agree with it.
 - Internal, no behaviour change: the Dockerfile lint moves out of the `push-to-registries` job into a new
   `dockerfile-lint` command, and the `GS_GIT_TAG_PREFIX` export folds into `image-prepare-tag` as a
   `git-tag-prefix` parameter. Both were inline `run:` steps in a job, which the repo's coding guidelines
@@ -43,6 +45,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 
+- `docs/multi-arch-dockerfiles.md`. Its subject was avoiding QEMU emulation in a single multi-platform
+  build, which the orb no longer does. The Dockerfile contract it described lives in
+  [docs/job/build-image.md](docs/job/build-image.md).
+- **Breaking.** `push-to-registries` no longer builds the image. It now joins the per-architecture digests
+  recorded by `build-image` into one tagged index per registry, then signs and attests it. Every config
+  that builds an image must add one `build-image` job per architecture and point the existing
+  `push-to-registries` job at them with `requires:` — keeping its name, so `sync-china-registry` and
+  repo-owned `custom.yml` jobs keep resolving. `build-context`, `dockerfile`, `provenance`, `hadolint`,
+  `hadolint-config`, `push`, `cache` and `cache-ref` move to `build-image`. CircleCI fails config
+  compilation on an unknown job argument, so a stale one is a named error rather than a silent no-op. See
+  [docs/migration-v9-to-v10.md](docs/migration-v9-to-v10.md).
 - **Breaking.** `skip_conftest_deprek8ion` parameter on `push-to-app-catalog`. It has been ignored since
   v6.3.2, when the `helm-conftest` step it controlled was removed. The third-party
   [deprek8ion](https://github.com/swade1987/deprek8ion) policies that step ran have been unmaintained since
