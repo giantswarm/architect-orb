@@ -23,6 +23,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Internal, no behaviour change: registry selection moves out of `image-build-and-push` into a new `image-select-registries` command — the repo-visibility check, the registries-data load, and the pass that resolves both the eligible push set and the layer-cache host. It records its answer in `/tmp/.image_access`, `/tmp/.eligible_registries` and `/tmp/.cache_registry`, which the caller now reads instead of re-deriving. Building `--tag` flags stays in `image-build-and-push`, since it is a pure cross-product of the eligible set with the tag list. One derivation, consumed from files, is what guarantees the signed and attested set can never drift from the pushed set — and it lets per-architecture build legs and a manifest merge resolve that set with exactly the same code.
 - Internal, no behaviour change: the cosign signing, SBOM staging and scratch-file cleanup steps move out of `image-build-and-push` into a new `image-sign-and-attest` command. The 230 moved lines are byte-identical — they already communicated with the build step only through files (`/tmp/.image_access`, `/tmp/.eligible_registries`, `/tmp/.index_digest`), which is what makes the lift possible. It also means the command works against any pushed index, including one assembled by `docker buildx imagetools create` rather than pushed by a single `buildx` invocation.
+- Internal, no behaviour change: the Dockerfile lint moves out of the `push-to-registries` job into a new
+  `dockerfile-lint` command, and the `GS_GIT_TAG_PREFIX` export folds into `image-prepare-tag` as a
+  `git-tag-prefix` parameter. Both were inline `run:` steps in a job, which the repo's coding guidelines
+  disallow, and both are needed verbatim by any other job that builds an image.
+- `image-prepare-tag`: new `persist-build-version` parameter, default `true`, so existing callers are
+  unaffected. Set it to `false` when several jobs that call the command run concurrently: CircleCI refuses
+  to attach a workspace that two concurrent jobs persisted the same path into, and each would otherwise
+  write `.build_version`. The value is deterministic for a given commit and `tag-suffix`, so exactly one
+  job should persist it and it does not matter which.
 - `push-to-registries`: register QEMU/binfmt handlers only when at least one target platform differs from the build host. Single-arch repos (`platforms: linux/amd64`) were paying a privileged `tonistiigi/binfmt --install all` image pull on every build for handlers that could never be used, since no `RUN` step is emulated when the target matches the host. Multi-arch builds are unchanged, and if the host platform cannot be determined the handlers are registered as before rather than risking an un-emulated cross build.
 - `executor` parameter on `push-to-app-catalog` is now **permanently retained** rather than pending removal.
   It accepts only `app-build-suite`, which is also the default, so passing it is already a no-op — but ~275
@@ -39,6 +48,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `helm-lint` step it controlled was removed along with the `architect`-executor path. Chart-testing config
   is still honoured by app-build-suite via `ct-config` in `.abs/main.yaml` — only the orb parameter is gone,
   so no `ct-config.yaml` files need to change.
+
+### Fixed
+
+- `push-to-registries`: `hadolint: fail` never failed the job. The step captured `$?` after the `if` that
+  ran hadolint, and bash sets that to the status of the `if` itself — 0 when the condition was false and no
+  `else` branch ran — so a Dockerfile with findings exited 0. It now exits 1 explicitly. Repos on
+  `hadolint: fail` may see a build go red on findings that were silently passing.
 
 > **Upgrading from v9.x?** See [docs/migration-v9-to-v10.md](docs/migration-v9-to-v10.md).
 

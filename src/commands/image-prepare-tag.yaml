@@ -1,18 +1,57 @@
+# Command: image-prepare-tag
+#
+# Computes the image tag from git state and publishes it to the rest of the job.
+#
+# Writes:
+#   /tmp/.docker_image_tag   the resolved tag (gitsemver output plus tag-suffix)
+#   DOCKER_IMAGE_TAG         the same value, exported through BASH_ENV
+#   .build_version           the same value in the workspace, unless
+#                            persist-build-version is false
 parameters:
+  git-tag-prefix:
+    description: |
+      Tag prefix for mono repos, exported as GS_GIT_TAG_PREFIX before gitsemver
+      runs. Empty on a single-project repo.
+
+      It is set here rather than by the caller because gitsemver needs it in the
+      same shell that computes the version, and a value written to BASH_ENV only
+      reaches the next step.
+    type: string
+    default: ""
   tag-suffix:
     type: "string"
     default: ""
+  persist-build-version:
+    description: |
+      Publish the computed version to the workspace as `.build_version`, where
+      `package-helm-with-abs` picks it up to stamp chart versions.
+
+      Set to false when several jobs that call this command run CONCURRENTLY:
+      CircleCI refuses to attach a workspace that two concurrent jobs persisted
+      the same path into. Exactly one job in a pipeline should persist it, and
+      the value is deterministic for a given commit and tag-suffix, so it does
+      not matter which.
+
+      DOCKER_IMAGE_TAG and /tmp/.docker_image_tag are written either way — this
+      controls only the workspace copy.
+    type: boolean
+    default: true
 steps:
   - run:
-      name: Generate container tag from 'gitsemver get' and tag-suffix parameter
+      name: "architect/image-prepare-tag: Compute the image tag from git state"
       command: |
+        export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"
+        echo "export GS_GIT_TAG_PREFIX=\"<<parameters.git-tag-prefix>>\"" >> "$BASH_ENV"
         gitsemver get | tr -d "\n" | tee /tmp/.docker_image_tag
         echo -n "<<parameters.tag-suffix>>" | tee -a /tmp/.docker_image_tag
         echo 'export DOCKER_IMAGE_TAG=$(cat /tmp/.docker_image_tag)' >> $BASH_ENV
-  - run:
-      name: "architect/image-prepare-tag: Write computed version to .build_version"
-      command: cp /tmp/.docker_image_tag .build_version
-  - persist_to_workspace:
-      root: .
-      paths:
-        - .build_version
+  - when:
+      condition: <<parameters.persist-build-version>>
+      steps:
+        - run:
+            name: "architect/image-prepare-tag: Write computed version to .build_version"
+            command: cp /tmp/.docker_image_tag .build_version
+        - persist_to_workspace:
+            root: .
+            paths:
+              - .build_version
