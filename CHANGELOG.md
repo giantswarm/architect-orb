@@ -45,9 +45,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 
-- `docs/multi-arch-dockerfiles.md`. Its subject was avoiding QEMU emulation in a single multi-platform
-  build, which the orb no longer does. The Dockerfile contract it described lives in
-  [docs/job/build-image.md](docs/job/build-image.md).
+- **Breaking.** `image-build-and-push`: the multi-platform tagged build path is removed, and with it the
+  `push-by-digest` parameter that selected between the two, plus `tag-latest-branch`, `sign` and
+  `sbom-cyclonedx`, which belong to the job that now tags and signs. Building one platform and pushing it
+  by digest is the only thing the command does. No job called the removed path.
 - **Breaking.** `push-to-registries` no longer builds the image. It now joins the per-architecture digests
   recorded by `build-image` into one tagged index per registry, then signs and attests it. Every config
   that builds an image must add one `build-image` job per architecture and point the existing
