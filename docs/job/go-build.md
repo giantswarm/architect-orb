@@ -6,7 +6,7 @@ Builds Go binaries for one or more target architectures in a single job and pers
 - Runs `go-test` (with optional `pre_test_target` and `test_target`).
 - Loops over each entry in `architectures` and runs `go build` cross-compiled for that GOOS/GOARCH.
 - Each binary is named `<binary>-<GOOS>-<GOARCH>`. For `linux/amd64` (when included), a copy is also written to `<binary>` for backward compatibility.
-- The resolved architecture list is written to `.platforms` in the workspace so `push-to-registries` can auto-derive `--platform`.
+- The resolved architecture list is written to `.platforms` in the workspace as a record of what was built.
 
 ## Parameters
 
@@ -38,7 +38,7 @@ workflows:
           requires: [architect/go-build]
 ```
 
-`architectures` defaults to `linux/amd64,linux/arm64`, so the default invocation builds both binaries in a single job. Tests run once (not per arch), CircleCI startup overhead is paid once, and `push-to-registries` auto-derives `--platform` from the `.platforms` file written to the workspace.
+`architectures` defaults to `linux/amd64,linux/arm64`, so the default invocation builds both binaries in a single job. Tests run once (not per arch) and CircleCI startup overhead is paid once. The image platforms are declared separately, as one [`build-image`](build-image.md) job per architecture.
 
 ### Restricting to a single architecture
 

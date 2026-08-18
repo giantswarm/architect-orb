@@ -1,30 +1,30 @@
-environment:
-  DOCKER_BUILDKIT: "1"
 executor: "architect"
 resource_class: "<< parameters.resource_class >>"
 parameters:
   image:
-    description: Name of the  container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
+    description: Name of the container repository and image. Defaults to `giantswarm/REPO_NAME`. Must not contain registry host name!
     type: string
     default: "giantswarm/${CIRCLE_PROJECT_REPONAME}"
+  platforms:
+    description: |
+      The platforms that were built. Every one must have left a digest in the
+      workspace, and no digest may be left over, or the job fails rather than
+      publishing an index that is quietly missing an architecture. Must match the
+      set of `build-image` jobs this job requires.
+    type: string
+    default: "linux/amd64,linux/arm64"
+  resource_class:
+    description: |
+      This job does no building — it assembles manifests, signs, and fetches SBOM
+      blobs. `small` is the right default; raise it only if a very large SBOM makes
+      the signing steps memory-bound.
+    type: enum
+    enum: ["small", "medium", "medium+", "large", "xlarge", "arm.medium", "arm.large", "arm.xlarge", "arm.2xlarge"]
+    default: small
   tag-latest-branch:
     description: 'Name of the branch on which the image will be additionally tagged as "latest".'
     type: string
     default: ""
-  resource_class:
-    default: small
-    description: |
-      Configures the amount of CPU and RAM for the job. See
-      https://circleci.com/docs/2.0/configuration-reference/#docker-executor
-      for details.
-    type: enum
-    enum: ["small", "medium", "medium+", "large", "xlarge", "arm.medium", "arm.large", "arm.xlarge", "arm.2xlarge"]
-  build-context:
-    type: string
-    default: "."
-  dockerfile:
-    type: string
-    default: "./Dockerfile"
   git-tag-prefix:
     type: string
     default: ""
@@ -32,50 +32,36 @@ parameters:
     type: string
     default: ""
   force-public:
-    description: Skip the repo visibility check and push the the image to public registries
-    type: boolean
-    default: false
-  split-china-push:
-    description: Use self-hosted CircleCI runner in China for pushing image to Aliyun.
+    description: Skip the repo visibility check and push the image to public registries.
     type: boolean
     default: false
   registries-data:
-    default: ""
     type: string
-  platforms:
+    default: ""
+  split-china-push:
     description: |
-      Comma-separated list of platforms for the buildx build. When empty, the list is
-      auto-derived from the `.platforms` file written by `go-build` to the workspace.
-      Falls back to `linux/amd64,linux/arm64` if neither is available.
-    type: string
-    default: ""
+      Use a self-hosted CircleCI runner in China for pushing to Aliyun. Must match
+      the value on the `build-image` jobs, or they and this job disagree about
+      which registries hold the per-architecture digests.
+    type: boolean
+    default: false
   annotations:
     description: |
-      Newline-separated OCI annotations passed to 'docker buildx build --annotation'.
-      Each line uses the buildx format '[type:]key=value'. For multi-arch builds:
-        manifest:key=value            - annotates each platform manifest
-        index:key=value               - annotates the manifest list (OCI index)
-        manifest-descriptor:key=value - annotates descriptors in the index
-        key=value (no prefix)         - defaults to index for multi-platform builds
+      Newline-separated OCI annotations for the merged index. Only `index:`,
+      `index-descriptor:` and `manifest-descriptor:` prefixes are accepted;
+      per-platform `manifest:` annotations belong on the `build-image` jobs.
     type: string
     default: ""
   oci-labels:
     description: |
-      Emit standard OCI image labels (and matching index annotations):
-      org.opencontainers.image.{source,revision,version,created}.
+      Emit org.opencontainers.image.{source,revision,version,created} as index
+      annotations. The merge builds a new index, so the per-architecture ones are
+      discarded with it and these have to be re-applied here.
     type: boolean
     default: true
-  provenance:
-    description: |
-      Buildx SLSA provenance attestation mode: "min" (default), "max", or "false".
-    type: enum
-    enum: ["min", "max", "false"]
-    default: "min"
   sbom:
     description: |
-      Generate and attach an SPDX SBOM attestation per platform. On public images with
-      `sign: true`, the exact SPDX predicate buildx produced is also signed as a cosign
-      keyless attestation (`--type spdxjson`).
+      Sign the SPDX SBOM attestation that `build-image` attached to each platform.
     type: boolean
     default: true
   sbom-cyclonedx:
@@ -89,115 +75,56 @@ parameters:
     default: false
   sign:
     description: |
-      Sign the pushed image — and its SPDX / CycloneDX SBOM attestations — with cosign
+      Sign the pushed index — and its SPDX / CycloneDX SBOM attestations — with cosign
       keyless OIDC. Public images only — private images are skipped at runtime to avoid
       leaking digests/timestamps into the public Rekor transparency log. Mints a fresh
       CircleCI OIDC token with audience=sigstore via `circleci run oidc get`.
     type: boolean
     default: true
-  hadolint:
-    description: |
-      Lint the Dockerfile with hadolint before building.
-      - "warn" (default): run hadolint, print findings, never fail the job.
-      - "fail": run hadolint and fail the job on any finding.
-      - "skip": don't run hadolint at all.
-    type: enum
-    enum: ["warn", "fail", "skip"]
-    default: "warn"
-  hadolint-config:
-    description: |
-      Optional path to a `.hadolint.yaml` configuration file. When empty,
-      hadolint uses its built-in defaults.
-    type: string
-    default: ""
-  push:
-    description: |
-      Push the built image to the configured registries (default). Set to false to only
-      validate that the image builds for every target platform — same Dockerfile lint,
-      same multi-arch buildx build (QEMU, `.platforms` auto-derivation, workspace attach),
-      but the result stays in the BuildKit cache. No registry credentials are used and
-      signing / provenance / SBOM generation are skipped. Useful on the branch/PR path of
-      workflows that push images only on release tags.
-    type: boolean
-    default: true
-  cache:
-    description: |
-      BuildKit layer-cache backend. "off" (default) keeps the previous behaviour: the
-      builder is created fresh on a fresh remote-docker VM every job, so the whole
-      Dockerfile is re-executed from scratch on every build. "registry" imports and
-      exports the layer cache as an OCI artifact in the registry the image is pushed
-      to. Requires `push: true`. `RUN --mount=type=cache` mounts are not part of the
-      exported cache — only layers are.
-    type: enum
-    enum: ["off", "registry"]
-    default: "off"
-  cache-ref:
-    description: |
-      Explicit OCI ref for the `cache: registry` artifact. Defaults to
-      `<registry>/<image>:buildcache<tag-suffix>`, where `<registry>` is the
-      visibility-matched entry, preferring gsoci/gsociprivate and never the China mirror.
-    type: string
-    default: ""
 steps:
   - checkout
+  # Only `docker login` needs this. Everything else here talks to the registry
+  # client-side: imagetools create/inspect, oras, cosign and syft all read
+  # credentials from ~/.docker/config.json and never touch a daemon — imagetools
+  # works with no daemon at all. Swapping image-login-to-registries for `oras
+  # login`, which writes the same file, would let the VM go, but that command is
+  # shared with sync-china-registry, so it is not a local change.
   - setup_remote_docker:
       version: default
   - attach_workspace:
       at: .
+  # This job is the only one on the release path that is not concurrent with
+  # another, so it is the one that publishes `.build_version`.
   - image-prepare-tag:
       git-tag-prefix: <<parameters.git-tag-prefix>>
       tag-suffix: <<parameters.tag-suffix>>
-  - dockerfile-lint:
-      dockerfile: <<parameters.dockerfile>>
-      mode: <<parameters.hadolint>>
-      config: <<parameters.hadolint-config>>
-  - when:
-      # Build-only mode needs no registry credentials.
-      condition: <<parameters.push>>
-      steps:
-        - image-login-to-registries:
-            registries-data: <<parameters.registries-data>>
-  - run:
-      name: Validate platforms parameter
-      command: |
-        if [ -n "<<parameters.platforms>>" ] && [[ ! "<<parameters.platforms>>" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
-          echo "ERROR: The 'platforms' parameter, if set, must be a comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
-          exit 1
-        fi
-  - run:
-      name: Validate cache-ref parameter
-      command: |
-        # Interpolated straight into a --cache-to/--cache-from attribute list, so keep it
-        # to the OCI reference charset (host[:port]/path:tag). A `,` would silently inject
-        # a further exporter attribute.
-        if [ -n "<<parameters.cache-ref>>" ] && [[ ! "<<parameters.cache-ref>>" =~ ^[a-zA-Z0-9._:/-]+$ ]]; then
-          echo "ERROR: 'cache-ref', if set, must be a plain OCI reference (e.g. registry.example.com/org/image:buildcache)."
-          exit 1
-        fi
-  - image-build-and-push:
-      image: <<parameters.image>>
-      build-context: <<parameters.build-context>>
-      dockerfile: <<parameters.dockerfile>>
+  - image-login-to-registries:
+      registries-data: <<parameters.registries-data>>
+  - generate-github-token
+  # The build jobs each resolved the same set to decide where to push; this
+  # resolves it again to decide where to merge, sign and attest. Same command,
+  # same inputs, same answer — the visibility check and the push_dev gate are
+  # deterministic for a given commit and tag.
+  - image-select-registries:
       force-public: <<parameters.force-public>>
+      registries-data: <<parameters.registries-data>>
+      split-china-push: <<parameters.split-china-push>>
+  - image-merge-manifests:
+      image: <<parameters.image>>
+      platforms: <<parameters.platforms>>
       tag-latest-branch: <<parameters.tag-latest-branch>>
       tag-suffix: <<parameters.tag-suffix>>
-      registries-data: <<parameters.registries-data>>
-      platforms: <<parameters.platforms>>
       annotations: <<parameters.annotations>>
       oci-labels: <<parameters.oci-labels>>
-      provenance: <<parameters.provenance>>
+  - image-sign-and-attest:
+      image: <<parameters.image>>
+      push: true
+      sign: <<parameters.sign>>
       sbom: <<parameters.sbom>>
       sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
-      sign: <<parameters.sign>>
-      split-china-push: <<parameters.split-china-push>>
-      push: <<parameters.push>>
-      cache: <<parameters.cache>>
-      cache-ref: <<parameters.cache-ref>>
   - when:
-      condition:
-        and:
-          - <<parameters.split-china-push>>
-          - <<parameters.push>>
+      # sync-china-registry restores this to learn what to mirror.
+      condition: <<parameters.split-china-push>>
       steps:
         - save_cache:
             key: image-data-{{.Environment.CIRCLE_PIPELINE_ID}}

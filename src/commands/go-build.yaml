@@ -5,8 +5,7 @@
 # `<binary>` for backward compatibility.
 #
 # All listed targets are built in this single job (no matrix needed) and the list is written
-# to `.platforms` in the workspace so downstream `push-to-registries` jobs can auto-derive
-# `--platform`.
+# to `.platforms` in the workspace, as a record of what was built.
 #
 # Parameters:
 #   binary: Name of the binary to produce.
@@ -44,7 +43,7 @@ parameters:
     description: |
       Comma-separated list of target architectures to build in this job (e.g.,
       "linux/amd64,linux/arm64"). The resolved list is written to `.platforms` in the
-      workspace for downstream auto-discovery in `push-to-registries`.
+      workspace, as a record of what was built.
     type: string
   build_concurrency:
     default: "1"

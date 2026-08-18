@@ -15,4 +15,3 @@
 
 - [Migrating from v8.x to v9](migration-v8-to-v9.md)
 - [Cosign signing](cosign-signing.md)
-- [Multi-arch Dockerfiles: avoiding QEMU emulation](multi-arch-dockerfiles.md)
