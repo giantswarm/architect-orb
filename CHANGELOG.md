@@ -7,6 +7,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `push-to-app-catalog`: new `comment_on_pr` parameter (default `true`) that reports the published
+  chart name and version on the pull request. Off-tag builds stamp
+  `X.Y.Z-dev.<branch>.<date>.<time>`, which is collision-proof but not guessable, so reviewers had to
+  open the CircleCI job and read the log to find out what to install. The comment also carries the
+  OCI reference, the digest, a `helm pull` command and a link to the git catalog.
+
+  It is a single sticky comment, found by a hidden marker keyed on the `chart` parameter and updated
+  in place on later pushes — a `PATCH` sends no notification, so a long branch produces one comment
+  instead of one per push, and a repo publishing several charts gets one comment per chart.
+
+  The pull request is resolved via `GET /repos/{o}/{r}/commits/{sha}/pulls` rather than
+  `CIRCLE_PULL_REQUEST`, which CircleCI does not provide under its GitHub App integration and which
+  is unreliable for same-repo pull requests under OAuth.
+
+  **Requires the `CircleCI architect` GitHub App to hold `Pull requests: write`** (plus
+  `Issues: write`, since pull request comments live on the issues endpoints), accepted by an
+  organisation owner. Until that is granted the step logs a warning naming the missing permission.
+  Every failure path is non-fatal by construction — no pull request yet, forked pull request (no
+  context, so no token), missing permission, rate limit — because the chart has already been
+  published by the time it runs. Nothing is posted for tag builds, default-branch builds, or when
+  both pushes are disabled.
+
+- `generate-github-token`: new `non_fatal` parameter (default `false`, so existing callers are
+  unaffected). When `true`, a missing App key or a failed `gh-token` call warns and exits 0 with
+  `GITHUB_TOKEN` unset instead of failing the step, for best-effort features that must never break a
+  build.
+
+### Fixed
+
+- `generate-github-token`: a failing `gh-token generate` left the step green with an empty token,
+  surfacing later as a confusing "GITHUB_TOKEN is not set" in whichever command needed it. The exit
+  status and an empty result are now checked at the source.
+
 ## [10.0.0] - 2026-08-18
 
 ### Deprecated

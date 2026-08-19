@@ -206,6 +206,14 @@ steps:
               # Persist for the cosign step (separate shell).
               echo -n "${CHART_ACCESS}" > /tmp/.chart_access
               echo -n "${chart_repo}@${chart_digest}" > /tmp/.cosign_refs.candidate
+
+              # Persist the tagged ref and the digest separately for the
+              # `comment-chart-version` command. Kept apart from the cosign candidate
+              # above, which is digest-form with no tag and whose lifecycle belongs to
+              # signing — it is emptied for private charts and only staged when
+              # `sign: true`.
+              echo -n "${pushed_ref}" > /tmp/.build_chart_oci_ref
+              echo -n "${chart_digest}" > /tmp/.build_chart_digest
         - when:
             condition: <<parameters.sign>>
             steps:

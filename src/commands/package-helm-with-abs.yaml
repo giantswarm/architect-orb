@@ -45,6 +45,9 @@ steps:
           echo "ERROR: could not determine build version (.build_version is empty and gitsemver returned nothing)"
           exit 1
         fi
+        # Record the stamped version so later steps can report what was published
+        # without recomputing it (see the `comment-chart-version` command).
+        printf '%s' "${VERSION}" > .build_chart_version
         if [ "<< parameters.override_chart_version >>" != "true" ]; then
           echo "NOTE: 'override_chart_version' is deprecated and ignored; stamping chart version ${VERSION} anyway."
         fi
@@ -59,3 +62,41 @@ steps:
           --catalog-base-url "https://giantswarm.github.io/$(cat .app_catalog_name)/" \
           --keep-chart-changes \
           ${OVERRIDES}
+  - run:
+      name: "architect/package-helm-with-abs: Record published chart name"
+      command: |
+        # Best effort: this only feeds the informational `comment-chart-version`
+        # command, so it must never be the reason a chart publish fails.
+        set +e
+        set -u -o pipefail
+
+        shopt -s nullglob
+        archives=( build/*.tgz )
+
+        if [[ ${#archives[@]} -ne 1 ]]; then
+          echo "WARNING: expected exactly one chart archive in build/, found ${#archives[@]}; not recording the chart name." >&2
+          if [[ ${#archives[@]} -gt 0 ]]; then
+            printf '  %s\n' "${archives[@]}" >&2
+          fi
+          exit 0
+        fi
+
+        version=$(cat .build_chart_version)
+        base=$(basename "${archives[0]}" .tgz)
+
+        # Helm names archives `<chart-name>-<version>.tgz`, and the version was stamped
+        # by the step above, so stripping it yields the chart name exactly — no guessing
+        # where the name ends and the semver begins. Reading it off the produced artifact
+        # rather than the `chart` parameter is also what makes this correct for callers
+        # using `explicit_allow_chart_name_mismatch`, where the name in Chart.yaml differs
+        # from the chart directory. This mirrors why `push-helm` derives the pushed ref
+        # from `helm push` output instead of the parameter.
+        name="${base%-${version}}"
+
+        if [[ -z "$name" || "$name" == "$base" ]]; then
+          echo "WARNING: could not derive the chart name from '${base}' (version '${version}'); not recording it." >&2
+          exit 0
+        fi
+
+        printf '%s' "$name" > .build_chart_name
+        echo "Published chart: ${name} ${version}"
