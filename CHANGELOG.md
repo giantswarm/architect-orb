@@ -17,6 +17,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `ARG ..._VERSION=`) and in `vendir.yml` (next to a `ref:`), so in `src/commands/` it matched no manager
   and Renovate never saw the dependency. It is a `--privileged` container, so it also went unwatched for
   CVEs.
+- `push-to-app-catalog`, `push-helm`: Helm chart signing was silently skipped — `sign: true` is the
+  default, yet every public chart published since 2026-05-20 shipped **unsigned** while CI reported
+  success. `push-helm` staged the chart's OCI reference with `echo -n`, so `/tmp/.cosign_refs` had no
+  trailing newline; `cosign-sign-verify` consumes that file with `while IFS= read -r`, which discards
+  a final line lacking a newline. The chart writes exactly one reference, so the loop body never ran.
+  The `[[ ! -s "$refs_file" ]]` guard passed (the file was non-empty), `cosign version` printed, and
+  the step exited 0 having signed nothing.
+
+  Container images and Go binaries were unaffected: their producers append with plain `echo`, so their
+  entries were newline-terminated. The regression came in with #774, which folded chart sign+verify
+  into the shared `cosign-sign-verify` command — the `echo -n` was carried over from the previous
+  single-value scratch files (`/tmp/.chart_digest`, `/tmp/.chart_registry`), where a missing newline
+  was harmless, and became a dropped line once the same file was read as line-oriented input.
+
+  Note this only fixes new publishes. Chart versions already in `gsoci.azurecr.io/charts/giantswarm`
+  remain unsigned; re-signing them is tracked separately, since a manual re-sign cannot carry the
+  CircleCI pipeline OIDC identity the verify assertions expect.
+
+- `cosign-sign-verify`: harden the command against this class of failure rather than the one instance.
+  All three read loops (`oci`, `blob`, `attest`) consume caller-supplied files and now tolerate a
+  missing final newline (`while … read … || [[ -n "$var" ]]`). The step also counts the actionable
+  entries in the file up front and fails if any of them never reached cosign, so a future silent skip
+  is a red build instead of a green one. The `oci` loop's blank/comment predicate now matches that
+  count (it reads with an empty `IFS`, so unlike the other two it also saw whitespace-only and
+  space-indented `#` lines as entries). Truncating the refs file to skip signing — how private charts
+  and images opt out — still exits 0 as before.
 
 ## [10.0.0] - 2026-08-18
 
