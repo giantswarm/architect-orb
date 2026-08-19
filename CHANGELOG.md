@@ -9,6 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `image-build-and-push`: the QEMU/binfmt image is bumped from `qemu-v8.1.5` (January 2025) to
+  `qemu-v10.2.3`, two QEMU majors of emulation performance for every build that targets a platform the
+  build host does not run natively.
+- The `# renovate:` annotation on the binfmt line now has a matching custom manager in `renovate.json5`.
+  The shared `giantswarm/renovate-presets` only reads that annotation shape in Dockerfiles (next to an
+  `ARG ..._VERSION=`) and in `vendir.yml` (next to a `ref:`), so in `src/commands/` it matched no manager
+  and Renovate never saw the dependency. It is a `--privileged` container, so it also went unwatched for
+  CVEs.
 - `push-to-app-catalog`, `push-helm`: Helm chart signing was silently skipped — `sign: true` is the
   default, yet every public chart published since 2026-05-20 shipped **unsigned** while CI reported
   success. `push-helm` staged the chart's OCI reference with `echo -n`, so `/tmp/.cosign_refs` had no

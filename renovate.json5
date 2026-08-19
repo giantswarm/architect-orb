@@ -105,6 +105,24 @@
       datasourceTemplate: 'github-releases',
       extractVersionTemplate: '^v(?<version>.+)$',
     },
+    {
+      // The shared preset only reads `# renovate:` annotations in Dockerfiles and
+      // vendir.yml, so the annotation on the binfmt line needs its own manager.
+      // Only the numeric part is captured, which keeps the `qemu-v` tag prefix in
+      // place on rewrite, and the anchored extractVersion skips the build-suffixed
+      // tags (`qemu-v10.2.3-68`).
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/commands/image-build-and-push\\.yaml$/',
+      ],
+      matchStrings: [
+        'tonistiigi/binfmt:qemu-v(?<currentValue>[0-9.]+)',
+      ],
+      depNameTemplate: 'tonistiigi/binfmt',
+      datasourceTemplate: 'docker',
+      extractVersionTemplate: '^qemu-v(?<version>[0-9.]+)$',
+      versioningTemplate: 'semver',
+    },
   ],
   packageRules: [
     {

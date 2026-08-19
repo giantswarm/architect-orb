@@ -341,7 +341,7 @@ steps:
         if [[ "$needs_emulation" == "true" ]]; then
           # Image is pinned via tag and bumped by Renovate.
           # renovate: datasource=docker depName=tonistiigi/binfmt
-          docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install all
+          docker run --privileged --rm tonistiigi/binfmt:qemu-v10.2.3 --install all
         else
           echo "All target platforms match the build host ($host_platform); skipping QEMU/binfmt registration."
         fi
