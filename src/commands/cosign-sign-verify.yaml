@@ -18,9 +18,15 @@
 #                 `gsoci.azurecr.io/giantswarm/myapp@sha256:… spdxjson /tmp/sbom.spdx.json`
 #                 (signs the predicate as a cosign DSSE attestation referrer on <ref>).
 # Blank lines and lines starting with `#` are ignored. If the file does not
-# exist or is empty, the step exits 0 without doing anything (so callers that
-# decide at runtime to skip signing — e.g. private artifacts — can do so by
-# truncating the file).
+# exist, is empty, or holds only ignored lines, the step exits 0 without doing
+# anything (so callers that decide at runtime to skip signing — e.g. private
+# artifacts — can do so by truncating the file).
+#
+# A final line without a trailing newline still counts: every entry the file
+# lists must reach cosign, and the step fails if one does not. Producers should
+# still terminate each line (`echo "$entry" >> "$file"`) — an entry that never
+# reaches cosign means an artifact published unsigned on a green build, which is
+# what #878 was.
 
 parameters:
   kind:
@@ -52,6 +58,18 @@ steps:
           echo "No entries in $refs_file; nothing to sign."
           exit 0
         fi
+
+        # Count the entries the loops below will actually act on (same blank-line and
+        # `#`-comment skipping), and assert at the end that every one was processed.
+        # A non-empty file whose entries all get skipped used to exit 0 silently —
+        # that is how chart signing went missing for three months (#878). `grep -c`
+        # exits 1 on zero matches, which `set -e` would take as a failure.
+        expected=$(grep -cvE '^[[:space:]]*($|#)' "$refs_file" || true)
+        if [[ "$expected" -eq 0 ]]; then
+          echo "No actionable entries in $refs_file; nothing to sign."
+          exit 0
+        fi
+        processed=0
 
         cosign version
 
@@ -145,8 +163,12 @@ steps:
 
         case "<<parameters.kind>>" in
           oci)
-            while IFS= read -r ref; do
-              [[ -z "$ref" || "$ref" =~ ^# ]] && continue
+            while IFS= read -r ref || [[ -n "$ref" ]]; do
+              # `oci` reads with an empty IFS to keep refs verbatim, so unlike the
+              # `blob`/`attest` loops it sees leading whitespace; match the blank/comment
+              # predicate `expected` uses above so the two cannot disagree.
+              [[ -z "${ref//[[:space:]]/}" || "$ref" =~ ^[[:space:]]*# ]] && continue
+              processed=$((processed + 1))
               echo "cosign sign $ref"
               rc=0; cosign_retry "sign $ref" quiet cosign sign --yes "$ref" || rc=$?
               if [[ "$rc" -eq 42 ]]; then
@@ -170,8 +192,9 @@ steps:
             # invocation — a retry produces a new, non-equivalent entry — so a
             # full re-run resolves the conflict. Transient backend errors are
             # retried the same way (with backoff); both share MAX_ATTEMPTS.
-            while IFS=' ' read -r file bundle; do
+            while IFS=' ' read -r file bundle || [[ -n "$file" ]]; do
               [[ -z "$file" || "$file" =~ ^# ]] && continue
+              processed=$((processed + 1))
               echo "cosign sign-blob $file → $bundle"
               for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
                 rm -f "$bundle"
@@ -230,8 +253,9 @@ steps:
             # `--signing-config` requires `--new-bundle-format`. The signing config is
             # built once and reused for every ref/arch in the loop.
             no_rekor_signing_config=/tmp/.cosign_signing_config_no_rekor.json
-            while IFS=' ' read -r ref type predicate; do
+            while IFS=' ' read -r ref type predicate || [[ -n "$ref" ]]; do
               [[ -z "$ref" || "$ref" =~ ^# ]] && continue
+              processed=$((processed + 1))
               echo "cosign attest --type $type $ref (predicate: $predicate)"
               no_tlog=0
               rc=0; cosign_retry "attest $ref ($type)" quiet \
@@ -282,3 +306,14 @@ steps:
             done < "$refs_file"
             ;;
         esac
+
+        # The loops read via a `<` redirection, not a pipe, so they run in this shell
+        # and the counter survives. Any entry that never reached cosign is a bug in the
+        # producing command's file format — fail red rather than report a green build
+        # for an unsigned artifact.
+        if [[ "$processed" -ne "$expected" ]]; then
+          echo "ERROR: $refs_file lists $expected entr(ies) but only $processed were processed." >&2
+          echo "  Signing was silently skipped. Check that the file is newline-terminated," >&2
+          echo "  one entry per line — see giantswarm/architect-orb#878." >&2
+          exit 1
+        fi

@@ -203,9 +203,12 @@ steps:
               # Strip the :<version> tag from the pushed ref to get the bare repo path.
               chart_repo="${pushed_ref%:*}"
 
-              # Persist for the cosign step (separate shell).
+              # Persist for the cosign step (separate shell). The refs file is
+              # line-oriented input for `cosign-sign-verify` (one ref per line), so it
+              # must be newline-terminated — a bare `echo -n` here writes a final line
+              # that the reading `while read` loop discards, silently skipping the sign.
               echo -n "${CHART_ACCESS}" > /tmp/.chart_access
-              echo -n "${chart_repo}@${chart_digest}" > /tmp/.cosign_refs.candidate
+              echo "${chart_repo}@${chart_digest}" > /tmp/.cosign_refs.candidate
         - when:
             condition: <<parameters.sign>>
             steps:
