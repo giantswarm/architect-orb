@@ -16,10 +16,37 @@ parameters:
       the variable is absent or empty.
     type: string
     default: ""
+  non_fatal:
+    description: |
+      When `true`, a missing App private key or a failed token generation logs a
+      warning and exits 0 instead of failing the step, leaving GITHUB_TOKEN unset.
+      Callers must then treat an empty GITHUB_TOKEN as "skip".
+
+      Meant for best-effort features that must never break a build — most notably
+      on forked-PR builds, where CircleCI withholds the context environment
+      variables entirely, so no token can be minted at all.
+
+      Defaults to `false`, which is the historical behaviour: every caller that
+      actually needs the token to do its job keeps failing loudly without one.
+    type: boolean
+    default: false
 steps:
   - run:
       name: Generate temporary GitHub token
       command: |
+        NON_FATAL="<< parameters.non_fatal >>"
+
+        # give_up <message ...> — abort the step, honouring the non_fatal contract.
+        give_up() {
+          if [[ "${NON_FATAL}" = "true" ]]; then
+            printf 'WARNING: %s\n' "$@" >&2
+            echo "WARNING: continuing without a GitHub token ('non_fatal' is set)." >&2
+            exit 0
+          fi
+          printf 'ERROR: %s\n' "$@" >&2
+          exit 1
+        }
+
         # If a pre-minted token env var is specified and populated, use it directly.
         TOKEN_ENV_VAR="<< parameters.token-env-var >>"
         if [[ -n "$TOKEN_ENV_VAR" ]]; then
@@ -33,13 +60,21 @@ steps:
         fi
 
         if [[ -z "${<< parameters.private_key_base64_env_var >>:-}" ]]; then
-          echo "ERROR: << parameters.private_key_base64_env_var >> is not set." >&2
-          echo "Add 'context: architect' to this job in .circleci/config.yml to enable artifact signing." >&2
-          exit 1
+          give_up "<< parameters.private_key_base64_env_var >> is not set." \
+                  "Add 'context: architect' to this job in .circleci/config.yml."
         fi
 
         echo -n "${<< parameters.private_key_base64_env_var >>}" | base64 -d > /tmp/private-key.pem
 
-        TOKEN=$(gh-token generate --key /tmp/private-key.pem --app-id "${<< parameters.app_id_env_var >>}" --installation-id "${<< parameters.installation_id_env_var >>}" --token-only)
+        # Without an explicit status check a failing `gh-token generate` would leave the
+        # step green with an empty token, surfacing much later as a confusing "GITHUB_TOKEN
+        # is not set" in whichever command needed it.
+        if ! TOKEN=$(gh-token generate --key /tmp/private-key.pem --app-id "${<< parameters.app_id_env_var >>}" --installation-id "${<< parameters.installation_id_env_var >>}" --token-only); then
+          give_up "gh-token failed to generate an installation token."
+        fi
+
+        if [[ -z "$TOKEN" ]]; then
+          give_up "gh-token returned an empty token."
+        fi
 
         echo "export GITHUB_TOKEN=\"$TOKEN\"" >> $BASH_ENV

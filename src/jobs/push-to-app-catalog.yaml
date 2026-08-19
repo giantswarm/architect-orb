@@ -84,6 +84,22 @@ parameters:
       When `true` (the default), passes `--override-app-version` to App Build Suite,
       stamping the app version with the value from `gitsemver` (or `.build_version`
       workspace file).  Set to `false` to leave the appVersion in `Chart.yaml` unchanged.
+  comment_on_pr:
+    default: true
+    description: |
+      Post — and on later pushes update in place — a single comment on the pull request
+      stating the chart name and version that were published, along with the OCI
+      reference and digest.
+
+      Off-tag builds stamp a `X.Y.Z-dev.<branch>.<date>.<time>` version that a reviewer
+      cannot guess, so without this they have to open the CircleCI job and read the log
+      to find out what to install.
+
+      Requires the `CircleCI architect` GitHub App to hold `Pull requests: write` on the
+      repository. Every failure — no pull request yet, a forked PR (no context, so no
+      token), a missing permission, a rate limit — logs a warning and leaves the build
+      green.
+    type: boolean
   persist_chart_archive:
     type: boolean
     default: false
@@ -127,6 +143,20 @@ steps:
       force-public: <<parameters.force-public>>
       sign: << parameters.sign >>
       chart: << parameters.chart >>
+  - when:
+      condition:
+        and:
+          - << parameters.comment_on_pr >>
+          # With both pushes off nothing was published, and advertising a version that
+          # exists nowhere is worse than saying nothing. As a compile-time condition this
+          # also avoids minting a GitHub token for no reason.
+          - or:
+              - << parameters.push_to_appcatalog >>
+              - << parameters.push_to_oci_registry >>
+      steps:
+        - comment-chart-version:
+            chart: << parameters.chart >>
+            push_to_appcatalog: << parameters.push_to_appcatalog >>
   - when:
       condition: << parameters.persist_chart_archive >>
       steps:

@@ -67,6 +67,33 @@ is why [override_chart_version](#override_chart_version-optional-deprecated) is 
 ignored — leaving the version from `Chart.yaml` in place let a branch build that had not bumped the
 version by hand republish, and so overwrite, the released chart.
 
+## Reporting the published version on a pull request
+
+That dev-version scheme is exactly why this is needed: `X.Y.Z-dev.<branch>.<date>.<time>` is
+collision-proof but not guessable, so a reviewer who wants to install the chart from a pull request
+would otherwise have to open the CircleCI job and read the log.
+
+With [comment_on_pr](#comment_on_pr-optional-boolean-defaulttrue) (the default), the job posts a
+single comment on the pull request stating the chart name and version it published, plus the OCI
+reference, the digest, and a `helm pull` command. Later pushes **update that same comment in place**
+rather than adding new ones, so a long-running branch produces one comment and one notification.
+
+**Prerequisite.** The `CircleCI architect` GitHub App must hold `Pull requests: write` (and
+`Issues: write` — pull request conversation comments live on the issues endpoints) on the
+repository, accepted by an organisation owner. Without it the job logs a warning naming the missing
+permission and carries on.
+
+Known limitations, all of which log a line and leave the build green:
+
+- Nothing is posted for tag builds or default-branch builds — there is no pull request, and a tag
+  build's version follows the tag anyway.
+- Nothing is posted for forked pull requests: CircleCI withholds context environment variables from
+  them, so no GitHub token can be minted.
+- If the push predates the pull request, the comment appears on the first build **after** it is
+  opened.
+- Nothing is posted when both `push_to_appcatalog` and `push_to_oci_registry` are `false`, since
+  nothing was published.
+
 ## Parameters
 
 - [common parameters](common.md#parameters) shared in all jobs.
@@ -75,12 +102,13 @@ version by hand republish, and so overwrite, the released chart.
 - [chart](#chart) name of the directory containing the chart in `helm/`
 - [on_tag](#on_tag-optional-boolean-defaulttrue) only push tagged commits to `app_catalog`
 - [explicit_allow_chart_name_mismatch](#explicit_allow_chart_name_mismatch-optional-boolean-defaultfalse)
-- [persist_chart_archive](#persist_chart_archive-boolean-defaultfalse)
+- [persist_chart_archive](#persist_chart_archive-optional-boolean-defaultfalse)
 - [push_to_appcatalog](#push_to_appcatalog-optional-boolean-defaulttrue)
 - [push_to_oci_registry](#push_to_oci_registry-optional-boolean-defaulttrue)
 - [sign](#sign-optional-boolean-defaulttrue)
 - [override_chart_version](#override_chart_version-optional-deprecated) (optional, deprecated, always treated as `true`)
 - [override_app_version](#override_app_version-optional-boolean-defaulttrue)
+- [comment_on_pr](#comment_on_pr-optional-boolean-defaulttrue)
 
 ### attach_workspace
 
@@ -185,3 +213,19 @@ When `true` (the default), passes `--override-app-version` to App Build Suite, s
 chart's `appVersion` field with the value computed by `gitsemver` (or read from the
 `.build_version` workspace file). Set to `false` to leave the `appVersion` field in `Chart.yaml`
 unchanged.
+
+### comment_on_pr (optional boolean, default=true)
+
+When `true` (the default), the job posts a comment on the pull request stating the chart name and
+version it published, together with the OCI reference, the digest, a `helm pull` command and a link
+to the git catalog. On subsequent pushes the same comment is updated in place, identified by a
+hidden HTML marker keyed on the `chart` parameter — so a repository publishing several charts gets
+one comment per chart.
+
+Set to `false` to disable it.
+
+Requires the `CircleCI architect` GitHub App to hold `Pull requests: write` on the repository. Every
+failure path — no pull request yet, a forked pull request, a missing App permission, a rate limit —
+logs a warning and leaves the build green; the chart has already been published by the time this
+runs. See [Reporting the published version on a pull
+request](#reporting-the-published-version-on-a-pull-request) for the prerequisites and limitations.
