@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `go-test`: re-enable static security analysis in CI. `golangci-lint`, now bundled in the `architect`
+  image (giantswarm/architect#1398), is run with only the `gosec` linter enabled, failing the build on any
+  finding. This was removed entirely in #616 (May 2025) when the `architect` image dropped `golangci-lint`,
+  leaving `gosec` runnable only via local pre-commit hooks, which CI could not observe or enforce.
+- Bump the `architect` executor image to `8.4.0`, which bundles `golangci-lint` (see above).
+
 ### Fixed
 
 - `image-build-and-push`: the QEMU/binfmt image is bumped from `qemu-v8.1.5` (January 2025) to
