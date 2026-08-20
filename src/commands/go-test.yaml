@@ -92,6 +92,13 @@ steps:
             command: |
               go test -ldflags "$(cat .ldflags)" ./...
   - run:
+      name: "architect/go-test: Check if golangci-lint has any complaints"
+      environment:
+        CGO_ENABLED: "0"
+      command: |
+        golangci-lint run --no-config --default=none --enable=gosec \
+          --max-issues-per-linter=0 --max-same-issues=0
+  - run:
       name: Check if dependencies have known security vulnerabilities
       environment:
         CGO_ENABLED: "0"
