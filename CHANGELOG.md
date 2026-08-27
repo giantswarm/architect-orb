@@ -7,6 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `package-helm-with-abs`, `push-to-app-catalog`: a repository can keep the `appVersion` declared in its
+  `Chart.yaml` by setting `keep-app-version: true` in its own `.abs/main.yaml`. The command reads that key
+  and then does not pass `--override-app-version` at all. `--override-chart-version` is unaffected, so the
+  chart version is still stamped from `gitsemver` and a branch build still cannot overwrite a release.
+
+  `appVersion` is a property of the chart, so the repository that owns it is better placed than this
+  pipeline to say whether the computed version belongs in that field. A chart that vendors an upstream
+  release declares that release as its `appVersion`, and its own `version` is the packaging line. The
+  `override_app_version` job parameter still works and is unchanged; the config-file route needs no CI
+  parameter, which matters for repos whose CircleCI config is generated.
+
+  Requires an App Build Suite that defines `keep-app-version` (giantswarm/app-build-suite#594): App Build
+  Suite rejects a config-file key it does not know, so the executor image must ship that release before
+  any repository sets the key.
+
 ## [10.1.0] - 2026-08-21
 
 ### Added

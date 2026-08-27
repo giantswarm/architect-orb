@@ -22,6 +22,14 @@ parameters:
       stamping the app version with the value computed by `gitsemver` (or read
       from the `.build_version` workspace file).  Set to `false` to leave the
       appVersion declared in `Chart.yaml` unchanged.
+
+      A repository can decide this for itself instead, without a CI parameter,
+      by setting `keep-app-version: true` in its `.abs/main.yaml`.  That is
+      usually the better place: `appVersion` is a property of the chart, so the
+      repository that owns the chart knows whether the version this pipeline
+      computes belongs in that field.  A chart that vendors an upstream release
+      declares that release as its `appVersion`, and its own `version` is the
+      packaging line.
 steps:
   - run:
       name: "architect/package-helm-with-abs: Execute App Build Suite"
@@ -49,7 +57,19 @@ steps:
           echo "NOTE: 'override_chart_version' is deprecated and ignored; stamping chart version ${VERSION} anyway."
         fi
         OVERRIDES="--override-chart-version ${VERSION}"
-        if [ "<< parameters.override_app_version >>" = "true" ]; then
+        # `appVersion` is a property of the chart, not of this pipeline, so the
+        # repository gets to opt out in its own ABS config rather than needing a
+        # CI parameter. Read it here and do not pass the flag at all: App Build
+        # Suite also honours `keep-app-version` and would ignore the flag, but a
+        # pipeline that quietly passes a value the tool discards is harder to
+        # follow than one that never passes it.
+        KEEP_APP_VERSION=false
+        if [ -f .abs/main.yaml ]; then
+          KEEP_APP_VERSION=$(python -c 'import yaml; c = yaml.safe_load(open(".abs/main.yaml")) or {}; print("true" if c.get("keep-app-version") is True else "false")')
+        fi
+        if [ "${KEEP_APP_VERSION}" = "true" ]; then
+          echo "NOTE: .abs/main.yaml sets 'keep-app-version'; keeping the appVersion declared in Chart.yaml."
+        elif [ "<< parameters.override_app_version >>" = "true" ]; then
           OVERRIDES="${OVERRIDES} --override-app-version ${VERSION}"
         fi
         mkdir -p build && python -m app_build_suite \
