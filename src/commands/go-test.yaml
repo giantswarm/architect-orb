@@ -109,7 +109,7 @@ steps:
         # the repo makes Go's buildvcs stamp `vcs.modified=true`, so release
         # binaries report `vX.Y.Z+dirty`. Keep it out of the tree like the other
         # orb scratch files (/tmp/.cosign_blobs, /tmp/.gh_response_binsign).
-        go list -json -m all \
+        go list -json -deps ./... \
           | nancy sleuth --skip-update-check \
             --quiet --exclude-vulnerability-file ./.nancy-ignore \
             --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
