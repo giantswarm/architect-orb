@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `go-test`/ `nancy`: Revert to `go list -json -deps ./...` for producing the dependency list (reverts #830).
+
 ## [10.1.1] - 2026-08-31
 
 ### Fixed
