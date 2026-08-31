@@ -8,7 +8,7 @@ This job:
 - Checks if filenames contain non-ASCII characters.
 - Runs `go vet` against the codebase.
 - Runs `go test` against the codebase.
-- Runs `golangci-lint` with the `gosec` linter enabled to check for security issues in the codebase.
+- Runs `golangci-lint` with the `gosec` linter enabled to check for security issues in the codebase (tests are excluded).
 - Runs `nancy` against the codebase to check for known vulnerabilities in code dependencies.
 
 Example usage:
