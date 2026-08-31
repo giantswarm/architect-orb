@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `gosec` no longer triggers on issues in test files.
+
 ## [10.1.0] - 2026-08-21
 
 ### Added
