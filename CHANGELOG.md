@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.1.2] - 2026-08-31
+
 ### Changed
 
 - `go-test`/ `nancy`: Revert to `go list -json -deps ./...` for producing the dependency list (reverts #830).
@@ -2065,7 +2067,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.1.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.1.2...HEAD
+[10.1.2]: https://github.com/giantswarm/architect-orb/compare/v10.1.1...v10.1.2
 [10.1.1]: https://github.com/giantswarm/architect-orb/compare/v10.1.0...v10.1.1
 [10.1.0]: https://github.com/giantswarm/architect-orb/compare/v10.0.0...v10.1.0
 [10.0.0]: https://github.com/giantswarm/architect-orb/compare/v9.6.0...v10.0.0
