@@ -64,11 +64,15 @@ steps:
                   "Add 'context: architect' to this job in .circleci/config.yml."
         fi
 
-        echo -n "${<< parameters.private_key_base64_env_var >>}" | base64 -d > /tmp/private-key.pem
+        # Routed through give_up as well: under `bash -eo pipefail` an unreadable key would
+        # otherwise abort the step, ignoring the non_fatal contract.
+        if ! echo -n "${<< parameters.private_key_base64_env_var >>}" | base64 -d > /tmp/private-key.pem; then
+          give_up "<< parameters.private_key_base64_env_var >> does not decode as base64."
+        fi
 
-        # Without an explicit status check a failing `gh-token generate` would leave the
-        # step green with an empty token, surfacing much later as a confusing "GITHUB_TOKEN
-        # is not set" in whichever command needed it.
+        # Both the exit status and the token itself are checked, so a failure names its own
+        # cause instead of surfacing much later as a confusing "GITHUB_TOKEN is not set" in
+        # whichever command needed it.
         if ! TOKEN=$(gh-token generate --key /tmp/private-key.pem --app-id "${<< parameters.app_id_env_var >>}" --installation-id "${<< parameters.installation_id_env_var >>}" --token-only); then
           give_up "gh-token failed to generate an installation token."
         fi

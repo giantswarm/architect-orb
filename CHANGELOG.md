@@ -21,10 +21,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `generate-github-token`: new `non_fatal` parameter (default `false`). When `true`, a missing App
   key or a failed token generation warns and exits 0 with `GITHUB_TOKEN` unset.
 
-### Fixed
+### Changed
 
-- `generate-github-token`: a failing `gh-token generate` left the step green with an empty token,
-  surfacing later as a confusing "GITHUB_TOKEN is not set".
+- `generate-github-token`: check `gh-token`'s exit status and the token it returns, and route the
+  private key decode through the same path, so `non_fatal` is honoured.
 
 ## [10.1.2] - 2026-08-31
 

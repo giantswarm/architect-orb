@@ -56,6 +56,10 @@ steps:
         # gh_api <METHOD> <url> [json-body-file] — sets GH_STATUS and GH_BODY.
         gh_api() {
           local method="$1" url="$2" data="${3:-}" out
+          # Cleared up front so a hard curl failure cannot leave the previous call's
+          # status behind for the caller to misread.
+          GH_STATUS=""
+          GH_BODY=""
           local -a args=(
             -sS -w '\n%{http_code}' -X "$method"
             -H "Authorization: token ${GITHUB_TOKEN}"
@@ -101,24 +105,53 @@ steps:
           esac
         }
 
+        # pr_is_open <number>. Returns 0 when the pull request is open, 1 when it is not,
+        # and 2 when the lookup itself failed, so a permission problem is not mistaken for
+        # a closed pull request.
+        pr_is_open() {
+          local state
+          gh_api GET "${api}/repos/${owner}/${repo}/pulls/$1" || return 2
+          state=$(printf '%s' "$GH_BODY" | jq -r '.state // empty')
+          [[ "$state" = "open" ]]
+        }
+
         # resolve_prs — writes the open pull request numbers, one per line, to
         # /tmp/.chart_prs. Returns 0 when at least one lookup succeeded (the file may
         # still legitimately be empty), and 1 when every lookup failed — so the caller
-        # can tell "there is no pull request" apart from "we could not find out".
+        # can tell "there is no pull request" apart from "we could not find out". Returns
+        # 2 when there is nothing to do and it has already said why.
         resolve_prs() {
-          local ok=1 nums
+          local ok=1 nums head_filter from_env="" rc
           : > /tmp/.chart_prs
 
           # CircleCI-provided values first: a free hit under the OAuth integration. Both
           # are absent under the GitHub App integration and unreliable for same-repo PRs
           # under OAuth, so they are an optimisation, not the mechanism.
           if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
-            echo "${CIRCLE_PR_NUMBER}" > /tmp/.chart_prs
-            return 0
+            from_env="${CIRCLE_PR_NUMBER}"
+          elif [[ -n "${CIRCLE_PULL_REQUEST:-}" ]]; then
+            from_env="${CIRCLE_PULL_REQUEST##*/}"
           fi
-          if [[ -n "${CIRCLE_PULL_REQUEST:-}" ]]; then
-            echo "${CIRCLE_PULL_REQUEST##*/}" > /tmp/.chart_prs
-            return 0
+
+          if [[ -n "$from_env" ]]; then
+            # Checked rather than trusted: re-running an old build for a commit whose pull
+            # request has since been merged or closed must not comment on it. Both lookups
+            # below filter on `open` for the same reason.
+            pr_is_open "$from_env"
+            rc=$?
+            case "$rc" in
+              0)
+                echo "$from_env" > /tmp/.chart_prs
+                return 0
+                ;;
+              1)
+                echo "Pull request #${from_env} is no longer open, so there is nothing to comment on."
+                return 2
+                ;;
+              *)
+                warn "could not check whether PR #${from_env} is still open; looking it up by commit instead."
+                ;;
+            esac
           fi
 
           # Pull requests containing the exact commit that was built. Preferred over
@@ -136,12 +169,19 @@ steps:
 
           # Fallback for same-repo branches, in case the commit-to-PR association index
           # has not caught up yet. Only reached when the call above found nothing.
-          if gh_api GET "${api}/repos/${owner}/${repo}/pulls?head=${owner}:${CIRCLE_BRANCH:-}&state=open&per_page=100"; then
-            ok=0
-            nums=$(printf '%s' "$GH_BODY" | jq -r '.[].number' | head -5)
-            if [[ -n "$nums" ]]; then
-              printf '%s\n' "$nums" > /tmp/.chart_prs
-              return 0
+          #
+          # The branch is required and percent-encoded: an empty one, or one containing a
+          # `&` or `#` (both legal in git), turns `head=` into no filter at all, and GitHub
+          # then answers with every open pull request in the repository.
+          if [[ -n "${CIRCLE_BRANCH:-}" ]]; then
+            head_filter=$(jq -rn --arg b "${CIRCLE_BRANCH}" '$b|@uri')
+            if gh_api GET "${api}/repos/${owner}/${repo}/pulls?head=${owner}:${head_filter}&state=open&per_page=100"; then
+              ok=0
+              nums=$(printf '%s' "$GH_BODY" | jq -r '.[].number' | head -5)
+              if [[ -n "$nums" ]]; then
+                printf '%s\n' "$nums" > /tmp/.chart_prs
+                return 0
+              fi
             fi
           fi
 
@@ -198,11 +238,6 @@ steps:
               printf '</details>\n\n'
             fi
 
-            # Deliberately prose rather than a copy-pasteable App CR snippet: the Catalog
-            # CR name is not mechanically derivable from the catalog repository name, and a
-            # snippet naming the wrong catalog is worse than no snippet at all.
-            printf 'To try it on a cluster, set `.spec.version` on the App CR to the version above.\n\n'
-
             printf '<sub>Posted by <a href="https://github.com/giantswarm/architect-orb">architect-orb</a>'
             [[ -n "${CIRCLE_BUILD_URL:-}" ]] && printf ' · <a href="%s">build %s</a>' "${CIRCLE_BUILD_URL}" "${CIRCLE_BUILD_NUM:-}"
             [[ -n "$sha" ]] && printf ' · commit <code>%s</code>' "${sha:0:7}"
@@ -233,8 +268,10 @@ steps:
           done
 
           if [[ -n "$id" ]]; then
-            # A 404 here almost certainly means the comment was deleted between the
-            # listing and the update, not a permission problem — we just listed it.
+            # A 404 or 410 here means the comment was deleted between the listing and the
+            # update, not a permission problem, since we just listed it. Any other status is
+            # a transient failure, and posting on one of those defeats the sticky comment:
+            # a single GitHub 502 would leave a second comment and a second notification.
             GH_ADVISE=false
             gh_api PATCH "${api}/repos/${owner}/${repo}/issues/comments/${id}" /tmp/.chart_comment.json
             local rc=$?
@@ -245,7 +282,11 @@ steps:
               echo "Updated existing comment ${id} on PR #${pr}."
               return 0
             fi
-            echo "Could not update comment ${id} (it may have been deleted); posting a new one instead." >&2
+            if [[ "${GH_STATUS:-}" != 404 && "${GH_STATUS:-}" != 410 ]]; then
+              warn "could not update comment ${id} on PR #${pr} (HTTP ${GH_STATUS:-none}); not posting a duplicate."
+              return 1
+            fi
+            echo "Comment ${id} is gone (HTTP ${GH_STATUS}); posting a new one instead." >&2
           fi
 
           gh_api POST "${api}/repos/${owner}/${repo}/issues/${pr}/comments" /tmp/.chart_comment.json || return 1
@@ -280,7 +321,13 @@ steps:
             return 0
           fi
 
-          if ! resolve_prs; then
+          local rc
+          resolve_prs
+          rc=$?
+          if [[ $rc -eq 2 ]]; then
+            return 0
+          fi
+          if [[ $rc -ne 0 ]]; then
             warn "could not determine which pull request this commit belongs to (see above). Skipping."
             return 0
           fi
