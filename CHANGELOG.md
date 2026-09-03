@@ -21,7 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `yarn` in `RUN` steps) that is minutes rather than a quarter of an hour.
 
   A job that does not set it is unchanged: the default path is the same single `docker buildx build`
-  as before, parameter for parameter. In merge mode `build-context`, `dockerfile`, `hadolint`,
+  as before, parameter for parameter. The tags a build carries are the same in both modes too,
+  including when `latest` is added: the merge applies the same `tag-latest-branch` comparison as the
+  single-job build. In merge mode `build-context`, `dockerfile`, `hadolint`,
   `hadolint-config`, `push`, `provenance`, `cache` and `cache-ref` describe the build, which now
   happens in the `build-image` jobs, and are ignored. `platforms` must match the set of `build-image`
   jobs in both directions, and `split-china-push` / `force-public` must carry the same values on all

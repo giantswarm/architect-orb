@@ -181,11 +181,15 @@ steps:
           rm -f .annotations_input
         fi
 
-        # Tags. `latest` only when the branch was named explicitly: on a tag build
-        # CIRCLE_BRANCH is empty, and an unset tag-latest-branch is empty too, so an
-        # unguarded comparison would tag every release `latest`.
+        # Tags. The `latest` rule is deliberately the same comparison as the
+        # single-job path in image-build-and-push, including its edge: on a tag
+        # build CIRCLE_BRANCH is empty and an unset tag-latest-branch is empty too,
+        # so every release build also gets `latest`. That is what every consumer
+        # gets today, and merge-digests must not change which tags a release
+        # carries. Tightening the rule (a `-n` guard) is a change to both paths at
+        # once, tracked separately: https://github.com/giantswarm/architect-orb/issues/914
         tags=("${TAG_VALUE}")
-        if [[ -n "$tag_latest_branch" && "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
+        if [[ "$CIRCLE_BRANCH" == "$tag_latest_branch" ]]; then
           tags+=("latest${tag_suffix}")
         fi
 
