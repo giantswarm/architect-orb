@@ -47,8 +47,33 @@ parameters:
       Comma-separated list of platforms for the buildx build. When empty, the list is
       auto-derived from the `.platforms` file written by `go-build` to the workspace.
       Falls back to `linux/amd64,linux/arm64` if neither is available.
+
+      With `merge-digests: true` it is resolved the same way and names the platforms
+      whose digests are joined; it must match the set of `build-image` jobs exactly, or
+      the job fails rather than publishing an index that is quietly missing an
+      architecture.
     type: string
     default: ""
+  merge-digests:
+    description: |
+      Opt in to the native per-architecture build. Instead of building the image
+      here, join the per-platform digests that `build-image` jobs recorded in the
+      workspace into one tagged OCI index per registry (`docker buildx imagetools
+      create`), then sign and attest it exactly as the single-job build does.
+      Point this job at the `build-image` jobs with `requires:` and keep its
+      name, so downstream `requires:` edges keep resolving.
+
+      Off (default): the job builds every platform in one `docker buildx build`,
+      as before. Nothing changes for configs that do not set this.
+
+      On: `build-context`, `dockerfile`, `hadolint`, `hadolint-config`, `push`,
+      `provenance`, `cache` and `cache-ref` describe the build, which now happens
+      in the `build-image` jobs, and are ignored here. `platforms` must match the
+      set of `build-image` jobs; `split-china-push` and `force-public` must carry
+      the same values as on those jobs. See
+      https://github.com/giantswarm/architect-orb/blob/main/docs/job/push-to-registries.md#native-per-architecture-builds-opt-in
+    type: boolean
+    default: false
   annotations:
     description: |
       Newline-separated OCI annotations passed to 'docker buildx build --annotation'.
@@ -147,60 +172,105 @@ steps:
   - image-prepare-tag:
       git-tag-prefix: <<parameters.git-tag-prefix>>
       tag-suffix: <<parameters.tag-suffix>>
-  - dockerfile-lint:
-      dockerfile: <<parameters.dockerfile>>
-      mode: <<parameters.hadolint>>
-      config: <<parameters.hadolint-config>>
+  # The default path: build every platform in one `docker buildx build`, on this
+  # machine, and push the tagged result. Unchanged.
+  - unless:
+      condition: <<parameters.merge-digests>>
+      steps:
+        - dockerfile-lint:
+            dockerfile: <<parameters.dockerfile>>
+            mode: <<parameters.hadolint>>
+            config: <<parameters.hadolint-config>>
+        - when:
+            # Build-only mode needs no registry credentials.
+            condition: <<parameters.push>>
+            steps:
+              - image-login-to-registries:
+                  registries-data: <<parameters.registries-data>>
+        - run:
+            name: Validate platforms parameter
+            command: |
+              if [ -n "<<parameters.platforms>>" ] && [[ ! "<<parameters.platforms>>" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
+                echo "ERROR: The 'platforms' parameter, if set, must be a comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
+                exit 1
+              fi
+        - run:
+            name: Validate cache-ref parameter
+            command: |
+              # Interpolated straight into a --cache-to/--cache-from attribute list, so keep it
+              # to the OCI reference charset (host[:port]/path:tag). A `,` would silently inject
+              # a further exporter attribute.
+              if [ -n "<<parameters.cache-ref>>" ] && [[ ! "<<parameters.cache-ref>>" =~ ^[a-zA-Z0-9._:/-]+$ ]]; then
+                echo "ERROR: 'cache-ref', if set, must be a plain OCI reference (e.g. registry.example.com/org/image:buildcache)."
+                exit 1
+              fi
+        - image-build-and-push:
+            image: <<parameters.image>>
+            build-context: <<parameters.build-context>>
+            dockerfile: <<parameters.dockerfile>>
+            force-public: <<parameters.force-public>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
+            registries-data: <<parameters.registries-data>>
+            platforms: <<parameters.platforms>>
+            annotations: <<parameters.annotations>>
+            oci-labels: <<parameters.oci-labels>>
+            provenance: <<parameters.provenance>>
+            sbom: <<parameters.sbom>>
+            sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
+            sign: <<parameters.sign>>
+            split-china-push: <<parameters.split-china-push>>
+            push: <<parameters.push>>
+            cache: <<parameters.cache>>
+            cache-ref: <<parameters.cache-ref>>
+        - when:
+            condition:
+              and:
+                - <<parameters.split-china-push>>
+                - <<parameters.push>>
+            steps:
+              - save_cache:
+                  key: image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
+                  paths:
+                    - /tmp/.docker_image_registry
+                    - /tmp/.docker_image_tag
+  # The opt-in path: the `build-image` jobs this job requires each built one
+  # platform natively and left its digest in the workspace. Join them into one
+  # tagged index per registry, then sign and attest that index with the same
+  # command the default path uses.
   - when:
-      # Build-only mode needs no registry credentials.
-      condition: <<parameters.push>>
+      condition: <<parameters.merge-digests>>
       steps:
         - image-login-to-registries:
             registries-data: <<parameters.registries-data>>
-  - run:
-      name: Validate platforms parameter
-      command: |
-        if [ -n "<<parameters.platforms>>" ] && [[ ! "<<parameters.platforms>>" =~ ^[a-zA-Z0-9/_,-]+$ ]]; then
-          echo "ERROR: The 'platforms' parameter, if set, must be a comma-separated list of valid platform strings (e.g., linux/amd64,linux/arm64)."
-          exit 1
-        fi
-  - run:
-      name: Validate cache-ref parameter
-      command: |
-        # Interpolated straight into a --cache-to/--cache-from attribute list, so keep it
-        # to the OCI reference charset (host[:port]/path:tag). A `,` would silently inject
-        # a further exporter attribute.
-        if [ -n "<<parameters.cache-ref>>" ] && [[ ! "<<parameters.cache-ref>>" =~ ^[a-zA-Z0-9._:/-]+$ ]]; then
-          echo "ERROR: 'cache-ref', if set, must be a plain OCI reference (e.g. registry.example.com/org/image:buildcache)."
-          exit 1
-        fi
-  - image-build-and-push:
-      image: <<parameters.image>>
-      build-context: <<parameters.build-context>>
-      dockerfile: <<parameters.dockerfile>>
-      force-public: <<parameters.force-public>>
-      tag-latest-branch: <<parameters.tag-latest-branch>>
-      tag-suffix: <<parameters.tag-suffix>>
-      registries-data: <<parameters.registries-data>>
-      platforms: <<parameters.platforms>>
-      annotations: <<parameters.annotations>>
-      oci-labels: <<parameters.oci-labels>>
-      provenance: <<parameters.provenance>>
-      sbom: <<parameters.sbom>>
-      sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
-      sign: <<parameters.sign>>
-      split-china-push: <<parameters.split-china-push>>
-      push: <<parameters.push>>
-      cache: <<parameters.cache>>
-      cache-ref: <<parameters.cache-ref>>
-  - when:
-      condition:
-        and:
-          - <<parameters.split-china-push>>
-          - <<parameters.push>>
-      steps:
-        - save_cache:
-            key: image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
-            paths:
-              - /tmp/.docker_image_registry
-              - /tmp/.docker_image_tag
+        - generate-github-token
+        # The build jobs each resolved the same set to decide where to push; this
+        # resolves it again to decide where to merge, sign and attest. Same
+        # command, same inputs, same answer: the visibility check and the
+        # push_dev gate are deterministic for a given commit and tag.
+        - image-select-registries:
+            force-public: <<parameters.force-public>>
+            registries-data: <<parameters.registries-data>>
+            split-china-push: <<parameters.split-china-push>>
+        - image-merge-manifests:
+            image: <<parameters.image>>
+            platforms: <<parameters.platforms>>
+            tag-latest-branch: <<parameters.tag-latest-branch>>
+            tag-suffix: <<parameters.tag-suffix>>
+            annotations: <<parameters.annotations>>
+            oci-labels: <<parameters.oci-labels>>
+        - image-sign-and-attest:
+            image: <<parameters.image>>
+            push: true
+            sign: <<parameters.sign>>
+            sbom: <<parameters.sbom>>
+            sbom-cyclonedx: <<parameters.sbom-cyclonedx>>
+        - when:
+            # sync-china-registry restores this to learn what to mirror.
+            condition: <<parameters.split-china-push>>
+            steps:
+              - save_cache:
+                  key: image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
+                  paths:
+                    - /tmp/.docker_image_registry
+                    - /tmp/.docker_image_tag

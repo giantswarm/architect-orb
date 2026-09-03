@@ -29,12 +29,16 @@ parameters:
   platforms:
     description: |
       Comma-separated list of the platforms that were built, e.g.
-      `linux/amd64,linux/arm64`. The set must match the build jobs exactly: a
-      platform with no digest fails the merge rather than publishing an index
-      that is quietly missing an architecture, and a digest with no matching
-      platform fails it rather than silently leaving that architecture out.
+      `linux/amd64,linux/arm64`. Resolved exactly as `image-build-and-push`
+      resolves its build platforms: this value if non-empty, else the `.platforms`
+      file `go-build` writes to the workspace, else `linux/amd64,linux/arm64`.
+
+      The set must match the build jobs exactly: a platform with no digest fails
+      the merge rather than publishing an index that is quietly missing an
+      architecture, and a digest with no matching platform fails it rather than
+      silently leaving that architecture out.
     type: string
-    default: "linux/amd64,linux/arm64"
+    default: ""
   tag-latest-branch:
     description: 'Name of the branch on which the image will be additionally tagged as "latest".'
     type: string
@@ -69,7 +73,17 @@ steps:
         tag_suffix="<<parameters.tag-suffix>>"
         tag_latest_branch="<<parameters.tag-latest-branch>>"
 
+        # Resolve platforms the way the build path does: explicit param > .platforms
+        # in the workspace > built-in default. Same rule on both paths, so a repo
+        # that never set `platforms` gets the same answer whichever way it builds.
         platforms_list="<<parameters.platforms>>"
+        if [[ -z "$platforms_list" && -f .platforms ]]; then
+          platforms_list=$(paste -sd, .platforms | tr -d '[:space:]')
+        fi
+        if [[ -z "$platforms_list" ]]; then
+          platforms_list="linux/amd64,linux/arm64"
+        fi
+        echo "Expecting a digest for each of: ${platforms_list}"
         if [[ ! "$platforms_list" =~ ^[a-zA-Z0-9/_,.-]+$ ]]; then
           echo "ERROR: 'platforms' must be a comma-separated list of valid platform"
           echo "strings (e.g. linux/amd64,linux/arm64), got '${platforms_list}'."
@@ -97,9 +111,9 @@ steps:
             echo "Every platform in 'platforms' needs an architect/build-image job that"
             echo "pushed and persisted its workspace. Refusing to publish a partial index."
             echo ""
-            echo "If this job has no build jobs at all, the config predates architect v10:"
-            echo "push-to-registries no longer builds the image. See"
-            echo "https://github.com/giantswarm/architect-orb/blob/main/docs/migration-v9-to-v10.md"
+            echo "If this job is not meant to have build-image jobs, drop merge-digests: true"
+            echo "and push-to-registries builds the image itself. See"
+            echo "https://github.com/giantswarm/architect-orb/blob/main/docs/job/push-to-registries.md#native-per-architecture-builds-opt-in"
             echo ""
             echo "Digests present:"
             find .image-digests -type f 2>/dev/null || echo "  (none)"

@@ -97,7 +97,96 @@ QEMU/binfmt handlers are registered only when at least one resolved platform dif
     resource_class: arm.medium
 ```
 
-That combination makes the host match the target, so the binfmt registration above is skipped and no `RUN` step is emulated.
+That combination makes the host match the target, so the binfmt registration above is skipped and no `RUN` step is emulated. It covers a single-architecture image; for a multi-architecture image that should build natively on both sides, see [Native per-architecture builds](#native-per-architecture-builds-opt-in) below.
+
+## Native per-architecture builds (opt-in)
+
+The single-job build above runs every platform in one `docker buildx build` on one machine, so all but one of them run under QEMU. For a Dockerfile that only `COPY`s a cross-compiled binary that costs nothing worth noticing. For one with real work in its `RUN` steps — `apt-get install`, `pip install`, `yarn install`, compiling native modules — the emulated architecture takes several times longer than the native one and is the whole critical path.
+
+`merge-digests: true` switches this job to a second shape: one [`build-image`](build-image.md) job per platform, each on a resource class of that architecture, pushes its manifest **by digest**; this job then joins the digests into one tagged index per registry with `docker buildx imagetools create`, and signs and attests it exactly as the single-job build does. The build jobs run concurrently, so wall clock becomes the slower single native build.
+
+It is opt-in per job. A `push-to-registries` job that does not set it behaves exactly as before.
+
+### Before
+
+```yaml
+- architect/push-to-registries:
+    context: architect
+    name: push-to-registries-release
+    dockerfile: packages/backend/Dockerfile
+    platforms: linux/amd64,linux/arm64
+    split-china-push: true
+    requires: [node-build]
+    filters:
+      tags:
+        only: /^v.*/
+      branches:
+        ignore: /.*/
+```
+
+### After
+
+```yaml
+- architect/build-image:
+    context: architect
+    name: build-image-release-amd64
+    platform: linux/amd64
+    resource_class: small
+    dockerfile: packages/backend/Dockerfile
+    split-china-push: true
+    requires: [node-build]
+    filters: &release-filters
+      tags:
+        only: /^v.*/
+      branches:
+        ignore: /.*/
+
+- architect/build-image:
+    context: architect
+    name: build-image-release-arm64
+    platform: linux/arm64
+    resource_class: arm.medium
+    dockerfile: packages/backend/Dockerfile
+    split-china-push: true
+    requires: [node-build]
+    filters: *release-filters
+
+- architect/push-to-registries:
+    context: architect
+    name: push-to-registries-release
+    merge-digests: true
+    platforms: linux/amd64,linux/arm64
+    split-china-push: true
+    requires: [build-image-release-amd64, build-image-release-arm64]
+    filters: *release-filters
+```
+
+Keep the `push-to-registries` job's **name**, so everything that already `requires:` it — `sync-china-registry`, chart jobs, repo-owned jobs in `.circleci/custom.yml` — keeps resolving.
+
+### What the job does in merge mode
+
+1. `image-prepare-tag` resolves the tag and persists `.build_version`, as before. This is the one job on the path that is not concurrent with another, which is why it — and not a `build-image` job — writes that file.
+2. `image-select-registries` resolves the eligible registry set with the same code and the same inputs the build jobs used, so it lands on the same answer.
+3. `image-merge-manifests` reads `.image-digests/<image><tag-suffix>/<platform>` from the attached workspace for every platform in `platforms` and runs one `imagetools create` per registry. The sources have to exist in the registry the index is written to, which is why every build job pushed to every eligible registry. It then asserts the index digest is identical everywhere.
+4. `image-sign-and-attest` signs the index and its per-platform SPDX SBOM attestations, exactly as on the single-job path.
+
+Each `build-image` push is itself a small index (the platform manifest plus its attestation manifest). `imagetools create` copies those child indexes whole, which is what keeps the provenance and SBOM attestations attached to their platform in the merged index — `docker manifest create` would strip them.
+
+### Invariants
+
+- **`platforms` must match the set of `build-image` jobs, in both directions.** A platform without a digest and a digest without a platform are both hard failures, deliberately: either would otherwise publish an index quietly missing an architecture, under a release tag. `platforms` is resolved as on the single-job path (explicit value, else `.platforms` from `go-build`, else `linux/amd64,linux/arm64`), so a Go repo whose `go-build` writes exactly the two Linux targets can leave it unset on both paths.
+- **`split-china-push` and `force-public` must be identical** on the build jobs and this job, or they disagree about which registries hold the digests.
+- **`persist-build-version` stays `false` on the `build-image` jobs** (their default). This job persists `.build_version`; two concurrent jobs persisting the same path make the downstream `attach_workspace` fail.
+- **Annotations split by scope.** `manifest:` annotations go on `build-image`; `index:`, `index-descriptor:` and `manifest-descriptor:` go on this job. Each rejects the other's with an explanation. `oci-labels` on this job re-applies the `org.opencontainers.image.*` index annotations, since the merge builds a new index and the per-platform ones are discarded with the child indexes; the matching image *labels* were set by the build jobs and survive untouched.
+- **Enable untagged-manifest retention on the target registries.** Each `build-image` job pushes by digest with no tag, so a pipeline that fails between the builds and the merge leaves untagged manifests behind — the same prerequisite the [build cache](#prerequisite-untagged-manifest-retention) has.
+
+### Parameters this mode does not use
+
+`build-context`, `dockerfile`, `hadolint`, `hadolint-config`, `push`, `provenance`, `cache` and `cache-ref` describe the build, which now happens in the `build-image` jobs — set them there. On a `push-to-registries` job with `merge-digests: true` they are accepted and ignored. In particular there is no `push: false` dry run of a merge: with `merge-digests: true` the job always tags. A branch path that only wants to validate the Dockerfile per architecture runs the `build-image` jobs with `push: false` and no `push-to-registries` at all (see [Branch validation](build-image.md#branch-validation)).
+
+### When not to opt in
+
+A Dockerfile that `COPY`s a cross-compiled binary (the [prebuilt-binary pattern](#prebuilt-binary-recommended-for-go-services)) has no `RUN` step to emulate, so the single-job build is native in effect already and the split only adds a second job's setup time — measured on a Go operator, about 1 min split against about 40 s single-job. Stay on the default there.
 
 ## Build cache
 
