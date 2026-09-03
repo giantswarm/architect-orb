@@ -1,0 +1,352 @@
+# Posts — or updates — a single sticky comment on the pull request stating the
+# chart name and version that were just published.
+#
+# Why this exists: off-tag builds stamp the chart version from `gitsemver` as
+# `X.Y.Z-dev.<branch>.<date>.<time>`. That is deliberately collision-proof, but it
+# is not something a reviewer can guess or derive, so today they have to open the
+# CircleCI job and read the log to find out what to install.
+#
+# Every failure mode is non-fatal by construction: no pull request yet, no token
+# (forked PR, or no `context: architect`), a missing GitHub App permission, a rate
+# limit — all log a warning and exit 0. The job's contract is "the chart is
+# published", and by the time this runs that has already happened.
+#
+# Inputs, written by earlier commands in the job:
+#   .build_chart_name, .build_chart_version  — package-helm-with-abs
+#   .app_catalog_name                        — determine-catalog-name
+#   /tmp/.build_chart_oci_ref                — push-helm (OCI push only)
+#   /tmp/.build_chart_digest                 — push-helm (OCI push only)
+#   /tmp/.chart_access                       — push-helm (OCI push only)
+parameters:
+  chart:
+    description: |
+      The job's `chart` parameter. Used as the sticky-comment marker key, so a
+      repository publishing several charts gets one comment per chart rather than
+      two jobs fighting over one, and so the key stays stable even if the name in
+      Chart.yaml changes during the pull request.
+    type: string
+  push_to_appcatalog:
+    description: Whether the chart was also pushed to the GitHub app catalog repository.
+    type: boolean
+    default: true
+steps:
+  - generate-github-token:
+      non_fatal: true
+  - run:
+      name: "architect/comment-chart-version: Report published chart version on the pull request"
+      command: |
+        # This step reports information; it does not produce an artifact, so it must
+        # never fail the build. CircleCI runs steps under `bash -eo pipefail`, so -e is
+        # turned off explicitly, and everything runs in a SUBSHELL — a `set -u` violation
+        # or a stray non-zero return inside it kills only the subshell, leaving the
+        # trailing `exit 0` to run.
+        set +e
+        set -u -o pipefail
+
+        warn() { printf 'WARNING: comment-chart-version: %s\n' "$@" >&2; }
+
+        api="https://api.github.com"
+        # Set to false around a call whose 401/403/404 has a likelier explanation than a
+        # missing App permission, so the advice below is not printed misleadingly.
+        GH_ADVISE=true
+        owner="${CIRCLE_PROJECT_USERNAME:-}"
+        repo="${CIRCLE_PROJECT_REPONAME:-}"
+        marker="<!-- architect-orb:chart-version:<< parameters.chart >> -->"
+
+        # gh_api <METHOD> <url> [json-body-file] — sets GH_STATUS and GH_BODY.
+        gh_api() {
+          local method="$1" url="$2" data="${3:-}" out
+          # Cleared up front so a hard curl failure cannot leave the previous call's
+          # status behind for the caller to misread.
+          GH_STATUS=""
+          GH_BODY=""
+          local -a args=(
+            -sS -w '\n%{http_code}' -X "$method"
+            -H "Authorization: token ${GITHUB_TOKEN}"
+            -H "Accept: application/vnd.github+json"
+            -H "X-GitHub-Api-Version: 2022-11-28"
+          )
+          if [[ -n "$data" ]]; then
+            args+=( --data-binary "@${data}" )
+          fi
+
+          out=$(curl "${args[@]}" "$url")
+          if [[ $? -ne 0 ]]; then
+            warn "${method} ${url} — curl failed."
+            return 1
+          fi
+
+          GH_STATUS=$(printf '%s' "$out" | tail -1)
+          GH_BODY=$(printf '%s' "$out" | sed '$d')
+
+          case "$GH_STATUS" in
+            2*)
+              return 0
+              ;;
+            401 | 403 | 404)
+              # GitHub answers 404 rather than 403 for some permission failures, so as
+              # to not leak whether a resource exists. All three therefore mean the
+              # same thing operationally and get the same advice.
+              if [[ "$GH_ADVISE" = "true" ]]; then
+                warn "${method} ${url} returned HTTP ${GH_STATUS}." \
+                     "The 'CircleCI architect' GitHub App most likely lacks 'Pull requests: write' on ${owner}/${repo}" \
+                     "— an organisation owner has to accept the updated App permissions."
+              else
+                warn "${method} ${url} returned HTTP ${GH_STATUS}."
+              fi
+              printf '%s\n' "$GH_BODY" | head -5 >&2
+              return 1
+              ;;
+            *)
+              warn "${method} ${url} returned HTTP ${GH_STATUS}."
+              printf '%s\n' "$GH_BODY" | head -5 >&2
+              return 1
+              ;;
+          esac
+        }
+
+        # pr_is_open <number>. Returns 0 when the pull request is open, 1 when it is not,
+        # and 2 when the lookup itself failed, so a permission problem is not mistaken for
+        # a closed pull request.
+        pr_is_open() {
+          local state
+          gh_api GET "${api}/repos/${owner}/${repo}/pulls/$1" || return 2
+          state=$(printf '%s' "$GH_BODY" | jq -r '.state // empty')
+          [[ "$state" = "open" ]]
+        }
+
+        # resolve_prs — writes the open pull request numbers, one per line, to
+        # /tmp/.chart_prs. Returns 0 when at least one lookup succeeded (the file may
+        # still legitimately be empty), and 1 when every lookup failed — so the caller
+        # can tell "there is no pull request" apart from "we could not find out". Returns
+        # 2 when there is nothing to do and it has already said why.
+        resolve_prs() {
+          local ok=1 nums head_filter from_env="" rc
+          : > /tmp/.chart_prs
+
+          # CircleCI-provided values first: a free hit under the OAuth integration. Both
+          # are absent under the GitHub App integration and unreliable for same-repo PRs
+          # under OAuth, so they are an optimisation, not the mechanism.
+          if [[ -n "${CIRCLE_PR_NUMBER:-}" ]]; then
+            from_env="${CIRCLE_PR_NUMBER}"
+          elif [[ -n "${CIRCLE_PULL_REQUEST:-}" ]]; then
+            from_env="${CIRCLE_PULL_REQUEST##*/}"
+          fi
+
+          if [[ -n "$from_env" ]]; then
+            # Checked rather than trusted: re-running an old build for a commit whose pull
+            # request has since been merged or closed must not comment on it. Both lookups
+            # below filter on `open` for the same reason.
+            pr_is_open "$from_env"
+            rc=$?
+            case "$rc" in
+              0)
+                echo "$from_env" > /tmp/.chart_prs
+                return 0
+                ;;
+              1)
+                echo "Pull request #${from_env} is no longer open, so there is nothing to comment on."
+                return 2
+                ;;
+              *)
+                warn "could not check whether PR #${from_env} is still open; looking it up by commit instead."
+                ;;
+            esac
+          fi
+
+          # Pull requests containing the exact commit that was built. Preferred over
+          # `?head=owner:branch` because it needs no knowledge of the head repository's
+          # owner — so it also covers forked PRs, whose PR object lives in the base
+          # repository — and because it matches a PR opened after this commit was pushed.
+          if gh_api GET "${api}/repos/${owner}/${repo}/commits/${CIRCLE_SHA1:-}/pulls?per_page=100"; then
+            ok=0
+            nums=$(printf '%s' "$GH_BODY" | jq -r '.[] | select(.state == "open") | .number' | head -5)
+            if [[ -n "$nums" ]]; then
+              printf '%s\n' "$nums" > /tmp/.chart_prs
+              return 0
+            fi
+          fi
+
+          # Fallback for same-repo branches, in case the commit-to-PR association index
+          # has not caught up yet. Only reached when the call above found nothing.
+          #
+          # The branch is required and percent-encoded: an empty one, or one containing a
+          # `&` or `#` (both legal in git), turns `head=` into no filter at all, and GitHub
+          # then answers with every open pull request in the repository.
+          if [[ -n "${CIRCLE_BRANCH:-}" ]]; then
+            head_filter=$(jq -rn --arg b "${CIRCLE_BRANCH}" '$b|@uri')
+            if gh_api GET "${api}/repos/${owner}/${repo}/pulls?head=${owner}:${head_filter}&state=open&per_page=100"; then
+              ok=0
+              nums=$(printf '%s' "$GH_BODY" | jq -r '.[].number' | head -5)
+              if [[ -n "$nums" ]]; then
+                printf '%s\n' "$nums" > /tmp/.chart_prs
+                return 0
+              fi
+            fi
+          fi
+
+          return $ok
+        }
+
+        # build_body — renders the comment into /tmp/.chart_comment.md.
+        build_body() {
+          local name version access="" ref="" digest="" registry="" chart_repo="" catalog="" sha
+
+          name=$(cat .build_chart_name)
+          version=$(cat .build_chart_version)
+          sha="${CIRCLE_SHA1:-}"
+
+          # Driven off file existence rather than the job's parameters, so a row only
+          # appears when the corresponding push actually happened.
+          [[ -s /tmp/.build_chart_oci_ref ]] && ref=$(cat /tmp/.build_chart_oci_ref)
+          [[ -s /tmp/.build_chart_digest ]] && digest=$(cat /tmp/.build_chart_digest)
+          [[ -s /tmp/.chart_access ]] && access=$(cat /tmp/.chart_access)
+          [[ -s .app_catalog_name ]] && catalog=$(cat .app_catalog_name)
+
+          if [[ -n "$ref" ]]; then
+            registry="${ref%%/*}"
+            chart_repo="${ref%:*}"
+          fi
+
+          {
+            printf '%s\n\n' "$marker"
+            printf '### Published Helm chart `%s`\n\n' "$name"
+
+            # The bare fenced version is the one thing a reviewer actually needs, so it
+            # comes first and unadorned — copy-pasteable in a single gesture.
+            printf '```\n%s\n```\n\n' "$version"
+
+            printf '|  |  |\n| --- | --- |\n'
+            printf '| Chart | `%s` |\n' "$name"
+            printf '| Version | `%s` |\n' "$version"
+            [[ -n "$ref" ]] && printf '| OCI reference | `oci://%s` |\n' "$ref"
+            [[ -n "$digest" ]] && printf '| Digest | `%s` |\n' "$digest"
+            [[ -n "$registry" ]] && printf '| Registry | %s — `%s` |\n' "${access:-unknown}" "$registry"
+            if [[ "<< parameters.push_to_appcatalog >>" = "true" && -n "$catalog" ]]; then
+              printf '| Git catalog | [%s](https://github.com/giantswarm/%s) ([index](https://giantswarm.github.io/%s/)) |\n' "$catalog" "$catalog" "$catalog"
+            fi
+            printf '\n'
+
+            if [[ -n "$chart_repo" ]]; then
+              printf '<details><summary>Pull this chart</summary>\n\n'
+              printf '```console\nhelm pull oci://%s --version %s\n```\n' "$chart_repo" "$version"
+              if [[ "$access" = "private" ]]; then
+                # Pulling from the private registry is not anonymous, so the snippet above
+                # fails for everyone outside CI without this.
+                printf '\nThis chart is private: run `helm registry login %s` first, with the `ACR_GSOCIPRIVATE_*` credentials from 1Password.\n' "$registry"
+              fi
+              printf '</details>\n\n'
+            fi
+
+            printf '<sub>Posted by <a href="https://github.com/giantswarm/architect-orb">architect-orb</a>'
+            [[ -n "${CIRCLE_BUILD_URL:-}" ]] && printf ' · <a href="%s">build %s</a>' "${CIRCLE_BUILD_URL}" "${CIRCLE_BUILD_NUM:-}"
+            [[ -n "$sha" ]] && printf ' · commit <code>%s</code>' "${sha:0:7}"
+            printf ' · updated in place on every push</sub>\n'
+          } > /tmp/.chart_comment.md
+
+          # Never hand-assemble the JSON payload.
+          jq -Rs '{body: .}' < /tmp/.chart_comment.md > /tmp/.chart_comment.json
+        }
+
+        # upsert <pr-number> — patch the existing sticky comment, or post a new one.
+        upsert() {
+          local pr="$1" page=1 id="" count max_pages=10
+          while :; do
+            gh_api GET "${api}/repos/${owner}/${repo}/issues/${pr}/comments?per_page=100&page=${page}" || return 1
+            id=$(printf '%s' "$GH_BODY" | jq -r --arg m "$marker" '[.[] | select((.body // "") | contains($m))] | .[0].id // empty')
+            [[ -n "$id" ]] && break
+            count=$(printf '%s' "$GH_BODY" | jq 'length')
+            [[ "$count" -lt 100 ]] && break
+            if [[ "$page" -ge "$max_pages" ]]; then
+              # Say so rather than truncating quietly: past this point the existing sticky
+              # comment cannot be found, so a duplicate gets posted instead of an update.
+              warn "PR #${pr} has more than $(( max_pages * 100 )) comments; gave up looking for the existing" \
+                   "chart-version comment and will post a new one."
+              break
+            fi
+            page=$(( page + 1 ))
+          done
+
+          if [[ -n "$id" ]]; then
+            # A 404 or 410 here means the comment was deleted between the listing and the
+            # update, not a permission problem, since we just listed it. Any other status is
+            # a transient failure, and posting on one of those defeats the sticky comment:
+            # a single GitHub 502 would leave a second comment and a second notification.
+            GH_ADVISE=false
+            gh_api PATCH "${api}/repos/${owner}/${repo}/issues/comments/${id}" /tmp/.chart_comment.json
+            local rc=$?
+            GH_ADVISE=true
+            if [[ $rc -eq 0 ]]; then
+              # A PATCH sends no notification, which is the whole point of the sticky
+              # comment: a thirty-push branch produces one comment and one notification.
+              echo "Updated existing comment ${id} on PR #${pr}."
+              return 0
+            fi
+            if [[ "${GH_STATUS:-}" != 404 && "${GH_STATUS:-}" != 410 ]]; then
+              warn "could not update comment ${id} on PR #${pr} (HTTP ${GH_STATUS:-none}); not posting a duplicate."
+              return 1
+            fi
+            echo "Comment ${id} is gone (HTTP ${GH_STATUS}); posting a new one instead." >&2
+          fi
+
+          gh_api POST "${api}/repos/${owner}/${repo}/issues/${pr}/comments" /tmp/.chart_comment.json || return 1
+          echo "Created comment $(printf '%s' "$GH_BODY" | jq -r '.id // "?"') on PR #${pr}."
+        }
+
+        main() {
+          if [[ -n "${CIRCLE_TAG:-}" ]]; then
+            echo "Tag build (${CIRCLE_TAG}) — the chart version follows the tag and there is no pull request. Nothing to report."
+            return 0
+          fi
+
+          case "${CIRCLE_BRANCH:-}" in
+            master | main)
+              echo "Default-branch build — no pull request to comment on."
+              return 0
+              ;;
+          esac
+
+          if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+            warn "no GITHUB_TOKEN — this is a forked-PR build, or 'context: architect' is not attached to the job. Skipping."
+            return 0
+          fi
+
+          if [[ -z "$owner" || -z "$repo" ]]; then
+            warn "CIRCLE_PROJECT_USERNAME/CIRCLE_PROJECT_REPONAME are not set. Skipping."
+            return 0
+          fi
+
+          if [[ ! -s .build_chart_name || ! -s .build_chart_version ]]; then
+            warn "the published chart name and version were not recorded — did package-helm-with-abs run? Skipping."
+            return 0
+          fi
+
+          local rc
+          resolve_prs
+          rc=$?
+          if [[ $rc -eq 2 ]]; then
+            return 0
+          fi
+          if [[ $rc -ne 0 ]]; then
+            warn "could not determine which pull request this commit belongs to (see above). Skipping."
+            return 0
+          fi
+
+          local prs
+          prs=$(cat /tmp/.chart_prs)
+          if [[ -z "$prs" ]]; then
+            echo "No open pull request found for ${CIRCLE_SHA1:-this commit} — nothing to comment on."
+            echo "(When the push predates the pull request, the comment appears on the first build after it is opened.)"
+            return 0
+          fi
+
+          build_body || return 1
+
+          local pr
+          for pr in $prs; do
+            upsert "$pr"
+          done
+        }
+
+        ( main ) || warn "the published chart version was not reported (see above). This never fails the build."
+        exit 0

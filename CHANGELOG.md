@@ -7,6 +7,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `push-to-app-catalog`: new `comment_on_pr` parameter (default `true`). Posts a sticky comment on
+  the pull request with the published chart name, version, OCI reference and digest, updated in
+  place on later pushes. Off-tag versions (`X.Y.Z-dev.<branch>.<date>.<time>`) are not guessable, so
+  reviewers had to read the CI log to find them.
+
+  Requires the `CircleCI architect` GitHub App to hold `Pull requests: write`. Every failure path —
+  no pull request, forked pull request, missing permission, rate limit — warns and leaves the build
+  green.
+
+- `generate-github-token`: new `non_fatal` parameter (default `false`). When `true`, a missing App
+  key or a failed token generation warns and exits 0 with `GITHUB_TOKEN` unset.
+
+### Changed
+
+- `generate-github-token`: check `gh-token`'s exit status and the token it returns, and route the
+  private key decode through the same path, so `non_fatal` is honoured.
+
 ## [10.1.2] - 2026-08-31
 
 ### Changed
