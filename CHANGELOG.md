@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.3.0] - 2026-09-04
+
 ### Added
 
 - `run-tests-with-ats`: new `create_kind_cluster` parameter (default `false`), the opt-in for
@@ -2160,7 +2162,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.2.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.3.0...HEAD
+[10.3.0]: https://github.com/giantswarm/architect-orb/compare/v10.2.0...v10.3.0
 [10.2.0]: https://github.com/giantswarm/architect-orb/compare/v10.1.2...v10.2.0
 [10.1.2]: https://github.com/giantswarm/architect-orb/compare/v10.1.1...v10.1.2
 [10.1.1]: https://github.com/giantswarm/architect-orb/compare/v10.1.0...v10.1.1
