@@ -4,7 +4,7 @@ parameters:
     type: string
     default: ""
   app-test-suite_version:
-    description: "Version of app-test-suite dabs.sh container wrapper to use (git tag or commit)"
+    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit). Legacy path only: ignored when create_kind_cluster is true."
     type: string
     default: "v0.15.0"
   app-test-suite_container_tag:
@@ -15,6 +15,24 @@ parameters:
     description: "Additional app-test-suite flags to use"
     type: string
     default: ""
+  create_kind_cluster:
+    description: |
+      Create a kind cluster in the job and run the app-test-suite image directly against it
+      (app-test-suite >= 1.0, which no longer provisions clusters and no longer ships dats.sh).
+      When false, the legacy path downloads dats.sh at app-test-suite_version and lets
+      app-test-suite <= 0.15 create its own kind cluster through the Docker socket.
+    type: boolean
+    default: false
+  kind_version:
+    description: "kind release to install when create_kind_cluster is true (https://github.com/kubernetes-sigs/kind/releases)."
+    type: string
+    default: "v0.33.0"
+  kind_node_image:
+    description: |
+      Node image of the kind cluster created when create_kind_cluster is true. The Kubernetes
+      version in its tag is passed to app-test-suite as --cluster-version.
+    type: string
+    default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4"
   resource_class:
     default: "medium"
     description: |
@@ -32,3 +50,6 @@ steps:
       app-test-suite_version: << parameters.app-test-suite_version >>
       app-test-suite_container_tag: << parameters.app-test-suite_container_tag >>
       additional_app-test-suite_flags: << parameters.additional_app-test-suite_flags >>
+      create_kind_cluster: << parameters.create_kind_cluster >>
+      kind_version: << parameters.kind_version >>
+      kind_node_image: << parameters.kind_node_image >>

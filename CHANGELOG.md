@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `run-tests-with-ats`: new `create_kind_cluster` parameter (default `false`), the opt-in for
+  app-test-suite 1.0 and later, which no longer provisions clusters and no longer ships `dats.sh`. With
+  it set, the job installs `kind` (`kind_version`), creates a cluster from `kind_node_image` (default
+  the Giant Swarm mirror of `kindest/node`), writes its kubeconfig to `kube.config` in the working
+  directory, runs the app-test-suite image directly with `--cluster-kubeconfig kube.config
+  --cluster-type kind --cluster-version <version from the node image tag>`, and deletes the cluster
+  in a step that also runs when the tests fail. No Docker socket is mounted on this path. A job that
+  does not set it is unchanged: `dats.sh` is downloaded at `app-test-suite_version` and app-test-suite
+  0.15 creates its own cluster, parameter for parameter. Both existing parameters keep their names
+  and defaults, so the twelve repositories that set them explicitly keep compiling. Flipping the
+  default to the new path is a later major, once the consumers have migrated their `.ats/main.yaml`
+  and `tests/ats` layouts (see the app-test-suite CHANGELOG).
+
 ## [10.2.0] - 2026-09-04
 
 ### Added

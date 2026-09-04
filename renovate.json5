@@ -28,6 +28,28 @@
     {
       customType: 'regex',
       managerFilePatterns: [
+        '/^src/jobs/run-tests-with-ats\\.yaml$/',
+      ],
+      matchStrings: [
+        'kind_version:[\\s\\S]*?default:\\s*"(?<currentValue>v[^"]+)"',
+      ],
+      depNameTemplate: 'kubernetes-sigs/kind',
+      datasourceTemplate: 'github-releases',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/jobs/run-tests-with-ats\\.yaml$/',
+      ],
+      matchStrings: [
+        'kind_node_image:[\\s\\S]*?default:\\s*"gsoci\\.azurecr\\.io/giantswarm/kind-node:(?<currentValue>v[^"]+)"',
+      ],
+      depNameTemplate: 'gsoci.azurecr.io/giantswarm/kind-node',
+      datasourceTemplate: 'docker',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
         '/^src/commands/integration-test-install-tools\\.yaml$/',
       ],
       matchStrings: [

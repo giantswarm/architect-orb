@@ -31,6 +31,35 @@ workflows:
             - push-to-catalog
 ```
 
+## Two paths: who creates the test cluster
+
+Up to app-test-suite 0.15 the tool created its own kind cluster (through the Docker socket) and was
+started by the `dats.sh` wrapper script downloaded from the app-test-suite repository. That is the
+default path of this job and it is unchanged.
+
+app-test-suite 1.0 and later no longer provision clusters and no longer ship `dats.sh`: the caller
+provides a kubeconfig. With [`create_kind_cluster: true`](#create_kind_cluster-optional-boolean-defaultfalse)
+this job installs `kind`, creates a cluster, writes its kubeconfig to `kube.config` in the working
+directory, runs the app-test-suite image directly with `--cluster-kubeconfig kube.config
+--cluster-type kind --cluster-version <kubernetes version>`, and deletes the cluster afterwards
+(also when the tests fail). Pick an `app-test-suite_container_tag` of 1.0 or later together with it.
+
+```yaml
+      - architect/run-tests-with-ats:
+          name: execute chart tests
+          create_kind_cluster: true
+          app-test-suite_container_tag: "1.0.0"
+          requires:
+            - push-to-catalog
+```
+
+Migrating a repository to app-test-suite 1.x also touches files in the repository: the
+`.ats/main.yaml` keys that selected a cluster per scenario (`smoke-tests-cluster-type`,
+`upgrade-tests-cluster-type`, ...) are gone (an unknown key fails the run), `tests/ats/Pipfile`
+becomes `pyproject.toml` + `uv.lock`, and tests that deployed the chart through an `App` CR install it
+with Helm. See the app-test-suite [CHANGELOG](https://github.com/giantswarm/app-test-suite/blob/main/CHANGELOG.md)
+for the full list.
+
 ## Parameters
 
 - [common parameters](common.md#parameters) shared in all jobs.
@@ -38,6 +67,9 @@ workflows:
 - [app-test-suite_version](#app-test-suite_version)
 - [app-test-suite_container_tag](#app-test-suite_container_tag)
 - [additional_app-test-suite_flags](#additional_app-test-suite_flags)
+- [create_kind_cluster](#create_kind_cluster-optional-boolean-defaultfalse)
+- [kind_version](#kind_version)
+- [kind_node_image](#kind_node_image)
 
 ### chart_archive_prefix (optional string, default="")
 
@@ -51,31 +83,61 @@ find -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit
 
 ### app-test-suite_version
 
-Version of app-test-suite `dabs.sh` container wrapper to use (git tag or commit).
+Version of app-test-suite `dats.sh` container wrapper to use (git tag or commit).
 Use this parameter if you have some changes lined up in `dats.sh` which is not released yet.
 For git tags, the same container tag of app-test-suite will be used.
 
 **Attention:** For git commits or branches, `latest` will be used as container tag.
 This can be circumvented by also setting the parameter [`app-test-suite_container_tag`](#app-test-suite_container_tag).
 
-(Default: "v0.10.6")
+Only used on the legacy path; ignored when [`create_kind_cluster`](#create_kind_cluster-optional-boolean-defaultfalse) is true.
+
+(Default: "v0.15.0")
 
 ### app-test-suite_container_tag
 
 Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite).
 This parameter allows to specify the used container tag of app-test-suite.
 
-(Default: "0.10.6")
+(Default: "0.15.0")
 
 ### additional_app-test-suite_flags
 
 Allows to add additional flags to the execution of app-test-suite.
 If possible, specify your configuration using the `.ats/main.yaml` configuration file.
 
-A basic `.ats/main.yaml` could look like this:
+A basic `.ats/main.yaml` for app-test-suite 0.15 could look like this:
 
 ```yaml
 smoke-tests-cluster-type: kind # Create a kind cluster to run tests in
 
 skip-steps: functional, upgrade # Only execute smoke tests
 ```
+
+With `create_kind_cluster: true` (app-test-suite 1.x) the cluster is the job's, so the file only
+selects the steps:
+
+```yaml
+skip-steps: functional, upgrade # Only execute smoke tests
+```
+
+### create_kind_cluster (optional boolean, default=false)
+
+Create a kind cluster in the job and run the app-test-suite image directly against it. Required for
+app-test-suite 1.0 and later. See [Two paths](#two-paths-who-creates-the-test-cluster).
+
+### kind_version
+
+The [kind](https://github.com/kubernetes-sigs/kind/releases) release installed when
+`create_kind_cluster` is true.
+
+(Default: "v0.33.0")
+
+### kind_node_image
+
+The node image of the kind cluster created when `create_kind_cluster` is true. The Kubernetes
+version in its tag (`v1.36.4` in the default) is passed to app-test-suite as `--cluster-version`.
+The default is the Giant Swarm mirror of `kindest/node`, so the pull does not count against Docker
+Hub's anonymous rate limit.
+
+(Default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4")
