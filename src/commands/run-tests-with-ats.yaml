@@ -4,7 +4,7 @@ parameters:
     type: string
     default: ""
   app-test-suite_version:
-    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit)"
+    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit). Legacy path only: ignored when create_kind_cluster is true."
     type: string
   app-test-suite_container_tag:
     description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
@@ -13,25 +13,110 @@ parameters:
     description: "Additional app-test-suite flags to use"
     type: string
     default: ""
+  create_kind_cluster:
+    description: |
+      Create a kind cluster in the job and run the app-test-suite image directly against it
+      (app-test-suite >= 1.0, which no longer provisions clusters and no longer ships dats.sh).
+      When false, the legacy path downloads dats.sh at app-test-suite_version and lets
+      app-test-suite <= 0.15 create its own kind cluster through the Docker socket.
+    type: boolean
+    default: false
+  kind_version:
+    description: "kind release to install when create_kind_cluster is true (https://github.com/kubernetes-sigs/kind/releases)."
+    type: string
+    default: "v0.33.0"
+  kind_node_image:
+    description: |
+      Node image of the kind cluster created when create_kind_cluster is true. The Kubernetes
+      version in its tag is passed to app-test-suite as --cluster-version.
+    type: string
+    default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4"
 steps:
   - attach_workspace:
       at: build
-  - run:
-      name: "Download dats.sh script"
-      command: |
-        wget -O dats.sh "https://raw.githubusercontent.com/giantswarm/app-test-suite/<< parameters.app-test-suite_version >>/dats.sh"
-        chmod +x dats.sh
-  - run:
-      name: "Execute app-test-suite with dats.sh wrapper"
-      command: |
-        set -x
+  - unless:
+      condition: << parameters.create_kind_cluster >>
+      steps:
+        - run:
+            name: "Download dats.sh script"
+            command: |
+              wget -O dats.sh "https://raw.githubusercontent.com/giantswarm/app-test-suite/<< parameters.app-test-suite_version >>/dats.sh"
+              chmod +x dats.sh
+        - run:
+            name: "Execute app-test-suite with dats.sh wrapper"
+            command: |
+              set -x
 
-        export DATS_TAG=<< parameters.app-test-suite_container_tag >>
-        # find the chart archive file name
-        chart_archive=$(find build -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit)
-        # move chart archive from build directory to root
-        # we're doing this to make sure .ats/main.yaml is picked up
-        cp "$chart_archive" "${chart_archive##*/}"
+              export DATS_TAG=<< parameters.app-test-suite_container_tag >>
+              # find the chart archive file name
+              chart_archive=$(find build -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit)
+              # move chart archive from build directory to root
+              # we're doing this to make sure .ats/main.yaml is picked up
+              cp "$chart_archive" "${chart_archive##*/}"
 
-        # execute dats wrapper
-        ./dats.sh --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>
+              # execute dats wrapper
+              ./dats.sh --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>
+  - when:
+      condition: << parameters.create_kind_cluster >>
+      steps:
+        - run:
+            name: "Install kind"
+            command: |
+              URL="https://kind.sigs.k8s.io/dl/<< parameters.kind_version >>/kind-linux-amd64"
+              echo "URL: $URL"
+              curl -Ls --output ./kind --retry 3 --retry-all-errors "$URL"
+              chmod +x ./kind
+              sudo mv ./kind /usr/local/bin/kind
+              kind version
+        - run:
+            name: "Create kind cluster"
+            command: |
+              # The kubeconfig lands in the working directory, which is mounted into the
+              # app-test-suite container as /ats/workdir; kind's API server listens on
+              # 127.0.0.1, which the container reaches through --network host.
+              tries=3
+              for i in $(seq 1 $tries); do
+                echo "====> Attempt $i: creating kind cluster 'ats'"
+                if kind create cluster --name ats --image "<< parameters.kind_node_image >>" --kubeconfig ./kube.config --wait 120s; then
+                  exit 0
+                fi
+                kind delete cluster --name ats --kubeconfig ./kube.config || true
+                sleep 5
+              done
+              echo "kind cluster creation failed after $tries attempts" >&2
+              exit 1
+        - run:
+            name: "Execute app-test-suite"
+            command: |
+              set -x
+
+              # find the chart archive file name
+              chart_archive=$(find build -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit)
+              # move chart archive from build directory to root
+              # we're doing this to make sure .ats/main.yaml is picked up
+              cp "$chart_archive" "${chart_archive##*/}"
+
+              # the Kubernetes version label comes from the node image tag: ...:v1.36.4 -> 1.36.4
+              node_image="<< parameters.kind_node_image >>"
+              cluster_version="${node_image##*:}"
+              cluster_version="${cluster_version%%@*}"
+              cluster_version="${cluster_version#v}"
+
+              # run the app-test-suite image directly; app-test-suite >= 1.0 needs neither the
+              # Docker socket nor a DOCKER_GID, it only talks to the cluster in kube.config
+              docker run --rm \
+                -e USE_UID="$(id -u)" \
+                -e USE_GID="$(id -g)" \
+                -v "$(pwd):/ats/workdir" \
+                --network host \
+                "gsoci.azurecr.io/giantswarm/app-test-suite:<< parameters.app-test-suite_container_tag >>" \
+                --chart-file "${chart_archive##*/}" \
+                --cluster-kubeconfig kube.config \
+                --cluster-type kind \
+                --cluster-version "$cluster_version" \
+                << parameters.additional_app-test-suite_flags >>
+        - run:
+            name: "Delete kind cluster"
+            when: always
+            command: |
+              kind delete cluster --name ats --kubeconfig ./kube.config || true
