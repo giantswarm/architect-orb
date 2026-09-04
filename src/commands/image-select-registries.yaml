@@ -1,0 +1,158 @@
+# Command: image-select-registries
+#
+# Decides which registries a build is allowed to push to, and records the answer
+# in files that every later step consumes instead of re-deriving it.
+#
+# Every caller resolves the set through here, so it is derived once per job and
+# read from files thereafter. That is what guarantees the signed and attested set
+# cannot drift from the pushed set.
+#
+# Environment it depends on (both supplied by the caller, deliberately):
+#   DOCKER_IMAGE_TAG  the resolved tag, exported by image-prepare-tag. The
+#                     dev-build gate needs it.
+#   GITHUB_TOKEN      required unless force-public is set. The caller runs
+#                     generate-github-token, so that step keeps its own
+#                     condition rather than this command growing one.
+#
+# Files it writes:
+#   .registries_data            the registries table, if not already present
+#   /tmp/.image_access          "public" or "private"
+#   /tmp/.eligible_registries   one registry host per line — the push set
+#   /tmp/.docker_image_registry the last eligible host (split-china-push reads it)
+#   /tmp/.cache_registry        the host chosen to hold the layer cache; may be
+#                               empty, which means "no eligible cache host"
+#
+# It deliberately does NOT build `--tag` flags. Those are a pure function of the
+# eligible set and the tag list, and the per-architecture legs push by digest
+# with no tags at all, so the caller derives them.
+parameters:
+  force-public:
+    description: Skip the repo visibility check and treat the image as public.
+    type: boolean
+    default: false
+  registries-data:
+    description: |
+      A string that defines configuration for registries. Each line describes one
+      registry using the format:
+
+      visibility registry username_envvar password_envvar push_dev_image
+    type: string
+    default: ""
+  split-china-push:
+    description: |
+      Exclude the Aliyun registry from the push set, because a self-hosted runner
+      in China mirrors it separately.
+    type: boolean
+    default: false
+steps:
+  - run:
+      name: "architect/image-select-registries: Resolve the eligible registry set"
+      command: |
+        set -o pipefail
+
+        TAG_VALUE="${DOCKER_IMAGE_TAG}"
+
+        # If image is forced to be pushed as a public one,
+        # we shouldn't check whether the source is public
+        # if repo is private, push to private only
+        # if repo is public or force-public is set push to public only
+        if [[ "<< parameters.force-public >>" = "true" ]]; then
+          echo -e "'force-public' flag is set, treating the image as public.\n"
+          IMAGE_ACCESS=public
+        else
+          GITHUB_API_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+          HTTP_STATUS=$(curl -s -o /tmp/.gh_response -w "%{http_code}" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "${GITHUB_API_URL}")
+
+          if [[ "${HTTP_STATUS}" != "200" ]]; then
+            echo "GitHub API call to ${GITHUB_API_URL} failed (HTTP ${HTTP_STATUS}):"
+            cat /tmp/.gh_response
+            exit 1
+          fi
+
+          REPO_PRIVATE=$(jq -r '.private' < /tmp/.gh_response)
+          if [[ "${REPO_PRIVATE}" != "true" && "${REPO_PRIVATE}" != "false" ]]; then
+            echo "Unexpected GitHub API response (could not parse .private):"
+            cat /tmp/.gh_response
+            exit 1
+          fi
+
+          if [[ "${REPO_PRIVATE}" = "false" ]]; then
+            echo -e "The GitHub repository is detected as public, treating the image as a public one.\n"
+            IMAGE_ACCESS=public
+          else
+            echo -e "The GitHub repository is not detected as public, treating the image as a private one.\n"
+            IMAGE_ACCESS=private
+          fi
+        fi
+
+        if ! [[ -f .registries_data ]]; then
+          if [[ "<<parameters.registries-data>>" ]]; then
+            echo "Using registries data from the circle.ci job parameters."
+            REGISTRIES_DATA="<<parameters.registries-data>>"
+          else
+            echo "Using registries data from the circle.ci environment variable settings."
+            if ! [[ "${REGISTRIES_DATA_BASE64}" ]]; then
+              echo "Environment variable REGISTRIES_DATA_BASE64 is not set properly in circleci's context."
+              exit 1
+            fi
+            REGISTRIES_DATA=$(echo $REGISTRIES_DATA_BASE64 | base64 -d)
+          fi
+          echo "${REGISTRIES_DATA}" > .registries_data
+        fi
+
+        # The registries this build is eligible to push to (visibility match, not
+        # skipped by split-china, and — for dev builds — push_dev=true) are
+        # recorded once in /tmp/.eligible_registries. The same pass also picks the
+        # registry that will host the layer cache, so the one filter that differs
+        # between the two is visible in one place.
+        : > /tmp/.eligible_registries
+        cache_registry=""
+        cache_fallback=""
+        while IFS=' ' read -r access reg _ _ push_dev; do
+          [[ -z "$reg" || "$reg" =~ ^# ]] && continue
+
+          # Layer-cache host. Evaluated here, BEFORE the push_dev gate below, on
+          # purpose: push_dev varies by build type, so selecting after it would send
+          # dev/branch builds to one registry and release builds to another — forking
+          # the cache so release builds never reuse what branch builds paid to write.
+          # Visibility stays in the filter (a private image's layers must not be cached
+          # in a public registry); the China mirror is excluded unconditionally rather
+          # than gated on split-china-push, since that parameter varies by build type
+          # too and a throwaway cache has no business crossing the Pacific. gsoci /
+          # gsociprivate win by name so the ref is independent of registries-data order.
+          if [[ "$access" == *"$IMAGE_ACCESS"* && "$reg" != *".cr.aliyuncs.com" ]]; then
+            case "$reg" in
+              gsoci.azurecr.io|gsociprivate.azurecr.io)
+                [[ -z "$cache_registry" ]] && cache_registry="$reg" ;;
+            esac
+            [[ -z "$cache_fallback" ]] && cache_fallback="$reg"
+          fi
+
+          [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
+          # Dev-build gate: `gitsemver validate --type dev` is the canonical dev-version
+          # check (anchored to the full X.Y.Z-dev.<branch>.<date>.<time> form). It runs
+          # only here; later steps consume the resulting set rather than re-testing it.
+          if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
+            echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"
+            continue
+          fi
+          if [[ "$access" == *"$IMAGE_ACCESS"* ]]; then
+            echo -n ${reg} > /tmp/.docker_image_registry
+            echo "$reg" >> /tmp/.eligible_registries
+          else
+            echo "Registry $reg is not configured for $IMAGE_ACCESS images, skipping"
+          fi
+        done < .registries_data
+        cache_registry="${cache_registry:-$cache_fallback}"
+
+        echo -n "$IMAGE_ACCESS" > /tmp/.image_access
+        echo -n "$cache_registry" > /tmp/.cache_registry
+
+        echo ""
+        echo "Image access: ${IMAGE_ACCESS}"
+        echo "Layer-cache host: ${cache_registry:-<none>}"
+        echo "Eligible registries:"
+        cat /tmp/.eligible_registries

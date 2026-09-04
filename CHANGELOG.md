@@ -9,6 +9,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `push-to-registries`: new `merge-digests` parameter (default `false`), the opt-in for native
+  per-architecture image builds. With it set, the job does not build: it joins the per-platform digests
+  that `build-image` jobs recorded in the workspace into one tagged OCI index per registry with
+  `docker buildx imagetools create`, then signs and attests that index with the same command the
+  single-job build uses. The shape is one `build-image` job per platform, each on a resource class of
+  that architecture (`small` for `linux/amd64`, `arm.medium` for `linux/arm64`), and the existing
+  `push-to-registries` job — same name, so downstream `requires:` keep resolving — with
+  `merge-digests: true` requiring them. Nothing is emulated and the builds run concurrently, so wall
+  clock becomes the slower single native build; on `giantswarm/backstage` (Node, `apt` + `pip` +
+  `yarn` in `RUN` steps) that is minutes rather than a quarter of an hour.
+
+  A job that does not set it is unchanged: the default path is the same single `docker buildx build`
+  as before, parameter for parameter. The tags a build carries are the same in both modes too,
+  including when `latest` is added: the merge applies the same `tag-latest-branch` comparison as the
+  single-job build. In merge mode `build-context`, `dockerfile`, `hadolint`,
+  `hadolint-config`, `push`, `provenance`, `cache` and `cache-ref` describe the build, which now
+  happens in the `build-image` jobs, and are ignored. `platforms` must match the set of `build-image`
+  jobs in both directions, and `split-china-push` / `force-public` must carry the same values on all
+  of them — each mismatch is a named failure rather than a partial index. A Dockerfile that only
+  `COPY`s a cross-compiled binary has nothing to gain from the split and should stay on the default.
+  See [docs/job/push-to-registries.md](docs/job/push-to-registries.md#native-per-architecture-builds-opt-in).
+
+- `image-merge-manifests` command: joins per-architecture digests into one tagged OCI index per registry with `docker buildx imagetools create`.
+
+- `build-image` job: builds the image for one architecture, on a machine of that architecture, and pushes it by digest. Run one per architecture; nothing is emulated and they run concurrently. See [docs/job/build-image.md](docs/job/build-image.md).
+
+- `push-to-registries`: `resource_class` now accepts CircleCI's Arm classes — `arm.medium`, `arm.large`, `arm.xlarge` and `arm.2xlarge` — alongside the existing x86 ones. The default is unchanged (`small`). See [docs/job/push-to-registries.md](docs/job/push-to-registries.md#building-on-arm) for when they help.
+
 - `push-to-app-catalog`: new `comment_on_pr` parameter (default `true`). Posts a sticky comment on
   the pull request with the published chart name, version, OCI reference and digest, updated in
   place on later pushes. Off-tag versions (`X.Y.Z-dev.<branch>.<date>.<time>`) are not guessable, so
@@ -23,8 +51,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Internal, no behaviour change: the Dockerfile lint moves out of the `push-to-registries` job into a new
+  `dockerfile-lint` command, and the `GS_GIT_TAG_PREFIX` export folds into `image-prepare-tag` as a
+  `git-tag-prefix` parameter. Both were inline `run:` steps in a job, which the repo's coding guidelines
+  disallow, and both are needed verbatim by any other job that builds an image.
+- `image-prepare-tag`: new `persist-build-version` parameter, default `true`, so existing callers are
+  unaffected. Set it to `false` when several jobs that call the command run concurrently: CircleCI refuses
+  to attach a workspace that two concurrent jobs persisted the same path into, and each would otherwise
+  write `.build_version`. The value is deterministic for a given commit and `tag-suffix`, so exactly one
+  job should persist it and it does not matter which.
+
+- Internal, no behaviour change: registry selection moves out of `image-build-and-push` into a new `image-select-registries` command — the repo-visibility check, the registries-data load, and the pass that resolves both the eligible push set and the layer-cache host. It records its answer in `/tmp/.image_access`, `/tmp/.eligible_registries` and `/tmp/.cache_registry`, which the caller now reads instead of re-deriving. Building `--tag` flags stays in `image-build-and-push`, since it is a pure cross-product of the eligible set with the tag list. One derivation, consumed from files, is what guarantees the signed and attested set can never drift from the pushed set — and it lets per-architecture build legs and a manifest merge resolve that set with exactly the same code.
+
+- Internal, no behaviour change: the cosign signing, SBOM staging and scratch-file cleanup steps move out of `image-build-and-push` into a new `image-sign-and-attest` command. The 230 moved lines are byte-identical — they already communicated with the build step only through files (`/tmp/.image_access`, `/tmp/.eligible_registries`, `/tmp/.index_digest`), which is what makes the lift possible. It also means the command works against any pushed index, including one assembled by `docker buildx imagetools create` rather than pushed by a single `buildx` invocation.
+
 - `generate-github-token`: check `gh-token`'s exit status and the token it returns, and route the
   private key decode through the same path, so `non_fatal` is honoured.
+
+### Fixed
+
+- `push-to-registries`: `hadolint: fail` never failed the job. The step captured `$?` after the `if` that
+  ran hadolint, and bash sets that to the status of the `if` itself — 0 when the condition was false and no
+  `else` branch ran — so a Dockerfile with findings exited 0. It now exits 1 explicitly. Repos on
+  `hadolint: fail` may see a build go red on findings that were silently passing.
+
 
 ## [10.1.2] - 2026-08-31
 
@@ -138,6 +188,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `helm-lint` step it controlled was removed along with the `architect`-executor path. Chart-testing config
   is still honoured by app-build-suite via `ct-config` in `.abs/main.yaml` — only the orb parameter is gone,
   so no `ct-config.yaml` files need to change.
+
+### Fixed
+
+- `push-to-registries`: `hadolint: fail` never failed the job. The step captured `$?` after the `if` that
+  ran hadolint, and bash sets that to the status of the `if` itself — 0 when the condition was false and no
+  `else` branch ran — so a Dockerfile with findings exited 0. It now exits 1 explicitly. Repos on
+  `hadolint: fail` may see a build go red on findings that were silently passing.
 
 > **Upgrading from v9.x?** See [docs/migration-v9-to-v10.md](docs/migration-v9-to-v10.md).
 

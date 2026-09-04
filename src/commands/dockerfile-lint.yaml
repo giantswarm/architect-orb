@@ -1,0 +1,51 @@
+# Command: dockerfile-lint
+#
+# Lints a Dockerfile with hadolint before it is built, so a style or correctness
+# problem surfaces in about a second rather than after minutes of building.
+parameters:
+  dockerfile:
+    type: string
+    default: "./Dockerfile"
+  mode:
+    description: |
+      - "warn" (default): run hadolint, print findings, never fail the job.
+      - "fail": run hadolint and fail the job on any finding.
+      - "skip": don't run hadolint at all.
+    type: enum
+    enum: ["warn", "fail", "skip"]
+    default: "warn"
+  config:
+    description: |
+      Optional path to a `.hadolint.yaml` configuration file. When empty,
+      hadolint uses its built-in defaults.
+    type: string
+    default: ""
+steps:
+  - unless:
+      condition:
+        equal: ["<<parameters.mode>>", "skip"]
+      steps:
+        - run:
+            name: "architect/dockerfile-lint: Lint <<parameters.dockerfile>> with hadolint"
+            command: |
+              set -uo pipefail
+              if ! command -v hadolint >/dev/null 2>&1; then
+                echo "hadolint not found on PATH; the architect image should provide it." >&2
+                if [[ "<<parameters.mode>>" == "fail" ]]; then exit 1; fi
+                exit 0
+              fi
+              args=()
+              if [[ -n "<<parameters.config>>" ]]; then
+                args+=("--config" "<<parameters.config>>")
+              fi
+              if hadolint "${args[@]}" "<<parameters.dockerfile>>"; then
+                echo "hadolint: no findings."
+                exit 0
+              fi
+              # Not `exit $?`: once the `if` above has completed, `$?` is the status of
+              # the `if` itself (0), not hadolint's, so `exit $?` would pass a failing
+              # lint. This was the behaviour of the inline copy this command replaces.
+              if [[ "<<parameters.mode>>" == "fail" ]]; then
+                exit 1
+              fi
+              echo "hadolint reported findings (mode=warn); continuing build."
