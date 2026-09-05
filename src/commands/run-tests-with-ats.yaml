@@ -31,6 +31,16 @@ parameters:
       version in its tag is passed to app-test-suite as --cluster-version.
     type: string
     default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4"
+  kind_registry_credentials:
+    description: |
+      When create_kind_cluster is true, give the kind node the registry credentials of the job so
+      the chart under test can pull private images (gsociprivate.azurecr.io and any other registry
+      listed in REGISTRIES_DATA_BASE64). The credentials come from the same architect context the
+      push-to-registries jobs use; the job therefore needs `context: architect`. They are written to
+      /var/lib/kubelet/config.json on the node, which the kubelet reads for every image pull, so the
+      chart needs no imagePullSecrets. Skipped with a notice when the context is not attached.
+    type: boolean
+    default: true
 steps:
   - attach_workspace:
       at: build
@@ -85,6 +95,49 @@ steps:
               done
               echo "kind cluster creation failed after $tries attempts" >&2
               exit 1
+        - when:
+            condition: << parameters.kind_registry_credentials >>
+            steps:
+              - run:
+                  name: "Give the kind node the job's registry credentials"
+                  command: |
+                    # Same input as architect/image-login-to-registries: one registry per line,
+                    # "visibility registry username_envvar password_envvar push_dev_image".
+                    if [ -z "${REGISTRIES_DATA_BASE64:-}" ]; then
+                      echo "REGISTRIES_DATA_BASE64 is not set (job runs without the architect context); the kind node gets no registry credentials, private images cannot be pulled."
+                      exit 0
+                    fi
+                    echo "${REGISTRIES_DATA_BASE64}" | base64 -d > .registries_data
+
+                    # No xtrace from here on: the loop resolves passwords.
+                    set +x
+                    config='{"auths":{'
+                    sep=""
+                    while read -r _ reg username password _; do
+                      [ -n "$reg" ] || continue
+                      case "$username" in *[!a-zA-Z0-9_]*) echo "Invalid username variable name: $username"; exit 1 ;; esac
+                      case "$password" in *[!a-zA-Z0-9_]*) echo "Invalid password variable name: $password"; exit 1 ;; esac
+                      eval "username_val=\${$username:-}"
+                      eval "password_val=\${$password:-}"
+                      if [ -z "$username_val" ] || [ -z "$password_val" ]; then
+                        echo "No credentials for $reg in the environment, skipping it."
+                        continue
+                      fi
+                      auth=$(printf '%s:%s' "$username_val" "$password_val" | base64 -w0)
+                      config="${config}${sep}\"${reg}\":{\"auth\":\"${auth}\"}"
+                      sep=","
+                      echo "Registry credentials for $reg added."
+                    done < .registries_data
+                    config="${config}}}"
+                    rm -f .registries_data
+
+                    # The kubelet reads this file (docker config format) for every image pull, so
+                    # pods need no imagePullSecrets. Written straight into the node container.
+                    umask 077
+                    printf '%s' "$config" > kubelet-config.json
+                    docker cp kubelet-config.json ats-control-plane:/var/lib/kubelet/config.json
+                    docker exec ats-control-plane chmod 600 /var/lib/kubelet/config.json
+                    rm -f kubelet-config.json
         - run:
             name: "Execute app-test-suite"
             command: |

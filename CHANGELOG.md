@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `run-tests-with-ats`: new `kind_registry_credentials` parameter (default `true`). When `create_kind_cluster`
+  is true and the job runs with the architect context, the registry credentials from `REGISTRIES_DATA_BASE64`
+  are written to `/var/lib/kubelet/config.json` on the kind node, so the chart under test can pull private
+  images (gsociprivate.azurecr.io) without `imagePullSecrets`. Without the context the step only prints a
+  notice; nothing changes for jobs that stay bare.
+
 ## [10.3.0] - 2026-09-04
 
 ### Added
