@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  architect: giantswarm/architect@10.1.2
+  architect: giantswarm/architect@10.4.0
   orb-tools: circleci/orb-tools@12.5.0
 
 workflows:
