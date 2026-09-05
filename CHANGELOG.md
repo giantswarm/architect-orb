@@ -7,6 +7,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `sync-china-registry`: waits for the image to finish geo-replicating before copying it. The job copies
+  gsoci → Aliyun from a runner in China that Traffic Manager routes to the Southeast Asia replica of
+  `gsoci.azurecr.io`, while the push job wrote to the home region. ACR replicates manifest by manifest,
+  each once its layers are across, so right after a push the replica already serves the index and the
+  attestation manifests but not yet the platform manifest — `regctl image copy` failed with
+  `MANIFEST_UNKNOWN` for a digest the home region had been serving for minutes, and the fixed 10 × 5 s
+  retry (about 70 s) was the whole budget. Small images mostly made it inside that window and otherwise
+  passed on a rerun (mcp-capi v0.0.80 and headlamp-longhorn v0.1.7 on 2026-09-04); the 20 GiB arm64
+  `vllm` image never did — every tag from v0.4.7 to v0.4.17 failed the same way and the Aliyun mirror
+  stopped at 0.3.11, until a rerun hours after the push copied v0.4.17 through. The job now first resolves
+  the source index from the runner and polls every child manifest (recursively) until all of them answer,
+  then copies. New `replica-wait-minutes` parameter (default 60) bounds the wait; on timeout the job fails
+  with a message that says so and names the recovery — rerun from failed once the image has arrived —
+  since nothing else in the pipeline depends on it. The wait prints a line per poll, so the executor's
+  no-output timeout does not fire while it waits.
+
+### Added
+
+- `image-wait-for-replica` and `image-copy-to-china` commands: the two steps of `sync-china-registry`,
+  which now composes commands like the rest of the orb instead of carrying its own `run:` step. The copy
+  step is unchanged in behaviour (ten attempts, five seconds apart).
+- [docs/job/sync-china-registry.md](docs/job/sync-china-registry.md): the job's first documentation page —
+  what it does, why it waits, parameters, and what each failure means.
+
 ## [10.3.0] - 2026-09-04
 
 ### Added

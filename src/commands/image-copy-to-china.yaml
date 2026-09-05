@@ -1,0 +1,38 @@
+# Command: image-copy-to-china
+#
+# Copies the image the preceding push-to-registries job published to the Aliyun
+# mirror with `regctl image copy`. Meant for a runner inside China, so the bytes
+# travel registry replica -> runner -> Aliyun within the region instead of
+# crossing the Pacific from a buildx push.
+#
+# Reads the same two cache files as image-wait-for-replica. Run that command
+# first: the replica this runner reads lags the region the image was pushed to,
+# and a copy that starts before the platform manifests have arrived fails with
+# MANIFEST_UNKNOWN no matter how often it is retried within a minute.
+#
+# Reads (written by the preceding push-to-registries job, restored from cache):
+#   /tmp/.docker_image_registry  the registry host the image was pushed to
+#   /tmp/.docker_image_tag       the image tag
+#
+# POSIX sh only (regctl executor: alpine, BusyBox /bin/sh).
+parameters:
+  image:
+    description: Name of the container repository and image, e.g. `giantswarm/REPO_NAME`. Must not contain the registry host name.
+    type: string
+steps:
+  - run:
+      name: "architect/image-copy-to-china: Copy the image to the Aliyun mirror"
+      command: |
+        SOURCE_REPOSITORY="$(cat /tmp/.docker_image_registry)/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
+        TARGET_REPOSITORY="giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
+        for ATTEMPT in $(seq 1 10); do
+          echo "attempt: ${ATTEMPT}"
+          if regctl image copy "${SOURCE_REPOSITORY}" "${TARGET_REPOSITORY}"; then
+            echo "Image is pushed to the registry."
+            exit 0
+          fi
+          echo "Waiting 5 seconds before the next attempt."
+          sleep 5
+        done
+        echo "Failed to sync the image"
+        exit 1
