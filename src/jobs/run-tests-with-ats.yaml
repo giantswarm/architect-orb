@@ -32,7 +32,7 @@ parameters:
       Node image of the kind cluster created when create_kind_cluster is true. The Kubernetes
       version in its tag is passed to app-test-suite as --cluster-version.
     type: string
-    default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4"
+    default: "gsoci.azurecr.io/giantswarm/kind-node:v1.37.0"
   kind_registry_credentials:
     description: |
       Give the kind node the job's registry credentials (REGISTRIES_DATA_BASE64 from the architect
