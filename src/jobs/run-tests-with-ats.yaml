@@ -33,6 +33,12 @@ parameters:
       version in its tag is passed to app-test-suite as --cluster-version.
     type: string
     default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4"
+  kind_registry_credentials:
+    description: |
+      Give the kind node the job's registry credentials (REGISTRIES_DATA_BASE64 from the architect
+      context) so the chart under test can pull private images. See the command parameter.
+    type: boolean
+    default: true
   resource_class:
     default: "medium"
     description: |
@@ -53,3 +59,4 @@ steps:
       create_kind_cluster: << parameters.create_kind_cluster >>
       kind_version: << parameters.kind_version >>
       kind_node_image: << parameters.kind_node_image >>
+      kind_registry_credentials: << parameters.kind_registry_credentials >>
