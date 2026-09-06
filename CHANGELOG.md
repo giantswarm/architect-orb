@@ -33,6 +33,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [docs/job/sync-china-registry.md](docs/job/sync-china-registry.md): the job's first documentation page —
   what it does, why it waits, parameters, and what each failure means.
 
+## [10.4.0] - 2026-09-05
+
+### Added
+
+- `run-tests-with-ats`: new `kind_registry_credentials` parameter (default `true`). When `create_kind_cluster`
+  is true and the job runs with the architect context, the registry credentials from `REGISTRIES_DATA_BASE64`
+  are written to `/var/lib/kubelet/config.json` on the kind node, so the chart under test can pull private
+  images (gsociprivate.azurecr.io) without `imagePullSecrets`. Without the context the step only prints a
+  notice; nothing changes for jobs that stay bare.
+
 ## [10.3.0] - 2026-09-04
 
 ### Added
@@ -2188,7 +2198,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.3.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.4.0...HEAD
+[10.4.0]: https://github.com/giantswarm/architect-orb/compare/v10.3.0...v10.4.0
 [10.3.0]: https://github.com/giantswarm/architect-orb/compare/v10.2.0...v10.3.0
 [10.2.0]: https://github.com/giantswarm/architect-orb/compare/v10.1.2...v10.2.0
 [10.1.2]: https://github.com/giantswarm/architect-orb/compare/v10.1.1...v10.1.2
