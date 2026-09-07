@@ -88,6 +88,17 @@ steps:
           LD_FLAGS="$(cat .ldflags)"
         fi
 
+        # The binaries and .platforms land in the working tree, and the
+        # architectures build concurrently: every build after the first would
+        # see an untracked file and Go's buildvcs would stamp vcs.modified=true
+        # (vX.Y.Z+dirty for binaries that report the module build info).
+        # Ignored files never show in `git status --porcelain`.
+        if [ -d .git ]; then
+          for pattern in '.platforms' '<<parameters.binary>>' '<<parameters.binary>>-*'; do
+            grep -qxF -- "$pattern" .git/info/exclude 2>/dev/null || echo "$pattern" >> .git/info/exclude
+          done
+        fi
+
         build_flags=()
         if [[ "<<parameters.trimpath>>" == "true" ]]; then
           build_flags+=( -trimpath )
