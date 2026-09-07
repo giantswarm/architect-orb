@@ -43,6 +43,19 @@ steps:
         # Commit SHA
         echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.gitSHA=${CIRCLE_SHA1}'" >> .ldflags
 
+        # Version: on tag builds the release tag without its `v`, the form
+        # the devctl Makefile stamps locally (`gitsemver get`) and kubectl-gs
+        # keeps in its version const. Auto-release computes the tag with
+        # git-cliff and never writes it into the sources, so without this
+        # line a repo's `pkg/project.Version()` is left to its default ("dev",
+        # a hardcoded -dev const) or to Go's VCS build info, which ignores
+        # tags above the module's major (muster prints v1.12.1-0.… for
+        # v5.10.3) and marks any untracked file as +dirty. Branch builds
+        # leave the repo's default in place.
+        if [ -n "${CIRCLE_TAG:-}" ]; then
+          echo -n " -X '$(go list "<<parameters.path>>")/pkg/project.version=${CIRCLE_TAG#v}'" >> .ldflags
+        fi
+
         # Print content
         echo "\"$(cat .ldflags)\""
 
