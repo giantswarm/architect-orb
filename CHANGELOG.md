@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `go-test` / `go-build`: the `.ldflags` scratch file is added to `.git/info/exclude` right after it is
+  written. Untracked, it made Go's buildvcs stamp `vcs.modified=true`, so a binary that reports its version
+  from the module build info (no `pkg/project.version` const, as auto-released CLIs like agentlab do) printed
+  `vX.Y.Z+dirty` from its release assets while `go install` printed `vX.Y.Z`. Ignored files do not appear in
+  `git status --porcelain`, which is what Go consults.
+
 ## [10.4.0] - 2026-09-05
 
 ### Added

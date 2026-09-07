@@ -46,6 +46,16 @@ steps:
         # Print content
         echo "\"$(cat .ldflags)\""
 
+        # .ldflags is untracked scratch that go-build reads back from the
+        # working tree. Left visible to git it flips Go's buildvcs stamp to
+        # vcs.modified=true and a binary that reports its version from the
+        # module build info (no version const, e.g. auto-released CLIs)
+        # prints vX.Y.Z+dirty. Ignored files never show in
+        # `git status --porcelain`, which is what Go checks.
+        if [ -d .git ] && ! grep -qxF '.ldflags' .git/info/exclude 2>/dev/null; then
+          echo '.ldflags' >> .git/info/exclude
+        fi
+
   - run:
       name: Check for non-ASCII characters in file names
       command: |
