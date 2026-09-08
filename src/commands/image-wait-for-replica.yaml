@@ -1,0 +1,96 @@
+# Command: image-wait-for-replica
+#
+# Waits until the image the China mirror is about to copy is visible from THIS
+# runner, child manifests included, so `regctl image copy` does not start
+# against a source that is still replicating.
+#
+# Why it exists: gsoci.azurecr.io is a geo-replicated Azure Container Registry
+# behind Traffic Manager. The push job writes to the home region; a runner in
+# China is routed to the Southeast Asia replica, which receives a pushed image
+# asynchronously. Replication is per manifest, and the manifest of a platform
+# image only shows up in the replica once all of its layers are there. Right
+# after a push the replica therefore already serves the (tiny) index and the
+# attestation manifests while the platform manifest is still in flight, and a
+# copy fails with MANIFEST_UNKNOWN for a digest the home region has served for
+# minutes. For a 50 MB image that gap is seconds to a few minutes; for the
+# 20 GiB vllm image it outlasted the previous fixed 10 x 5 s retry every time.
+#
+# What it does: resolves the source tag to its manifest, then fetches every
+# child manifest (recursively, so a nested index is covered too) from this
+# runner and polls until all of them answer or the deadline passes. It waits on
+# the children, not on the tag: the tag is the first thing to arrive.
+#
+# Reads (written by the preceding push-to-registries job, restored from cache):
+#   /tmp/.docker_image_registry  the registry host the image was pushed to
+#   /tmp/.docker_image_tag       the image tag
+#
+# POSIX sh only. This runs on the regctl executor (alpine, BusyBox /bin/sh);
+# bash-only constructs break there silently -- see giantswarm/architect-orb#765.
+parameters:
+  image:
+    description: Name of the container repository and image, e.g. `giantswarm/REPO_NAME`. Must not contain the registry host name.
+    type: string
+  timeout-minutes:
+    description: How long to wait for the source image to become visible from this runner before giving up.
+    type: integer
+    default: 60
+  poll-seconds:
+    description: Seconds between two visibility checks.
+    type: integer
+    default: 30
+steps:
+  - run:
+      name: "architect/image-wait-for-replica: Wait until the source image is visible from this runner"
+      command: |
+        SOURCE_REGISTRY="$(cat /tmp/.docker_image_registry)"
+        IMAGE_TAG="$(cat /tmp/.docker_image_tag)"
+        REPOSITORY="${SOURCE_REGISTRY}/<<parameters.image>>"
+        SOURCE="${REPOSITORY}:${IMAGE_TAG}"
+
+        # Prints one child digest per line for an index; nothing for a plain manifest.
+        CHILDREN_TEMPLATE='{{if .IsList}}{{range .GetManifestList}}{{println .Digest}}{{end}}{{end}}'
+
+        START=$(date +%s)
+        DEADLINE=$(( START + <<parameters.timeout-minutes>> * 60 ))
+
+        echo "Waiting up to <<parameters.timeout-minutes>> minutes for ${SOURCE} to be visible from this runner."
+        while :; do
+          NOW=$(date +%s)
+          ELAPSED=$(( NOW - START ))
+
+          if CHILDREN=$(regctl manifest get "${SOURCE}" --format "${CHILDREN_TEMPLATE}" 2>/tmp/.wait_for_replica_error); then
+            # Breadth-first over the manifest tree: a child that is itself an
+            # index contributes its own children to the queue.
+            QUEUE="${CHILDREN}"
+            MISSING=""
+            PRESENT=0
+            while [ -n "${QUEUE}" ]; do
+              set -- ${QUEUE}
+              DIGEST="$1"
+              shift
+              QUEUE="$*"
+              if GRANDCHILDREN=$(regctl manifest get "${REPOSITORY}@${DIGEST}" --format "${CHILDREN_TEMPLATE}" 2>/dev/null); then
+                PRESENT=$(( PRESENT + 1 ))
+                [ -n "${GRANDCHILDREN}" ] && QUEUE="${QUEUE} ${GRANDCHILDREN}"
+              else
+                MISSING="${MISSING} ${DIGEST}"
+              fi
+            done
+            if [ -z "${MISSING}" ]; then
+              echo "[${ELAPSED}s] ${SOURCE} is visible from this runner: manifest and ${PRESENT} child manifest(s) present."
+              exit 0
+            fi
+            echo "[${ELAPSED}s] index visible, child manifest(s) still replicating:${MISSING}"
+          else
+            echo "[${ELAPSED}s] ${SOURCE} not visible yet: $(cat /tmp/.wait_for_replica_error)"
+          fi
+
+          if [ "${NOW}" -ge "${DEADLINE}" ]; then
+            echo ""
+            echo "Gave up after <<parameters.timeout-minutes>> minutes: ${SOURCE} has not fully replicated to the registry replica this runner reads."
+            echo "Nothing else in the pipeline depends on this job. Rerun it from failed once the image has replicated;"
+            echo "a large image takes longer, raise replica-wait-minutes on the sync-china-registry job if this repeats."
+            exit 1
+          fi
+          sleep <<parameters.poll-seconds>>
+        done

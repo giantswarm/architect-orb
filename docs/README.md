@@ -9,6 +9,7 @@
 - [push-to-app-catalog](job/push-to-app-catalog.md)
 - [push-to-registries](job/push-to-registries.md)
 - [run-tests-with-ats](job/run-tests-with-ats.md) (Experimental)
+- [sync-china-registry](job/sync-china-registry.md)
 - [upload-release-assets](job/upload-release-assets.md)
 
 ## Guides

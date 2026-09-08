@@ -8,6 +8,17 @@ parameters:
   registries-data:
     default: ""
     type: string
+  replica-wait-minutes:
+    description: |
+      How long to wait for the image to become visible from this runner before the
+      copy starts. gsoci.azurecr.io is geo-replicated and the in-China runner reads
+      the Southeast Asia replica, which receives a pushed image asynchronously: the
+      index within seconds, each platform manifest only once its layers are across,
+      which for a multi-GiB image can take tens of minutes. Nothing else in the
+      pipeline depends on this job, so waiting costs only runner time; on timeout the
+      job fails and a rerun from failed picks the copy up once the image has arrived.
+    type: integer
+    default: 60
 steps:
   - image-login-to-registries:
       client: "regctl"
@@ -15,24 +26,8 @@ steps:
   - restore_cache:
       keys:
         - image-data-{{.Environment.CIRCLE_PIPELINE_ID}}
-  - run:
-      name: Sync image to Aliyun registry
-      command: |
-        SOURCE_REPOSITORY="$(cat /tmp/.docker_image_registry)/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
-        TARGET_REPOSITORY="giantswarm-registry.cn-shanghai.cr.aliyuncs.com/<<parameters.image>>:$(cat /tmp/.docker_image_tag)"
-        CMD="regctl image copy ${SOURCE_REPOSITORY} ${TARGET_REPOSITORY}"
-        SUCCESS=false
-        for x in $(seq 1 10); do
-          echo "attempt: ${x}"
-          if sh -c "${CMD}"; then
-            echo "Image is pushed to the registry."
-            SUCCESS=true
-            break
-          fi
-          echo "Waiting 5 seconds before the next attempt."
-          sleep 5
-        done
-        if [[ "${SUCCESS}" == "false" ]]; then
-          echo "Failed to sync the image"
-          exit 1
-        fi
+  - image-wait-for-replica:
+      image: <<parameters.image>>
+      timeout-minutes: <<parameters.replica-wait-minutes>>
+  - image-copy-to-china:
+      image: <<parameters.image>>
