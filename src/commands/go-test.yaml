@@ -96,8 +96,17 @@ steps:
       environment:
         CGO_ENABLED: "0"
       command: |
-        golangci-lint run --no-config --default=none --enable=gosec \
-          --tests=false --max-issues-per-linter=0 --max-same-issues=0
+        # The repo's `.golangci.yml` is read so its reviewed gosec exclusions apply.
+        # `--enable-only` keeps this gosec-only; `--enable` would merge into the
+        # config's enable list and pull in other linters. The rest pin gate mechanics
+        # the config must not decide: `run.tests`, `run.issues-exit-code`,
+        # `issues.new*`, `issues.max-*`. Do not drop them.
+        # See docs/job/go-test.md#security-scanning-with-gosec.
+        golangci-lint run --enable-only=gosec \
+          --tests=false \
+          --issues-exit-code=1 \
+          --new=false --new-from-rev= --new-from-patch= --new-from-merge-base= \
+          --max-issues-per-linter=0 --max-same-issues=0
   - run:
       name: Check if dependencies have known security vulnerabilities
       environment:
