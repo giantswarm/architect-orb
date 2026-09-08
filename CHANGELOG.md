@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.4.1] - 2026-09-08
+
 ### Fixed
 
 - `sync-china-registry`: waits for the image to finish geo-replicating before copying it. The job copies
@@ -2198,7 +2200,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.4.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.4.1...HEAD
+[10.4.1]: https://github.com/giantswarm/architect-orb/compare/v10.4.0...v10.4.1
 [10.4.0]: https://github.com/giantswarm/architect-orb/compare/v10.3.0...v10.4.0
 [10.3.0]: https://github.com/giantswarm/architect-orb/compare/v10.2.0...v10.3.0
 [10.2.0]: https://github.com/giantswarm/architect-orb/compare/v10.1.2...v10.2.0
