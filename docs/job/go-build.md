@@ -3,7 +3,7 @@
 Builds Go binaries for one or more target architectures in a single job and persists them to the workspace.
 
 **How it works:**
-- Runs `go-test` (with optional `pre_test_target` and `test_target`).
+- Runs [`go-test`](go-test.md) (with optional `pre_test_target` and `test_target`), including its [`gosec` scan](go-test.md#security-scanning-with-gosec).
 - Loops over each entry in `architectures` and runs `go build` cross-compiled for that GOOS/GOARCH.
 - Each binary is named `<binary>-<GOOS>-<GOARCH>`. For `linux/amd64` (when included), a copy is also written to `<binary>` for backward compatibility.
 - The resolved architecture list is written to `.platforms` in the workspace so `push-to-registries` can auto-derive `--platform`.

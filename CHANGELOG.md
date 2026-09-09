@@ -7,6 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `go-test`: the `gosec` step now honours the repo's `golangci-lint` config; it ran with `--no-config`
+  before, so `gosec` exclusions there had no effect and an inline `#nosec` comment was the only way to
+  suppress a triaged finding. Only the config's exclusions apply (`linters.settings.gosec`,
+  `linters.exclusions`). Linter selection is ignored so `gosec` alone runs, and `run.tests`,
+  `run.issues-exit-code`, `issues.new*` and `issues.max-*` are overridden so those keys cannot exempt the
+  repo from the gate, limit it to new code, or truncate the report. This affects any repo with a
+  `.golangci.{yml,yaml,toml,json}` at or above the repo root; a v1-format config fails to parse and fails
+  the build. See [docs/job/go-test.md](docs/job/go-test.md#security-scanning-with-gosec).
+
+### Fixed
+
+- `go-test`: the job description and docs claimed the job runs `go vet`. The step was removed in 5.5.2 on
+  the grounds that `golangci-lint` covered it, `golangci-lint` was then removed in 5.14.0, and when it
+  returned in 10.1.0 it was `gosec`-only, so nothing has run `go vet` since. Both now list what the job
+  actually does.
+
 ## [10.4.1] - 2026-09-08
 
 ### Fixed
