@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `run-tests-with-ats`: new `kind_config` parameter (default `""`) on the job and the command — the path,
+  relative to the checkout, of a kind `Cluster` configuration passed to `kind create cluster --config`
+  when `create_kind_cluster` is true. The job keeps naming the cluster and choosing the node image
+  (kind's `--name` and `--image` take precedence over the configuration's `name` and `nodes[].image`),
+  so the file carries only what the job does not decide: feature gates, runtime config, kubeadm or
+  containerd patches, extra nodes. Empty creates the cluster the job creates today, so no existing
+  consumer changes; a path that does not exist in the checkout fails the job before the cluster is
+  created. First use: charts whose tests run Agent Substrate (kagent API v2), which needs the
+  `ClusterTrustBundle`, `ClusterTrustBundleProjection` and `PodCertificateRequest` gates and the
+  `certificates.k8s.io/v1beta1` API on the cluster — the worked example in
+  [docs/job/run-tests-with-ats.md](docs/job/run-tests-with-ats.md#kind_config-optional-string-default),
+  whose parameter list now also names `kind_registry_credentials` (10.4.0).
+
 ## [10.4.2] - 2026-09-10
 
 ### Changed

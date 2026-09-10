@@ -33,6 +33,14 @@ parameters:
       version in its tag is passed to app-test-suite as --cluster-version.
     type: string
     default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4"
+  kind_config:
+    description: |
+      Path, relative to the checkout, of a kind Cluster configuration passed to `kind create cluster
+      --config` when create_kind_cluster is true (feature gates, runtime config, patches, extra nodes;
+      the job's --name and --image take precedence). Empty creates the cluster as before. See the
+      command parameter.
+    type: string
+    default: ""
   kind_registry_credentials:
     description: |
       Give the kind node the job's registry credentials (REGISTRIES_DATA_BASE64 from the architect
@@ -59,4 +67,5 @@ steps:
       create_kind_cluster: << parameters.create_kind_cluster >>
       kind_version: << parameters.kind_version >>
       kind_node_image: << parameters.kind_node_image >>
+      kind_config: << parameters.kind_config >>
       kind_registry_credentials: << parameters.kind_registry_credentials >>

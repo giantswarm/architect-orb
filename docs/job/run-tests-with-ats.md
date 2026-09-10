@@ -70,6 +70,8 @@ for the full list.
 - [create_kind_cluster](#create_kind_cluster-optional-boolean-defaultfalse)
 - [kind_version](#kind_version)
 - [kind_node_image](#kind_node_image)
+- [kind_config](#kind_config-optional-string-default)
+- [kind_registry_credentials](#kind_registry_credentials-optional-boolean-defaulttrue)
 
 ### chart_archive_prefix (optional string, default="")
 
@@ -141,3 +143,58 @@ The default is the Giant Swarm mirror of `kindest/node`, so the pull does not co
 Hub's anonymous rate limit.
 
 (Default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4")
+
+### kind_config (optional string, default="")
+
+Path, relative to the checkout, of a [kind cluster configuration](https://kind.sigs.k8s.io/docs/user/configuration/)
+(`kind: Cluster`, `apiVersion: kind.x-k8s.io/v1alpha4`) that the job passes to `kind create cluster
+--config` when `create_kind_cluster` is true. Empty creates the cluster the job creates without it, so
+setting nothing changes nothing.
+
+The job keeps naming the cluster (`ats`) and choosing the node image ([`kind_node_image`](#kind_node_image)):
+kind's `--name` and `--image` take precedence over the configuration's `name` and `nodes[].image`, so the
+file carries only what the job does not decide — feature gates, runtime config, kubeadm or containerd
+patches, extra nodes. Feature gates and runtime config are fixed when the cluster is created; nothing can
+turn them on afterwards, and app-test-suite 1.x provisions no cluster, so `.ats/main.yaml` cannot either.
+
+The worked example: a chart whose tests run [Agent Substrate](https://github.com/kagent-dev/substrate), the
+sandboxed actor runtime of [kagent](https://kagent.dev) API v2. Substrate projects pod identities and trust
+bundles into its worker pods through the `PodCertificateRequest` API (`certificates.k8s.io/v1beta1`) and
+`ClusterTrustBundle` projection. Those are beta feature gates, off by default in Kubernetes; without them
+not a single Substrate worker starts, and the `v1beta1` API needs Kubernetes 1.35 or newer (the default node
+image satisfies that). kind applies `featureGates` to the API server, the controller manager, the scheduler
+and the kubelet alike. Put the configuration in the repository, for example `.circleci/kind-config.yaml`:
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+featureGates:
+  ClusterTrustBundle: true
+  ClusterTrustBundleProjection: true
+  PodCertificateRequest: true
+runtimeConfig:
+  "certificates.k8s.io/v1beta1": "true"
+```
+
+and name it in the job:
+
+```yaml
+      - architect/run-tests-with-ats:
+          name: execute chart tests
+          create_kind_cluster: true
+          app-test-suite_container_tag: "1.0.0"
+          kind_config: ".circleci/kind-config.yaml"
+          requires:
+            - push-to-catalog
+```
+
+The job fails before creating the cluster when the file does not exist in the checkout.
+
+### kind_registry_credentials (optional boolean, default=true)
+
+When `create_kind_cluster` is true, gives the kind node the registry credentials of the job so the chart
+under test can pull private images (`gsociprivate.azurecr.io` and any other registry listed in
+`REGISTRIES_DATA_BASE64`). The credentials come from the same `architect` context the push-to-registries
+jobs use, so the job needs `context: architect`; they are written to `/var/lib/kubelet/config.json` on the
+node, which the kubelet reads for every image pull, so the chart needs no `imagePullSecrets`. Skipped with
+a notice when the context is not attached.
