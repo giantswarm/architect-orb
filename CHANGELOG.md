@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.4.2] - 2026-09-10
+
 ### Changed
 
 - `go-test`: the `gosec` step now honours the repo's `golangci-lint` config; it ran with `--no-config`
@@ -2218,7 +2220,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.4.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.4.2...HEAD
+[10.4.2]: https://github.com/giantswarm/architect-orb/compare/v10.4.1...v10.4.2
 [10.4.1]: https://github.com/giantswarm/architect-orb/compare/v10.4.0...v10.4.1
 [10.4.0]: https://github.com/giantswarm/architect-orb/compare/v10.3.0...v10.4.0
 [10.3.0]: https://github.com/giantswarm/architect-orb/compare/v10.2.0...v10.3.0
