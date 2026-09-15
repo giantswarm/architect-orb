@@ -51,6 +51,12 @@ parameters:
       chart needs no imagePullSecrets. Skipped with a notice when the context is not attached.
     type: boolean
     default: true
+  require_open_pull_request:
+    description: |
+      Halt instead of failing when the attached workspace carries no chart
+      archive. The job parameter of the same name documents why. See the job.
+    type: boolean
+    default: false
 steps:
   - attach_workspace:
       at: build
@@ -59,6 +65,14 @@ steps:
       environment:
         PARAM_CHART_ARCHIVE_PREFIX: << parameters.chart_archive_prefix >>
       command: <<include(scripts/run-tests-with-ats-skip-release-commit.sh)>>
+  - when:
+      condition: << parameters.require_open_pull_request >>
+      steps:
+        - run:
+            name: "architect/run-tests-with-ats: Halt when the gated build produced no chart"
+            environment:
+              PARAM_CHART_ARCHIVE_PREFIX: << parameters.chart_archive_prefix >>
+            command: <<include(scripts/run-tests-with-ats-halt-without-chart.sh)>>
   - unless:
       condition: << parameters.create_kind_cluster >>
       steps:

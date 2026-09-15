@@ -12,6 +12,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `pin-version` job and command: resolve the workflow's version once with `gitsemver get` and persist it to the
   workspace as `.pipeline_version` (`.pipeline_version-<prefix>` with `git-tag-prefix`). A stable tag landing while
   a workflow runs (a promote) no longer gives the image and the chart that references it different versions.
+- New `require_open_pull_request` parameter (default `false`) on the `build-image`,
+  `push-to-registries` and `push-to-app-catalog` jobs. When `true`, the job halts before it does
+  anything unless an open pull request covers the commit being built, so a push to a scratch branch
+  produces no image and no chart and costs only the executor spin-up, while a branch under review
+  builds on every push. The pull request being open is the whole rule — there is no label and no
+  branch prefix. Tag builds are exempt (a tag has no pull request to find) and the gate fails open:
+  a missing token, a GitHub outage or a rate limit builds the commit and says so in the log.
+  Requires `context: architect`. Set it on every job you want gated — `circleci-agent step halt`
+  ends a job successfully, and a halted job does not skip the jobs that `require` it.
+- New `require_open_pull_request` parameter (default `false`) on the `run-tests-with-ats` job and
+  command. It halts instead of failing when the attached workspace carries no chart archive, which
+  is exactly what a closed gate on `push-to-app-catalog` produces. It does not query GitHub: the
+  job runs on the `machine` executor, which carries none of the GitHub App tooling.
+- New `require-open-pull-request` command, which the gate above is built from.
 
 ### Changed
 
