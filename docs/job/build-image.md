@@ -122,6 +122,10 @@ Two parameters are specific to this job:
 The rest are the build half of the `push-to-registries` parameters, and behave
 identically. See that page for the details:
 
+- [Build arguments](push-to-registries.md#build-arguments) — `build-args`, one
+  `NAME=VALUE` per line, `${DOCKER_IMAGE_TAG}` and the other job variables
+  expanded at build time. Set it on every architecture's job: each builds the
+  Dockerfile on its own.
 - [Build cache](push-to-registries.md#build-cache) — `cache`, `cache-ref`. The
   platform is appended to the cache ref, derived or explicit, because these jobs
   run concurrently and would otherwise race on one ref.
