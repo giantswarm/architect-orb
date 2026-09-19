@@ -29,6 +29,14 @@ parameters:
   dockerfile:
     type: string
     default: "./Dockerfile"
+  build-args:
+    description: |
+      Newline-separated 'NAME=VALUE' build arguments for the Dockerfile. Variable
+      references in a value ('${DOCKER_IMAGE_TAG}', '${CIRCLE_SHA1}') are expanded at
+      build time. See
+      [docs/job/push-to-registries.md](https://github.com/giantswarm/architect-orb/blob/main/docs/job/push-to-registries.md#build-arguments).
+    type: string
+    default: ""
   git-tag-prefix:
     type: string
     default: ""
@@ -159,6 +167,7 @@ steps:
       push-by-digest: true
       build-context: <<parameters.build-context>>
       dockerfile: <<parameters.dockerfile>>
+      build-args: <<parameters.build-args>>
       tag-suffix: <<parameters.tag-suffix>>
       force-public: <<parameters.force-public>>
       registries-data: <<parameters.registries-data>>

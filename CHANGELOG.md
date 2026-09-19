@@ -7,6 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `image-build-and-push`, `build-image`, `push-to-registries`: new `build-args` parameter (default `""`) --
+  newline-separated `NAME=VALUE` build arguments passed to `docker buildx build --build-arg`. Variable
+  references in a value (`${DOCKER_IMAGE_TAG}`, `${CIRCLE_SHA1}`) are expanded at build time, and only
+  those: no command substitution, and a reference to an unset variable fails the build. Each argument is
+  one argv element, so an `LDFLAGS` string with spaces works. Until now the orb passed no build arguments,
+  so a Dockerfile that requires the version or the commit as an argument (an upstream project's, built by a
+  fork line) could only be built by patching its `ARG` defaults into a copy of the file. With
+  `merge-digests: true` the parameter belongs on the `build-image` jobs and is ignored on
+  `push-to-registries`. See [docs/job/push-to-registries.md](docs/job/push-to-registries.md#build-arguments).
+- `push-to-registries`: new `persist-build-version` parameter (default `true`, the behaviour so far) so a
+  workflow with several `push-to-registries` jobs -- one per image of a mono-repo -- can keep
+  `.build_version` on exactly one of them: CircleCI refuses to attach a workspace that two concurrent jobs
+  persisted the same path into, whatever the content, which failed every downstream job (a chart push, a
+  scan) of such a workflow. `build-image` already had the parameter. See
+  [docs/job/push-to-registries.md](docs/job/push-to-registries.md#several-push-jobs-in-one-workflow).
+
 ## [10.5.0] - 2026-09-11
 
 ### Added
