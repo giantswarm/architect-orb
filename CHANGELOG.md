@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.6.0] - 2026-09-19
+
 ### Added
 
 - `image-build-and-push`, `build-image`, `push-to-registries`: new `build-args` parameter (default `""`) --
@@ -2255,7 +2257,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.5.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.6.0...HEAD
+[10.6.0]: https://github.com/giantswarm/architect-orb/compare/v10.5.0...v10.6.0
 [10.5.0]: https://github.com/giantswarm/architect-orb/compare/v10.4.2...v10.5.0
 [10.4.2]: https://github.com/giantswarm/architect-orb/compare/v10.4.1...v10.4.2
 [10.4.1]: https://github.com/giantswarm/architect-orb/compare/v10.4.0...v10.4.1
