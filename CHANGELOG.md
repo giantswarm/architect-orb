@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `go-build`: give each build of a concurrent wave `-p $(nproc) / build_concurrency`, at least 1,
+  so the wave runs about as many compile processes as the executor has CPUs. `go build` defaults
+  `-p` to `GOMAXPROCS`, so a `build_concurrency` of 4 on a 4-CPU executor started up to 16 compile
+  processes. A warm build cache hid it, because almost no package is compiled; a cold one exhausted
+  the executor and the container was killed part way through `Build binaries`, which CircleCI
+  reports as a cancelled step in a failed build with no error in the log. Measured on one cold
+  cross-compile of `marge`: about 700 MiB peak at `-p 1` against about 1.4 GiB at `-p 12`, so a
+  wave of four falls from roughly 5.3 GiB to 2.8 GiB on an 8 GiB executor. The wave is no slower,
+  because four builds of one worker each already fill four CPUs. A `build_concurrency` of 1 is
+  unchanged and still gets every CPU.
+
 ## [10.6.0] - 2026-09-19
 
 ### Added

@@ -106,7 +106,7 @@ steps:
           # mask a failed `go build` (the `if` returns 0 when the condition is
           # false), and `set -e` is suppressed both for backgrounded builds and
           # inside `|| fail=1`.
-          if ! CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build "${build_flags[@]}" -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$output_name" "<<parameters.path>>"; then
+          if ! CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -p "$build_procs" "${build_flags[@]}" -ldflags "$LD_FLAGS" -tags "<<parameters.tags>>" -o "$output_name" "<<parameters.path>>"; then
             return 1
           fi
 
@@ -132,6 +132,15 @@ steps:
           echo "ERROR: 'build_concurrency' must be a positive integer or \"auto\" (got: $concurrency)."
           exit 1
         fi
+
+        # Each build of a wave gets an equal share of the CPUs. `go build`
+        # defaults -p to GOMAXPROCS, so a wave of N builds otherwise starts
+        # N * GOMAXPROCS compile processes on N CPUs, and the memory that costs
+        # exceeds the executor whenever the build cache does not answer. The
+        # share is read by build_one, which runs after this point.
+        build_procs=$(( $(nproc) / concurrency ))
+        (( build_procs < 1 )) && build_procs=1
+        echo "Compiling ${concurrency} architecture(s) at a time, -p ${build_procs} each."
 
         # Backgrounded builds do not fail the step on their own; aggregate exit
         # codes into $fail and propagate at the end. Each PID is waited exactly

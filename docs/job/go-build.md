@@ -92,6 +92,14 @@ controls how many run at once:
 - `"auto"` or an integer `> 1`: compile that many architectures concurrently.
   Worth it only with spare CPU and RAM, i.e. a larger `resource_class`.
 
+Each build of a wave is given `-p $(nproc) / build_concurrency`, at least 1, so
+the whole wave runs about as many compile processes as the executor has CPUs.
+`go build` otherwise defaults `-p` to `GOMAXPROCS` and a wave of four starts four
+times that many compilers. That is invisible while the build cache answers,
+because almost nothing is compiled, and it exhausts the executor on the first
+cold run: one cold cross-compile of a mid-sized binary peaks at about 700 MiB at
+`-p 1` and about 1.4 GiB at `-p 12`.
+
 For three or more architectures, set `resource_class: large` (4 vCPU) or
 `xlarge` (8 vCPU) and `build_concurrency` to roughly the vCPU count. CircleCI
 Docker credit rates scale with the class (medium 10/min, large 20/min, xlarge
