@@ -126,6 +126,7 @@ steps:
         grep -qF \
             -e 'error accessing OSS Index' \
             -e 'Error: guide API request failed' \
+            -e 'rate limited by OSS Index' \
             /tmp/nancy-results.txt; grep_result=$?
         set -e
         # If nancy gave us a bad exit code AND grep found an OSS index error in the output, then we don't fail the build.
