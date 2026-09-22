@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.6.2] - 2026-09-22
+
 ### Fixed
 
 - `go-test`: treat an OSS Index rate limit as an external scanner problem. nancy exits non-zero with
@@ -2279,7 +2281,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.6.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.6.2...HEAD
+[10.6.2]: https://github.com/giantswarm/architect-orb/compare/v10.6.1...v10.6.2
 [10.6.1]: https://github.com/giantswarm/architect-orb/compare/v10.6.0...v10.6.1
 [10.6.0]: https://github.com/giantswarm/architect-orb/compare/v10.5.0...v10.6.0
 [10.5.0]: https://github.com/giantswarm/architect-orb/compare/v10.4.2...v10.5.0
