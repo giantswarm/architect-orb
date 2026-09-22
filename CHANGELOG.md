@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `go-test`: treat an OSS Index rate limit as an external scanner problem. nancy exits non-zero with
+  `Error: You have been rate limited by OSS Index.`, which matched neither pattern of the soft-fail
+  grep, so a 429 from Sonatype hard-failed the build instead of being ignored like the other OSS
+  Index outages.
+
 ## [10.6.1] - 2026-09-21
 
 ### Fixed
