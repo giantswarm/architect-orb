@@ -133,7 +133,8 @@ steps:
 
           [[ "<<parameters.split-china-push>>" == "true" && "${reg}" == "giantswarm-registry.cn-shanghai.cr.aliyuncs.com" ]] && continue
           # Dev-build gate: `gitsemver validate --type dev` is the canonical dev-version
-          # check (anchored to the full X.Y.Z-dev.<branch>.<date>.<time> form). It runs
+          # check (gitsemver v3's X.Y.Z-r<branch-hash>t<timestamp>h<sha> and the
+          # superseded X.Y.Z-dev.<branch>.<date>.<time> form alike). It runs
           # only here; later steps consume the resulting set rather than re-testing it.
           if [[ "$push_dev" == "false" ]] && gitsemver validate --type dev "$TAG_VALUE" >/dev/null 2>&1; then
             echo "Not uploading image with tag $TAG_VALUE, as 'push-dev' is 'false'"

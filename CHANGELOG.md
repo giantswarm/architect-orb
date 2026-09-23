@@ -7,6 +7,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `architect` executor: architect 8.5.0, which bundles gitsemver 3 like the `app-build-suite` executor does
+  since 10.8.0. The two executors computed different versions for one commit on a branch pipeline:
+  `push-to-registries` tagged the image with gitsemver 2's `X.Y.Z-dev.<branch>.<date>.<time>.h<sha>`, while
+  `push-to-app-catalog` stamped the chart, and the image tag in it, with gitsemver 3's
+  `X.Y.Z-r<branch-hash>t<timestamp>h<sha>`. The branch chart named an image that was never pushed, so
+  `run-tests-with-ats` hung in `helm --wait` on ImagePullBackOff until the no-output timeout
+  ([#956](https://github.com/giantswarm/architect-orb/issues/956)). Both now compute the gitsemver 3 version.
+
+### Changed
+
+- Dev image tags follow the gitsemver 3 schema `X.Y.Z-r<branch-hash>t<timestamp>h<sha>`
+  ([gitsemver v3.0.0](https://github.com/giantswarm/gitsemver/releases/tag/v3.0.0)), as dev chart versions
+  have since 10.8.0. A tag in the new schema sorts above an old `-dev.` tag at the same `X.Y.Z`. A Flux image
+  or chart filter that matches `-dev.<branch>.` no longer matches new builds: select a branch's builds with
+  `^.*-r<branch-hash>t[0-9]{14}h[0-9a-f]{7}$`, where `gitsemver branch-hash <branch>` prints the hash.
+- The orb's pipeline runs `executors-agree`: the architect and app-build-suite executor images must compute
+  the same `gitsemver get` for one dev commit, before the orb is published.
+
 ## [10.9.0] - 2026-09-23
 
 ### Added
