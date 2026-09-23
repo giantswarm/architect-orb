@@ -1,6 +1,7 @@
 description: |
-  Checks if the code is formatted by `go fmt` and then runs `go vet` and `go
-  test` It also injects following variables into the
+  Checks that `go.mod`/`go.sum` are tidy and the code is formatted (`gofmt`,
+  `goimports`), then runs `go test`, `gosec` and `nancy`. It also injects the
+  following variables into the
   "github.com/ORGANIZATION/REPOSITORY/pkg/project" package for testing:
 
   - "buildTimestamp" in RFC-3339 format in UTC time zone.

@@ -4,7 +4,7 @@ Builds a multi-architecture container image with `docker buildx` and pushes it t
 
 By default it uses the `Dockerfile` at the workspace root and the root directory as the build context; pass `dockerfile` and `build-context` to override.
 
-The image is tagged with the version produced by `gitsemver get`. The registry hosts come from `registries-data` (or the `REGISTRIES_DATA_BASE64` environment variable) — `image` should only be `repository/image`, no host.
+The image is tagged with the version produced by `gitsemver get`: the release version on a tag pipeline, a dev version on a branch pipeline. A branch pipeline whose head commit carries a release tag (a bot's temporary branch at the release commit, a pull request opened from one, a rerun after the tag was cut) would resolve the release version too, so `image-prepare-tag` fails it before anything is built — a release is published by the tag's own pipeline alone, and a second push from a branch would replace the released index. The registry hosts come from `registries-data` (or the `REGISTRIES_DATA_BASE64` environment variable) — `image` should only be `repository/image`, no host.
 
 `tag-suffix` adds a suffix to the generated tag.
 
@@ -76,6 +76,51 @@ Validates that the image builds for every target platform without pushing anythi
       manifest:io.giantswarm.klaus.type=toolchain
       manifest:io.giantswarm.klaus.name=myapp
 ```
+
+### Build arguments
+
+`build-args` passes `--build-arg` values to the Dockerfile, one `NAME=VALUE` per line. A
+value may reference environment variables of the job (`$NAME` or `${NAME}`); they are
+expanded at build time, so a Dockerfile that refuses to build without the version or the
+commit takes them from the job:
+
+```yaml
+- architect/push-to-registries:
+    image: giantswarm/myapp
+    build-args: |
+      VERSION=${DOCKER_IMAGE_TAG}
+      GIT_REVISION=${CIRCLE_SHA1}
+```
+
+`DOCKER_IMAGE_TAG` is the tag `image-prepare-tag` computed (`gitsemver get` plus
+`tag-suffix`) and `DOCKER_IMAGE_VERSION` the version alone, without the suffix;
+`CIRCLE_SHA1` and the other [built-in variables](https://circleci.com/docs/variables/#built-in-environment-variables)
+are available as usual.
+
+`DOCKER_IMAGE_VERSION` is for a Dockerfile that builds on a sibling image of the same
+pipeline: one job publishes `giantswarm/myapp:1.2.3`, a second job with `tag-suffix: -ci`
+and `requires` on the first publishes `giantswarm/myapp:1.2.3-ci` from a Dockerfile that
+starts `ARG BASE_VERSION` / `FROM gsoci.azurecr.io/giantswarm/myapp:${BASE_VERSION}`, with
+`build-args: BASE_VERSION=${DOCKER_IMAGE_VERSION}`. The second image then always carries
+the first image's code of the same build, on a branch and on a tag alike, and no release
+step has to bump a pin in the Dockerfile. Only variable references are expanded -- no command substitution,
+no globbing -- and a reference to an unset variable fails the build rather than passing
+an empty value. Each argument is one argv element, so a value may contain spaces (an
+`LDFLAGS` string); it must not contain a single quote. Blank lines and `#` comments are
+ignored.
+
+The same parameter exists on [`build-image`](build-image.md); with `merge-digests: true`
+the build happens there and `build-args` on this job is ignored.
+
+### Several push jobs in one workflow
+
+This job persists the computed version to the workspace as `.build_version`
+(`persist-build-version`, default `true`), where `push-to-app-catalog` and repo-owned
+jobs downstream read it. A workflow that publishes several images -- one
+`push-to-registries` job per image of a mono-repo -- sets it on **exactly one** of them
+and `persist-build-version: false` on the others: CircleCI refuses to attach a workspace
+that two concurrent jobs persisted the same path into, whatever the content. The value
+is deterministic for a commit and `tag-suffix`, so it does not matter which job keeps it.
 
 ## Platform resolution order
 
@@ -182,7 +227,7 @@ Each `build-image` push is itself a small index (the platform manifest plus its 
 
 ### Parameters this mode does not use
 
-`build-context`, `dockerfile`, `hadolint`, `hadolint-config`, `push`, `provenance`, `cache` and `cache-ref` describe the build, which now happens in the `build-image` jobs — set them there. On a `push-to-registries` job with `merge-digests: true` they are accepted and ignored. In particular there is no `push: false` dry run of a merge: with `merge-digests: true` the job always tags. A branch path that only wants to validate the Dockerfile per architecture runs the `build-image` jobs with `push: false` and no `push-to-registries` at all (see [Branch validation](build-image.md#branch-validation)).
+`build-context`, `dockerfile`, `build-args`, `hadolint`, `hadolint-config`, `push`, `provenance`, `cache` and `cache-ref` describe the build, which now happens in the `build-image` jobs — set them there. On a `push-to-registries` job with `merge-digests: true` they are accepted and ignored. In particular there is no `push: false` dry run of a merge: with `merge-digests: true` the job always tags. A branch path that only wants to validate the Dockerfile per architecture runs the `build-image` jobs with `push: false` and no `push-to-registries` at all (see [Branch validation](build-image.md#branch-validation)).
 
 ### When not to opt in
 

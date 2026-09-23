@@ -13,6 +13,26 @@ parameters:
   dockerfile:
     type: string
     default: "./Dockerfile"
+  build-args:
+    description: |
+      Newline-separated build arguments passed to 'docker buildx build --build-arg',
+      one 'NAME=VALUE' per line. Blank lines and lines starting with '#' are ignored.
+      References to environment variables in a value ('$NAME' or '${NAME}') are
+      expanded at build time, so a Dockerfile that requires the version or the
+      commit as an argument can take them from the job:
+        VERSION=${DOCKER_IMAGE_TAG}
+        GIT_REVISION=${CIRCLE_SHA1}
+      DOCKER_IMAGE_VERSION is the version without the tag-suffix: a Dockerfile
+      that builds on a sibling image of the same pipeline (one job publishes
+      'app:1.2.3', a second job with tag-suffix '-ci' publishes 'app:1.2.3-ci'
+      FROM it) takes its base from BASE_VERSION=${DOCKER_IMAGE_VERSION}.
+      Only variable references are expanded -- no command substitution, no globbing,
+      and a reference to an unset variable fails the build instead of passing an
+      empty value. Each argument is passed to buildx as its own argv element, so a
+      value may contain spaces (an LDFLAGS string). A value must not contain a
+      single quote.
+    type: string
+    default: ""
   registries-data:
     default: ""
     description: |
@@ -378,6 +398,45 @@ steps:
           rm -f .annotations_input
         fi
 
+        # Build arguments. The parameter is inserted in single quotes so the shell
+        # does not touch it here; the loop below expands variable references
+        # ($NAME, ${NAME}) itself, and only those -- no command substitution, no
+        # globbing -- so a value reads the same in the config and in the log. Each
+        # NAME=VALUE becomes one argv element after --build-arg, so a value may
+        # contain spaces.
+        build_arg_flags=()
+        build_args_input='<<parameters.build-args>>'
+        if [[ -n "$build_args_input" ]]; then
+          printf '%s\n' "$build_args_input" > .build_args_input
+          while IFS= read -r line; do
+            line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            [[ -z "$line" || "$line" =~ ^# ]] && continue
+            if [[ ! "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+              echo "ERROR: build-args line '${line}' is not NAME=VALUE."
+              rm -f .build_args_input
+              exit 1
+            fi
+            arg_name="${line%%=*}"
+            arg_value="${line#*=}"
+            expanded=""
+            while [[ "$arg_value" =~ \$(\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*)) ]]; do
+              ref="${BASH_REMATCH[0]}"
+              var_name="${BASH_REMATCH[2]:-${BASH_REMATCH[3]}}"
+              if [[ -z "${!var_name+set}" ]]; then
+                echo "ERROR: build-args line '${line}' references \$${var_name}, which is not set."
+                rm -f .build_args_input
+                exit 1
+              fi
+              expanded+="${arg_value%%"${ref}"*}${!var_name}"
+              arg_value="${arg_value#*"${ref}"}"
+            done
+            expanded+="$arg_value"
+            echo "build-arg ${arg_name}=${expanded}"
+            build_arg_flags+=("--build-arg" "${arg_name}=${expanded}")
+          done < .build_args_input
+          rm -f .build_args_input
+        fi
+
         # SLSA provenance and SBOM attestations. The buildkitd builder config
         # written above tells BuildKit to store these as OCI 1.1 referrer
         # artifacts when the target registry supports them (ACR/gsoci, GHCR,
@@ -448,6 +507,7 @@ steps:
             --platform "$platforms" \
             "${all_tags[@]}" \
             "${annotation_flags[@]}" \
+            "${build_arg_flags[@]}" \
             "${oci_label_flags[@]}" \
             "${attest_flags[@]}" \
             "${cache_flags[@]}" \

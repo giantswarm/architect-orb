@@ -25,12 +25,33 @@ parameters:
   dockerfile:
     type: string
     default: "./Dockerfile"
+  build-args:
+    description: |
+      Newline-separated 'NAME=VALUE' build arguments for the Dockerfile. Variable
+      references in a value ('${DOCKER_IMAGE_TAG}', '${CIRCLE_SHA1}') are expanded at
+      build time. Ignored with `merge-digests: true`, where the build happens in the
+      `build-image` jobs. See
+      [docs/job/push-to-registries.md](https://github.com/giantswarm/architect-orb/blob/main/docs/job/push-to-registries.md#build-arguments).
+    type: string
+    default: ""
   git-tag-prefix:
     type: string
     default: ""
   tag-suffix:
     type: string
     default: ""
+  persist-build-version:
+    description: |
+      Publish the computed version to the workspace as `.build_version`, where
+      `package-helm-with-abs` and repo-owned jobs downstream pick it up.
+
+      Defaults to true, which is right for the one push job most workflows have.
+      A workflow with several `push-to-registries` jobs (one per image of a
+      mono-repo) must set it on EXACTLY ONE of them and false on the others:
+      CircleCI refuses to attach a workspace that two concurrent jobs persisted
+      the same path into, whatever the content.
+    type: boolean
+    default: true
   force-public:
     description: Skip the repo visibility check and push the the image to public registries
     type: boolean
@@ -66,8 +87,8 @@ parameters:
       Off (default): the job builds every platform in one `docker buildx build`,
       as before. Nothing changes for configs that do not set this.
 
-      On: `build-context`, `dockerfile`, `hadolint`, `hadolint-config`, `push`,
-      `provenance`, `cache` and `cache-ref` describe the build, which now happens
+      On: `build-context`, `dockerfile`, `build-args`, `hadolint`, `hadolint-config`,
+      `push`, `provenance`, `cache` and `cache-ref` describe the build, which now happens
       in the `build-image` jobs, and are ignored here. `platforms` must match the
       set of `build-image` jobs; `split-china-push` and `force-public` must carry
       the same values as on those jobs. See
@@ -172,6 +193,7 @@ steps:
   - image-prepare-tag:
       git-tag-prefix: <<parameters.git-tag-prefix>>
       tag-suffix: <<parameters.tag-suffix>>
+      persist-build-version: <<parameters.persist-build-version>>
   # The default path: build every platform in one `docker buildx build`, on this
   # machine, and push the tagged result. Unchanged.
   - unless:
@@ -208,6 +230,7 @@ steps:
             image: <<parameters.image>>
             build-context: <<parameters.build-context>>
             dockerfile: <<parameters.dockerfile>>
+            build-args: <<parameters.build-args>>
             force-public: <<parameters.force-public>>
             tag-latest-branch: <<parameters.tag-latest-branch>>
             tag-suffix: <<parameters.tag-suffix>>

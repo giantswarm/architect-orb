@@ -23,6 +23,13 @@ parameters:
       from the `.build_version` workspace file).  Set to `false` to leave the
       appVersion declared in `Chart.yaml` unchanged.
 steps:
+  # The version this job resolves itself, for when no image job upstream
+  # persisted `.build_version` to the workspace. The same command the image
+  # jobs run, so the same rule: a branch pipeline at a tagged commit fails here
+  # instead of stamping the released version onto a chart of its own. Not
+  # persisted -- a chart job may run concurrently with the job that does.
+  - image-prepare-tag:
+      persist-build-version: false
   - run:
       name: "architect/package-helm-with-abs: Execute App Build Suite"
       command: |
@@ -36,13 +43,15 @@ steps:
         # version from `Chart.yaml` in place let a branch build publish a plain
         # release version, overwriting the released chart at that version in the OCI
         # registry (`push-helm` pushes to the same repo path for every build).
+        # `.build_version` from the workspace wins: an image job upstream computed it
+        # with that job's tag-suffix, and the chart follows the image.
         if [ -f .build_version ]; then
           VERSION=$(tr -d "\n" < .build_version)
         else
-          VERSION=$(gitsemver get | tr -d "\n")
+          VERSION=$(tr -d "\n" < /tmp/.docker_image_tag)
         fi
         if [ -z "${VERSION}" ]; then
-          echo "ERROR: could not determine build version (.build_version is empty and gitsemver returned nothing)"
+          echo "ERROR: could not determine build version (.build_version and the version image-prepare-tag resolved are empty)"
           exit 1
         fi
         # Record the stamped version so later steps can report what was published

@@ -3,7 +3,7 @@
 Builds Go binaries for one or more target architectures in a single job and persists them to the workspace.
 
 **How it works:**
-- Runs `go-test` (with optional `pre_test_target` and `test_target`).
+- Runs [`go-test`](go-test.md) (with optional `pre_test_target` and `test_target`), including its [`gosec` scan](go-test.md#security-scanning-with-gosec).
 - Loops over each entry in `architectures` and runs `go build` cross-compiled for that GOOS/GOARCH.
 - Each binary is named `<binary>-<GOOS>-<GOARCH>`. For `linux/amd64` (when included), a copy is also written to `<binary>` for backward compatibility.
 - The resolved architecture list is written to `.platforms` in the workspace so `push-to-registries` can auto-derive `--platform`.
@@ -91,6 +91,14 @@ controls how many run at once:
   parallelism buys little and risks OOM.
 - `"auto"` or an integer `> 1`: compile that many architectures concurrently.
   Worth it only with spare CPU and RAM, i.e. a larger `resource_class`.
+
+Each build of a wave is given `-p $(nproc) / build_concurrency`, at least 1, so
+the whole wave runs about as many compile processes as the executor has CPUs.
+`go build` otherwise defaults `-p` to `GOMAXPROCS` and a wave of four starts four
+times that many compilers. That is invisible while the build cache answers,
+because almost nothing is compiled, and it exhausts the executor on the first
+cold run: one cold cross-compile of a mid-sized binary peaks at about 700 MiB at
+`-p 1` and about 1.4 GiB at `-p 12`.
 
 For three or more architectures, set `resource_class: large` (4 vCPU) or
 `xlarge` (8 vCPU) and `build_concurrency` to roughly the vCPU count. CircleCI

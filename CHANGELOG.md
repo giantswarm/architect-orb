@@ -28,6 +28,167 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   its release assets while `go install` printed `vX.Y.Z`. Ignored files do not appear in
   `git status --porcelain`, which is what Go consults.
 
+## [10.8.0] - 2026-09-23
+
+### Changed
+
+- `app-build-suite` executor: app-build-suite 2.4.1. Its new `HelmImageReferenceValidator` resolves every
+  `gsoci.azurecr.io` image reference of the rendered chart against the registry inside `package-helm-with-abs`,
+  before `push-helm`, and fails the build when the registry does not carry the tag or digest, naming the
+  reference and the template it renders from. A chart published with such a reference cannot start its pods; a
+  Renovate bump of a mirrored third-party image tag that the mirror had not copied yet was released this way
+  and took a service down until the mirror caught up
+  ([app-build-suite#617](https://github.com/giantswarm/app-build-suite/issues/617)). Because `abs` runs on every
+  branch build of `push-to-app-catalog`, such a bump now goes red on its own pull request. Charts whose images
+  are deliberately absent at build time opt out with `disable-helm-image-reference-validator: true` in
+  `.abs/main.yaml`; a chart job that does not `require` the image job building the chart's own image will now
+  fail until it does. 2.4.1, not 2.4.0: the `2.4.0-circleci` image was built from the 2.3.0 base and
+  carries none of it ([app-build-suite#621](https://github.com/giantswarm/app-build-suite/issues/621)).
+
+## [10.7.0] - 2026-09-23
+
+### Added
+
+- `image-prepare-tag` exports `DOCKER_IMAGE_VERSION`, the computed version without the `tag-suffix`, beside
+  `DOCKER_IMAGE_TAG`. It is the tag of a sibling image the same pipeline builds without a suffix, so a
+  Dockerfile that builds on that image takes its base from `build-args: BASE_VERSION=${DOCKER_IMAGE_VERSION}`
+  and always carries the sibling's code of the same build, on a branch and on a tag alike. Until now such a
+  Dockerfile pinned the base by hand and a release process had to bump the pin: app-build-suite's
+  `2.4.0-circleci` executor image was built `FROM app-build-suite:2.3.0` because its automated release
+  bumps no pin, and shipped without the release's changes.
+
+## [10.6.3] - 2026-09-23
+
+### Fixed
+
+- `image-prepare-tag`: a branch pipeline never resolves a release version. The command took its version
+  from `gitsemver get`, which reads the git state alone, so a branch pipeline whose head commit carries a
+  release tag — a temporary branch a bot pushes at the release commit, a pull request opened from one, a
+  rerun of a branch pipeline after the tag was cut — resolved the bare release version and every later
+  step treated the build as the release: `image-select-registries` let the China mirror into the push set
+  (the version being no dev version), the `build-image` legs pushed by digest, `push-to-registries`
+  (merge-digests) wrote the release tag again and `push-to-app-catalog` the release chart version, all
+  from a branch job. In giantswarm/backstage the changesets workflow's temporary branch replaced the
+  released v2.58.0 and v2.58.1 indexes on gsoci and the China mirror minutes after the tag pipeline had
+  written them, and stalled the branch legs of v2.58.2 to v2.58.8 for 20 minutes on the China push
+  ([#942](https://github.com/giantswarm/architect-orb/issues/942)). Now, when `CIRCLE_TAG` is empty and
+  the resolved version is not a dev version (`gitsemver validate --type dev`), the step fails naming the
+  version and the branch, before anything is built or logged in; a tag pipeline is unchanged, and so is
+  every branch pipeline at an untagged commit. `package-helm-with-abs` resolves the version through the
+  same command when no `.build_version` reached the workspace, so a chart-only branch pipeline at a tagged
+  commit fails the same way instead of stamping the released version. The logic moved to
+  `src/scripts/image-prepare-tag.sh` and is tested by `src/tests/image-prepare-tag.bats`; the orb's own
+  pipeline runs the tests (`bats/run` in the architect executor) before publishing.
+
+## [10.6.2] - 2026-09-22
+
+### Fixed
+
+- `go-test`: treat an OSS Index rate limit as an external scanner problem. nancy exits non-zero with
+  `Error: You have been rate limited by OSS Index.`, which matched neither pattern of the soft-fail
+  grep, so a 429 from Sonatype hard-failed the build instead of being ignored like the other OSS
+  Index outages.
+
+## [10.6.1] - 2026-09-21
+
+### Fixed
+
+- `go-build`: give each build of a concurrent wave `-p $(nproc) / build_concurrency`, at least 1,
+  so the wave runs about as many compile processes as the executor has CPUs. `go build` defaults
+  `-p` to `GOMAXPROCS`, so a `build_concurrency` of 4 on a 4-CPU executor started up to 16 compile
+  processes. A warm build cache hid it, because almost no package is compiled; a cold one exhausted
+  the executor and the container was killed part way through `Build binaries`, which CircleCI
+  reports as a cancelled step in a failed build with no error in the log. Measured on one cold
+  cross-compile of `marge`: about 700 MiB peak at `-p 1` against about 1.4 GiB at `-p 12`, so a
+  wave of four falls from roughly 5.3 GiB to 2.8 GiB on an 8 GiB executor. The wave is no slower,
+  because four builds of one worker each already fill four CPUs. A `build_concurrency` of 1 is
+  unchanged and still gets every CPU.
+
+## [10.6.0] - 2026-09-19
+
+### Added
+
+- `image-build-and-push`, `build-image`, `push-to-registries`: new `build-args` parameter (default `""`) --
+  newline-separated `NAME=VALUE` build arguments passed to `docker buildx build --build-arg`. Variable
+  references in a value (`${DOCKER_IMAGE_TAG}`, `${CIRCLE_SHA1}`) are expanded at build time, and only
+  those: no command substitution, and a reference to an unset variable fails the build. Each argument is
+  one argv element, so an `LDFLAGS` string with spaces works. Until now the orb passed no build arguments,
+  so a Dockerfile that requires the version or the commit as an argument (an upstream project's, built by a
+  fork line) could only be built by patching its `ARG` defaults into a copy of the file. With
+  `merge-digests: true` the parameter belongs on the `build-image` jobs and is ignored on
+  `push-to-registries`. See [docs/job/push-to-registries.md](docs/job/push-to-registries.md#build-arguments).
+- `push-to-registries`: new `persist-build-version` parameter (default `true`, the behaviour so far) so a
+  workflow with several `push-to-registries` jobs -- one per image of a mono-repo -- can keep
+  `.build_version` on exactly one of them: CircleCI refuses to attach a workspace that two concurrent jobs
+  persisted the same path into, whatever the content, which failed every downstream job (a chart push, a
+  scan) of such a workflow. `build-image` already had the parameter. See
+  [docs/job/push-to-registries.md](docs/job/push-to-registries.md#several-push-jobs-in-one-workflow).
+
+## [10.5.0] - 2026-09-11
+
+### Added
+
+- `run-tests-with-ats`: new `kind_config` parameter (default `""`) on the job and the command — the path,
+  relative to the checkout, of a kind `Cluster` configuration passed to `kind create cluster --config`
+  when `create_kind_cluster` is true. The job keeps naming the cluster and choosing the node image
+  (kind's `--name` and `--image` take precedence over the configuration's `name` and `nodes[].image`),
+  so the file carries only what the job does not decide: feature gates, runtime config, kubeadm or
+  containerd patches, extra nodes. Empty creates the cluster the job creates today, so no existing
+  consumer changes; a path that does not exist in the checkout fails the job before the cluster is
+  created. First use: charts whose tests run Agent Substrate (kagent API v2), which needs the
+  `ClusterTrustBundle`, `ClusterTrustBundleProjection` and `PodCertificateRequest` gates and the
+  `certificates.k8s.io/v1beta1` API on the cluster — the worked example in
+  [docs/job/run-tests-with-ats.md](docs/job/run-tests-with-ats.md#kind_config-optional-string-default),
+  whose parameter list now also names `kind_registry_credentials` (10.4.0).
+
+## [10.4.2] - 2026-09-10
+
+### Changed
+
+- `go-test`: the `gosec` step now honours the repo's `golangci-lint` config; it ran with `--no-config`
+  before, so `gosec` exclusions there had no effect and an inline `#nosec` comment was the only way to
+  suppress a triaged finding. Only the config's exclusions apply (`linters.settings.gosec`,
+  `linters.exclusions`). Linter selection is ignored so `gosec` alone runs, and `run.tests`,
+  `run.issues-exit-code`, `issues.new*` and `issues.max-*` are overridden so those keys cannot exempt the
+  repo from the gate, limit it to new code, or truncate the report. This affects any repo with a
+  `.golangci.{yml,yaml,toml,json}` at or above the repo root; a v1-format config fails to parse and fails
+  the build. See [docs/job/go-test.md](docs/job/go-test.md#security-scanning-with-gosec).
+
+### Fixed
+
+- `go-test`: the job description and docs claimed the job runs `go vet`. The step was removed in 5.5.2 on
+  the grounds that `golangci-lint` covered it, `golangci-lint` was then removed in 5.14.0, and when it
+  returned in 10.1.0 it was `gosec`-only, so nothing has run `go vet` since. Both now list what the job
+  actually does.
+
+## [10.4.1] - 2026-09-08
+
+### Fixed
+
+- `sync-china-registry`: waits for the image to finish geo-replicating before copying it. The job copies
+  gsoci → Aliyun from a runner in China that Traffic Manager routes to the Southeast Asia replica of
+  `gsoci.azurecr.io`, while the push job wrote to the home region. ACR replicates manifest by manifest,
+  each once its layers are across, so right after a push the replica already serves the index and the
+  attestation manifests but not yet the platform manifest — `regctl image copy` failed with
+  `MANIFEST_UNKNOWN` for a digest the home region had been serving for minutes, and the fixed 10 × 5 s
+  retry (about 70 s) was the whole budget. Small images mostly made it inside that window and otherwise
+  passed on a rerun (mcp-capi v0.0.80 and headlamp-longhorn v0.1.7 on 2026-09-04); the 20 GiB arm64
+  `vllm` image never did — every tag from v0.4.7 to v0.4.17 failed the same way and the Aliyun mirror
+  stopped at 0.3.11, until a rerun hours after the push copied v0.4.17 through. The job now first resolves
+  the source index from the runner and polls every child manifest (recursively) until all of them answer,
+  then copies. New `replica-wait-minutes` parameter (default 60) bounds the wait; on timeout the job fails
+  with a message that says so and names the recovery — rerun from failed once the image has arrived —
+  since nothing else in the pipeline depends on it. The wait prints a line per poll, so the executor's
+  no-output timeout does not fire while it waits.
+
+### Added
+
+- `image-wait-for-replica` and `image-copy-to-china` commands: the two steps of `sync-china-registry`,
+  which now composes commands like the rest of the orb instead of carrying its own `run:` step. The copy
+  step is unchanged in behaviour (ten attempts, five seconds apart).
+- [docs/job/sync-china-registry.md](docs/job/sync-china-registry.md): the job's first documentation page —
+  what it does, why it waits, parameters, and what each failure means.
+
 ## [10.4.0] - 2026-09-05
 
 ### Added
@@ -2193,7 +2354,16 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.4.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.8.0...HEAD
+[10.8.0]: https://github.com/giantswarm/architect-orb/compare/v10.7.0...v10.8.0
+[10.7.0]: https://github.com/giantswarm/architect-orb/compare/v10.6.3...v10.7.0
+[10.6.3]: https://github.com/giantswarm/architect-orb/compare/v10.6.2...v10.6.3
+[10.6.2]: https://github.com/giantswarm/architect-orb/compare/v10.6.1...v10.6.2
+[10.6.1]: https://github.com/giantswarm/architect-orb/compare/v10.6.0...v10.6.1
+[10.6.0]: https://github.com/giantswarm/architect-orb/compare/v10.5.0...v10.6.0
+[10.5.0]: https://github.com/giantswarm/architect-orb/compare/v10.4.2...v10.5.0
+[10.4.2]: https://github.com/giantswarm/architect-orb/compare/v10.4.1...v10.4.2
+[10.4.1]: https://github.com/giantswarm/architect-orb/compare/v10.4.0...v10.4.1
 [10.4.0]: https://github.com/giantswarm/architect-orb/compare/v10.3.0...v10.4.0
 [10.3.0]: https://github.com/giantswarm/architect-orb/compare/v10.2.0...v10.3.0
 [10.2.0]: https://github.com/giantswarm/architect-orb/compare/v10.1.2...v10.2.0

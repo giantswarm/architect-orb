@@ -122,6 +122,10 @@ Two parameters are specific to this job:
 The rest are the build half of the `push-to-registries` parameters, and behave
 identically. See that page for the details:
 
+- [Build arguments](push-to-registries.md#build-arguments) — `build-args`, one
+  `NAME=VALUE` per line, `${DOCKER_IMAGE_TAG}` and the other job variables
+  expanded at build time. Set it on every architecture's job: each builds the
+  Dockerfile on its own.
 - [Build cache](push-to-registries.md#build-cache) — `cache`, `cache-ref`. The
   platform is appended to the cache ref, derived or explicit, because these jobs
   run concurrently and would otherwise race on one ref.
@@ -150,7 +154,17 @@ persisted the same path into, so it defaults to `false`. On a path with a
 `push-to-registries` merge that job writes `.build_version`. On a validate-only
 branch path with no `push-to-registries` job, set it on one `build-image` job if
 a chart job downstream needs the version — otherwise `package-helm-with-abs`
-falls back to bare `gitsemver get`, which does not apply `tag-suffix`.
+resolves the version itself through `image-prepare-tag`, without `tag-suffix`.
+
+**A branch pipeline at a tagged commit fails in `image-prepare-tag`.** The
+version comes from `gitsemver get`, which reads the git state: at a commit that
+carries a release tag it is the release version, whichever ref triggered the
+pipeline. A branch pipeline there — a bot's temporary branch pushed at the
+release commit, a pull request opened from one, a rerun after the tag was cut —
+would push the release by digest again and the merge job would rewrite the
+released index, so the step refuses when `CIRCLE_TAG` is empty and the version
+is no dev version. The release is the tag pipeline's; a branch that needs an
+image gets a dev version with its next commit.
 
 **The platform set lives in the workflow.** The set of architectures is the list
 of `build-image` jobs, and the `platforms` parameter of the `push-to-registries`
