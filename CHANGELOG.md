@@ -21,6 +21,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `go-test` / `go-build`: the files both commands write into the working tree — `.ldflags`, `.platforms`,
+  the `<binary>` copy and the `<binary>-<os>-<arch>` outputs of the (concurrent) cross-compile — are added
+  to `.git/info/exclude` before they are written. Untracked, each of them made Go's buildvcs stamp
+  `vcs.modified=true` for every build after it, so a binary that reports its version from the module build
+  info (no `pkg/project.version` const, as auto-released CLIs like agentlab do) printed `vX.Y.Z+dirty` from
+  its release assets while `go install` printed `vX.Y.Z`. Ignored files do not appear in
+  `git status --porcelain`, which is what Go consults.
+
+## [10.8.1] - 2026-09-23
+
+### Fixed
+
 - `go-build`: the compile parallelism comes from the executor's cgroup CPU quota, not `nproc`. In a CircleCI
   Docker executor `nproc` counts the host's CPUs rather than the resource class's, so since 10.6.1 a `medium`
   executor (2 vCPU) compiled with `-p 36` and a heavy enough build killed the container part way through
@@ -32,13 +44,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `GOMAXPROCS` Go derives from it, i.e. the `-p` `go build` used before 10.6.1.
   `build_concurrency: auto` counts the same CPUs. The step's logic is `src/scripts/go-build-procs.sh`, tested
   by `src/tests/go-build-procs.bats`.
-- `go-test` / `go-build`: the files both commands write into the working tree — `.ldflags`, `.platforms`,
-  the `<binary>` copy and the `<binary>-<os>-<arch>` outputs of the (concurrent) cross-compile — are added
-  to `.git/info/exclude` before they are written. Untracked, each of them made Go's buildvcs stamp
-  `vcs.modified=true` for every build after it, so a binary that reports its version from the module build
-  info (no `pkg/project.version` const, as auto-released CLIs like agentlab do) printed `vX.Y.Z+dirty` from
-  its release assets while `go install` printed `vX.Y.Z`. Ignored files do not appear in
-  `git status --porcelain`, which is what Go consults.
 
 ## [10.8.0] - 2026-09-23
 
@@ -2366,7 +2371,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.8.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.8.1...HEAD
+[10.8.1]: https://github.com/giantswarm/architect-orb/compare/v10.8.0...v10.8.1
 [10.8.0]: https://github.com/giantswarm/architect-orb/compare/v10.7.0...v10.8.0
 [10.7.0]: https://github.com/giantswarm/architect-orb/compare/v10.6.3...v10.7.0
 [10.6.3]: https://github.com/giantswarm/architect-orb/compare/v10.6.2...v10.6.3
