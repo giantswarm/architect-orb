@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   module's major (muster v5.10.3 prints `v1.12.1-0.20260906…`) and marks any untracked file `+dirty`.
   Same form as the devctl Makefile's local `gitsemver get` stamp. Repos without `pkg/project` are
   unaffected: the linker ignores `-X` for symbols that do not exist. Branch builds are unchanged.
+  Documented under [Build metadata](docs/job/go-test.md#build-metadata).
 
 ### Fixed
 
