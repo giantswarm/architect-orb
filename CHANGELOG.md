@@ -21,6 +21,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `go-build`: the compile parallelism comes from the executor's cgroup CPU quota, not `nproc`. In a CircleCI
+  Docker executor `nproc` counts the host's CPUs rather than the resource class's, so since 10.6.1 a `medium`
+  executor (2 vCPU) compiled with `-p 36` and a heavy enough build killed the container part way through
+  `Build binaries`: a cancelled step in a failed job with nothing in the log
+  ([#952](https://github.com/giantswarm/architect-orb/issues/952)). A new step, `Resolve the compile
+  parallelism`, reads `cpu.max` (cgroup v2) or `cpu.cfs_quota_us` / `cpu.cfs_period_us` (v1), rounds up to
+  whole CPUs and falls back to `nproc` only where no quota is lower. On a `medium` executor it printed
+  `-p 4 each (4 CPU(s), from the cgroup CPU quota)`: the quota CircleCI sets on the container, and the
+  `GOMAXPROCS` Go derives from it, i.e. the `-p` `go build` used before 10.6.1.
+  `build_concurrency: auto` counts the same CPUs. The step's logic is `src/scripts/go-build-procs.sh`, tested
+  by `src/tests/go-build-procs.bats`.
 - `go-test` / `go-build`: the files both commands write into the working tree — `.ldflags`, `.platforms`,
   the `<binary>` copy and the `<binary>-<os>-<arch>` outputs of the (concurrent) cross-compile — are added
   to `.git/info/exclude` before they are written. Untracked, each of them made Go's buildvcs stamp
