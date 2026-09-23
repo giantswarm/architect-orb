@@ -10,7 +10,8 @@
 #   CIRCLE_BRANCH         the branch a branch pipeline was triggered by
 #   BASH_ENV              the file every later step sources
 #
-# Writes /tmp/.docker_image_tag and exports DOCKER_IMAGE_TAG and
+# Writes /tmp/.docker_image_tag and exports DOCKER_IMAGE_TAG (the version plus
+# the tag-suffix), DOCKER_IMAGE_VERSION (the version alone) and
 # GS_GIT_TAG_PREFIX through BASH_ENV.
 #
 # The version comes from `gitsemver get`, which reads the git state alone: at
@@ -54,4 +55,8 @@ fi
 tag="${version}${PARAM_TAG_SUFFIX}"
 printf '%s' "${tag}" > /tmp/.docker_image_tag
 echo "export DOCKER_IMAGE_TAG=\"${tag}\"" >> "${BASH_ENV}"
+# The version without the suffix: what a sibling image of this pipeline, built
+# without a tag-suffix, is tagged with. A Dockerfile that builds on that image
+# takes it as a build argument (build-args: BASE_VERSION=${DOCKER_IMAGE_VERSION}).
+echo "export DOCKER_IMAGE_VERSION=\"${version}\"" >> "${BASH_ENV}"
 echo "${tag}"

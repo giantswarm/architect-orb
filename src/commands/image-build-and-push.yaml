@@ -22,6 +22,10 @@ parameters:
       commit as an argument can take them from the job:
         VERSION=${DOCKER_IMAGE_TAG}
         GIT_REVISION=${CIRCLE_SHA1}
+      DOCKER_IMAGE_VERSION is the version without the tag-suffix: a Dockerfile
+      that builds on a sibling image of the same pipeline (one job publishes
+      'app:1.2.3', a second job with tag-suffix '-ci' publishes 'app:1.2.3-ci'
+      FROM it) takes its base from BASE_VERSION=${DOCKER_IMAGE_VERSION}.
       Only variable references are expanded -- no command substitution, no globbing,
       and a reference to an unset variable fails the build instead of passing an
       empty value. Each argument is passed to buildx as its own argv element, so a

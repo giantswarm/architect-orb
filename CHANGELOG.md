@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `image-prepare-tag` exports `DOCKER_IMAGE_VERSION`, the computed version without the `tag-suffix`, beside
+  `DOCKER_IMAGE_TAG`. It is the tag of a sibling image the same pipeline builds without a suffix, so a
+  Dockerfile that builds on that image takes its base from `build-args: BASE_VERSION=${DOCKER_IMAGE_VERSION}`
+  and always carries the sibling's code of the same build, on a branch and on a tag alike. Until now such a
+  Dockerfile pinned the base by hand and a release process had to bump the pin: app-build-suite's
+  `2.4.0-circleci` executor image was built `FROM app-build-suite:2.3.0` because its automated release
+  bumps no pin, and shipped without the release's changes.
+
 ## [10.6.3] - 2026-09-23
 
 ### Fixed

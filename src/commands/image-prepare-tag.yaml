@@ -5,6 +5,10 @@
 # Writes:
 #   /tmp/.docker_image_tag   the resolved tag (gitsemver output plus tag-suffix)
 #   DOCKER_IMAGE_TAG         the same value, exported through BASH_ENV
+#   DOCKER_IMAGE_VERSION     the version without the tag-suffix, exported through
+#                            BASH_ENV: the tag of a sibling image this pipeline
+#                            builds without a suffix, for a Dockerfile that builds
+#                            on it (build-args: BASE_VERSION=${DOCKER_IMAGE_VERSION})
 #   .build_version           the same value in the workspace, unless
 #                            persist-build-version is false
 #
