@@ -6,9 +6,31 @@ This job:
 - Checks if Go code is formatted according to rules.
 - Checks if imports in .go files are properly sorted using `goimports`.
 - Checks if filenames contain non-ASCII characters.
+- Writes `.ldflags`, the linker flags [`go-build`](go-build.md) links with, stamping the
+  [build metadata](#build-metadata).
 - Runs `go test` against the codebase.
 - Runs [`gosec`](#security-scanning-with-gosec) via `golangci-lint`. Tests are excluded.
 - Runs `nancy` against the codebase to check for known vulnerabilities in code dependencies.
+
+## Build metadata
+
+`.ldflags` sets string variables of the module's `pkg/project` package (`$(go list <path>)/pkg/project`):
+
+- `buildTimestamp`: the build time in UTC, `2006-01-02T15:04:05Z`.
+- `gitSHA`: the commit, `CIRCLE_SHA1`.
+- `version`: on a tag pipeline the tag without its `v` (`v5.10.3` → `5.10.3`), as
+  `-X '<module>/pkg/project.version=5.10.3'`. A branch pipeline does not set it, so the package's
+  default applies.
+
+Declare them as package-level `var`s; `-X` cannot set a `const`, and a repo without them builds
+unchanged. Without the version flag, a binary that falls back to `debug.ReadBuildInfo()` reports a
+`v0`/`v1` pseudo-version whenever the module path lacks its major suffix (`/v5`). A `test_target` that
+adds its own version flag to `.ldflags`, for example for branch builds, skips when a
+`/pkg/project.version=` flag is already there.
+
+`.ldflags` is added to `.git/info/exclude`, as are the binaries and `.platforms` that
+[`go-build`](go-build.md) writes into the working tree, so Go's VCS stamp keeps `vcs.modified=false`
+and a binary that reports its version from the build info does not print `+dirty`.
 
 ## Security scanning with gosec
 
