@@ -16,7 +16,7 @@ Builds Go binaries for one or more target architectures in a single job and pers
 - `pre_test_target`: Makefile target to run before tests/lints (optional).
 - `tags`: Additional Go build tags (optional).
 - `test_target`: Makefile target to run for tests (optional).
-- `build_concurrency`: Maximum number of architectures to compile concurrently. `"1"` (default) builds sequentially; `"auto"` uses the number of available CPUs; an integer caps it. See [Build speed and concurrency](#build-speed-and-concurrency).
+- `build_concurrency`: Maximum number of architectures to compile concurrently. `"1"` (default) builds sequentially; `"auto"` uses the executor's CPUs (its cgroup CPU quota where one is set); an integer caps it. See [Build speed and concurrency](#build-speed-and-concurrency).
 - `resource_class`: CircleCI resource class for the job.
 - `clone_depth`: Commits to keep in local git history after checkout (default: `1`, i.e. CircleCI's default shallow clone). Use `0` for full history. Greater than `1` deepens to that many commits. Set to `0` when build steps rely on `git log` / `git rev-list` (e.g. `go generate` embedding the commit SHA of the last change to a template).
 - `sign`: Sign each produced binary with cosign keyless OIDC (default: `true`). Public repos only — private repos are skipped at runtime. See [Signing](#signing).
@@ -92,13 +92,20 @@ controls how many run at once:
 - `"auto"` or an integer `> 1`: compile that many architectures concurrently.
   Worth it only with spare CPU and RAM, i.e. a larger `resource_class`.
 
-Each build of a wave is given `-p $(nproc) / build_concurrency`, at least 1, so
-the whole wave runs about as many compile processes as the executor has CPUs.
-`go build` otherwise defaults `-p` to `GOMAXPROCS` and a wave of four starts four
-times that many compilers. That is invisible while the build cache answers,
-because almost nothing is compiled, and it exhausts the executor on the first
-cold run: one cold cross-compile of a mid-sized binary peaks at about 700 MiB at
-`-p 1` and about 1.4 GiB at `-p 12`.
+Each build of a wave is given `-p` the executor's CPUs divided by
+`build_concurrency`, at least 1, so the whole wave runs about as many compile
+processes as the executor has CPUs. `go build` otherwise defaults `-p` to
+`GOMAXPROCS` and a wave of four starts four times that many compilers. That is
+invisible while the build cache answers, because almost nothing is compiled, and
+it exhausts the executor on the first cold run: one cold cross-compile of a
+mid-sized binary peaks at about 700 MiB at `-p 1` and about 1.4 GiB at `-p 12`.
+
+The executor's CPUs are its cgroup CPU quota, rounded up (`cpu.max` on cgroup v2,
+`cpu.cfs_quota_us` / `cpu.cfs_period_us` on v1), and `nproc` only where no quota
+is lower. In a Docker executor `nproc` counts the host's CPUs, not the resource
+class's: 36 on a `medium` executor whose quota is 4. The step `Resolve the
+compile parallelism` prints what it chose, there `Compiling 1 architecture(s) at
+a time, -p 4 each (4 CPU(s), from the cgroup CPU quota).`
 
 For three or more architectures, set `resource_class: large` (4 vCPU) or
 `xlarge` (8 vCPU) and `build_concurrency` to roughly the vCPU count. CircleCI

@@ -16,7 +16,8 @@
 #   pre_test_target: Makefile target to run before tests/lints (optional).
 #   tags: Additional Go build tags (optional).
 #   test_target: Makefile target to run for tests (optional).
-#   build_concurrency: Max architectures to compile concurrently ("1" = sequential, "auto" = nproc).
+#   build_concurrency: Max architectures to compile concurrently ("1" = sequential, "auto" = the
+#       executor's CPUs, from its cgroup CPU quota).
 
 parameters:
   binary:
@@ -51,8 +52,10 @@ parameters:
     description: |
       Maximum number of architectures to compile concurrently. "1" builds
       sequentially (the default; no extra CPU/RAM pressure on a `medium`
-      executor). "auto" uses the number of available CPUs. Raise it alongside
-      `resource_class` (roughly to the vCPU count) when building three or more
+      executor). "auto" uses the executor's CPUs: its cgroup CPU quota where
+      one is set, as in a Docker executor, whose `nproc` counts the host's.
+      Raise it alongside `resource_class` (roughly to the vCPU count) when
+      building three or more
       architectures: each concurrent `go build` can occupy ~1 vCPU and a
       significant amount of RAM, so an under-provisioned executor will thrash
       or OOM.
@@ -80,6 +83,11 @@ steps:
       path: <<parameters.path>>
       pre_test_target: <<parameters.pre_test_target>>
       test_target: <<parameters.test_target>>
+  - run:
+      name: Resolve the compile parallelism
+      environment:
+        PARAM_BUILD_CONCURRENCY: <<parameters.build_concurrency>>
+      command: <<include(scripts/go-build-procs.sh)>>
   - run:
       name: Build binaries
       command: |
@@ -126,21 +134,11 @@ steps:
           echo "ERROR: 'architectures' must match ^[a-zA-Z0-9/_,-]+\$ (got: $architectures)."
           exit 1
         fi
-        concurrency="<<parameters.build_concurrency>>"
-        [[ "$concurrency" == "auto" ]] && concurrency="$(nproc)"
-        if [[ ! "$concurrency" =~ ^[0-9]+$ ]] || (( concurrency < 1 )); then
-          echo "ERROR: 'build_concurrency' must be a positive integer or \"auto\" (got: $concurrency)."
-          exit 1
-        fi
-
-        # Each build of a wave gets an equal share of the CPUs. `go build`
-        # defaults -p to GOMAXPROCS, so a wave of N builds otherwise starts
-        # N * GOMAXPROCS compile processes on N CPUs, and the memory that costs
-        # exceeds the executor whenever the build cache does not answer. The
-        # share is read by build_one, which runs after this point.
-        build_procs=$(( $(nproc) / concurrency ))
-        (( build_procs < 1 )) && build_procs=1
-        echo "Compiling ${concurrency} architecture(s) at a time, -p ${build_procs} each."
+        # Resolved by the previous step from build_concurrency and the
+        # executor's CPU quota (src/scripts/go-build-procs.sh). build_procs is
+        # read by build_one, which runs after this point.
+        concurrency="${GO_BUILD_CONCURRENCY}"
+        build_procs="${GO_BUILD_PROCS}"
 
         # Backgrounded builds do not fail the step on their own; aggregate exit
         # codes into $fail and propagate at the end. Each PID is waited exactly
