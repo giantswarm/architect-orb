@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.8.1] - 2026-09-23
+
 ### Fixed
 
 - `go-build`: the compile parallelism comes from the executor's cgroup CPU quota, not `nproc`. In a CircleCI
@@ -2347,7 +2349,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.8.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.8.1...HEAD
+[10.8.1]: https://github.com/giantswarm/architect-orb/compare/v10.8.0...v10.8.1
 [10.8.0]: https://github.com/giantswarm/architect-orb/compare/v10.7.0...v10.8.0
 [10.7.0]: https://github.com/giantswarm/architect-orb/compare/v10.6.3...v10.7.0
 [10.6.3]: https://github.com/giantswarm/architect-orb/compare/v10.6.2...v10.6.3
