@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.6.3] - 2026-09-23
+
 ### Fixed
 
 - `image-prepare-tag`: a branch pipeline never resolves a release version. The command took its version
@@ -2302,7 +2304,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.6.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.6.3...HEAD
+[10.6.3]: https://github.com/giantswarm/architect-orb/compare/v10.6.2...v10.6.3
 [10.6.2]: https://github.com/giantswarm/architect-orb/compare/v10.6.1...v10.6.2
 [10.6.1]: https://github.com/giantswarm/architect-orb/compare/v10.6.0...v10.6.1
 [10.6.0]: https://github.com/giantswarm/architect-orb/compare/v10.5.0...v10.6.0
