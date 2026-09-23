@@ -8,8 +8,10 @@ binaries, Docker images, and Helm charts to Giant Swarm's image and chart regist
 
 ## Development workflow
 
-There are no local build or test commands — the orb is developed by pushing branches and testing against
-CircleCI.
+The orb is developed by pushing branches and testing against CircleCI. The one local test is
+`bats src/tests` ([bats-core](https://github.com/bats-core/bats-core), with `git` and `gitsemver` on the
+path): it exercises the scripts under `src/scripts/` that commands include. The orb's own pipeline runs it
+in the architect executor before publishing.
 
 **Testing changes**: Each branch push publishes the dev orb under three tags: `dev:<branch-name>`,
 `dev:<full-commit-sha>`, and `dev:alpha` (latest dev publish of any branch). Reference the branch-name
@@ -26,8 +28,9 @@ and auto-deleted after 90 days.
 **CI pipeline** (`.circleci/config.yml`):
 
 1. `orb-tools/lint` — validates YAML structure
-2. `orb-tools/pack` — assembles `src/` into a single packed orb
-3. `orb-tools/publish` — publishes as dev version (branches) or production (tags matching `v\d+\.\d+\.\d+`)
+2. `orb-tools/pack` — assembles `src/` into a single packed orb, inlining `<<include(scripts/...)>>`
+3. `bats/run` — runs `src/tests/*.bats` against `src/scripts/` in the architect executor
+4. `orb-tools/publish` — publishes as dev version (branches) or production (tags matching `v\d+\.\d+\.\d+`)
 
 ## Source structure
 
@@ -37,6 +40,9 @@ src/
   commands/         # Reusable steps (one YAML file per command)
   jobs/             # Job definitions (compose commands; no `run:` steps directly)
   executors/        # Executor definitions
+  scripts/          # Shell scripts a command's step includes (`command: <<include(scripts/x.sh)>>`);
+                    # parameters reach them as PARAM_* environment variables set on the step
+  tests/            # bats tests of the scripts
 docs/               # Job documentation (one .md per job)
 ```
 

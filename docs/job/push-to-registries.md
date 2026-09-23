@@ -4,7 +4,7 @@ Builds a multi-architecture container image with `docker buildx` and pushes it t
 
 By default it uses the `Dockerfile` at the workspace root and the root directory as the build context; pass `dockerfile` and `build-context` to override.
 
-The image is tagged with the version produced by `gitsemver get`. The registry hosts come from `registries-data` (or the `REGISTRIES_DATA_BASE64` environment variable) — `image` should only be `repository/image`, no host.
+The image is tagged with the version produced by `gitsemver get`: the release version on a tag pipeline, a dev version on a branch pipeline. A branch pipeline whose head commit carries a release tag (a bot's temporary branch at the release commit, a pull request opened from one, a rerun after the tag was cut) would resolve the release version too, so `image-prepare-tag` fails it before anything is built — a release is published by the tag's own pipeline alone, and a second push from a branch would replace the released index. The registry hosts come from `registries-data` (or the `REGISTRIES_DATA_BASE64` environment variable) — `image` should only be `repository/image`, no host.
 
 `tag-suffix` adds a suffix to the generated tag.
 

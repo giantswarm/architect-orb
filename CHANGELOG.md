@@ -7,6 +7,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `image-prepare-tag`: a branch pipeline never resolves a release version. The command took its version
+  from `gitsemver get`, which reads the git state alone, so a branch pipeline whose head commit carries a
+  release tag — a temporary branch a bot pushes at the release commit, a pull request opened from one, a
+  rerun of a branch pipeline after the tag was cut — resolved the bare release version and every later
+  step treated the build as the release: `image-select-registries` let the China mirror into the push set
+  (the version being no dev version), the `build-image` legs pushed by digest, `push-to-registries`
+  (merge-digests) wrote the release tag again and `push-to-app-catalog` the release chart version, all
+  from a branch job. In giantswarm/backstage the changesets workflow's temporary branch replaced the
+  released v2.58.0 and v2.58.1 indexes on gsoci and the China mirror minutes after the tag pipeline had
+  written them, and stalled the branch legs of v2.58.2 to v2.58.8 for 20 minutes on the China push
+  ([#942](https://github.com/giantswarm/architect-orb/issues/942)). Now, when `CIRCLE_TAG` is empty and
+  the resolved version is not a dev version (`gitsemver validate --type dev`), the step fails naming the
+  version and the branch, before anything is built or logged in; a tag pipeline is unchanged, and so is
+  every branch pipeline at an untagged commit. `package-helm-with-abs` resolves the version through the
+  same command when no `.build_version` reached the workspace, so a chart-only branch pipeline at a tagged
+  commit fails the same way instead of stamping the released version. The logic moved to
+  `src/scripts/image-prepare-tag.sh` and is tested by `src/tests/image-prepare-tag.bats`; the orb's own
+  pipeline runs the tests (`bats/run` in the architect executor) before publishing.
+
 ## [10.6.2] - 2026-09-22
 
 ### Fixed
