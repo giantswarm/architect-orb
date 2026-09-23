@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `app-build-suite` executor: app-build-suite 2.4.1. Its new `HelmImageReferenceValidator` resolves every
+  `gsoci.azurecr.io` image reference of the rendered chart against the registry inside `package-helm-with-abs`,
+  before `push-helm`, and fails the build when the registry does not carry the tag or digest, naming the
+  reference and the template it renders from. A chart published with such a reference cannot start its pods; a
+  Renovate bump of a mirrored third-party image tag that the mirror had not copied yet was released this way
+  and took a service down until the mirror caught up
+  ([app-build-suite#617](https://github.com/giantswarm/app-build-suite/issues/617)). Because `abs` runs on every
+  branch build of `push-to-app-catalog`, such a bump now goes red on its own pull request. Charts whose images
+  are deliberately absent at build time opt out with `disable-helm-image-reference-validator: true` in
+  `.abs/main.yaml`; a chart job that does not `require` the image job building the chart's own image will now
+  fail until it does. 2.4.1, not 2.4.0: the `2.4.0-circleci` image was built from the 2.3.0 base and
+  carries none of it ([app-build-suite#621](https://github.com/giantswarm/app-build-suite/issues/621)).
+
 ## [10.7.0] - 2026-09-23
 
 ### Added
