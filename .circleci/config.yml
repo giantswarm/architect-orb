@@ -5,6 +5,21 @@ orbs:
   orb-tools: circleci/orb-tools@12.5.0
   bats: circleci/bats@1.1.0
 
+jobs:
+  # The two executors must compute the same dev version for one commit: the
+  # architect executor tags the image, the app-build-suite executor stamps the
+  # chart that references it. A machine executor, to run both images of this
+  # revision (src/executors) side by side.
+  executors-agree:
+    machine:
+      image: ubuntu-2404:current
+    resource_class: medium
+    steps:
+      - checkout
+      - run:
+          name: Compare the dev version the architect and app-build-suite executors compute
+          command: .circleci/executors-agree.sh
+
 workflows:
   catalog_build:
     jobs:
@@ -33,6 +48,11 @@ workflows:
             tags:
               only: /.*/
 
+      - executors-agree:
+          filters:
+            tags:
+              only: /.*/
+
       - orb-tools/publish:
           name: publish-branch
           orb_name: giantswarm/architect
@@ -45,6 +65,7 @@ workflows:
           requires:
             - "orb-tools/pack"
             - test
+            - executors-agree
           filters:
             branches:
               only: /.*/
@@ -61,6 +82,7 @@ workflows:
           requires:
             - "orb-tools/pack"
             - test
+            - executors-agree
           filters:
             branches:
               ignore: /.*/

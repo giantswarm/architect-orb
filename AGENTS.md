@@ -30,7 +30,10 @@ and auto-deleted after 90 days.
 1. `orb-tools/lint` — validates YAML structure
 2. `orb-tools/pack` — assembles `src/` into a single packed orb, inlining `<<include(scripts/...)>>`
 3. `bats/run` — runs `src/tests/*.bats` against `src/scripts/` in the architect executor
-4. `orb-tools/publish` — publishes as dev version (branches) or production (tags matching `v\d+\.\d+\.\d+`)
+4. `executors-agree` — runs `.circleci/executors-agree.sh`: the architect and app-build-suite executor images
+   of `src/executors` must compute the same `gitsemver get` for one dev commit, since the first tags the image
+   and the second stamps the chart that references it
+5. `orb-tools/publish` — publishes as dev version (branches) or production (tags matching `v\d+\.\d+\.\d+`)
 
 ## Source structure
 

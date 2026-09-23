@@ -91,7 +91,7 @@ parameters:
       stating the chart name and version that were published, along with the OCI
       reference and digest.
 
-      Off-tag builds stamp a `X.Y.Z-dev.<branch>.<date>.<time>` version that a reviewer
+      Off-tag builds stamp a `X.Y.Z-r<branch-hash>t<timestamp>h<sha>` version that a reviewer
       cannot guess, so without this they have to open the CircleCI job and read the log
       to find out what to install.
 

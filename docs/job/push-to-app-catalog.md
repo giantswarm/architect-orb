@@ -62,7 +62,7 @@ overwrites the released chart in place, and anything tracking that version — F
 reconciles the digest change and rolls out the branch's code.
 
 What prevents this is that the chart version is **always** stamped from `gitsemver`. Off-tag that
-yields an `X.Y.Z-dev.<branch>.<date>.<time>` pre-release, which cannot collide with a release. This
+yields an `X.Y.Z-r<branch-hash>t<timestamp>h<sha>` pre-release, which cannot collide with a release. This
 is why [override_chart_version](#override_chart_version-optional-deprecated) is deprecated and
 ignored — leaving the version from `Chart.yaml` in place let a branch build that had not bumped the
 version by hand republish, and so overwrite, the released chart.
@@ -77,7 +77,7 @@ gets one with its next commit.
 
 ## Reporting the published version on a pull request
 
-That dev-version scheme is exactly why this is needed: `X.Y.Z-dev.<branch>.<date>.<time>` is
+That dev-version scheme is exactly why this is needed: `X.Y.Z-r<branch-hash>t<timestamp>h<sha>` is
 collision-proof but not guessable, so a reviewer who wants to install the chart from a pull request
 would otherwise have to open the CircleCI job and read the log.
 

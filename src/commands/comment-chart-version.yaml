@@ -2,7 +2,7 @@
 # chart name and version that were just published.
 #
 # Why this exists: off-tag builds stamp the chart version from `gitsemver` as
-# `X.Y.Z-dev.<branch>.<date>.<time>`. That is deliberately collision-proof, but it
+# `X.Y.Z-r<branch-hash>t<timestamp>h<sha>`. That is deliberately collision-proof, but it
 # is not something a reviewer can guess or derive, so today they have to open the
 # CircleCI job and read the log to find out what to install.
 #
