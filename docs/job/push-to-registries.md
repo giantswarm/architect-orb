@@ -93,8 +93,17 @@ commit takes them from the job:
 ```
 
 `DOCKER_IMAGE_TAG` is the tag `image-prepare-tag` computed (`gitsemver get` plus
-`tag-suffix`); `CIRCLE_SHA1` and the other [built-in variables](https://circleci.com/docs/variables/#built-in-environment-variables)
-are available as usual. Only variable references are expanded -- no command substitution,
+`tag-suffix`) and `DOCKER_IMAGE_VERSION` the version alone, without the suffix;
+`CIRCLE_SHA1` and the other [built-in variables](https://circleci.com/docs/variables/#built-in-environment-variables)
+are available as usual.
+
+`DOCKER_IMAGE_VERSION` is for a Dockerfile that builds on a sibling image of the same
+pipeline: one job publishes `giantswarm/myapp:1.2.3`, a second job with `tag-suffix: -ci`
+and `requires` on the first publishes `giantswarm/myapp:1.2.3-ci` from a Dockerfile that
+starts `ARG BASE_VERSION` / `FROM gsoci.azurecr.io/giantswarm/myapp:${BASE_VERSION}`, with
+`build-args: BASE_VERSION=${DOCKER_IMAGE_VERSION}`. The second image then always carries
+the first image's code of the same build, on a branch and on a tag alike, and no release
+step has to bump a pin in the Dockerfile. Only variable references are expanded -- no command substitution,
 no globbing -- and a reference to an unset variable fails the build rather than passing
 an empty value. Each argument is one argv element, so a value may contain spaces (an
 `LDFLAGS` string); it must not contain a single quote. Blank lines and `#` comments are

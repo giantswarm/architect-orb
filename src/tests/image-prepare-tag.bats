@@ -65,6 +65,7 @@ exported() {
   [ "${output}" = "1.2.3" ]
   [ "$(resolved_tag)" = "1.2.3" ]
   [ "$(exported DOCKER_IMAGE_TAG)" = "1.2.3" ]
+  [ "$(exported DOCKER_IMAGE_VERSION)" = "1.2.3" ]
   [ "$(exported GS_GIT_TAG_PREFIX)" = "" ]
 }
 
@@ -76,6 +77,7 @@ exported() {
   [ "${status}" -eq 0 ]
   gitsemver validate --type dev "$(resolved_tag)"
   [ "$(exported DOCKER_IMAGE_TAG)" = "$(resolved_tag)" ]
+  [ "$(exported DOCKER_IMAGE_VERSION)" = "$(resolved_tag)" ]
 }
 
 @test "tag-suffix is appended to the version" {
@@ -84,6 +86,7 @@ exported() {
   [ "${status}" -eq 0 ]
   [ "$(resolved_tag)" = "1.2.3-debug" ]
   [ "$(exported DOCKER_IMAGE_TAG)" = "1.2.3-debug" ]
+  [ "$(exported DOCKER_IMAGE_VERSION)" = "1.2.3" ]
 }
 
 @test "git-tag-prefix selects the mono repo's tags and is exported" {
