@@ -103,9 +103,9 @@ mid-sized binary peaks at about 700 MiB at `-p 1` and about 1.4 GiB at `-p 12`.
 The executor's CPUs are its cgroup CPU quota, rounded up (`cpu.max` on cgroup v2,
 `cpu.cfs_quota_us` / `cpu.cfs_period_us` on v1), and `nproc` only where no quota
 is lower. In a Docker executor `nproc` counts the host's CPUs, not the resource
-class's. The step `Resolve the compile parallelism` prints what it chose, e.g.
-`Compiling 1 architecture(s) at a time, -p 2 each (2 CPU(s), from the cgroup CPU
-quota).` on `medium`.
+class's: 36 on a `medium` executor whose quota is 4. The step `Resolve the
+compile parallelism` prints what it chose, there `Compiling 1 architecture(s) at
+a time, -p 4 each (4 CPU(s), from the cgroup CPU quota).`
 
 For three or more architectures, set `resource_class: large` (4 vCPU) or
 `xlarge` (8 vCPU) and `build_concurrency` to roughly the vCPU count. CircleCI

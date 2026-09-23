@@ -15,7 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   `Build binaries`: a cancelled step in a failed job with nothing in the log
   ([#952](https://github.com/giantswarm/architect-orb/issues/952)). A new step, `Resolve the compile
   parallelism`, reads `cpu.max` (cgroup v2) or `cpu.cfs_quota_us` / `cpu.cfs_period_us` (v1), rounds up to
-  whole CPUs and falls back to `nproc` only where no quota is lower; it prints `-p 2` on `medium`.
+  whole CPUs and falls back to `nproc` only where no quota is lower. On a `medium` executor it printed
+  `-p 4 each (4 CPU(s), from the cgroup CPU quota)`: the quota CircleCI sets on the container, and the
+  `GOMAXPROCS` Go derives from it, i.e. the `-p` `go build` used before 10.6.1.
   `build_concurrency: auto` counts the same CPUs. The step's logic is `src/scripts/go-build-procs.sh`, tested
   by `src/tests/go-build-procs.bats`.
 

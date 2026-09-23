@@ -12,9 +12,9 @@
 #
 # The CPU budget is the executor's cgroup CPU quota, rounded up to whole CPUs.
 # In a CircleCI Docker executor nproc counts the host's CPUs, not the resource
-# class's: 36 on a `medium` executor of 2 vCPUs, and 36 compile processes kill
-# the container part way through the build. nproc is the budget only when no
-# quota is lower, on a machine executor whose CPUs are its own.
+# class's: 36 on a `medium` executor whose quota is 4 CPUs, and 36 compile
+# processes kill the container part way through the build. nproc is the budget
+# only when no quota is lower, on a machine executor whose CPUs are its own.
 #
 # Each build of a wave gets an equal share of the budget, at least 1: `go build`
 # defaults -p to GOMAXPROCS, so a wave of N builds would otherwise start N times

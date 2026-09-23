@@ -33,7 +33,7 @@ exported() {
   (. "${BASH_ENV}" && printf '%s' "${!1:-}")
 }
 
-@test "a medium Docker executor (cgroup v2) compiles with -p 2, not the host's 36" {
+@test "a Docker executor's cgroup v2 quota of 2 CPUs gives -p 2, not the host's 36" {
   cgroup_v2 "200000 100000"
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
