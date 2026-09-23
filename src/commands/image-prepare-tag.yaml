@@ -1,12 +1,21 @@
 # Command: image-prepare-tag
 #
-# Computes the image tag from git state and publishes it to the rest of the job.
+# Computes the build version from git state and publishes it to the rest of the job.
 #
 # Writes:
 #   /tmp/.docker_image_tag   the resolved tag (gitsemver output plus tag-suffix)
 #   DOCKER_IMAGE_TAG         the same value, exported through BASH_ENV
 #   .build_version           the same value in the workspace, unless
 #                            persist-build-version is false
+#
+# A branch pipeline never resolves a release version. `gitsemver get` reads the
+# git state alone, so at a commit that carries a release tag it yields that
+# release version whichever ref triggered the pipeline; the rest of the job
+# would then treat a branch build as the release and push the released image
+# and chart again. When CIRCLE_TAG is empty and the version is not a dev
+# version, the step fails naming the version and the branch, before anything is
+# built. A tag pipeline is unchanged. The logic is src/scripts/image-prepare-tag.sh,
+# tested by src/tests/image-prepare-tag.bats.
 parameters:
   git-tag-prefix:
     description: |
@@ -38,13 +47,11 @@ parameters:
     default: true
 steps:
   - run:
-      name: "architect/image-prepare-tag: Compute the image tag from git state"
-      command: |
-        export GS_GIT_TAG_PREFIX="<<parameters.git-tag-prefix>>"
-        echo "export GS_GIT_TAG_PREFIX=\"<<parameters.git-tag-prefix>>\"" >> "$BASH_ENV"
-        gitsemver get | tr -d "\n" | tee /tmp/.docker_image_tag
-        echo -n "<<parameters.tag-suffix>>" | tee -a /tmp/.docker_image_tag
-        echo 'export DOCKER_IMAGE_TAG=$(cat /tmp/.docker_image_tag)' >> $BASH_ENV
+      name: "architect/image-prepare-tag: Compute the build version from git state"
+      environment:
+        PARAM_GIT_TAG_PREFIX: <<parameters.git-tag-prefix>>
+        PARAM_TAG_SUFFIX: <<parameters.tag-suffix>>
+      command: <<include(scripts/image-prepare-tag.sh)>>
   - when:
       condition: <<parameters.persist-build-version>>
       steps:

@@ -67,6 +67,14 @@ is why [override_chart_version](#override_chart_version-optional-deprecated) is 
 ignored — leaving the version from `Chart.yaml` in place let a branch build that had not bumped the
 version by hand republish, and so overwrite, the released chart.
 
+The one place `gitsemver` yields a release version off-tag is a branch whose head commit **is** a
+tagged release commit — a temporary branch a bot pushes at the release commit, a pull request opened
+from one, a rerun of the branch's pipeline after the tag was cut. `gitsemver` reads the git state,
+not the pipeline's trigger. The job resolves the version through `image-prepare-tag`, which fails a
+branch pipeline (`CIRCLE_TAG` empty) whose version is no dev version, before the chart is packaged:
+the release is published by the tag's own pipeline alone. A branch that needs a chart of its own
+gets one with its next commit.
+
 ## Reporting the published version on a pull request
 
 That dev-version scheme is exactly why this is needed: `X.Y.Z-dev.<branch>.<date>.<time>` is

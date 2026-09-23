@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   architect: giantswarm/architect@10.6.2
   orb-tools: circleci/orb-tools@12.5.0
+  bats: circleci/bats@1.1.0
 
 workflows:
   catalog_build:
@@ -21,6 +22,17 @@ workflows:
             tags:
               only: /.*/
 
+      # The scripts the commands include (src/scripts) against their tests
+      # (src/tests), in the executor the commands run in, so the gitsemver and
+      # git the tests exercise are the ones a consuming job has.
+      - bats/run:
+          name: test
+          path: ./src/tests
+          exec_environment: architect/architect
+          filters:
+            tags:
+              only: /.*/
+
       - orb-tools/publish:
           name: publish-branch
           orb_name: giantswarm/architect
@@ -32,6 +44,7 @@ workflows:
           dev_tags: dev:${CIRCLE_SHA1},dev:alpha,dev:${CIRCLE_BRANCH}
           requires:
             - "orb-tools/pack"
+            - test
           filters:
             branches:
               only: /.*/
@@ -47,6 +60,7 @@ workflows:
           pub_type: production
           requires:
             - "orb-tools/pack"
+            - test
           filters:
             branches:
               ignore: /.*/
