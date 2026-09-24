@@ -16,7 +16,7 @@ parameters:
     description: "File of environment variables to set."
     type: string
   helm-version:
-    default: "v3.21.4"
+    default: "v3.22.0"
     description: "Helm version to install."
     type: string
   install-app-platform:
@@ -30,7 +30,7 @@ parameters:
     description: "Path to kind config file."
     type: string
   kubernetes-version:
-    default: "v1.36.1"
+    default: "v1.37.0"
     description: "Kubernetes version for kind cluster."
     type: string
   setup-script:
