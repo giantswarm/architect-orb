@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `app-build-suite` executor: app-build-suite 2.5.0. `ABS_HELM_IMAGE_REFERENCE_VALIDATOR_OWN_IMAGE` names the
+  image a pipeline builds itself, e.g. `gsoci.azurecr.io/giantswarm/my-app`. The image reference check in
+  `package-helm-with-abs` then skips that image's reference at the version the chart is stamped with and still
+  resolves every other `gsoci.azurecr.io` reference, third-party mirrors included. A `push-to-app-catalog`
+  job that runs before the pipeline's own image is pushed exports the variable into `$BASH_ENV` in a
+  `pre-steps` step instead of `ABS_DISABLE_HELM_IMAGE_REFERENCE_VALIDATOR=true`, which also skipped the
+  third-party references
+  ([app-build-suite#624](https://github.com/giantswarm/app-build-suite/issues/624)).
+
 ## [10.10.0] - 2026-09-23
 
 ### Fixed
