@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.11.0] - 2026-09-24
+
 ### Changed
 
 - `app-build-suite` executor: app-build-suite 2.5.0. `ABS_HELM_IMAGE_REFERENCE_VALIDATOR_OWN_IMAGE` names the
@@ -2406,7 +2408,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.10.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.11.0...HEAD
+[10.11.0]: https://github.com/giantswarm/architect-orb/compare/v10.10.0...v10.11.0
 [10.10.0]: https://github.com/giantswarm/architect-orb/compare/v10.9.0...v10.10.0
 [10.9.0]: https://github.com/giantswarm/architect-orb/compare/v10.8.1...v10.9.0
 [10.8.1]: https://github.com/giantswarm/architect-orb/compare/v10.8.0...v10.8.1
