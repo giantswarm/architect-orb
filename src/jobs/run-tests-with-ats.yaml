@@ -6,11 +6,11 @@ parameters:
   app-test-suite_version:
     description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit). Legacy path only: ignored when create_kind_cluster is true."
     type: string
-    default: "v0.15.0"
+    default: "v1.0.3"
   app-test-suite_container_tag:
     description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
     type: string
-    default: "0.15.0"
+    default: "1.0.3"
   additional_app-test-suite_flags:
     description: "Additional app-test-suite flags to use"
     type: string
