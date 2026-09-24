@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `app-build-suite` executor: app-build-suite 2.5.1. The image reference check in `package-helm-with-abs` no
+  longer resolves the images of a Helm test, a manifest whose `helm.sh/hook` names only `test` events: only
+  `helm test` creates it, no install or upgrade pulls those images. A chart whose subchart ships a test pod
+  with an image the mirror does not carry builds again without
+  `ABS_DISABLE_HELM_IMAGE_REFERENCE_VALIDATOR=true`, which also skipped every image the release pulls
+  ([app-build-suite#627](https://github.com/giantswarm/app-build-suite/pull/627)).
+
 ## [10.11.0] - 2026-09-24
 
 ### Changed
