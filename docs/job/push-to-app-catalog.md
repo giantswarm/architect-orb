@@ -2,6 +2,10 @@
 
 This job templates and packages a given `chart` from the helm directory and
 pushes it to `app_catalog` for tagged builds and `app_catalog_test` otherwise.
+A tag whose version carries a pre-release (`v1.2.3-rc.1`) is a release candidate
+and goes to `app_catalog_test` too; its OCI push is unchanged. The production
+catalog's `latest` version, which the management clusters' AppCatalogEntries,
+happa and kubectl-gs offer, stays the latest stable release.
 
 It supports both classic GitHub-repository-based catalogs and OCI registry
 catalogs (by default in Azure Container Registry). Depending on parameters, it

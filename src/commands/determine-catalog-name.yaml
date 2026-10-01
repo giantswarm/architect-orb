@@ -1,3 +1,11 @@
+# Command: determine-catalog-name
+#
+# Chooses the app catalog a chart is pushed to and writes it to
+# .app_catalog_name, the pipeline's reference (tag or commit) to .reference.
+# A tag pipeline releases to app_catalog, unless the tag's version carries a
+# pre-release (v1.2.3-rc.1): a release candidate goes to app_catalog_test like
+# every branch build. The logic is src/scripts/determine-catalog-name.sh, tested
+# by src/tests/determine-catalog-name.bats.
 parameters:
   app_catalog:
     type: "string"
@@ -11,19 +19,10 @@ parameters:
       Set this to `false` for deployments that follow a a master branch for production releases rather than
       using tags (the default).
 steps:
-  - when:
-      condition: << parameters.on_tag >>
-      steps:
-        - run:
-            name: "architect/determine-catalog-name: Determine target app catalog based on presence of tag"
-            command: |
-              [ -z ${CIRCLE_TAG} ] && echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name
-              echo -n ${CIRCLE_TAG} | tee .reference
-  - unless:
-      condition: << parameters.on_tag >>
-      steps:
-        - run:
-            name: "architect/determine-catalog-name: Determine target app catalog based on branch name"
-            command: |
-              [[ ${CIRCLE_BRANCH} == master ]] && echo -n '<< parameters.app_catalog >>' | tee .app_catalog_name || echo -n '<< parameters.app_catalog_test >>' | tee .app_catalog_name
-              echo -n ${CIRCLE_SHA1} | tee .reference
+  - run:
+      name: "architect/determine-catalog-name: Determine the target app catalog"
+      environment:
+        PARAM_APP_CATALOG: << parameters.app_catalog >>
+        PARAM_APP_CATALOG_TEST: << parameters.app_catalog_test >>
+        PARAM_ON_TAG: << parameters.on_tag >>
+      command: <<include(scripts/determine-catalog-name.sh)>>

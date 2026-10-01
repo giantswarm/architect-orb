@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `push-to-app-catalog`: a tag whose version carries a pre-release (`v1.2.3-rc.1`, `api/v2.0.0-beta.1`) pushes
+  its chart to `app_catalog_test` instead of `app_catalog`; the OCI push is unchanged. A release candidate no
+  longer becomes the `latest` AppCatalogEntry of a production catalog on every management cluster, nor the
+  version happa and kubectl-gs offer as the newest. `determine-catalog-name`'s logic moves to
+  `src/scripts/determine-catalog-name.sh`, tested by `src/tests/determine-catalog-name.bats`.
+
 ## [10.11.1] - 2026-09-24
 
 ### Fixed
