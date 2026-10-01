@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.12.0] - 2026-10-01
+
 ### Changed
 
 - `push-to-app-catalog`: a tag whose version carries a pre-release (`v1.2.3-rc.1`, `api/v2.0.0-beta.1`) pushes
@@ -2427,7 +2429,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.11.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.12.0...HEAD
+[10.12.0]: https://github.com/giantswarm/architect-orb/compare/v10.11.1...v10.12.0
 [10.11.1]: https://github.com/giantswarm/architect-orb/compare/v10.11.0...v10.11.1
 [10.11.0]: https://github.com/giantswarm/architect-orb/compare/v10.10.0...v10.11.0
 [10.10.0]: https://github.com/giantswarm/architect-orb/compare/v10.9.0...v10.10.0
