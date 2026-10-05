@@ -1,12 +1,13 @@
 #!/usr/bin/env bats
 # Tests of src/scripts/determine-catalog-name.sh: the catalog a chart is pushed
 # to for a release tag, a pre-release tag and a branch build, with on_tag true
-# and false.
+# and false. PARAM_ON_TAG is 1 or 0, as CircleCI renders a boolean parameter in
+# a step's environment.
 
 setup() {
   SCRIPT="${BATS_TEST_DIRNAME}/../scripts/determine-catalog-name.sh"
   export PARAM_APP_CATALOG=giantswarm-catalog PARAM_APP_CATALOG_TEST=giantswarm-test-catalog
-  export PARAM_ON_TAG=true
+  export PARAM_ON_TAG=1
   export CIRCLE_BRANCH=main CIRCLE_SHA1=0123abc
   unset CIRCLE_TAG
   cd "${BATS_TEST_TMPDIR}" || exit 1
@@ -26,6 +27,23 @@ reference() {
   [ "${status}" -eq 0 ]
   [ "$(catalog)" = giantswarm-catalog ]
   [ "$(reference)" = v1.2.3 ]
+  [[ "${output}" != *"pre-release"* ]]
+}
+
+@test "on_tag as true or false, for a run by hand" {
+  export CIRCLE_TAG=v1.2.3 PARAM_ON_TAG=true
+  run bash "${SCRIPT}"
+  [ "$(catalog)" = giantswarm-catalog ]
+  export PARAM_ON_TAG=false
+  run bash "${SCRIPT}"
+  [ "$(catalog)" = giantswarm-test-catalog ]
+}
+
+@test "an unknown on_tag value fails" {
+  export CIRCLE_TAG=v1.2.3 PARAM_ON_TAG=yes
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"expected 1 or 0"* ]]
 }
 
 @test "a release candidate tag goes to the test catalog" {
@@ -75,14 +93,21 @@ reference() {
 }
 
 @test "on_tag false: master goes to the production catalog" {
-  export PARAM_ON_TAG=false CIRCLE_BRANCH=master
+  export PARAM_ON_TAG=0 CIRCLE_BRANCH=master
   run bash "${SCRIPT}"
   [ "$(catalog)" = giantswarm-catalog ]
   [ "$(reference)" = 0123abc ]
 }
 
+@test "on_tag false: a tag pipeline goes to the test catalog" {
+  export PARAM_ON_TAG=0 CIRCLE_BRANCH="" CIRCLE_TAG=v1.2.3
+  run bash "${SCRIPT}"
+  [ "$(catalog)" = giantswarm-test-catalog ]
+  [ "$(reference)" = 0123abc ]
+}
+
 @test "on_tag false: another branch goes to the test catalog" {
-  export PARAM_ON_TAG=false CIRCLE_BRANCH=feature
+  export PARAM_ON_TAG=0 CIRCLE_BRANCH=feature
   run bash "${SCRIPT}"
   [ "$(catalog)" = giantswarm-test-catalog ]
   [ "$(reference)" = 0123abc ]

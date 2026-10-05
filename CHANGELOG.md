@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `push-to-app-catalog`: a release tag pushes its chart to `app_catalog` again. Since 10.12.0 every tag build,
+  stable releases included, went to `app_catalog_test` with the commit as its reference:
+  `determine-catalog-name` compared `on_tag` with `true`, while CircleCI renders a boolean parameter in a step's
+  environment as `1`. An `on_tag` value other than `1`, `0`, `true` or `false` now fails the step.
+
 ## [10.12.0] - 2026-10-01
 
 ### Changed
