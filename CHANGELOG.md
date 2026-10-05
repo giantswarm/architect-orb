@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.12.1] - 2026-10-05
+
 ### Fixed
 
 - `push-to-app-catalog`: a release tag pushes its chart to `app_catalog` again. Since 10.12.0 every tag build,
@@ -2436,7 +2438,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.12.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.12.1...HEAD
+[10.12.1]: https://github.com/giantswarm/architect-orb/compare/v10.12.0...v10.12.1
 [10.12.0]: https://github.com/giantswarm/architect-orb/compare/v10.11.1...v10.12.0
 [10.11.1]: https://github.com/giantswarm/architect-orb/compare/v10.11.0...v10.11.1
 [10.11.0]: https://github.com/giantswarm/architect-orb/compare/v10.10.0...v10.11.0
