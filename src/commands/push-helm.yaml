@@ -49,50 +49,11 @@ steps:
               git clone -q --depth=1 --single-branch "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
         - run:
             name: "architect/push-helm-package: Push chart archive to app catalog repo"
-            command: |
-                readonly app_catalog_name="$(cat .app_catalog_name)"
-
-                cd .app_catalog
-
-                readonly head="$(git rev-parse HEAD)"
-
-                ret=1
-                tries=4
-                for i in $(seq 1 $tries) ; do
-                  echo "====> Attempt $i: Running: git reset --hard \$head"
-                  git reset --hard $head
-
-                  echo "====> Attempt $i: Running: git pull --rebase"
-                  git pull --rebase
-
-                  echo "====> Attempt $i: Running: helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build"
-                  helm repo index --url https://giantswarm.github.io/$app_catalog_name --merge index.yaml ../build
-
-                  echo "====> Attempt $i: Running: cp -r ../build/* ."
-                  cp -r ../build/* .
-
-                  echo "====> Attempt $i: Running: git add -A"
-                  git add -A
-
-                  echo "====> Attempt $i: Running: git commit -m \"add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)\""
-                  git commit -m "add $(git status --porcelain | cut -c4- | grep << parameters.chart >>)"
-
-                  echo "====> Attempt $i: Running \"git push\""
-                  set +e
-                  git push
-                  ret=$?
-                  set -e
-
-                  [[ $ret -eq 0 ]] && exit $ret
-
-                  sleep 5
-                done
-
-                echo "Giving up after $tries failures." >&2
-                echo "Error pushing changes. See known errors in:" >&2
-                echo "https://github.com/giantswarm/architect-orb/blob/master/README.md#push-to-app-catalog" >&2
-
-                exit $ret
+            environment:
+              PARAM_CHART: << parameters.chart >>
+              PARAM_TRIES: "10"
+              PARAM_BACKOFF_SECONDS: "2"
+            command: <<include(scripts/push-to-app-catalog.sh)>>
   - when:
       condition:
         equal: [<< parameters.push_to_oci_registry >>, true]
