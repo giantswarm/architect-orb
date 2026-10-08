@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.12.2] - 2026-10-08
+
 ### Fixed
 
 - `push-to-app-catalog`: the push to the shared catalog repository survives concurrent pushes of other builds.
@@ -2446,7 +2448,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.12.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.12.2...HEAD
+[10.12.2]: https://github.com/giantswarm/architect-orb/compare/v10.12.1...v10.12.2
 [10.12.1]: https://github.com/giantswarm/architect-orb/compare/v10.12.0...v10.12.1
 [10.12.0]: https://github.com/giantswarm/architect-orb/compare/v10.11.1...v10.12.0
 [10.11.1]: https://github.com/giantswarm/architect-orb/compare/v10.11.0...v10.11.1
