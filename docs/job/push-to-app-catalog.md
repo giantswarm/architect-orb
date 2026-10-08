@@ -30,19 +30,13 @@ github user][catalogbot-user] credentials.
 Detailed instructions on how to set up App Catalog can be found
 [here][creating_app_catalog].
 
-**NOTE**: There is a known issue produced by a race condition which produces a failed build with the following output.
-```
-To github.com:giantswarm/control-plane-test-catalog.git
- ! [rejected]        master -> master (fetch first)
-error: failed to push some refs to 'git@github.com:giantswarm/control-plane-test-catalog.git'
-hint: Updates were rejected because the remote contains work that you do
-hint: not have locally. This is usually caused by another repository pushing
-hint: to the same ref. You may want to first integrate the remote changes
-hint: (e.g., 'git pull ...') before pushing again.
-hint: See the 'Note about fast-forwards' in 'git push --help' for details.
-Exited with code 1
-```
-It is an rare case so triggering again the build should solve the issue.
+**NOTE**: Every build pushes to the same few catalog repositories, so a push can
+lose the race against another build's (`! [rejected] master -> master (fetch
+first)`). The job retries: every attempt fetches the catalog's current head,
+re-applies the chart and pushes, and a lost attempt waits a random, growing time
+(up to 30 seconds) before the next one, 10 attempts in all. A job that still
+gives up prints `Giving up after 10 push attempts to <catalog>. Last error: ...`;
+a rerun from failed retries.
 
 [catalog-editors-team]: https://github.com/orgs/giantswarm/teams/bot-catalog-editors/repositories
 [catalogbot-user]: https://github.com/catalogbot

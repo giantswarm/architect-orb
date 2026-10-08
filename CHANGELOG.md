@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `push-to-app-catalog`: the push to the shared catalog repository survives concurrent pushes of other builds.
+  Every attempt fetches the remote's head, resets onto it and re-applies the chart before it pushes; a lost race
+  waits a random time up to a doubling bound (2 s to 30 s) instead of a flat 5 s, and the step makes 10 attempts
+  instead of 4. When it gives up, its last line names the push's error. What is pushed is unchanged. The push
+  logic moves to `src/scripts/push-to-app-catalog.sh`, tested by `src/tests/push-to-app-catalog.bats`.
+
 ## [10.12.1] - 2026-10-05
 
 ### Fixed
