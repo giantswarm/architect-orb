@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.13.0] - 2026-10-09
+
 ### Changed
 
 - Bumped the `architect` executor image from 8.5.0 to 8.6.0: Go 1.27.2 and golangci-lint v2.14.0, so `go-build`
@@ -2465,7 +2467,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.12.3...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.0...HEAD
+[10.13.0]: https://github.com/giantswarm/architect-orb/compare/v10.12.3...v10.13.0
 [10.12.3]: https://github.com/giantswarm/architect-orb/compare/v10.12.2...v10.12.3
 [10.12.2]: https://github.com/giantswarm/architect-orb/compare/v10.12.1...v10.12.2
 [10.12.1]: https://github.com/giantswarm/architect-orb/compare/v10.12.0...v10.12.1
