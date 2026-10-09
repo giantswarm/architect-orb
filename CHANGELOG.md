@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped the `architect` executor image from 8.5.0 to 8.6.0: Go 1.27.2 and golangci-lint v2.14.0, so `go-build`
+  lints modules on `toolchain go1.27.2` (export data version 5).
+
 ## [10.12.3] - 2026-10-09
 
 ### Fixed
