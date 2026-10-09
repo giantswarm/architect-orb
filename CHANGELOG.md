@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.12.3] - 2026-10-09
+
 ### Fixed
 
 - `push-to-app-catalog`: concurrent chart pushes to the same catalog no longer exhaust the push attempts. `helm repo
@@ -2458,7 +2460,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.12.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.12.3...HEAD
+[10.12.3]: https://github.com/giantswarm/architect-orb/compare/v10.12.2...v10.12.3
 [10.12.2]: https://github.com/giantswarm/architect-orb/compare/v10.12.1...v10.12.2
 [10.12.1]: https://github.com/giantswarm/architect-orb/compare/v10.12.0...v10.12.1
 [10.12.0]: https://github.com/giantswarm/architect-orb/compare/v10.11.1...v10.12.0
