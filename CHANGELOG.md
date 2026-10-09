@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `push-to-app-catalog`: concurrent chart pushes to the same catalog no longer exhaust the push attempts. `helm repo
+  index --merge` reads and rewrites the catalog's whole index (24 MB for `giantswarm-test-catalog`, 13 s and more)
+  and ran inside every attempt's window between fetch and push, so under a burst of builds every attempt lost. It now
+  runs once; an attempt after a lost race three-way merges the chart's index entries onto the fetched head with
+  `git merge-file` and pushes within about a second, indexing with helm again only when the entries overlap another
+  build's. The `generated:` line is kept out of the merge and set to helm's. The step makes 20 attempts instead of
+  10, a lost race waits up to 60 s instead of 30 s, and giving up names the time spent. What is pushed is unchanged.
+
 ## [10.12.2] - 2026-10-08
 
 ### Fixed

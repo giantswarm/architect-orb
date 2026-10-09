@@ -32,11 +32,15 @@ Detailed instructions on how to set up App Catalog can be found
 
 **NOTE**: Every build pushes to the same few catalog repositories, so a push can
 lose the race against another build's (`! [rejected] master -> master (fetch
-first)`). The job retries: every attempt fetches the catalog's current head,
-re-applies the chart and pushes, and a lost attempt waits a random, growing time
-(up to 30 seconds) before the next one, 10 attempts in all. A job that still
-gives up prints `Giving up after 10 push attempts to <catalog>. Last error: ...`;
-a rerun from failed retries.
+first)`). The job merges the chart into the catalog's index with helm once and
+retries: every attempt after a lost race fetches the catalog's current head,
+three-way merges the chart's index entries onto it with `git merge-file` (about
+a second, instead of helm rewriting the whole index each time) and pushes; only
+entries that overlap another build's (a version of the same chart at the same
+place) are indexed with helm again. A lost attempt waits a random, growing time
+(up to 60 seconds) before the next one, 20 attempts in all. A job that still
+gives up prints `Giving up after 20 push attempts to <catalog> in <n>s. Last
+error: ...`; a rerun from failed retries.
 
 [catalog-editors-team]: https://github.com/orgs/giantswarm/teams/bot-catalog-editors/repositories
 [catalogbot-user]: https://github.com/catalogbot
