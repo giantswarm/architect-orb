@@ -90,9 +90,16 @@ for i in $(seq 1 "${PARAM_TRIES}"); do
   with_generated "${helm_generated}" "${work_dir}/merged.yaml" > index.yaml
 
   git add -A
-  added="$(git status --porcelain | cut -c4- | grep "${PARAM_CHART}")"
-  echo "====> Attempt ${i}/${PARAM_TRIES}: Running: git commit -m \"add ${added}\""
-  git commit -q -m "add ${added}"
+  # The commit names the added paths that carry the chart's name. A chart
+  # packaged under another name (giantswarm/releases passes its directory,
+  # release-chart, and packages release-<provider>-<version>.tgz) names its
+  # archives instead: a name that matches nothing never fails the push.
+  added="$(git status --porcelain | cut -c4- | grep "${PARAM_CHART}" || true)"
+  if [[ -z "${added}" ]]; then
+    added="$(git status --porcelain | cut -c4- | grep '\.tgz$' || true)"
+  fi
+  echo "====> Attempt ${i}/${PARAM_TRIES}: Running: git commit -m \"add ${added:-chart}\""
+  git commit -q -m "add ${added:-chart}"
 
   echo "====> Attempt ${i}/${PARAM_TRIES}: Running: git push origin HEAD:${branch}"
   if push_output="$(git push origin "HEAD:${branch}" 2>&1)"; then

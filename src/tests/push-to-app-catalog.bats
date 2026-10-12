@@ -110,6 +110,22 @@ EOF
 )" ]
 }
 
+@test "a chart packaged under another name than the chart parameter is pushed" {
+  # giantswarm/releases passes the chart's directory, release-chart, and
+  # app-build-suite packages it as release-<provider>-<version>.tgz with a
+  # metadata directory next to it.
+  export PARAM_CHART=release-chart
+  rm build/my-chart-1.0.0.tgz
+  echo chart > build/release-aws-35.2.1-0dbf07c.tgz
+  mkdir build/release-aws-35.2.1-0dbf07c.tgz-meta
+  echo meta > build/release-aws-35.2.1-0dbf07c.tgz-meta/main.yaml
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "$(remote_file release-aws-35.2.1-0dbf07c.tgz)" = chart ]
+  [ "$(remote_file release-aws-35.2.1-0dbf07c.tgz-meta/main.yaml)" = meta ]
+  [ "$(git -C remote.git log -1 --format=%s master)" = "add release-aws-35.2.1-0dbf07c.tgz" ]
+}
+
 @test "a lost push merges the chart onto the remote's head without indexing again" {
   export RACES=3
   run bash "${SCRIPT}"
