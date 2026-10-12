@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.13.2] - 2026-10-12
+
 ### Fixed
 
 - `comment-chart-version`: every GitHub API call is bounded (`--connect-timeout 10 --max-time 30`), the step has a
@@ -2484,7 +2486,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.1...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.2...HEAD
+[10.13.2]: https://github.com/giantswarm/architect-orb/compare/v10.13.1...v10.13.2
 [10.13.1]: https://github.com/giantswarm/architect-orb/compare/v10.13.0...v10.13.1
 [10.13.0]: https://github.com/giantswarm/architect-orb/compare/v10.12.3...v10.13.0
 [10.12.3]: https://github.com/giantswarm/architect-orb/compare/v10.12.2...v10.12.3
