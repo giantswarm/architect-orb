@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `push-to-app-catalog`: a chart packaged under another name than the job's `chart` parameter is pushed again.
+  Since 10.12.2 the push script builds its commit message from the added paths that match the `chart` name, and
+  under `set -e` a name that matched nothing (giantswarm/releases passes its chart directory, `release-chart`, and
+  packages `release-<provider>-<version>.tgz`) ended the step with exit 1 right after `cp -r build/* .`, before
+  the commit, with no error line. Such a chart's commit now names its archives instead; a name that matches
+  nothing never fails the push. Before 10.12.2 the same grep ran inside the commit message and could not fail.
+
 ## [10.13.0] - 2026-10-09
 
 ### Changed
