@@ -34,6 +34,9 @@ steps:
       non_fatal: true
   - run:
       name: "architect/comment-chart-version: Report published chart version on the pull request"
+      # Backstop for the step as a whole: the per-call curl bounds below keep it well
+      # inside this, but a step that goes quiet must fail the step rather than hold the job.
+      no_output_timeout: 5m
       command: |
         # This step reports information; it does not produce an artifact, so it must
         # never fail the build. CircleCI runs steps under `bash -eo pipefail`, so -e is
@@ -55,7 +58,7 @@ steps:
 
         # gh_api <METHOD> <url> [json-body-file] — sets GH_STATUS and GH_BODY.
         gh_api() {
-          local method="$1" url="$2" data="${3:-}" out
+          local method="$1" url="$2" data="${3:-}" out rc
           # Cleared up front so a hard curl failure cannot leave the previous call's
           # status behind for the caller to misread.
           GH_STATUS=""
@@ -70,9 +73,12 @@ steps:
             args+=( --data-binary "@${data}" )
           fi
 
-          out=$(curl "${args[@]}" "$url")
-          if [[ $? -ne 0 ]]; then
-            warn "${method} ${url} — curl failed."
+          # Every call is bounded, so an unreachable or stalled API ends the call
+          # (and, through the caller, the step) instead of holding the job open.
+          out=$(curl --connect-timeout 10 --max-time 30 "${args[@]}" "$url" </dev/null)
+          rc=$?
+          if [[ $rc -ne 0 ]]; then
+            warn "${method} ${url} — curl failed (exit ${rc}); gave up, the chart version comment is skipped."
             return 1
           fi
 
@@ -348,5 +354,7 @@ steps:
           done
         }
 
-        ( main ) || warn "the published chart version was not reported (see above). This never fails the build."
+        # Stdin is closed and the subshell is the only process: nothing can outlive it
+        # holding the step's output open, so the step always ends when `main` does.
+        ( main ) </dev/null || warn "the published chart version was not reported (see above). This never fails the build."
         exit 0

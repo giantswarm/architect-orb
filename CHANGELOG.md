@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `comment-chart-version`: every GitHub API call is bounded (`--connect-timeout 10 --max-time 30`), the step has a
+  `no_output_timeout` of 5 minutes, and its subshell runs with stdin closed, so an unreachable or stalled API ends
+  the step with a warning that names the call instead of holding the job open. The step still never fails the build.
+
 ## [10.13.1] - 2026-10-12
 
 ### Fixed
