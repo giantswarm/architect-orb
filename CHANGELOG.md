@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.13.1] - 2026-10-12
+
 ### Fixed
 
 - `push-to-app-catalog`: a chart packaged under another name than the job's `chart` parameter is pushed again.
@@ -2476,7 +2478,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.0...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.1...HEAD
+[10.13.1]: https://github.com/giantswarm/architect-orb/compare/v10.13.0...v10.13.1
 [10.13.0]: https://github.com/giantswarm/architect-orb/compare/v10.12.3...v10.13.0
 [10.12.3]: https://github.com/giantswarm/architect-orb/compare/v10.12.2...v10.12.3
 [10.12.2]: https://github.com/giantswarm/architect-orb/compare/v10.12.1...v10.12.2
