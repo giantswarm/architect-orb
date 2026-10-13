@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   architect: giantswarm/architect@10.13.2
   orb-tools: circleci/orb-tools@12.5.0
-  bats: circleci/bats@1.1.0
+  bats: circleci/bats@1.2.0
 
 jobs:
   # The two executors must compute the same dev version for one commit: the
