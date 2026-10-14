@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `go-test` / `go-build`: the "Check if go.mod and go.sum are clean" step retries `go mod tidy` up to three
+  times with backoff (10s, then 20s), so a transient module proxy error (`stream error ... INTERNAL_ERROR;
+  received from peer` from proxy.golang.org) no longer fails the job with no code cause. An untidy `go.mod` or
+  `go.sum` still fails the step on the first attempt: tidy succeeds and `git diff --exit-code` reports the diff.
+
 ## [10.13.2] - 2026-10-12
 
 ### Fixed

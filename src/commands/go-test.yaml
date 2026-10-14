@@ -29,8 +29,7 @@ steps:
               make <<parameters.pre_test_target>>
   - run:
       name: Check if go.mod and go.sum are clean
-      command: |
-        go mod tidy && git diff --exit-code
+      command: <<include(scripts/go-mod-tidy-check.sh)>>
 
   - run:
       name: Create ldflags file
