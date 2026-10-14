@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.13.3] - 2026-10-14
+
 ### Fixed
 
 - `go-test` / `go-build`: the "Check if go.mod and go.sum are clean" step retries `go mod tidy` up to three
@@ -2493,7 +2495,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.2...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.3...HEAD
+[10.13.3]: https://github.com/giantswarm/architect-orb/compare/v10.13.2...v10.13.3
 [10.13.2]: https://github.com/giantswarm/architect-orb/compare/v10.13.1...v10.13.2
 [10.13.1]: https://github.com/giantswarm/architect-orb/compare/v10.13.0...v10.13.1
 [10.13.0]: https://github.com/giantswarm/architect-orb/compare/v10.12.3...v10.13.0
