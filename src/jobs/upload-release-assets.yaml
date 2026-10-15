@@ -38,8 +38,8 @@ parameters:
     description: |
       Name of an environment variable holding a GitHub token with contents:write
       on the target repository. Leave empty (default) to use the GitHub App token.
-      Set to an env var name (e.g. TAYLORBOT_GITHUB_ACTION) to use a pre-minted
-      token instead of generating one from the App.
+      Set to an env var name to use a pre-minted token instead of generating one
+      from the App.
     type: string
     default: ""
 steps:

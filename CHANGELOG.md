@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `upload-release-assets`: the docs no longer suggest `TAYLORBOT_GITHUB_ACTION` for `github-token-env-var`; the shared
+  `taylorbot` account is being removed. The GitHub App token, the default, is the supported way to upload.
+
 ## [10.13.4] - 2026-10-15
 
 ### Fixed
