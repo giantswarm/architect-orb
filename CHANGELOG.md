@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Removed
+
+- `upload-release-assets`: the `github-token-env-var` parameter, and `generate-github-token`: the `token-env-var`
+  parameter. Both let a job use a pre-minted token, such as the shared `taylorbot` account's `TAYLORBOT_GITHUB_ACTION`,
+  instead of an installation token of the architect GitHub App. The account is being removed and no repository sets
+  either parameter, so the App token is now the only way the orb authenticates to GitHub.
+
 ### Fixed
 
 - `cosign-sign-verify`: a Rekor duplicate-entry answer ("an equivalent entry already exists") no longer leaves an
