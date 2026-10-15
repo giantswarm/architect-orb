@@ -136,18 +136,24 @@ steps:
   # A build in the same window with other dependencies (another go.sum) starts
   # from the window's latest cache. The save key ends in the cache's checksum,
   # so a cache that gained reports is saved and an unchanged one is not.
-  # Keys are per branch: nancy trusts the expiry stored in its cache, so a
+  # Keys are per branch or tag, as a checksum so that no ref's keys are a
+  # prefix of another's: nancy trusts the expiry stored in its cache, so a
   # branch's build must never hand a cache to main's or a tag's build.
   - run:
       name: "architect/go-test: Compute the nancy cache window"
       command: |
+        if [ -n "${CIRCLE_TAG:-}" ]; then
+          echo "tag:${CIRCLE_TAG}" > /tmp/nancy-cache-ref
+        else
+          echo "branch:${CIRCLE_BRANCH:-}" > /tmp/nancy-cache-ref
+        fi
         date --utc '+%F-%p' > /tmp/nancy-cache-window
         cat /tmp/nancy-cache-window go.sum 2>/dev/null > /tmp/nancy-cache-deps || true
   - restore_cache:
       keys:
-        - nancy-guide-v2-{{ .Branch }}-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}-
-        - nancy-guide-v2-{{ .Branch }}-{{ checksum "/tmp/nancy-cache-window" }}-
-        - nancy-guide-v2-{{ .Branch }}-
+        - nancy-guide-v2-{{ checksum "/tmp/nancy-cache-ref" }}-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}-
+        - nancy-guide-v2-{{ checksum "/tmp/nancy-cache-ref" }}-{{ checksum "/tmp/nancy-cache-window" }}-
+        - nancy-guide-v2-{{ checksum "/tmp/nancy-cache-ref" }}-
   - run:
       name: Check if dependencies have known security vulnerabilities
       environment:
@@ -155,7 +161,7 @@ steps:
       command: <<include(scripts/nancy-scan.sh)>>
   - save_cache:
       when: always
-      key: nancy-guide-v2-{{ .Branch }}-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}-{{ checksum "/tmp/nancy-cache-state" }}
+      key: nancy-guide-v2-{{ checksum "/tmp/nancy-cache-ref" }}-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}-{{ checksum "/tmp/nancy-cache-state" }}
       paths:
         - ~/.cache/nancy
   - store_test_results:
