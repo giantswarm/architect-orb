@@ -37,10 +37,14 @@ retries: every attempt after a lost race fetches the catalog's current head,
 three-way merges the chart's index entries onto it with `git merge-file` (about
 a second, instead of helm rewriting the whole index each time) and pushes; only
 entries that overlap another build's (a version of the same chart at the same
-place) are indexed with helm again. A lost attempt waits a random, growing time
-(up to 60 seconds) before the next one, 20 attempts in all. A job that still
-gives up prints `Giving up after 20 push attempts to <catalog> in <n>s. Last
-error: ...`; a rerun from failed retries.
+place) are indexed with helm again. A lost race is retried at once: a wave of
+builds keeps a catalog busy for many minutes, and a build that waited would come
+back in the middle of another build's push and lose again. The push keeps
+retrying lost races for up to 30 minutes and prints `Giving up after <n> push
+attempts to <catalog> in <n>s. Last error: ...` when that runs out. A fetch or
+push that fails for another reason (the network, GitHub) waits a random, growing
+time (up to 60 seconds) and ends the job after 5 such failures in a row; a rerun
+from failed retries.
 
 [catalog-editors-team]: https://github.com/orgs/giantswarm/teams/bot-catalog-editors/repositories
 [catalogbot-user]: https://github.com/catalogbot
