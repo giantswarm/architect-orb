@@ -14,6 +14,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   instead of an installation token of the architect GitHub App. The account is being removed and no repository sets
   either parameter, so the App token is now the only way the orb authenticates to GitHub.
 
+### Fixed
+
+- `cosign-sign-verify`: a Rekor duplicate-entry answer ("an equivalent entry already exists") no longer leaves an
+  `oci` or `attest` artifact unsigned in the registry. cosign's own client retries a transparency-log upload that
+  already succeeded server-side, gets the 409 and stops before it attaches the signature, so the step used to skip
+  the sign and then fail `cosign verify` with `no signatures found`. On a duplicate the step now prints cosign's
+  error, checks the registry with the verify it runs afterwards, skips only when a verifiable signature is there,
+  and otherwise signs again (fresh ephemeral keys make a new, non-equivalent Rekor entry). Verify stays strict.
+  The step's script moved to `src/scripts/cosign-sign-verify.sh`, with bats tests of the duplicate path.
+
 ## [10.13.4] - 2026-10-15
 
 ### Fixed
