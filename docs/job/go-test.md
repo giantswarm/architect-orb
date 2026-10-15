@@ -10,7 +10,8 @@ This job:
   [build metadata](#build-metadata).
 - Runs `go test` against the codebase.
 - Runs [`gosec`](#security-scanning-with-gosec) via `golangci-lint`. Tests are excluded.
-- Runs `nancy` against the codebase to check for known vulnerabilities in code dependencies.
+- Runs [`nancy`](#dependency-scanning-with-nancy) against the codebase to check for known vulnerabilities in code
+  dependencies.
 
 ## Build metadata
 
@@ -92,3 +93,18 @@ workflows:
             tags:
               only: /^v.*/
 ```
+
+## Dependency scanning with nancy
+
+nancy asks the Sonatype Guide API about every dependency `go list -json -deps ./...` lists. Vulnerable
+dependencies that `.nancy-ignore` and `.nancy-ignore.generated` do not exclude fail the job.
+
+nancy caches each dependency's report for 12 hours. The job keeps that cache (`~/.cache/nancy`) in a
+CircleCI cache per 12-hour window, so a dependency costs Sonatype Guide credits once per window instead of
+once per build, and a build whose dependencies are all cached scans while the API is unavailable.
+
+When nancy cannot get an answer (an outage, a rate limit, an exhausted credit quota or rejected credentials),
+the job does not fail, so an unrelated pull request is not blocked. The step prints `NOT SCANNED:` with the
+reason, and the job's JUnit results record the failed test `Go dependencies are scanned for known
+vulnerabilities`, shown in the job's Tests tab and in CircleCI's test insights. A green job with that failed
+test has not checked its dependencies.

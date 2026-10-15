@@ -129,31 +129,31 @@ steps:
           --issues-exit-code=1 \
           --new=false --new-from-rev= --new-from-patch= --new-from-merge-base= \
           --max-issues-per-linter=0 --max-same-issues=0
+  # nancy caches each package's report for 12 hours. Keeping that cache across
+  # builds spends Sonatype Guide credits once per package and 12-hour window
+  # instead of once per build, and lets a build whose packages are all cached
+  # scan while the API is unavailable.
+  # A build in the same window with other dependencies (another go.sum) saves
+  # its own cache, which starts from the window's latest.
+  - run:
+      name: "architect/go-test: Compute the nancy cache window"
+      command: |
+        date --utc '+%F-%p' > /tmp/nancy-cache-window
+        cat /tmp/nancy-cache-window go.sum 2>/dev/null > /tmp/nancy-cache-deps || true
+  - restore_cache:
+      keys:
+        - nancy-guide-v1-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}
+        - nancy-guide-v1-{{ checksum "/tmp/nancy-cache-window" }}-
+        - nancy-guide-v1-
   - run:
       name: Check if dependencies have known security vulnerabilities
       environment:
         CGO_ENABLED: "0"
-      command: |
-        set +e
-        # Write the scan log to /tmp, not the working tree: this command runs
-        # between `make test` and the binary link, and a stray untracked file in
-        # the repo makes Go's buildvcs stamp `vcs.modified=true`, so release
-        # binaries report `vX.Y.Z+dirty`. Keep it out of the tree like the other
-        # orb scratch files (/tmp/.cosign_blobs, /tmp/.gh_response_binsign).
-        go list -json -deps ./... \
-          | nancy sleuth --skip-update-check \
-            --quiet --exclude-vulnerability-file ./.nancy-ignore \
-            --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
-            | tee /tmp/nancy-results.txt ; nancy_result=(${PIPESTATUS[1]})
-        grep -qF \
-            -e 'error accessing OSS Index' \
-            -e 'Error: guide API request failed' \
-            -e 'rate limited by OSS Index' \
-            /tmp/nancy-results.txt; grep_result=$?
-        set -e
-        # If nancy gave us a bad exit code AND grep found an OSS index error in the output, then we don't fail the build.
-        if [[ $nancy_result -ne 0 && $grep_result -eq 0 ]]; then
-          echo Ignoring failed scan due to problem with the external scanner.
-          exit 0
-        fi
-        exit $nancy_result
+      command: <<include(scripts/nancy-scan.sh)>>
+  - save_cache:
+      when: always
+      key: nancy-guide-v1-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}
+      paths:
+        - ~/.cache/nancy
+  - store_test_results:
+      path: /tmp/nancy-test-results
