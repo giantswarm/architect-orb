@@ -98,10 +98,23 @@ times with exponential backoff (5s, 10s, 20s) when the error matches a known
 transient pattern. Auth/config 4xx (401/403/404) and bad references are
 deliberately **not** retried, so genuine misconfiguration still fails fast;
 408/425/429 (timeout / too-early / rate-limit) and 5xx, by contrast, are
-treated as transient. Rekor duplicate-entry conflicts (HTTP 409) keep their existing
-handling: skipped for `oci`/`attest` (the signature already exists), retried
-with fresh ephemeral keys for `blob` (where the bundle file must be produced
-locally).
+treated as transient.
+
+A Rekor duplicate-entry conflict (HTTP 409, "an equivalent entry already
+exists") is never taken as proof of a signature. It comes from cosign's own
+client retrying a transparency-log upload that already succeeded server-side;
+cosign then stops before it attaches the signature to the registry, so the
+Rekor entry exists while the registry holds nothing to verify. The step prints
+cosign's error and, for `oci`/`attest`, checks the registry with the same
+`cosign verify`/`cosign verify-attestation` it runs afterwards: a verifiable
+signature there skips the sign, otherwise the artifact is signed again. Keyless
+signing mints fresh ephemeral keys and a fresh Fulcio certificate per call, so
+the new upload is a non-equivalent Rekor entry and the signature reaches the
+registry with its own transparency-log proof; the strict verify (no
+`--insecure-ignore-tlog`) then runs as always. After `MAX_ATTEMPTS` duplicates
+without a signature in the registry the step fails. `blob` has no registry to
+check and signs again with fresh keys straight away, since its bundle file is
+only written on success.
 
 ## Verifying signatures as a consumer
 
