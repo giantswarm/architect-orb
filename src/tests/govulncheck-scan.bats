@@ -41,9 +41,9 @@ STUB
 @test "a clean scan passes, says how many modules it checked and records a passed test" {
   run bash -eo pipefail "${SCRIPT}"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"govulncheck checked 3 modules against https://vuln.go.dev"* ]]
+  [[ "$output" == *"govulncheck checked 3 modules against https://vulndb.invalid"* ]]
   [[ "$output" == *"No reachable known vulnerability."* ]]
-  [[ "$(cat "${GOVULNCHECK_ARGS}")" == "-format json -db https://vuln.go.dev ./..." ]]
+  [[ "$(cat "${GOVULNCHECK_ARGS}")" == "-format json -db https://vulndb.invalid ./..." ]]
   grep -q 'failures="0"' "${JUNIT}"
   ! grep -q '<failure' "${JUNIT}"
 }
