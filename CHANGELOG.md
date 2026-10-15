@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
+
 ### Removed
 
 - `upload-release-assets`: the `github-token-env-var` parameter, and `generate-github-token`: the `token-env-var`
