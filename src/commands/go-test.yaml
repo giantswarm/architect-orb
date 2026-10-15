@@ -133,8 +133,9 @@ steps:
   # builds spends Sonatype Guide credits once per package and 12-hour window
   # instead of once per build, and lets a build whose packages are all cached
   # scan while the API is unavailable.
-  # A build in the same window with other dependencies (another go.sum) saves
-  # its own cache, which starts from the window's latest.
+  # A build in the same window with other dependencies (another go.sum) starts
+  # from the window's latest cache. The save key ends in the cache's checksum,
+  # so a cache that gained reports is saved and an unchanged one is not.
   - run:
       name: "architect/go-test: Compute the nancy cache window"
       command: |
@@ -142,7 +143,7 @@ steps:
         cat /tmp/nancy-cache-window go.sum 2>/dev/null > /tmp/nancy-cache-deps || true
   - restore_cache:
       keys:
-        - nancy-guide-v1-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}
+        - nancy-guide-v1-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}-
         - nancy-guide-v1-{{ checksum "/tmp/nancy-cache-window" }}-
         - nancy-guide-v1-
   - run:
@@ -152,7 +153,7 @@ steps:
       command: <<include(scripts/nancy-scan.sh)>>
   - save_cache:
       when: always
-      key: nancy-guide-v1-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}
+      key: nancy-guide-v1-{{ checksum "/tmp/nancy-cache-window" }}-{{ checksum "/tmp/nancy-cache-deps" }}-{{ checksum "/tmp/nancy-cache-state" }}
       paths:
         - ~/.cache/nancy
   - store_test_results:

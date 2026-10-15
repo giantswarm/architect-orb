@@ -2,6 +2,7 @@
 # Tests of src/scripts/nancy-scan.sh: a clean scan passes, vulnerable
 # dependencies fail the step, and a scanner outage passes the step while it
 # says that nothing was scanned and records a failed JUnit test.
+# The script runs as CircleCI runs a step, under `bash -eo pipefail`.
 # go and nancy are stubs on the PATH: nancy prints NANCY_OUTPUT, exits with
 # NANCY_EXIT and records its arguments.
 
@@ -10,6 +11,7 @@ setup() {
   export NANCY_RESULTS="${BATS_TEST_TMPDIR}/nancy-results.txt"
   export NANCY_TEST_RESULTS_DIR="${BATS_TEST_TMPDIR}/test-results"
   export NANCY_CACHE_DIR="${BATS_TEST_TMPDIR}/cache"
+  export NANCY_CACHE_STATE="${BATS_TEST_TMPDIR}/cache-state"
   export NANCY_ARGS="${BATS_TEST_TMPDIR}/nancy.args"
   export NANCY_OUTPUT="Audited Dependencies 237"
   export NANCY_EXIT=0
@@ -32,16 +34,17 @@ STUB
 }
 
 @test "a clean scan passes and records a passed test" {
-  run "${SCRIPT}"
+  run bash -eo pipefail "${SCRIPT}"
   [ "$status" -eq 0 ]
   [[ "$output" == *"Audited Dependencies 237"* ]]
   [[ "$(cat "${NANCY_ARGS}")" == *"--db-cache-path ${NANCY_CACHE_DIR}"* ]]
   grep -q 'failures="0"' "${JUNIT}"
   ! grep -q '<failure' "${JUNIT}"
+  [ -s "${NANCY_CACHE_STATE}" ]
 }
 
 @test "vulnerable dependencies fail the step" {
-  NANCY_OUTPUT="Vulnerable Dependencies 1" NANCY_EXIT=1 run "${SCRIPT}"
+  NANCY_OUTPUT="Vulnerable Dependencies 1" NANCY_EXIT=1 run bash -eo pipefail "${SCRIPT}"
   [ "$status" -eq 1 ]
   [[ "$output" != *"NOT SCANNED"* ]]
   grep -q 'failures="1"' "${JUNIT}"
@@ -49,15 +52,16 @@ STUB
 
 @test "an exhausted Sonatype Guide quota passes the step but says nothing was scanned" {
   NANCY_OUTPUT="Error: guide API request failed: json: cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost" \
-    NANCY_EXIT=1 run "${SCRIPT}"
+    NANCY_EXIT=1 run bash -eo pipefail "${SCRIPT}"
   [ "$status" -eq 0 ]
   [[ "$output" == *"NOT SCANNED: no Go dependency was checked"* ]]
   [[ "$output" == *"exhausted credit quota"* ]]
   grep -q '<failure message="NOT SCANNED' "${JUNIT}"
+  [ -s "${NANCY_CACHE_STATE}" ]
 }
 
 @test "an OSS Index rate limit passes the step but says nothing was scanned" {
-  NANCY_OUTPUT="Error: You have been rate limited by OSS Index." NANCY_EXIT=1 run "${SCRIPT}"
+  NANCY_OUTPUT="Error: You have been rate limited by OSS Index." NANCY_EXIT=1 run bash -eo pipefail "${SCRIPT}"
   [ "$status" -eq 0 ]
   [[ "$output" == *"NOT SCANNED"* ]]
   [[ "$output" == *"the external scanner could not answer"* ]]

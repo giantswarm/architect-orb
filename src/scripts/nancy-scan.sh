@@ -5,6 +5,8 @@
 #   NANCY_RESULTS           the scan log, /tmp/nancy-results.txt by default
 #   NANCY_TEST_RESULTS_DIR  where the JUnit result goes, /tmp/nancy-test-results by default
 #   NANCY_CACHE_DIR         nancy's response cache, ~/.cache/nancy by default
+#   NANCY_CACHE_STATE       the checksum of that cache after the scan, the save key's last part,
+#                           /tmp/nancy-cache-state by default
 #
 # The scan log stays out of the working tree: this step runs between
 # `make test` and the binary link, and a stray untracked file in the repo makes
@@ -17,11 +19,14 @@
 # never reported as a scan either: the step says that no dependency was
 # scanned, and the JUnit result records a failed test, which the job's Tests
 # tab and CircleCI's test insights show while the job stays green.
-set -uo pipefail
+# CircleCI runs the step with `-eo pipefail`; nancy's exit code is evaluated
+# below, so a failing scan must not end the script.
+set +e -uo pipefail
 
 results="${NANCY_RESULTS:-/tmp/nancy-results.txt}"
 junit_dir="${NANCY_TEST_RESULTS_DIR:-/tmp/nancy-test-results}"
 cache_dir="${NANCY_CACHE_DIR:-$HOME/.cache/nancy}"
+cache_state="${NANCY_CACHE_STATE:-/tmp/nancy-cache-state}"
 
 write_junit() {
   local failures="$1" message="$2"
@@ -44,6 +49,11 @@ go list -json -deps ./... \
     --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
   | tee "$results"
 nancy_result=${PIPESTATUS[1]}
+
+# The cache is saved under a key that ends in its checksum: a scan that added
+# reports saves a new cache, one that added none (or could not run) saves
+# nothing new, so an empty cache never takes a window's key.
+cat "$cache_dir"/* 2>/dev/null | sha256sum > "$cache_state"
 
 if [[ "$nancy_result" -eq 0 ]]; then
   write_junit 0 ""
