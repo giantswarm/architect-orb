@@ -27,7 +27,7 @@
 # evaluated below, so a failing scan must not end the script.
 set +e -uo pipefail
 
-db="${GOVULNCHECK_DB:-https://vuln.go.dev}"
+db="${GOVULNCHECK_DB:-https://vulndb.invalid}"  # PROOF ONLY: a forced scanner error, never merged
 results="${GOVULNCHECK_RESULTS:-/tmp/govulncheck-results.json}"
 junit_dir="${GOVULNCHECK_TEST_RESULTS_DIR:-/tmp/govulncheck-test-results}"
 ignore_file="${GOVULNCHECK_IGNORE:-./.govulncheck-ignore}"
