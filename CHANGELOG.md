@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [10.13.4] - 2026-10-15
+
 ### Fixed
 
 - `go-test` / `go-build`: a nancy scan that could not run is no longer reported as a scan. When the Sonatype
@@ -2508,7 +2510,8 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.3...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.4...HEAD
+[10.13.4]: https://github.com/giantswarm/architect-orb/compare/v10.13.3...v10.13.4
 [10.13.3]: https://github.com/giantswarm/architect-orb/compare/v10.13.2...v10.13.3
 [10.13.2]: https://github.com/giantswarm/architect-orb/compare/v10.13.1...v10.13.2
 [10.13.1]: https://github.com/giantswarm/architect-orb/compare/v10.13.0...v10.13.1
