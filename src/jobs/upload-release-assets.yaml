@@ -34,20 +34,11 @@ parameters:
       for details.
     type: "enum"
     enum: ["small", "medium", "medium+", "large", "xlarge"]
-  github-token-env-var:
-    description: |
-      Name of an environment variable holding a GitHub token with contents:write
-      on the target repository. Leave empty (default) to use the GitHub App token.
-      Set to an env var name to use a pre-minted token instead of generating one
-      from the App.
-    type: string
-    default: ""
 steps:
   - checkout
   - attach_workspace:
       at: .
-  - generate-github-token:
-      token-env-var: << parameters.github-token-env-var >>
+  - generate-github-token
   - run:
       name: Upload release assets to GitHub
       command: |
