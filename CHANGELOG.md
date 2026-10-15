@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `go-test` / `go-build`: a nancy scan that could not run is no longer reported as a scan. When the Sonatype
+  Guide API answers with an error (an exhausted credit quota or rejected credentials, which nancy 2.1.0 prints as
+  `cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost`), an OSS Index outage or a
+  rate limit, the step still passes so unrelated pull requests are not blocked, but it prints `NOT SCANNED:` with
+  the reason and records a failed JUnit test, `Go dependencies are scanned for known vulnerabilities`, in the
+  job's test results. A clean scan records it as passed.
+- `go-test` / `go-build`: a failing `go list` fails the nancy step; nancy used to audit the empty list and pass.
+- `go-test` / `go-build`: nancy's 12-hour response cache is kept between builds in a CircleCI cache per branch and
+  12-hour window, so each dependency costs Sonatype Guide credits once per window instead of once per build, and a
+  build whose dependencies are all cached scans while the API is unavailable.
+
 ## [10.13.3] - 2026-10-14
 
 ### Fixed
