@@ -15,8 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   rate limit, the step still passes so unrelated pull requests are not blocked, but it prints `NOT SCANNED:` with
   the reason and records a failed JUnit test, `Go dependencies are scanned for known vulnerabilities`, in the
   job's test results. A clean scan records it as passed.
-- `go-test` / `go-build`: nancy's 12-hour response cache is kept between builds in a CircleCI cache per 12-hour
-  window, so each dependency costs Sonatype Guide credits once per window instead of once per build, and a
+- `go-test` / `go-build`: a failing `go list` fails the nancy step; nancy used to audit the empty list and pass.
+- `go-test` / `go-build`: nancy's 12-hour response cache is kept between builds in a CircleCI cache per branch and
+  12-hour window, so each dependency costs Sonatype Guide credits once per window instead of once per build, and a
   build whose dependencies are all cached scans while the API is unavailable.
 
 ## [10.13.3] - 2026-10-14

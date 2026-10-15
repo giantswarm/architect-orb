@@ -48,12 +48,20 @@ go list -json -deps ./... \
     --quiet --exclude-vulnerability-file ./.nancy-ignore \
     --additional-exclude-vulnerability-files ./.nancy-ignore.generated 2>&1 \
   | tee "$results"
-nancy_result=${PIPESTATUS[1]}
+statuses=("${PIPESTATUS[@]}")
+go_list_result=${statuses[0]}
+nancy_result=${statuses[1]}
 
 # The cache is saved under a key that ends in its checksum: a scan that added
 # reports saves a new cache, one that added none (or could not run) saves
 # nothing new, so an empty cache never takes a window's key.
 cat "$cache_dir"/* 2>/dev/null | sha256sum > "$cache_state"
+
+# Without the dependency list nancy audits nothing and passes.
+if [[ "$go_list_result" -ne 0 ]]; then
+  write_junit 1 "go list failed (exit code ${go_list_result}), no dependency was scanned"
+  exit "$go_list_result"
+fi
 
 if [[ "$nancy_result" -eq 0 ]]; then
   write_junit 0 ""

@@ -97,11 +97,13 @@ workflows:
 ## Dependency scanning with nancy
 
 nancy asks the Sonatype Guide API about every dependency `go list -json -deps ./...` lists. Vulnerable
-dependencies that `.nancy-ignore` and `.nancy-ignore.generated` do not exclude fail the job.
+dependencies that `.nancy-ignore` and `.nancy-ignore.generated` do not exclude fail the job, and so does a
+failing `go list`.
 
 nancy caches each dependency's report for 12 hours. The job keeps that cache (`~/.cache/nancy`) in a
-CircleCI cache per 12-hour window, so a dependency costs Sonatype Guide credits once per window instead of
-once per build, and a build whose dependencies are all cached scans while the API is unavailable.
+CircleCI cache per branch and 12-hour window, so a dependency costs Sonatype Guide credits once per window
+instead of once per build, and a build whose dependencies are all cached scans while the API is unavailable.
+The cache never crosses branches: a branch's build cannot hand reports to the default branch or a tag.
 
 When nancy cannot get an answer (an outage, a rate limit, an exhausted credit quota or rejected credentials),
 the job does not fail, so an unrelated pull request is not blocked. The step prints `NOT SCANNED:` with the

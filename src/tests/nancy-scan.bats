@@ -21,6 +21,7 @@ setup() {
   cat > "${BATS_TEST_TMPDIR}/bin/go" <<'STUB'
 #!/bin/bash
 echo '{"ImportPath": "example.com/stub"}'
+exit "${GO_EXIT:-0}"
 STUB
   cat > "${BATS_TEST_TMPDIR}/bin/nancy" <<'STUB'
 #!/bin/bash
@@ -66,4 +67,10 @@ STUB
   [[ "$output" == *"NOT SCANNED"* ]]
   [[ "$output" == *"the external scanner could not answer"* ]]
   grep -q '<failure message="NOT SCANNED' "${JUNIT}"
+}
+
+@test "a failing go list fails the step, nancy's empty pass is no scan" {
+  GO_EXIT=1 run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  grep -q '<failure message="go list failed' "${JUNIT}"
 }
