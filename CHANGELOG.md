@@ -20,6 +20,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `push-to-app-catalog`: a push to a busy catalog lands instead of giving up after 20 attempts. A wave of builds
+  keeps `giantswarm-test-catalog` saturated (a push every 10 to 14 seconds) for many minutes, and only a build that
+  fetches right after another build's push landed can win. The job used to wait a random, doubling time of up to 60
+  seconds after each lost race, so it came back in the middle of another build's push and lost again, all 20 times
+  (645 s). A lost race is now retried at once, for up to 30 minutes; helm indexes the chart once, on the cloned head,
+  before the first attempt. A failing `git fetch` of the catalog is retried like a failing push, with a jittered,
+  doubling wait, up to 5 such failures in a row. `src/tests/push-to-app-catalog-concurrency.bats` runs builds against
+  a catalog that a fleet of other builds keeps saturated.
+
 - `cosign-sign-verify`: a Rekor duplicate-entry answer ("an equivalent entry already exists") no longer leaves an
   `oci` or `attest` artifact unsigned in the registry. cosign's own client retries a transparency-log upload that
   already succeeded server-side, gets the 409 and stops before it attaches the signature, so the step used to skip

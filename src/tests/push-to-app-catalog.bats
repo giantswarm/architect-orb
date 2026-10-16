@@ -5,11 +5,12 @@
 # `generated:` line. A git wrapper lets another build push a chart of its own
 # right before each of this build's first RACES pushes, between this build's
 # fetch and its push; with OVERLAP set, that build's change is a my-chart
-# version at the same place in the index.
+# version at the same place in the index. With FETCH_FAILURES set, this
+# build's first fetches fail.
 
 setup() {
   SCRIPT="${BATS_TEST_DIRNAME}/../scripts/push-to-app-catalog.sh"
-  export PARAM_CHART=my-chart PARAM_TRIES=4 PARAM_BACKOFF_SECONDS=1
+  export PARAM_CHART=my-chart PARAM_TIMEOUT_SECONDS=60 PARAM_TRIES=3 PARAM_BACKOFF_SECONDS=1
   export GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@example.com
   export GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@example.com
   export GIT_CONFIG_GLOBAL=/dev/null LC_ALL=C
@@ -67,6 +68,14 @@ echo chart > "${name}.tgz"
 EOF
   cat > bin/git <<'EOF'
 #!/bin/bash
+if [[ "$1" == fetch && "${PWD}" == */.app_catalog ]]; then
+  fetches=$(( $(cat "${BATS_TEST_TMPDIR}/fetches" 2>/dev/null || echo 0) + 1 ))
+  echo "${fetches}" > "${BATS_TEST_TMPDIR}/fetches"
+  if [[ "${fetches}" -le "${FETCH_FAILURES:-0}" ]]; then
+    echo "fatal: unable to access the catalog" >&2
+    exit 128
+  fi
+fi
 if [[ "$1" == push && "${PWD}" == */.app_catalog ]]; then
   pushes=$(( $(cat "${BATS_TEST_TMPDIR}/pushes" 2>/dev/null || echo 0) + 1 ))
   echo "${pushes}" > "${BATS_TEST_TMPDIR}/pushes"
@@ -95,7 +104,7 @@ helm_calls() {
   [ "${status}" -eq 0 ]
   [ "$(remote_file my-chart-1.0.0.tgz)" = chart ]
   [ "$(git -C remote.git log -1 --format=%s master)" = "add my-chart-1.0.0.tgz" ]
-  [[ "${output}" != *"Attempt 2/"* ]]
+  [[ "${output}" != *"Attempt 2:"* ]]
   [ "$(remote_file index.yaml)" = "$(cat <<'EOF'
 apiVersion: v1
 entries:
@@ -130,7 +139,8 @@ EOF
   export RACES=3
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"Attempt 4/4"* ]]
+  [[ "${output}" == *"Attempt 4: Running: git push"* ]]
+  [[ "${output}" != *"waiting"* ]]
   [ "$(helm_calls)" -eq 1 ]
   [ "$(remote_file my-chart-1.0.0.tgz)" = chart ]
   for n in 1 2 3; do
@@ -161,7 +171,7 @@ EOF
   export RACES=1 OVERLAP=1
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"Attempt 2/4: the chart's index entries overlap another build's, indexing again."* ]]
+  [[ "${output}" == *"Attempt 2: the chart's index entries overlap another build's, indexing again."* ]]
   [ "$(helm_calls)" -eq 2 ]
   [ "$(remote_file my-chart-0.9.0.tgz)" = chart ]
   [ "$(remote_file my-chart-1.0.0.tgz)" = chart ]
@@ -171,20 +181,32 @@ EOF
   [[ "${index}" == *'generated: "helm-2"' ]]
 }
 
-@test "it gives up after the last attempt with the push's error and the time spent" {
-  export RACES=4
+@test "a lost race is retried at once until the time budget runs out" {
+  export RACES=1000000 PARAM_TIMEOUT_SECONDS=3
   run bash "${SCRIPT}"
   [ "${status}" -eq 1 ]
-  [[ "${output}" == *"Giving up after 4 push attempts to giantswarm-test-catalog in "*"s. Last error:"*"[rejected]"* ]]
+  [[ "${output}" == *"Attempt 3 lost the race to another build's push, fetching its head at once."* ]]
+  [[ "${output}" != *"waiting"* ]]
+  [[ "${output}" == *"Giving up after "*" push attempts to giantswarm-test-catalog in "*"s. Last error:"*"[rejected]"* ]]
   run remote_file my-chart-1.0.0.tgz
   [ "${status}" -ne 0 ]
 }
 
-@test "the wait between attempts is jittered and bounded" {
-  export RACES=3 PARAM_BACKOFF_SECONDS=1
+@test "a failing fetch is retried with a jittered, bounded backoff" {
+  export FETCH_FAILURES=2
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
-  for line in $(echo "${output}" | sed -nE 's/.*waiting ([0-9]+)s.*/\1/p'); do
-    [ "${line}" -ge 1 ] && [ "${line}" -le 4 ]
+  [[ "${output}" == *"Attempt 1 failed (1/3), waiting "* ]]
+  [[ "${output}" == *"Attempt 2 failed (2/3), waiting "* ]]
+  for delay in $(echo "${output}" | sed -nE 's/.*waiting ([0-9]+)s.*/\1/p'); do
+    [ "${delay}" -ge 1 ] && [ "${delay}" -le 2 ]
   done
+  [ "$(remote_file my-chart-1.0.0.tgz)" = chart ]
+}
+
+@test "it gives up after PARAM_TRIES failures in a row that are no lost race" {
+  export FETCH_FAILURES=3
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"Giving up after 3 failures in a row to reach giantswarm-test-catalog in "*"s. Last error: fatal: unable to access the catalog"* ]]
 }
