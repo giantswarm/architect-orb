@@ -17,8 +17,11 @@
 # release version whichever ref triggered the pipeline; the rest of the job
 # would then treat a branch build as the release and push the released image
 # and chart again. When CIRCLE_TAG is empty and the version is not a dev
-# version, the step fails naming the version and the branch, before anything is
-# built. A tag pipeline is unchanged. The logic is src/scripts/image-prepare-tag.sh,
+# version, the step names the version and the branch and ends the job
+# successfully, before anything is built (`circleci-agent step halt`): the
+# branch pipeline's statuses land on the tagged commit under the tag pipeline's
+# contexts, and a failure there would block the release's promotion. A tag
+# pipeline is unchanged. The logic is src/scripts/image-prepare-tag.sh,
 # tested by src/tests/image-prepare-tag.bats.
 parameters:
   git-tag-prefix:

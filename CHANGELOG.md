@@ -20,6 +20,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `image-prepare-tag`: a branch pipeline at a release-tagged commit ends the job successfully, before anything is
+  built (`circleci-agent step halt`), instead of failing it. The job's status lands on the release commit under the
+  same context as the tag pipeline's, so the failure marked a green release candidate as failed and
+  `devctl release promote` and the stable promotion refused it. Nothing is published under a release version from a
+  branch pipeline, as before. `build-image`, `push-to-registries` and `push-to-app-catalog` all end there.
+  `run-tests-with-ats` ends the same way when such a pipeline left no chart archive to test, and `sync-china-registry`
+  when it pushed no image to mirror.
 - `push-to-app-catalog`: a push to a busy catalog lands instead of giving up after 20 attempts. A wave of builds
   keeps `giantswarm-test-catalog` saturated (a push every 10 to 14 seconds) for many minutes, and only a build that
   fetches right after another build's push landed can win. The job used to wait a random, doubling time of up to 60
