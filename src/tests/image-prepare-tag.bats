@@ -77,8 +77,14 @@ exported() {
 }
 
 @test "a branch pipeline at a tagged commit fails when it cannot end the job" {
-  rm "${BATS_TEST_TMPDIR}/bin/circleci-agent"
-  run -127 bash "${SCRIPT}"
+  # A PATH of the script's own tools alone: on CircleCI the real circleci-agent
+  # is on the PATH too.
+  local tools="${BATS_TEST_TMPDIR}/tools"
+  mkdir -p "${tools}"
+  for tool in bash cat git gitsemver tr; do
+    ln -s "$(command -v "${tool}")" "${tools}/${tool}"
+  done
+  run -127 env PATH="${tools}" bash "${SCRIPT}"
   [ ! -e /tmp/.docker_image_tag ]
 }
 
