@@ -3,7 +3,10 @@
 # from a git repository, for a tag pipeline and for a branch pipeline, at a
 # tagged commit and after one. Needs git and gitsemver, as the architect
 # executor has them; a tag pipeline is CIRCLE_TAG set, a branch pipeline
-# CIRCLE_TAG unset.
+# CIRCLE_TAG unset. circleci-agent is a stand-in on PATH that records the
+# arguments it was called with.
+
+bats_require_minimum_version 1.5.0
 
 setup() {
   SCRIPT="${BATS_TEST_DIRNAME}/../scripts/image-prepare-tag.sh"
@@ -24,6 +27,16 @@ setup() {
   git commit -q --allow-empty -m "release"
   git tag v1.2.3
   rm -f /tmp/.docker_image_tag
+
+  AGENT_CALLS="${BATS_TEST_TMPDIR}/circleci-agent.calls"
+  export AGENT_CALLS
+  mkdir -p "${BATS_TEST_TMPDIR}/bin"
+  cat > "${BATS_TEST_TMPDIR}/bin/circleci-agent" <<'AGENT'
+#!/bin/bash
+echo "$*" >> "${AGENT_CALLS}"
+AGENT
+  chmod +x "${BATS_TEST_TMPDIR}/bin/circleci-agent"
+  export PATH="${BATS_TEST_TMPDIR}/bin:${PATH}"
 }
 
 teardown() {
@@ -34,26 +47,38 @@ resolved_tag() {
   cat /tmp/.docker_image_tag
 }
 
+halted() {
+  [ "$(cat "${AGENT_CALLS}" 2>/dev/null)" = "step halt" ]
+}
+
 exported() {
   # The variable a later step sees after sourcing BASH_ENV.
   (. "${BASH_ENV}" && printf '%s' "${!1:-}")
 }
 
-@test "a branch pipeline at a tagged commit fails before writing the tag" {
+@test "a branch pipeline at a tagged commit ends the job successfully before writing the tag" {
   run bash "${SCRIPT}"
-  [ "${status}" -eq 1 ]
-  [[ "${output}" == *"branch pipeline resolved the release version 1.2.3"* ]]
+  [ "${status}" -eq 0 ]
+  halted
+  [[ "${output}" == *"branch pipeline resolved the release version 1.2.3; this job ends here, successfully"* ]]
   [[ "${output}" == *"triggered by the branch 'changesets-ghcommit-temp/changeset-release/main'"* ]]
   [ ! -e /tmp/.docker_image_tag ]
   [ -z "$(exported DOCKER_IMAGE_TAG)" ]
 }
 
-@test "a branch pipeline at an rc-tagged commit fails the same way" {
+@test "a branch pipeline at an rc-tagged commit ends the same way" {
   git commit -q --allow-empty -m "candidate"
   git tag v1.3.0-rc.1
   run bash "${SCRIPT}"
-  [ "${status}" -eq 1 ]
+  [ "${status}" -eq 0 ]
+  halted
   [[ "${output}" == *"release version 1.3.0-rc.1"* ]]
+  [ ! -e /tmp/.docker_image_tag ]
+}
+
+@test "a branch pipeline at a tagged commit fails when it cannot end the job" {
+  rm "${BATS_TEST_TMPDIR}/bin/circleci-agent"
+  run -127 bash "${SCRIPT}"
   [ ! -e /tmp/.docker_image_tag ]
 }
 
@@ -62,6 +87,7 @@ exported() {
   unset CIRCLE_BRANCH
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
+  ! halted
   [ "${output}" = "1.2.3" ]
   [ "$(resolved_tag)" = "1.2.3" ]
   [ "$(exported DOCKER_IMAGE_TAG)" = "1.2.3" ]
@@ -75,6 +101,7 @@ exported() {
   export CIRCLE_BRANCH=feature/next
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
+  ! halted
   gitsemver validate --type dev "$(resolved_tag)"
   [ "$(exported DOCKER_IMAGE_TAG)" = "$(resolved_tag)" ]
   [ "$(exported DOCKER_IMAGE_VERSION)" = "$(resolved_tag)" ]
@@ -98,11 +125,12 @@ exported() {
   [ "$(exported GS_GIT_TAG_PREFIX)" = "api" ]
 }
 
-@test "a branch pipeline at a mono repo's tagged commit fails too" {
+@test "a branch pipeline at a mono repo's tagged commit ends too" {
   git tag api/v2.0.0
   export PARAM_GIT_TAG_PREFIX=api
   run bash "${SCRIPT}"
-  [ "${status}" -eq 1 ]
+  [ "${status}" -eq 0 ]
+  halted
   [[ "${output}" == *"release version 2.0.0"* ]]
   [ ! -e /tmp/.docker_image_tag ]
 }

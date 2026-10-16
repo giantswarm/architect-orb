@@ -23,7 +23,11 @@
 # request opened from one, a rerun of a branch pipeline after the tag was cut.
 # Every later step treats a release version as a release: the China mirror
 # joins the push set, the tagged index and the chart are written again under
-# the released version. This step refuses instead, before anything is built.
+# the released version. This step ends the job instead, before anything is
+# built, and ends it successfully (`circleci-agent step halt`): the branch
+# pipeline posts its statuses on the tagged commit, under the same contexts as
+# the tag's own pipeline, and a failure there would mark a green release as
+# failed and keep it from being promoted.
 set -euo pipefail
 
 export GS_GIT_TAG_PREFIX="${PARAM_GIT_TAG_PREFIX}"
@@ -36,20 +40,24 @@ if [[ -z "${version}" ]]; then
 fi
 
 if [[ -z "${CIRCLE_TAG:-}" ]] && ! gitsemver validate --type dev "${version}" >/dev/null 2>&1; then
-  cat >&2 <<EOF
-ERROR: a branch pipeline resolved the release version ${version}.
+  cat <<EOF
+NOTE: a branch pipeline resolved the release version ${version}; this job ends here, successfully, without building.
 
 This pipeline was triggered by the branch '${CIRCLE_BRANCH:-}' (CIRCLE_TAG is empty),
 but the branch's head carries the release tag for ${version}: gitsemver reads
 the git state, not the trigger. A release version is published by the tag's own
 pipeline alone. From here it would be pushed a second time -- the tagged image
 index and the chart replaced under the released version, the China mirror
-included -- so this build stops before anything is built.
+included -- so this job stops before anything is built, and stops green: its
+status lands on the release commit next to the tag pipeline's.
 
 Nothing is wrong with the release. If this branch needs an image or a chart of
 its own, push a commit: the next commit after a tag resolves to a dev version.
 EOF
-  exit 1
+  # Ends the job after this step, as a success. Without circleci-agent (outside
+  # CircleCI) this fails, which still builds nothing.
+  circleci-agent step halt
+  exit 0
 fi
 
 tag="${version}${PARAM_TAG_SUFFIX}"
