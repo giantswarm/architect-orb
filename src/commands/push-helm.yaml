@@ -51,7 +51,8 @@ steps:
             name: "architect/push-helm-package: Push chart archive to app catalog repo"
             environment:
               PARAM_CHART: << parameters.chart >>
-              PARAM_TRIES: "20"
+              PARAM_TIMEOUT_SECONDS: "1800"
+              PARAM_TRIES: "5"
               PARAM_BACKOFF_SECONDS: "2"
             command: <<include(scripts/push-to-app-catalog.sh)>>
   - when:

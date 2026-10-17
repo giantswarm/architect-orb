@@ -54,6 +54,11 @@ parameters:
 steps:
   - attach_workspace:
       at: build
+  - run:
+      name: "architect/run-tests-with-ats: Skip a branch pipeline at a release commit"
+      environment:
+        PARAM_CHART_ARCHIVE_PREFIX: << parameters.chart_archive_prefix >>
+      command: <<include(scripts/run-tests-with-ats-skip-release-commit.sh)>>
   - unless:
       condition: << parameters.create_kind_cluster >>
       steps:

@@ -14,6 +14,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   fails the job, and so does a scan that could not run (`NOT SCANNED:`). Reviewed findings are excluded in
   `.govulncheck-ignore` with a required `until=` date. nancy is unchanged.
 
+### Changed
+
+- `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
+
+### Removed
+
+- `upload-release-assets`: the `github-token-env-var` parameter, and `generate-github-token`: the `token-env-var`
+  parameter. Both let a job use a pre-minted token, such as the shared `taylorbot` account's `TAYLORBOT_GITHUB_ACTION`,
+  instead of an installation token of the architect GitHub App. The account is being removed and no repository sets
+  either parameter, so the App token is now the only way the orb authenticates to GitHub.
+
+### Fixed
+
+- `image-prepare-tag`: a branch pipeline at a release-tagged commit ends the job successfully, before anything is
+  built (`circleci-agent step halt`), instead of failing it. The job's status lands on the release commit under the
+  same context as the tag pipeline's, so the failure marked a green release candidate as failed and
+  `devctl release promote` and the stable promotion refused it. Nothing is published under a release version from a
+  branch pipeline, as before. `build-image`, `push-to-registries` and `push-to-app-catalog` all end there.
+  `run-tests-with-ats` ends the same way when such a pipeline left no chart archive to test, and `sync-china-registry`
+  when it pushed no image to mirror.
+- `push-to-app-catalog`: a push to a busy catalog lands instead of giving up after 20 attempts. A wave of builds
+  keeps `giantswarm-test-catalog` saturated (a push every 10 to 14 seconds) for many minutes, and only a build that
+  fetches right after another build's push landed can win. The job used to wait a random, doubling time of up to 60
+  seconds after each lost race, so it came back in the middle of another build's push and lost again, all 20 times
+  (645 s). A lost race is now retried at once, for up to 30 minutes; helm indexes the chart once, on the cloned head,
+  before the first attempt. A failing `git fetch` of the catalog is retried like a failing push, with a jittered,
+  doubling wait, up to 5 such failures in a row. `src/tests/push-to-app-catalog-concurrency.bats` runs builds against
+  a catalog that a fleet of other builds keeps saturated.
+
+- `cosign-sign-verify`: a Rekor duplicate-entry answer ("an equivalent entry already exists") no longer leaves an
+  `oci` or `attest` artifact unsigned in the registry. cosign's own client retries a transparency-log upload that
+  already succeeded server-side, gets the 409 and stops before it attaches the signature, so the step used to skip
+  the sign and then fail `cosign verify` with `no signatures found`. On a duplicate the step now prints cosign's
+  error, checks the registry with the verify it runs afterwards, skips only when a verifiable signature is there,
+  and otherwise signs again (fresh ephemeral keys make a new, non-equivalent Rekor entry). Verify stays strict.
+  The step's script moved to `src/scripts/cosign-sign-verify.sh`, with bats tests of the duplicate path.
+
 ## [10.13.4] - 2026-10-15
 
 ### Fixed
