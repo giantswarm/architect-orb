@@ -29,7 +29,9 @@ setup() {
   git init -q --bare -b master remote.git
   # The catalog's push processing. A build's push (its commit adds
   # my-chart-<n>-1.0.0.tgz) that still has injected races to lose has a fleet
-  # chart land first; the fleet's own pushes pass at once.
+  # chart land first; the fleet's own pushes pass at once. Every push, the
+  # builds' and the fleet's, updates the one ref master, so the hook reads the
+  # first ref line only.
   cat > remote.git/hooks/pre-receive <<'EOF'
 #!/bin/bash
 read -r _ new _
