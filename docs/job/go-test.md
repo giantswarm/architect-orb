@@ -114,6 +114,12 @@ vulnerabilities`, shown in the job's Tests tab and in CircleCI's test insights. 
 test has not checked its dependencies with nancy; [govulncheck](#vulnerability-scanning-with-govulncheck)
 still scanned the code, since a govulncheck scan that could not run fails the job.
 
+nancy 2.1.0 reports every error answer of the Sonatype Guide API as `cannot unmarshal object into Go value of
+type []sonatypeguide.ComponentReportPost`. On that error the step checks two dependencies with nancy's URL and
+credentials (`OSSI_OSSINDEXURL`, `GUIDE_TOKEN` or `OSSI_USERNAME` and `OSSI_TOKEN` from the job's context) and
+puts the status and the API's reason into the `NOT SCANNED:` line, for an exhausted credit quota with the credits
+left and the date the quota resets. A refused check costs no credits.
+
 ## Vulnerability scanning with govulncheck
 
 [govulncheck](https://go.dev/doc/security/vuln/) checks the code against the Go vulnerability database
