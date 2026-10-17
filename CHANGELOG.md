@@ -7,23 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### Added
-
-- `go-test` / `go-build`: `govulncheck` checks whether the code reaches a known vulnerability in the Go
-  vulnerability database, which needs no account or credits. The step fails closed: a reachable vulnerability
-  fails the job, and so does a scan that could not run (`NOT SCANNED:`). Reviewed findings are excluded in
-  `.govulncheck-ignore` with a required `until=` date. nancy is unchanged.
-
-### Changed
-
-- `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
-
-### Removed
-
-- `upload-release-assets`: the `github-token-env-var` parameter, and `generate-github-token`: the `token-env-var`
-  parameter. Both let a job use a pre-minted token, such as the shared `taylorbot` account's `TAYLORBOT_GITHUB_ACTION`,
-  instead of an installation token of the architect GitHub App. The account is being removed and no repository sets
-  either parameter, so the App token is now the only way the orb authenticates to GitHub.
+## [10.14.1] - 2026-10-17
 
 ### Fixed
 
@@ -36,6 +20,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `push-to-app-catalog` concurrency test: the catalog's fake push hook lands a fixed number of other builds'
   charts ahead of each build's push instead of a fleet that pushes against the clock, so the test lands the same
   charts on a loaded machine as on an idle one, runs a bounded number of processes and is cut after 180 seconds.
+
+## [10.14.0] - 2026-10-17
+
+### Added
+
+- `go-test` / `go-build`: `govulncheck` checks whether the code reaches a known vulnerability in the Go
+  vulnerability database, which needs no account or credits. The step fails closed: a reachable vulnerability
+  fails the job, and so does a scan that could not run (`NOT SCANNED:`). Reviewed findings are excluded in
+  `.govulncheck-ignore` with a required `until=` date. nancy is unchanged.
+
+## [10.13.9] - 2026-10-16
+
+### Fixed
+
 - `image-prepare-tag`: a branch pipeline at a release-tagged commit ends the job successfully, before anything is
   built (`circleci-agent step halt`), instead of failing it. The job's status lands on the release commit under the
   same context as the tag pipeline's, so the failure marked a green release candidate as failed and
@@ -43,6 +41,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   branch pipeline, as before. `build-image`, `push-to-registries` and `push-to-app-catalog` all end there.
   `run-tests-with-ats` ends the same way when such a pipeline left no chart archive to test, and `sync-china-registry`
   when it pushed no image to mirror.
+
+## [10.13.8] - 2026-10-16
+
+### Fixed
+
 - `push-to-app-catalog`: a push to a busy catalog lands instead of giving up after 20 attempts. A wave of builds
   keeps `giantswarm-test-catalog` saturated (a push every 10 to 14 seconds) for many minutes, and only a build that
   fetches right after another build's push landed can win. The job used to wait a random, doubling time of up to 60
@@ -51,6 +54,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   before the first attempt. A failing `git fetch` of the catalog is retried like a failing push, with a jittered,
   doubling wait, up to 5 such failures in a row. `src/tests/push-to-app-catalog-concurrency.bats` runs builds against
   a catalog that a fleet of other builds keeps saturated.
+
+## [10.13.7] - 2026-10-15
+
+### Changed
+
+- `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
+
+## [10.13.7-rc.3] - 2026-10-15
+
+### Removed
+
+- `upload-release-assets`: the `github-token-env-var` parameter, and `generate-github-token`: the `token-env-var`
+  parameter. Both let a job use a pre-minted token, such as the shared `taylorbot` account's `TAYLORBOT_GITHUB_ACTION`,
+  instead of an installation token of the architect GitHub App. The account is being removed and no repository sets
+  either parameter, so the App token is now the only way the orb authenticates to GitHub.
+
+## [10.13.6] - 2026-10-15
+
+### Fixed
 
 - `cosign-sign-verify`: a Rekor duplicate-entry answer ("an equivalent entry already exists") no longer leaves an
   `oci` or `attest` artifact unsigned in the registry. cosign's own client retries a transparency-log upload that
@@ -2563,7 +2585,14 @@ registries at once.
 
 - Add push-to-app-catalog job.
 
-[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.13.4...HEAD
+[Unreleased]: https://github.com/giantswarm/architect-orb/compare/v10.14.1...HEAD
+[10.14.1]: https://github.com/giantswarm/architect-orb/compare/v10.14.0...v10.14.1
+[10.14.0]: https://github.com/giantswarm/architect-orb/compare/v10.13.9...v10.14.0
+[10.13.9]: https://github.com/giantswarm/architect-orb/compare/v10.13.8...v10.13.9
+[10.13.8]: https://github.com/giantswarm/architect-orb/compare/v10.13.7...v10.13.8
+[10.13.7]: https://github.com/giantswarm/architect-orb/compare/v10.13.7-rc.3...v10.13.7
+[10.13.7-rc.3]: https://github.com/giantswarm/architect-orb/compare/v10.13.6...v10.13.7-rc.3
+[10.13.6]: https://github.com/giantswarm/architect-orb/compare/v10.13.4...v10.13.6
 [10.13.4]: https://github.com/giantswarm/architect-orb/compare/v10.13.3...v10.13.4
 [10.13.3]: https://github.com/giantswarm/architect-orb/compare/v10.13.2...v10.13.3
 [10.13.2]: https://github.com/giantswarm/architect-orb/compare/v10.13.1...v10.13.2
