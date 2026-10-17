@@ -111,7 +111,8 @@ When nancy cannot get an answer (an outage, a rate limit, an exhausted credit qu
 the job does not fail, so an unrelated pull request is not blocked. The step prints `NOT SCANNED:` with the
 reason, and the job's JUnit results record the failed test `Go dependencies are scanned for known
 vulnerabilities`, shown in the job's Tests tab and in CircleCI's test insights. A green job with that failed
-test has not checked its dependencies.
+test has not checked its dependencies with nancy; [govulncheck](#vulnerability-scanning-with-govulncheck)
+still scanned the code, since a govulncheck scan that could not run fails the job.
 
 ## Vulnerability scanning with govulncheck
 

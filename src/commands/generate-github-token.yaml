@@ -8,14 +8,6 @@ parameters:
   installation_id_env_var:
     type: string
     default: CIRCLECI_ARCHITECT_GITHUB_APP_INSTALLATION_ID
-  token-env-var:
-    description: |
-      Name of an environment variable holding a pre-minted GitHub token. When
-      the named variable is non-empty at runtime, it is exported as GITHUB_TOKEN
-      and App token generation is skipped. Falls back to the GitHub App when
-      the variable is absent or empty.
-    type: string
-    default: ""
   non_fatal:
     description: |
       When `true`, a missing App private key or a failed token generation logs a
@@ -46,18 +38,6 @@ steps:
           printf 'ERROR: %s\n' "$@" >&2
           exit 1
         }
-
-        # If a pre-minted token env var is specified and populated, use it directly.
-        TOKEN_ENV_VAR="<< parameters.token-env-var >>"
-        if [[ -n "$TOKEN_ENV_VAR" ]]; then
-          TOKEN="${!TOKEN_ENV_VAR:-}"
-          if [[ -n "$TOKEN" ]]; then
-            echo "Using token from \$${TOKEN_ENV_VAR}."
-            echo "export GITHUB_TOKEN=\"$TOKEN\"" >> "$BASH_ENV"
-            exit 0
-          fi
-          echo "Warning: \$${TOKEN_ENV_VAR} is set as token-env-var but the variable is empty; falling back to GitHub App token." >&2
-        fi
 
         if [[ -z "${<< parameters.private_key_base64_env_var >>:-}" ]]; then
           give_up "<< parameters.private_key_base64_env_var >> is not set." \

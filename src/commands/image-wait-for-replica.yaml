@@ -42,6 +42,14 @@ steps:
   - run:
       name: "architect/image-wait-for-replica: Wait until the source image is visible from this runner"
       command: |
+        # A branch pipeline at a release commit pushed nothing: push-to-registries
+        # ended at image-prepare-tag, successfully, before saving the image data.
+        # Nothing to mirror, and the tag's own pipeline mirrors the release.
+        if [ ! -f /tmp/.docker_image_tag ] && [ -z "${CIRCLE_TAG:-}" ]; then
+          echo "NOTE: no image was pushed by this branch pipeline (a release commit is built by its tag's pipeline); nothing to mirror, this job ends here, successfully."
+          circleci-agent step halt
+          exit 0
+        fi
         SOURCE_REGISTRY="$(cat /tmp/.docker_image_registry)"
         IMAGE_TAG="$(cat /tmp/.docker_image_tag)"
         REPOSITORY="${SOURCE_REGISTRY}/<<parameters.image>>"
