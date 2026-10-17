@@ -8,6 +8,9 @@
 #   NANCY_CACHE_STATE       the checksum of that cache after the scan, the save key's last part,
 #                           /tmp/nancy-cache-state by default
 #
+# nancy reads its Sonatype Guide credentials (GUIDE_TOKEN, or OSSI_USERNAME and
+# OSSI_TOKEN) and its base URL (OSSI_OSSINDEXURL) from the job's context.
+#
 # The scan log stays out of the working tree: this step runs between
 # `make test` and the binary link, and a stray untracked file in the repo makes
 # Go's buildvcs stamp `vcs.modified=true`, so release binaries would report
@@ -36,10 +39,56 @@ write_junit() {
     echo "<testsuites><testsuite name=\"nancy\" tests=\"1\" failures=\"${failures}\">"
     echo '<testcase classname="nancy" name="Go dependencies are scanned for known vulnerabilities">'
     if [[ "$failures" -ne 0 ]]; then
+      message=$(printf '%s' "$message" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/"/\&quot;/g')
       echo "<failure message=\"${message}\"/>"
     fi
     echo '</testcase></testsuite></testsuites>'
   } > "$junit_dir/nancy.xml"
+}
+
+# nancy 2.1.0's Sonatype Guide client decodes an error answer (HTTP 400, 401,
+# 402, 500) as a component report and drops its status, so every refusal reads
+# `cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost`.
+# One check of two dependencies with nancy's URL and credentials recovers the
+# status and the API's reason: a refused check costs no credits, and one that
+# is answered costs at most two dependencies' worth. The credentials reach curl
+# on stdin, never on its command line.
+guide_error_reason() {
+  local base="${OSSI_OSSINDEXURL:-${OSSIndexURL:-https://api.guide.sonatype.com}}"
+  local auth body status message
+  if [[ -n "${GUIDE_TOKEN:-}" ]]; then
+    auth="header = \"Authorization: Bearer ${GUIDE_TOKEN}\""
+  elif [[ -n "${OSSI_USERNAME:-}" ]]; then
+    auth="user = \"${OSSI_USERNAME}:${OSSI_TOKEN:-}\""
+  elif [[ -n "${OSSI_TOKEN:-}" ]]; then
+    auth="header = \"Authorization: Bearer ${OSSI_TOKEN}\""
+  else
+    echo "no Sonatype Guide credentials are set (GUIDE_TOKEN, or OSSI_USERNAME and OSSI_TOKEN)"
+    return
+  fi
+
+  body=$(mktemp)
+  status=$(printf '%s\n' "$auth" | curl -sS --max-time 30 -K - -o "$body" -w '%{http_code}' \
+    -X POST "${base%/}/api/v3/component-report" -H 'Content-Type: application/json' \
+    -d '{"coordinates":["pkg:golang/golang.org/x/text@v0.3.8","pkg:golang/golang.org/x/net@v0.7.0"]}') || status=""
+  message=$(jq -r 'if type == "object" then (.message // .code // empty) else empty end' "$body" 2>/dev/null) || message=""
+
+  case "$status" in
+    402)
+      jq -r '"Sonatype Guide answered HTTP 402 \(.code // "Payment Required"): \(.creditsRemaining // "no") credits left on the \(.tier // "unknown") tier, the quota resets on \(.resetDate // "an unknown date")"' \
+        "$body" 2>/dev/null || echo "Sonatype Guide answered HTTP 402 Payment Required${message:+: ${message}}"
+      ;;
+    2??)
+      echo "Sonatype Guide answered a check of two dependencies, so its refusal of the scan was transient or specific to the scan's batch"
+      ;;
+    ""|000)
+      echo "the Sonatype Guide API could not be reached to recover its answer"
+      ;;
+    *)
+      echo "Sonatype Guide answered HTTP ${status}${message:+: ${message}}"
+      ;;
+  esac
+  rm -f "$body"
 }
 
 go list -json -deps ./... \
@@ -77,12 +126,9 @@ if ! grep -qF \
   exit "$nancy_result"
 fi
 
-# The Sonatype Guide client decodes an error answer (HTTP 400, 401, 402, 500)
-# as a component report, so an exhausted credit quota or rejected credentials
-# read as this decode error rather than as their status.
 reason="the external scanner could not answer"
 if grep -qF 'cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost' "$results"; then
-  reason="the Sonatype Guide API answered with an error instead of a report (an exhausted credit quota or rejected credentials)"
+  reason=$(guide_error_reason)
 fi
 
 echo

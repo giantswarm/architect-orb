@@ -27,6 +27,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `go-test` / `go-build`: a nancy scan the Sonatype Guide API refused says why. nancy 2.1.0 reports every Guide
+  error as `cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost`; the step now
+  checks two dependencies with nancy's URL and credentials and prints the status and the API's reason in the
+  `NOT SCANNED:` line and the JUnit failure, for an exhausted credit quota with the credits left and the reset date
+  (`HTTP 402 CREDIT_LIMIT_EXCEEDED: 0.1 credits left on the paid tier, the quota resets on 2026-10-28`). A
+  refused check costs no credits. The JUnit failure message is now XML-escaped.
 - `push-to-app-catalog` concurrency test: the catalog's fake push hook lands a fixed number of other builds'
   charts ahead of each build's push instead of a fleet that pushes against the clock, so the test lands the same
   charts on a loaded machine as on an idle one, runs a bounded number of processes and is cut after 180 seconds.
