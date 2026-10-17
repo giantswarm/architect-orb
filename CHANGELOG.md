@@ -27,6 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `push-to-app-catalog` concurrency test: the catalog's fake push hook lands a fixed number of other builds'
+  charts ahead of each build's push instead of a fleet that pushes against the clock, so the test lands the same
+  charts on a loaded machine as on an idle one, runs a bounded number of processes and is cut after 180 seconds.
 - `image-prepare-tag`: a branch pipeline at a release-tagged commit ends the job successfully, before anything is
   built (`circleci-agent step halt`), instead of failing it. The job's status lands on the release commit under the
   same context as the tag pipeline's, so the failure marked a green release candidate as failed and
