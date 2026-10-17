@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `go-test` / `go-build`: `govulncheck` checks whether the code reaches a known vulnerability in the Go
+  vulnerability database, which needs no account or credits. The step fails closed: a reachable vulnerability
+  fails the job, and so does a scan that could not run (`NOT SCANNED:`). Reviewed findings are excluded in
+  `.govulncheck-ignore` with a required `until=` date. nancy is unchanged.
+
 ### Changed
 
 - `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.

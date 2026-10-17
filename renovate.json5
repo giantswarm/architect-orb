@@ -128,6 +128,17 @@
       extractVersionTemplate: '^v(?<version>.+)$',
     },
     {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^src/commands/go-test\\.yaml$/',
+      ],
+      matchStrings: [
+        'GOVULNCHECK_VERSION:\\s*"(?<currentValue>v[^"]+)"',
+      ],
+      depNameTemplate: 'golang.org/x/vuln',
+      datasourceTemplate: 'go',
+    },
+    {
       // The shared preset only reads `# renovate:` annotations in Dockerfiles and
       // vendir.yml, so the annotation on the binfmt line needs its own manager.
       // Only the numeric part is captured, which keeps the `qemu-v` tag prefix in
