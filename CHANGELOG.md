@@ -7,19 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### Added
-
-- `go-test` / `go-build`: `govulncheck` checks whether the code reaches a known vulnerability in the Go
-  vulnerability database, which needs no account or credits. The step fails closed: a reachable vulnerability
-  fails the job, and so does a scan that could not run (`NOT SCANNED:`). Reviewed findings are excluded in
-  `.govulncheck-ignore` with a required `until=` date. nancy is unchanged.
-
 ### Changed
 
 - `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
 
 ### Removed
 
+- `go-test`: remove the `govulncheck` step. Vulnerability scanning in CI is owned by Team Shield.
 - `upload-release-assets`: the `github-token-env-var` parameter, and `generate-github-token`: the `token-env-var`
   parameter. Both let a job use a pre-minted token, such as the shared `taylorbot` account's `TAYLORBOT_GITHUB_ACTION`,
   instead of an installation token of the architect GitHub App. The account is being removed and no repository sets
