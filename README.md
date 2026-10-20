@@ -9,17 +9,6 @@ This repository hosts the source code for giantswarm/architect orb.
 
 Jobs available in this orb are documented [here](docs/README.md#jobs)
 
-## Vulnerability scanning in `go-test` and `go-build`
-
-Both jobs scan the Go code twice, and the GitHub check tells a scanned build from an unscanned one:
-
-- [`govulncheck`](docs/job/go-test.md#vulnerability-scanning-with-govulncheck) fails closed. A green check
-  means the code was checked against the Go vulnerability database and reaches no known vulnerability. A
-  scan that could not run turns the check red and prints `NOT SCANNED:`.
-- [`nancy`](docs/job/go-test.md#dependency-scanning-with-nancy) fails open when Sonatype Guide cannot answer
-  (an outage or an exhausted credit quota): its step prints `NOT SCANNED:` and records the failed JUnit test
-  `Go dependencies are scanned for known vulnerabilities` in the job's Tests tab, while the check stays green.
-
 ## Design and Goals
 
 - Replacing [architect][architect] entirely **is not** a goal. But replacing
