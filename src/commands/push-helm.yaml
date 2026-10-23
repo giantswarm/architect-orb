@@ -23,30 +23,13 @@ steps:
       condition:
         equal: [<< parameters.push_to_appcatalog >>, true]
       steps:
-        - run:
-            name: "architect/push-helm-package: Check environment variables"
-            command: |
-              [ ! -z "${CATALOGBOT_SSH_KEY_PRIVATE_BASE64}" ] && exit 0
-              echo "CATALOGBOT_SSH_KEY_PRIVATE_BASE64 env variable must not be empty"
-              exit 1
-        - run:
-            name: "architect/push-helm-package: Setup SSH key"
-            command: |
-              mkdir -p ~/.ssh
-              echo "${CATALOGBOT_SSH_KEY_PRIVATE_BASE64}" | base64 -d > ~/.ssh/id_rsa
-              chmod 0600 ~/.ssh/id_rsa
-              ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
-        - run:
-            name: "architect/push-helm-package: Configure git"
-            command: |
-              git config --global url."ssh://git@github.com".insteadOf "https://github.com"
-              git config --global gc.auto 0
-              git config --global user.email "catalogbot@giantswarm.io"
-              git config --global user.name "CatalogBot"
+        - generate-github-token
         - run:
             name: "architect/push-helm-package: Clone app catalog repo"
-            command: |
-              git clone -q --depth=1 --single-branch "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
+            environment:
+              PARAM_TRIES: "5"
+              PARAM_BACKOFF_SECONDS: "2"
+            command: <<include(scripts/clone-app-catalog.sh)>>
         - run:
             name: "architect/push-helm-package: Push chart archive to app catalog repo"
             environment:

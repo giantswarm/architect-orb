@@ -52,8 +52,8 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
 - Temporary `.build_*` files should be only used in scope of a single command.
 - A command using temporary files should clean them up as the last step.
 
-[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/prepare-catalogbot-git-ssh.yaml
-[step-prefix]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/prepare-catalogbot-git-ssh.yaml
+[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/3e36470/src/commands/prepare-catalogbot-git-ssh.yaml
+[step-prefix]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/integration-test-setup.yaml
 [when-unless]: https://circleci.com/docs/2.0/configuration-reference/#the-when-step-requires-version-21
 
 ## Development
