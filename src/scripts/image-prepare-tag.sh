@@ -14,8 +14,10 @@
 # the tag-suffix), DOCKER_IMAGE_VERSION (the version alone) and
 # GS_GIT_TAG_PREFIX through BASH_ENV.
 #
-# The version comes from `gitsemver get`, which reads the git state alone: at
-# a commit carrying a release tag it is that release version, whichever ref the
+# The version is the one pin-version recorded for the workflow in
+# .pipeline_version, when the job attached it from the workspace; otherwise
+# `gitsemver get` resolves it. Either way the version comes from git state
+# alone: at a commit carrying a release tag it is that release version, whichever ref the
 # pipeline was triggered by. A release version is only ever published by the
 # tag's own pipeline, so on a branch pipeline the version must be a dev
 # version, and a release version there means the branch's head is a tagged
@@ -33,7 +35,20 @@ set -euo pipefail
 export GS_GIT_TAG_PREFIX="${PARAM_GIT_TAG_PREFIX}"
 echo "export GS_GIT_TAG_PREFIX=\"${PARAM_GIT_TAG_PREFIX}\"" >> "${BASH_ENV}"
 
-version="$(gitsemver get | tr -d '\n')"
+# A version pin-version resolved at the start of the workflow, attached from
+# the workspace, wins: every job of the workflow then builds with the same
+# version, even when a stable tag lands while it runs. Without the file the
+# version is resolved here, from the git state of this job's checkout.
+pinned=".pipeline_version"
+if [[ -n "${PARAM_GIT_TAG_PREFIX}" ]]; then
+  pinned="${pinned}-${PARAM_GIT_TAG_PREFIX}"
+fi
+if [[ -s "${pinned}" ]]; then
+  version="$(tr -d '\n' < "${pinned}")"
+  echo "Using the version pin-version resolved for this workflow (${pinned}): ${version}" >&2
+else
+  version="$(gitsemver get | tr -d '\n')"
+fi
 if [[ -z "${version}" ]]; then
   echo "ERROR: gitsemver get returned no version." >&2
   exit 1

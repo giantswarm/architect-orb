@@ -1,0 +1,35 @@
+# Command: pin-version
+#
+# Resolves the version of the workflow once and persists it to the workspace,
+# for every later job to build with.
+#
+# Writes:
+#   .pipeline_version        the version `gitsemver get` resolves, in the
+#                            workspace (with git-tag-prefix:
+#                            .pipeline_version-<prefix>)
+#
+# image-prepare-tag, in a job that attached the workspace, takes its version
+# from that file instead of resolving it again: build-image,
+# push-to-registries, and push-to-app-catalog with attach_workspace. A job that
+# resolves the version itself fetches the tags anew at checkout, so a stable
+# tag landing mid-workflow (a promote) would move the base of the dev version
+# between the image and the chart that references it. The logic is
+# src/scripts/pin-version.sh, tested by src/tests/pin-version.bats.
+parameters:
+  git-tag-prefix:
+    description: |
+      Tag prefix for mono repos, exported as GS_GIT_TAG_PREFIX before gitsemver
+      runs. Empty on a single-project repo. The jobs that build with the
+      version must pass the same prefix.
+    type: string
+    default: ""
+steps:
+  - run:
+      name: "architect/pin-version: Resolve the workflow's version from git state"
+      environment:
+        PARAM_GIT_TAG_PREFIX: <<parameters.git-tag-prefix>>
+      command: <<include(scripts/pin-version.sh)>>
+  - persist_to_workspace:
+      root: .
+      paths:
+        - .pipeline_version*

@@ -7,8 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `pin-version` job and command: resolve the workflow's version once with `gitsemver get` and persist it to the
+  workspace as `.pipeline_version` (`.pipeline_version-<prefix>` with `git-tag-prefix`). A stable tag landing while
+  a workflow runs (a promote) no longer gives the image and the chart that references it different versions.
+
 ### Changed
 
+- `image-prepare-tag`: take the version from `.pipeline_version` when `pin-version` persisted it and the job attached
+  the workspace (`build-image`, `push-to-registries`, `push-to-app-catalog` with `attach_workspace: true`). Without
+  the file the version is resolved with `gitsemver get` as before.
 - `push-to-app-catalog` / `push-helm`: push the chart to the git app catalog over HTTPS with an installation token of
   the architect GitHub App, minted by `generate-github-token`, instead of over SSH with the shared `catalogbot`
   account's key (`CATALOGBOT_SSH_KEY_PRIVATE_BASE64`). The catalog's commits are authored by `circleci-architect[bot]`.
