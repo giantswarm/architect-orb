@@ -79,6 +79,11 @@ fi
 if [[ "$1" == push && "${PWD}" == */.app_catalog ]]; then
   pushes=$(( $(cat "${BATS_TEST_TMPDIR}/pushes" 2>/dev/null || echo 0) + 1 ))
   echo "${pushes}" > "${BATS_TEST_TMPDIR}/pushes"
+  if [[ -n "${PUSH_DENIED:-}" ]]; then
+    echo "remote: Permission to giantswarm/giantswarm-test-catalog.git denied to circleci-architect[bot]." >&2
+    echo "fatal: unable to access 'https://github.com/giantswarm/giantswarm-test-catalog.git/': The requested URL returned error: 403" >&2
+    exit 128
+  fi
   if [[ "${pushes}" -le "${RACES:-0}" ]]; then
     other-build "${pushes}"
   fi
@@ -209,4 +214,13 @@ EOF
   run bash "${SCRIPT}"
   [ "${status}" -eq 1 ]
   [[ "${output}" == *"Giving up after 3 failures in a row to reach giantswarm-test-catalog in "*"s. Last error: fatal: unable to access the catalog"* ]]
+}
+
+@test "a refused push gives up at once" {
+  export PUSH_DENIED=1
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 1 ]
+  [ "$(cat "${BATS_TEST_TMPDIR}/pushes")" -eq 1 ]
+  [[ "${output}" != *"waiting"* ]]
+  [[ "${output}" == *"The push to giantswarm-test-catalog was refused, giving up. Error: fatal: unable to access"*"403"* ]]
 }

@@ -16,8 +16,9 @@ can push to one or the other, or both of them with a single job run.
 token of the `CircleCI architect` GitHub App, minted by `generate-github-token`, so
 it needs the `architect` context. The catalog's commits are authored by
 `circleci-architect[bot]`. The App is installed on every repository of the
-organisation with `Contents: write`, so a new catalog repository needs no extra
-set-up.
+organisation with `Contents: write`. A catalog whose default branch has a branch
+protection or ruleset must let the App push; a refused push ends the job at once
+with `The push to <catalog> was refused`.
 
 This job assumes that the App Catalog is defined in a GitHub repository inside
 giantswarm organization. E.g. when `app_catalog` parameter is set to
@@ -179,7 +180,8 @@ workflows:
 ### push_to_appcatalog (optional boolean, default=true)
 
 When set to `true`, the packaged chart will be pushed to a classic GitHub app
-catalog.
+catalog with the architect GitHub App's token, so the job needs the `architect`
+context.
 
 ### push_to_oci_registry (optional boolean, default=true)
 

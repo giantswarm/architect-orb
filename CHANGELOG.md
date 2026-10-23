@@ -13,13 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   the architect GitHub App, minted by `generate-github-token`, instead of over SSH with the shared `catalogbot`
   account's key (`CATALOGBOT_SSH_KEY_PRIVATE_BASE64`). The catalog's commits are authored by `circleci-architect[bot]`.
   The OCI push already needed the `architect` context; a job with `push_to_oci_registry: false` now needs it too
-  (no repository sets that).
+  (no repository in the organisation sets that). A push the catalog refuses (a rejected token, no write access, a
+  protected branch) ends the job at once instead of being retried.
 - `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
 
 ### Removed
 
-- `prepare-catalogbot-git-ssh` command. No job uses it, no repository calls it, and the `catalogbot` account it
-  set up is being removed.
+- `prepare-catalogbot-git-ssh` command. No job of the orb and no repository in the organisation calls it, and the
+  `catalogbot` account it set up is being removed.
 - `go-test`: remove the `govulncheck` step. Vulnerability scanning in CI is owned by Team Shield.
 - `upload-release-assets`: the `github-token-env-var` parameter, and `generate-github-token`: the `token-env-var`
   parameter. Both let a job use a pre-minted token, such as the shared `taylorbot` account's `TAYLORBOT_GITHUB_ACTION`,
