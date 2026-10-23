@@ -6,6 +6,7 @@
 - [go-build](job/go-build.md)
 - [go-test](job/go-test.md)
 - [integration-test](job/integration-test.md)
+- [pin-version](job/pin-version.md)
 - [push-to-app-catalog](job/push-to-app-catalog.md)
 - [push-to-registries](job/push-to-registries.md)
 - [run-tests-with-ats](job/run-tests-with-ats.md) (Experimental)
