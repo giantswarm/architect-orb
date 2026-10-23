@@ -150,10 +150,11 @@ while [[ "${SECONDS}" -lt "${deadline}" ]]; do
     failures=0
     echo "====> Attempt ${i} lost the race to another build's push, fetching its head at once." >&2
   # A refused push: the token is rejected or lacks write access, or the branch
-  # is protected against it. Another attempt is refused the same way.
-  elif echo "${push_output}" | grep -q -E 'Authentication failed|Invalid username or token|Permission to .* denied|returned error: 40[13]|GH006|GH013'; then
+  # is protected against it. Another attempt is refused the same way. A bare
+  # 403 is no refusal: GitHub throttles busy pushers with one.
+  elif echo "${push_output}" | grep -q -E 'Authentication failed|Invalid username or token|Permission to .* denied|GH006|GH013'; then
     echo "The push to ${app_catalog_name} was refused, giving up. Error: ${error}" >&2
-    echo "The job pushes with the architect GitHub App's token: check that the job has the architect context and that the App may push to the catalog's ${branch} branch." >&2
+    echo "The job pushes with the architect GitHub App's token: check that the job has the architect context and that the App may push to the catalog's ${branch} branch. The token lasts an hour: after a long job a rerun mints a new one." >&2
     exit 1
   else
     failed "${error}"

@@ -79,9 +79,8 @@ fi
 if [[ "$1" == push && "${PWD}" == */.app_catalog ]]; then
   pushes=$(( $(cat "${BATS_TEST_TMPDIR}/pushes" 2>/dev/null || echo 0) + 1 ))
   echo "${pushes}" > "${BATS_TEST_TMPDIR}/pushes"
-  if [[ -n "${PUSH_DENIED:-}" ]]; then
-    echo "remote: Permission to giantswarm/giantswarm-test-catalog.git denied to circleci-architect[bot]." >&2
-    echo "fatal: unable to access 'https://github.com/giantswarm/giantswarm-test-catalog.git/': The requested URL returned error: 403" >&2
+  if [[ -n "${PUSH_ERROR:-}" ]]; then
+    printf '%b\n' "${PUSH_ERROR}" >&2
     exit 128
   fi
   if [[ "${pushes}" -le "${RACES:-0}" ]]; then
@@ -217,10 +216,24 @@ EOF
 }
 
 @test "a refused push gives up at once" {
-  export PUSH_DENIED=1
+  for refusal in \
+    "remote: Permission to giantswarm/giantswarm-test-catalog.git denied to circleci-architect[bot].\nfatal: unable to access 'https://github.com/giantswarm/giantswarm-test-catalog.git/': The requested URL returned error: 403" \
+    "remote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https://github.com/giantswarm/giantswarm-test-catalog.git/'" \
+    "remote: error: GH013: Repository rule violations found for refs/heads/master.\n ! [remote rejected] HEAD -> master (push declined due to repository rule violations)\nerror: failed to push some refs"; do
+    rm -f "${BATS_TEST_TMPDIR}/pushes"
+    PUSH_ERROR="${refusal}" run bash "${SCRIPT}"
+    [ "${status}" -eq 1 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/pushes")" -eq 1 ]
+    [[ "${output}" != *"waiting"* ]]
+    [[ "${output}" == *"The push to giantswarm-test-catalog was refused, giving up. Error: "* ]]
+  done
+}
+
+@test "a throttled push is retried" {
+  export PUSH_ERROR="fatal: unable to access 'https://github.com/giantswarm/giantswarm-test-catalog.git/': The requested URL returned error: 403"
   run bash "${SCRIPT}"
   [ "${status}" -eq 1 ]
-  [ "$(cat "${BATS_TEST_TMPDIR}/pushes")" -eq 1 ]
-  [[ "${output}" != *"waiting"* ]]
-  [[ "${output}" == *"The push to giantswarm-test-catalog was refused, giving up. Error: fatal: unable to access"*"403"* ]]
+  [ "$(cat "${BATS_TEST_TMPDIR}/pushes")" -eq 3 ]
+  [[ "${output}" != *"was refused"* ]]
+  [[ "${output}" == *"Giving up after 3 failures in a row to reach giantswarm-test-catalog in "*"returned error: 403"* ]]
 }
