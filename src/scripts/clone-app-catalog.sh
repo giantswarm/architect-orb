@@ -16,12 +16,14 @@
 # it does not start with https://github.com and is not rewritten. Git asks the
 # helper for the password, the helper hands it the token from the environment:
 # the token is never written into a URL or a config file. The helper, the
-# author and gc.auto are the clone's own configuration, so no other step of the
-# job authenticates with the token.
+# author and gc.auto are the clone's own configuration: no other git command of
+# the job authenticates with the token. An empty http.extraHeader drops any
+# Authorization header the checkout configures, so the token is what git sends.
 #
 # A clone that fails is retried after a random wait up to a doubling bound (2,
 # 4, 8, ... seconds for a base of 2, at most 60), unless GitHub refused it: a
-# rejected token, a catalog the App cannot see or write to.
+# catalog the App cannot see. A rejected token is retried, GitHub may reject a
+# token it minted seconds ago.
 set -euo pipefail
 
 if [[ -z "${GITHUB_TOKEN:-}" ]]; then
@@ -30,8 +32,7 @@ if [[ -z "${GITHUB_TOKEN:-}" ]]; then
 fi
 
 readonly max_wait=60
-# Keep in sync with the refused pushes in push-to-app-catalog.sh.
-readonly refused='Authentication failed|Invalid username or token|Permission to .* denied|Write access to repository not granted|Repository not found|repository .* not found|GH006|GH013'
+readonly refused='Repository not found|repository .* not found'
 # shellcheck disable=SC2016 # the helper reads GITHUB_TOKEN when git runs it.
 readonly helper='!f() { test "$1" = get || return 0; echo username=x-access-token; echo "password=${GITHUB_TOKEN}"; }; f'
 
@@ -43,11 +44,12 @@ for i in $(seq 1 "${PARAM_TRIES}"); do
   rm -rf .app_catalog
   echo "====> Attempt ${i}: Running: git clone --depth=1 --single-branch ${url} .app_catalog"
   # An empty credential.helper first drops any helper the image configures.
-  if output="$(git -c credential.helper= -c "credential.helper=${helper}" \
+  if output="$(git -c http.extraHeader= -c credential.helper= -c "credential.helper=${helper}" \
     clone -q --depth=1 --single-branch "${url}" .app_catalog 2>&1)"; then
     # The empty helper drops any helper of the image's or the job's configuration.
     git -C .app_catalog config credential.helper ""
     git -C .app_catalog config --add credential.helper "${helper}"
+    git -C .app_catalog config http.extraHeader ""
     git -C .app_catalog config gc.auto 0
     # The App's bot user, so the catalog's commits are attributed to it on GitHub.
     git -C .app_catalog config user.name "circleci-architect[bot]"

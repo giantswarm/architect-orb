@@ -63,6 +63,7 @@ WRAPPER
   [ "$(git -C .app_catalog config --local user.name)" = "circleci-architect[bot]" ]
   [ "$(git -C .app_catalog config --local user.email)" = "240937895+circleci-architect[bot]@users.noreply.github.com" ]
   [ "$(git -C .app_catalog config --local gc.auto)" = 0 ]
+  [ -z "$(git -C .app_catalog config --local http.extraHeader)" ]
   run git config --global --get-regexp '^credential\.'
   [ "${status}" -ne 0 ]
   run bash -c 'printf "protocol=https\nhost=github.com\nusername=x-access-token\n\n" | git -C .app_catalog credential fill'
@@ -83,8 +84,7 @@ WRAPPER
 @test "a refused clone gives up at once" {
   export CLONE_FAILURES=10
   for refusal in \
-    "remote: Repository not found.\nfatal: repository 'https://github.com/giantswarm/giantswarm-test-catalog.git/' not found" \
-    "remote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https://github.com/giantswarm/giantswarm-test-catalog.git/'"; do
+    "remote: Repository not found.\nfatal: repository 'https://github.com/giantswarm/giantswarm-test-catalog.git/' not found"; do
     rm -f "${BATS_TEST_TMPDIR}/clones"
     CLONE_ERROR="${refusal}" run bash "${SCRIPT}"
     [ "${status}" -eq 1 ]
@@ -92,6 +92,13 @@ WRAPPER
     [[ "${output}" != *"waiting"* ]]
     [[ "${output}" == *"The clone of giantswarm-test-catalog was refused, giving up. Error: fatal: "* ]]
   done
+}
+
+@test "a rejected token is retried, GitHub may not know a token it just minted" {
+  export CLONE_FAILURES=1 CLONE_ERROR="remote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https://github.com/giantswarm/giantswarm-test-catalog.git/'"
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "$(cat "${BATS_TEST_TMPDIR}/clones")" -eq 2 ]
 }
 
 @test "it gives up after PARAM_TRIES failed clones" {
