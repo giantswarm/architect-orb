@@ -13,8 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   the architect GitHub App, minted by `generate-github-token`, instead of over SSH with the shared `catalogbot`
   account's key (`CATALOGBOT_SSH_KEY_PRIVATE_BASE64`). The catalog's commits are authored by `circleci-architect[bot]`.
   The OCI push already needed the `architect` context; a job with `push_to_oci_registry: false` now needs it too
-  (no repository in the organisation sets that). A push the catalog refuses (a rejected token, no write access, a
-  protected branch) ends the job at once instead of being retried.
+  (no repository in the organisation sets that). The token reaches only the catalog's clone: its URL names the user
+  `x-access-token`, so the SSH rewrite CircleCI's checkout sets for projects with a deploy key does not apply, and the
+  credential helper and the author are the clone's own configuration. A failing clone is retried like a failing push.
+  A clone or push the catalog refuses (a rejected token, a catalog the App cannot see or write to, a protected branch)
+  ends the job at once instead of being retried.
 - `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
 
 ### Removed

@@ -17,8 +17,11 @@ token of the `CircleCI architect` GitHub App, minted by `generate-github-token`,
 it needs the `architect` context. The catalog's commits are authored by
 `circleci-architect[bot]`. The App is installed on every repository of the
 organisation with `Contents: write`. A catalog whose default branch has a branch
-protection or ruleset must let the App push; a refused push ends the job at once
-with `The push to <catalog> was refused`.
+protection or ruleset must let the App push; a refused clone or push ends the job
+at once with `The clone of <catalog> was refused` or `The push to <catalog> was
+refused`. The token is only configured in the catalog's clone, so no other step of
+the job authenticates with it, and the clone is not rewritten to SSH by the
+checkout of a project with a deploy key.
 
 This job assumes that the App Catalog is defined in a GitHub repository inside
 giantswarm organization. E.g. when `app_catalog` parameter is set to
