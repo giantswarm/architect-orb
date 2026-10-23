@@ -23,30 +23,30 @@ steps:
       condition:
         equal: [<< parameters.push_to_appcatalog >>, true]
       steps:
-        - run:
-            name: "architect/push-helm-package: Check environment variables"
-            command: |
-              [ ! -z "${CATALOGBOT_SSH_KEY_PRIVATE_BASE64}" ] && exit 0
-              echo "CATALOGBOT_SSH_KEY_PRIVATE_BASE64 env variable must not be empty"
-              exit 1
-        - run:
-            name: "architect/push-helm-package: Setup SSH key"
-            command: |
-              mkdir -p ~/.ssh
-              echo "${CATALOGBOT_SSH_KEY_PRIVATE_BASE64}" | base64 -d > ~/.ssh/id_rsa
-              chmod 0600 ~/.ssh/id_rsa
-              ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+        - generate-github-token
         - run:
             name: "architect/push-helm-package: Configure git"
             command: |
-              git config --global url."ssh://git@github.com".insteadOf "https://github.com"
+              set -euo pipefail
+
+              if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+                echo "ERROR: GITHUB_TOKEN is not set. Did the generate-github-token step succeed?" >&2
+                exit 1
+              fi
+
+              # The catalog is pushed over HTTPS with the architect GitHub App's installation
+              # token. The helper hands git the token from the environment when GitHub asks
+              # for credentials, so it is never written into a remote URL or a config file.
+              git config --global credential.https://github.com.helper \
+                '!f() { test "$1" = get || return 0; echo username=x-access-token; echo "password=${GITHUB_TOKEN}"; }; f'
               git config --global gc.auto 0
-              git config --global user.email "catalogbot@giantswarm.io"
-              git config --global user.name "CatalogBot"
+              # The App's bot user, so the catalog's commits are attributed to it on GitHub.
+              git config --global user.name "circleci-architect[bot]"
+              git config --global user.email "240937895+circleci-architect[bot]@users.noreply.github.com"
         - run:
             name: "architect/push-helm-package: Clone app catalog repo"
             command: |
-              git clone -q --depth=1 --single-branch "git@github.com:giantswarm/$(cat .app_catalog_name).git" .app_catalog
+              git clone -q --depth=1 --single-branch "https://github.com/giantswarm/$(cat .app_catalog_name).git" .app_catalog
         - run:
             name: "architect/push-helm-package: Push chart archive to app catalog repo"
             environment:

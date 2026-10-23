@@ -12,20 +12,17 @@ catalogs (by default in Azure Container Registry). Depending on parameters, it
 can push to one or the other, or both of them with a single job run.
 
 ## Pushing to GitHub App Catalogs (`push_to_appcatalog: true`)
-**NOTE**: The job requires `CATALOGBOT_SSH_KEY_PRIVATE_BASE64` environment
-variable to be set in the build. This must be base64 encoded private SSH key of
-[CatalogBot Github user][catalogbot-user].
-
-**NOTE**: App catalog repositories configured in the job parameters must be
-added to the [Catalog Editors][catalog-editors-team] GitHub team. See the
-paragraph below for explanation.
+**NOTE**: The job pushes to the catalog repository over HTTPS with an installation
+token of the `CircleCI architect` GitHub App, minted by `generate-github-token`, so
+it needs the `architect` context. The catalog's commits are authored by
+`circleci-architect[bot]`. The App is installed on every repository of the
+organisation with `Contents: write`, so a new catalog repository needs no extra
+set-up.
 
 This job assumes that the App Catalog is defined in a GitHub repository inside
 giantswarm organization. E.g. when `app_catalog` parameter is set to
 `"control-plane-test-catalog"` the job will try to use catalog
-[giantswarm/control-plane-test-catalog][control-plane-test-catalog]. All
-interactions with the App Catalog GitHub repository are done with [CatalogBot
-github user][catalogbot-user] credentials.
+[giantswarm/control-plane-test-catalog][control-plane-test-catalog].
 
 Detailed instructions on how to set up App Catalog can be found
 [here][creating_app_catalog].
@@ -46,8 +43,6 @@ push that fails for another reason (the network, GitHub) waits a random, growing
 time (up to 60 seconds) and ends the job after 5 such failures in a row; a rerun
 from failed retries.
 
-[catalog-editors-team]: https://github.com/orgs/giantswarm/teams/bot-catalog-editors/repositories
-[catalogbot-user]: https://github.com/catalogbot
 [control-plane-test-catalog]: https://github.com/giantswarm/control-plane-test-catalog
 [creating_app_catalog]: https://intranet.giantswarm.io/docs/dev-and-releng/app-developer-processes/creating_app_catalog/
 
