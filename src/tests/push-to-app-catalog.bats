@@ -218,6 +218,7 @@ EOF
 @test "a refused push gives up at once" {
   for refusal in \
     "remote: Permission to giantswarm/giantswarm-test-catalog.git denied to circleci-architect[bot].\nfatal: unable to access 'https://github.com/giantswarm/giantswarm-test-catalog.git/': The requested URL returned error: 403" \
+    "remote: Write access to repository not granted.\nfatal: unable to access 'https://github.com/giantswarm/giantswarm-test-catalog.git/': The requested URL returned error: 403" \
     "remote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https://github.com/giantswarm/giantswarm-test-catalog.git/'" \
     "remote: error: GH013: Repository rule violations found for refs/heads/master.\n ! [remote rejected] HEAD -> master (push declined due to repository rule violations)\nerror: failed to push some refs"; do
     rm -f "${BATS_TEST_TMPDIR}/pushes"
