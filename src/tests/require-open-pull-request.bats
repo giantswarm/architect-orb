@@ -23,6 +23,7 @@ setup() {
 #!/bin/bash
 url="${*: -1}"
 echo "${url}" >> "${FAKE}/urls"
+[ -e "${FAKE}/curl-fails" ] && exit 28
 case "${url}" in
   */commits/*/pulls*) kind=commits ;;
   */pulls\?head=*) kind=head ;;
@@ -61,7 +62,9 @@ halted() {
 
 @test "a pull request that is closed does not count" {
   commits_answer 200 '[{"state":"closed"}]'
+  head_answer 200 '[{"state":"closed"}]'
   run bash "${SCRIPT}"
+  grep -q 'pulls?head=' "${FAKE}/urls"
   halted
 }
 
@@ -75,6 +78,7 @@ halted() {
 @test "the branch is percent-encoded in the head filter" {
   CIRCLE_BRANCH='feat/a&b#c' run bash "${SCRIPT}"
   grep -q 'head=giantswarm:feat%2Fa%26b%23c&state=open' "${FAKE}/urls"
+  halted
 }
 
 @test "an empty branch never queries the head filter, which would match every pull request" {
@@ -106,6 +110,27 @@ halted() {
 
 @test "the gate fails open when GitHub answers an error" {
   commits_answer 403 '{"message":"rate limited"}'
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ ! -e "${FAKE}/agent" ]
+}
+
+@test "the gate fails open when the head lookup answers an error" {
+  head_answer 500 'oops'
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ ! -e "${FAKE}/agent" ]
+}
+
+@test "the gate fails open when curl itself fails, for example on a timeout" {
+  touch "${FAKE}/curl-fails"
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ ! -e "${FAKE}/agent" ]
+}
+
+@test "the gate fails open when GitHub answers 200 with a body that is not JSON" {
+  commits_answer 200 '<html>maintenance</html>'
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
   [ ! -e "${FAKE}/agent" ]

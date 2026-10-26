@@ -212,5 +212,9 @@ This job does **not** query GitHub. It runs on the `machine` executor, which
 carries none of the GitHub App tooling, and the chart archive is an exact
 signal: the packaging job either ran or it did not.
 
+The signal is "no `*.tgz` with the chart prefix in the workspace", so a real
+packaging failure, a mistyped prefix or `persist_chart_archive: false` also
+halts instead of failing. That is why the parameter defaults to `false`.
+
 Leave it off when nothing upstream is gated. A missing chart archive then stays
 a loud failure, which is what it should be.

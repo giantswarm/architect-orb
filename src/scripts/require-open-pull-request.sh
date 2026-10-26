@@ -21,7 +21,7 @@ repo="${CIRCLE_PROJECT_REPONAME:-}"
 # permission problem is never read as "there is no pull request".
 gh_open_pr_count() {
   local out status body
-  out=$(curl -sS -w '\n%{http_code}' \
+  out=$(curl -sS --connect-timeout 5 --max-time 20 -w '\n%{http_code}' \
     -H "Authorization: token ${GITHUB_TOKEN}" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \

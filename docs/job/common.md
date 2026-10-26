@@ -16,6 +16,10 @@ sufficient. Note that there are differences between [docker executors] and [mach
 
 ### `require_open_pull_request` (optional boolean, default=false)
 
+The gate only works if a pipeline runs when the pull request opens; see the
+`trigger-circleci-pipeline` workflow in giantswarm/github-workflows. The
+`integration-test` job has no such parameter, so it is not gated.
+
 Carried by `build-image`, `push-to-registries` and `push-to-app-catalog`. When
 `true`, the job halts before it does anything unless an open pull request
 covers the commit being built, so a push to a scratch branch produces no image
