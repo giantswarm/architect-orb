@@ -47,6 +47,21 @@ parameters:
       context) so the chart under test can pull private images. See the command parameter.
     type: boolean
     default: true
+  require_open_pull_request:
+    description: |
+      Halt this job when the attached workspace carries no chart archive, instead
+      of failing. Set it when the job that packages the chart is itself gated on
+      an open pull request (architect's `require_open_pull_request`): the gate
+      closed upstream, so there is nothing to test.
+
+      This job does not query GitHub. It runs on the machine executor, which
+      carries none of the GitHub App tooling, and the chart archive is an exact
+      signal — the packaging job either ran or it did not.
+
+      Off by default: without it a missing chart archive stays a loud failure,
+      which is what it means when nothing upstream is gated.
+    type: boolean
+    default: false
   resource_class:
     default: "medium"
     description: |
@@ -69,3 +84,4 @@ steps:
       kind_node_image: << parameters.kind_node_image >>
       kind_config: << parameters.kind_config >>
       kind_registry_credentials: << parameters.kind_registry_credentials >>
+      require_open_pull_request: << parameters.require_open_pull_request >>

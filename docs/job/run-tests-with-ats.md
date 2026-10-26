@@ -198,3 +198,23 @@ under test can pull private images (`gsociprivate.azurecr.io` and any other regi
 jobs use, so the job needs `context: architect`; they are written to `/var/lib/kubelet/config.json` on the
 node, which the kubelet reads for every image pull, so the chart needs no `imagePullSecrets`. Skipped with
 a notice when the context is not attached.
+
+### require_open_pull_request (optional boolean, default=false)
+
+Halt instead of failing when the attached workspace carries no chart archive.
+
+Set it when the job that packages the chart — `push-to-app-catalog` — is itself
+gated on an open pull request (see
+[`require_open_pull_request`](common.md#require_open_pull_request-optional-boolean-defaultfalse)).
+The gate closed upstream, nothing was packaged, and there is nothing to test.
+
+This job does **not** query GitHub. It runs on the `machine` executor, which
+carries none of the GitHub App tooling, and the chart archive is an exact
+signal: the packaging job either ran or it did not.
+
+The signal is "no `*.tgz` with the chart prefix in the workspace", so a real
+packaging failure, a mistyped prefix or `persist_chart_archive: false` also
+halts instead of failing. That is why the parameter defaults to `false`.
+
+Leave it off when nothing upstream is gated. A missing chart archive then stays
+a loud failure, which is what it should be.
