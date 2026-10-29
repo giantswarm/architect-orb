@@ -33,31 +33,36 @@ workflows:
 
 ## Two paths: who creates the test cluster
 
-Up to app-test-suite 0.15 the tool created its own kind cluster (through the Docker socket) and was
-started by the `dats.sh` wrapper script downloaded from the app-test-suite repository. That is the
-default path of this job and it is unchanged.
+[`app-test-suite_container_tag`](#app-test-suite_container_tag) picks the path.
 
-app-test-suite 1.0 and later no longer provision clusters and no longer ship `dats.sh`: the caller
-provides a kubeconfig. With [`create_kind_cluster: true`](#create_kind_cluster-optional-boolean-defaultfalse)
-this job installs `kind`, creates a cluster, writes its kubeconfig to `kube.config` in the working
-directory, runs the app-test-suite image directly with `--cluster-kubeconfig kube.config
---cluster-type kind --cluster-version <kubernetes version>`, and deletes the cluster afterwards
-(also when the tests fail). Pick an `app-test-suite_container_tag` of 1.0 or later together with it.
+A 0.x tag (`0.15.0`, `v0.15.0`, `0.15.0-<sha>`) takes the legacy path. Up to app-test-suite 0.15 the
+tool created its own kind cluster (through the Docker socket) and was started by the `dats.sh` wrapper
+script downloaded from the app-test-suite repository. The default tag is still 0.15.0, so this is the
+default path, and it is unchanged.
+
+Any other tag (1.x, `latest`) takes the kind path. app-test-suite 1.0 and later no longer provision
+clusters and no longer ship `dats.sh`: the caller provides a kubeconfig. The job installs `kind`, creates
+a cluster, writes its kubeconfig to `kube.config` in the working directory, runs the app-test-suite image
+directly with `--cluster-kubeconfig kube.config --cluster-type kind --cluster-version <kubernetes
+version>`, and deletes the cluster afterwards (also when the tests fail). Setting the tag is all a
+repository needs to opt in:
 
 ```yaml
       - architect/run-tests-with-ats:
           name: execute chart tests
-          create_kind_cluster: true
-          app-test-suite_container_tag: "1.0.0"
+          app-test-suite_container_tag: "1.1.1"
           requires:
             - push-to-catalog
 ```
 
+A repository that pins a 0.x tag keeps the legacy path also when the default tag moves to 1.x.
+
 Migrating a repository to app-test-suite 1.x also touches files in the repository: the
 `.ats/main.yaml` keys that selected a cluster per scenario (`smoke-tests-cluster-type`,
-`upgrade-tests-cluster-type`, ...) are gone (an unknown key fails the run), `tests/ats/Pipfile`
-becomes `pyproject.toml` + `uv.lock`, and tests that deployed the chart through an `App` CR install it
-with Helm. See the app-test-suite [CHANGELOG](https://github.com/giantswarm/app-test-suite/blob/main/CHANGELOG.md)
+`upgrade-tests-cluster-type`, `*-cluster-config-file`, ...) are gone (1.1.1 and later ignore them
+with a warning; a kind configuration moves to [`kind_config`](#kind_config-optional-string-default)),
+`tests/ats/Pipfile` becomes `pyproject.toml` + `uv.lock`, and tests that deployed the chart through
+an `App` CR install it with Helm. See the app-test-suite [CHANGELOG](https://github.com/giantswarm/app-test-suite/blob/main/CHANGELOG.md)
 for the full list.
 
 ## Parameters
@@ -67,7 +72,7 @@ for the full list.
 - [app-test-suite_version](#app-test-suite_version)
 - [app-test-suite_container_tag](#app-test-suite_container_tag)
 - [additional_app-test-suite_flags](#additional_app-test-suite_flags)
-- [create_kind_cluster](#create_kind_cluster-optional-boolean-defaultfalse)
+- [create_kind_cluster](#create_kind_cluster-optional-boolean-defaultfalse-deprecated) (deprecated)
 - [kind_version](#kind_version)
 - [kind_node_image](#kind_node_image)
 - [kind_config](#kind_config-optional-string-default)
@@ -87,12 +92,9 @@ find -name "<< parameters.chart_archive_prefix >>*.tgz" -print -quit
 
 Version of app-test-suite `dats.sh` container wrapper to use (git tag or commit).
 Use this parameter if you have some changes lined up in `dats.sh` which is not released yet.
-For git tags, the same container tag of app-test-suite will be used.
+The container tag always comes from [`app-test-suite_container_tag`](#app-test-suite_container_tag).
 
-**Attention:** For git commits or branches, `latest` will be used as container tag.
-This can be circumvented by also setting the parameter [`app-test-suite_container_tag`](#app-test-suite_container_tag).
-
-Only used on the legacy path; ignored when [`create_kind_cluster`](#create_kind_cluster-optional-boolean-defaultfalse) is true.
+Only used on the legacy path (a 0.x [`app-test-suite_container_tag`](#app-test-suite_container_tag)); ignored on the kind path.
 
 (Default: "v0.15.0")
 
@@ -100,6 +102,8 @@ Only used on the legacy path; ignored when [`create_kind_cluster`](#create_kind_
 
 Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite).
 This parameter allows to specify the used container tag of app-test-suite.
+It also picks the path: 0.x takes the legacy `dats.sh` path, any other tag the kind path. See
+[Two paths](#two-paths-who-creates-the-test-cluster).
 
 (Default: "0.15.0")
 
@@ -116,39 +120,40 @@ smoke-tests-cluster-type: kind # Create a kind cluster to run tests in
 skip-steps: functional, upgrade # Only execute smoke tests
 ```
 
-With `create_kind_cluster: true` (app-test-suite 1.x) the cluster is the job's, so the file only
+On the kind path (app-test-suite 1.x) the cluster is the job's, so the file only
 selects the steps:
 
 ```yaml
 skip-steps: functional, upgrade # Only execute smoke tests
 ```
 
-### create_kind_cluster (optional boolean, default=false)
+### create_kind_cluster (optional boolean, default=false, deprecated)
 
-Create a kind cluster in the job and run the app-test-suite image directly against it. Required for
-app-test-suite 1.0 and later. See [Two paths](#two-paths-who-creates-the-test-cluster).
+Deprecated: [`app-test-suite_container_tag`](#app-test-suite_container_tag) picks the path, so a 1.x tag
+no longer needs it. `true` forces the kind path also for a 0.x tag and logs a deprecation warning; `false`
+leaves the choice to the tag and cannot force the legacy path for a tag that does not start with `0.` or `v0.`.
+Still accepted, so existing configurations keep working; drop it when you touch the job.
 
 ### kind_version
 
-The [kind](https://github.com/kubernetes-sigs/kind/releases) release installed when
-`create_kind_cluster` is true.
+The [kind](https://github.com/kubernetes-sigs/kind/releases) release installed on the kind path.
 
 (Default: "v0.33.0")
 
 ### kind_node_image
 
-The node image of the kind cluster created when `create_kind_cluster` is true. The Kubernetes
-version in its tag (`v1.36.4` in the default) is passed to app-test-suite as `--cluster-version`.
+The node image of the kind cluster created on the kind path. The Kubernetes
+version in its tag (`v1.37.0` in the default) is passed to app-test-suite as `--cluster-version`.
 The default is the Giant Swarm mirror of `kindest/node`, so the pull does not count against Docker
 Hub's anonymous rate limit.
 
-(Default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4")
+(Default: "gsoci.azurecr.io/giantswarm/kind-node:v1.37.0")
 
 ### kind_config (optional string, default="")
 
 Path, relative to the checkout, of a [kind cluster configuration](https://kind.sigs.k8s.io/docs/user/configuration/)
 (`kind: Cluster`, `apiVersion: kind.x-k8s.io/v1alpha4`) that the job passes to `kind create cluster
---config` when `create_kind_cluster` is true. Empty creates the cluster the job creates without it, so
+--config` on the kind path. Empty creates the cluster the job creates without it, so
 setting nothing changes nothing.
 
 The job keeps naming the cluster (`ats`) and choosing the node image ([`kind_node_image`](#kind_node_image)):
@@ -181,8 +186,7 @@ and name it in the job:
 ```yaml
       - architect/run-tests-with-ats:
           name: execute chart tests
-          create_kind_cluster: true
-          app-test-suite_container_tag: "1.0.0"
+          app-test-suite_container_tag: "1.1.1"
           kind_config: ".circleci/kind-config.yaml"
           requires:
             - push-to-catalog
@@ -192,7 +196,7 @@ The job fails before creating the cluster when the file does not exist in the ch
 
 ### kind_registry_credentials (optional boolean, default=true)
 
-When `create_kind_cluster` is true, gives the kind node the registry credentials of the job so the chart
+On the kind path, gives the kind node the registry credentials of the job so the chart
 under test can pull private images (`gsociprivate.azurecr.io` and any other registry listed in
 `REGISTRIES_DATA_BASE64`). The credentials come from the same `architect` context the push-to-registries
 jobs use, so the job needs `context: architect`; they are written to `/var/lib/kubelet/config.json` on the
