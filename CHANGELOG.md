@@ -29,6 +29,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   catalog refuses (a rejected token, no write access, a protected branch) ends the job at once instead of being
   retried.
 - `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
+- `run-tests-with-ats`: `app-test-suite_container_tag` picks the path. A 0.x tag (`0.15.0`, `v0.15.0`) takes the
+  legacy `dats.sh` path, any other tag creates a kind cluster in the job and runs the app-test-suite image against it,
+  as `create_kind_cluster: true` did. A repository opts into app-test-suite 1.x by setting the tag alone, and one that
+  pins 0.x keeps the legacy path when the default tag moves. The default stays 0.15.0, so the default path is
+  unchanged. A tag that does not start with `0.` or `v0.` (`latest`, a commit SHA) now takes the kind path, and
+  `create_kind_cluster: false` no longer forces the legacy path.
+
+### Deprecated
+
+- `run-tests-with-ats`: the `create_kind_cluster` parameter. Still accepted; `true` forces the kind path also for a
+  0.x tag and logs a deprecation warning, `false` leaves the choice to `app-test-suite_container_tag`.
 
 ### Removed
 

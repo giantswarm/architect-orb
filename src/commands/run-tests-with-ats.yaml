@@ -4,10 +4,16 @@ parameters:
     type: string
     default: ""
   app-test-suite_version:
-    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit). Legacy path only: ignored when create_kind_cluster is true."
+    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit). Legacy path only: ignored on the kind path."
     type: string
   app-test-suite_container_tag:
-    description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
+    description: |
+      Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite). The
+      tag picks the path: a 0.x tag (`0.15.0`, `v0.15.0`, `0.15.0-<sha>`) takes the legacy path, which
+      downloads dats.sh at app-test-suite_version and lets app-test-suite <= 0.15 create its own kind
+      cluster through the Docker socket. Any other tag takes the kind path: the job creates a kind
+      cluster and runs the app-test-suite image directly against it (app-test-suite >= 1.0, which no
+      longer provisions clusters and no longer ships dats.sh).
     type: string
   additional_app-test-suite_flags:
     description: "Additional app-test-suite flags to use"
@@ -15,26 +21,24 @@ parameters:
     default: ""
   create_kind_cluster:
     description: |
-      Create a kind cluster in the job and run the app-test-suite image directly against it
-      (app-test-suite >= 1.0, which no longer provisions clusters and no longer ships dats.sh).
-      When false, the legacy path downloads dats.sh at app-test-suite_version and lets
-      app-test-suite <= 0.15 create its own kind cluster through the Docker socket.
+      Deprecated: app-test-suite_container_tag picks the path. True forces the kind path also for a
+      0.x tag; false (the default) leaves the choice to the tag.
     type: boolean
     default: false
   kind_version:
-    description: "kind release to install when create_kind_cluster is true (https://github.com/kubernetes-sigs/kind/releases)."
+    description: "kind release to install on the kind path (https://github.com/kubernetes-sigs/kind/releases)."
     type: string
     default: "v0.33.0"
   kind_node_image:
     description: |
-      Node image of the kind cluster created when create_kind_cluster is true. The Kubernetes
+      Node image of the kind cluster created on the kind path. The Kubernetes
       version in its tag is passed to app-test-suite as --cluster-version.
     type: string
     default: "gsoci.azurecr.io/giantswarm/kind-node:v1.36.4"
   kind_config:
     description: |
       Path, relative to the checkout, of a kind Cluster configuration (kind.x-k8s.io/v1alpha4) passed
-      to `kind create cluster --config` when create_kind_cluster is true. Empty (the default) creates
+      to `kind create cluster --config` on the kind path. Empty (the default) creates
       the cluster the job creates without it. The job keeps naming the cluster and choosing the node
       image: kind's --name and --image take precedence over the configuration's `name` and
       `nodes[].image`, so the file carries only what the job does not decide (featureGates,
@@ -43,7 +47,7 @@ parameters:
     default: ""
   kind_registry_credentials:
     description: |
-      When create_kind_cluster is true, give the kind node the registry credentials of the job so
+      On the kind path, give the kind node the registry credentials of the job so
       the chart under test can pull private images (gsociprivate.azurecr.io and any other registry
       listed in REGISTRIES_DATA_BASE64). The credentials come from the same architect context the
       push-to-registries jobs use; the job therefore needs `context: architect`. They are written to
@@ -59,8 +63,24 @@ steps:
       environment:
         PARAM_CHART_ARCHIVE_PREFIX: << parameters.chart_archive_prefix >>
       command: <<include(scripts/run-tests-with-ats-skip-release-commit.sh)>>
-  - unless:
+  - when:
       condition: << parameters.create_kind_cluster >>
+      steps:
+        - run:
+            name: "architect/run-tests-with-ats: Warn about the deprecated create_kind_cluster"
+            command: |
+              echo "WARNING: create_kind_cluster is deprecated. app-test-suite_container_tag picks the path:"
+              echo "a 1.x tag takes the kind path without it. Drop the parameter from the job."
+  # The path follows app-test-suite_container_tag: 0.x is the legacy dats.sh path, anything else
+  # (1.x, latest) the kind path. create_kind_cluster (deprecated) forces the kind path.
+  # This condition and the kind path's below are complements: change both together.
+  - when:
+      condition:
+        and:
+          - not: << parameters.create_kind_cluster >>
+          - matches:
+              pattern: '^v?0\..*$'
+              value: << parameters.app-test-suite_container_tag >>
       steps:
         - run:
             name: "Download dats.sh script"
@@ -81,8 +101,15 @@ steps:
 
               # execute dats wrapper
               ./dats.sh --chart-file "${chart_archive##*/}" << parameters.additional_app-test-suite_flags >>
+  # Complement of the legacy path's condition above: change both together.
   - when:
-      condition: << parameters.create_kind_cluster >>
+      condition:
+        or:
+          - << parameters.create_kind_cluster >>
+          - not:
+              matches:
+                pattern: '^v?0\..*$'
+                value: << parameters.app-test-suite_container_tag >>
       steps:
         - run:
             name: "Install kind"
