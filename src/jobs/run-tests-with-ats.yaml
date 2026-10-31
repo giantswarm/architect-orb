@@ -6,14 +6,14 @@ parameters:
   app-test-suite_version:
     description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit). Legacy path only: ignored on the kind path."
     type: string
-    default: "v0.15.0"
+    default: "v1.1.1"
   app-test-suite_container_tag:
     description: |
       Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite). The
       tag picks the path: 0.x takes the legacy dats.sh path, any other tag (1.x) creates a kind
       cluster in the job and runs the image directly against it. See the command parameter.
     type: string
-    default: "0.15.0"
+    default: "1.1.1"
   additional_app-test-suite_flags:
     description: "Additional app-test-suite flags to use"
     type: string
