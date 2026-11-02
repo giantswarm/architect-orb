@@ -2,6 +2,15 @@
 #
 # Computes the build version from git state and publishes it to the rest of the job.
 #
+# Reads:
+#   .pipeline_version        the version pin-version resolved at the start of
+#                            the workflow, when the job attached the workspace
+#                            (with git-tag-prefix: .pipeline_version-<prefix>).
+#                            It wins over `gitsemver get`, so every job of the
+#                            workflow builds with one version even when a stable
+#                            tag lands while it runs. Without it the version is
+#                            resolved from this job's checkout, as before.
+#
 # Writes:
 #   /tmp/.docker_image_tag   the resolved tag (gitsemver output plus tag-suffix)
 #   DOCKER_IMAGE_TAG         the same value, exported through BASH_ENV

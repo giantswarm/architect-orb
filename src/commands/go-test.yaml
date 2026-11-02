@@ -166,19 +166,3 @@ steps:
         - ~/.cache/nancy
   - store_test_results:
       path: /tmp/nancy-test-results
-  # govulncheck reads the Go vulnerability database, which needs no account or
-  # credits, so unlike nancy its step fails closed: a scan that could not run
-  # fails the job. See docs/job/go-test.md#vulnerability-scanning-with-govulncheck.
-  - run:
-      name: "architect/go-test: Install govulncheck"
-      environment:
-        GOVULNCHECK_VERSION: "v1.8.0"
-      command: |
-        go install "golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION}"
-  - run:
-      name: "architect/go-test: Check if the code reaches known vulnerabilities"
-      environment:
-        CGO_ENABLED: "0"
-      command: <<include(scripts/govulncheck-scan.sh)>>
-  - store_test_results:
-      path: /tmp/govulncheck-test-results

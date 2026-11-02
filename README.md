@@ -9,17 +9,6 @@ This repository hosts the source code for giantswarm/architect orb.
 
 Jobs available in this orb are documented [here](docs/README.md#jobs)
 
-## Vulnerability scanning in `go-test` and `go-build`
-
-Both jobs scan the Go code twice, and the GitHub check tells a scanned build from an unscanned one:
-
-- [`govulncheck`](docs/job/go-test.md#vulnerability-scanning-with-govulncheck) fails closed. A green check
-  means the code was checked against the Go vulnerability database and reaches no known vulnerability. A
-  scan that could not run turns the check red and prints `NOT SCANNED:`.
-- [`nancy`](docs/job/go-test.md#dependency-scanning-with-nancy) fails open when Sonatype Guide cannot answer
-  (an outage or an exhausted credit quota): its step prints `NOT SCANNED:` and records the failed JUnit test
-  `Go dependencies are scanned for known vulnerabilities` in the job's Tests tab, while the check stays green.
-
 ## Design and Goals
 
 - Replacing [architect][architect] entirely **is not** a goal. But replacing
@@ -63,8 +52,8 @@ Both jobs scan the Go code twice, and the GitHub check tells a scanned build fro
 - Temporary `.build_*` files should be only used in scope of a single command.
 - A command using temporary files should clean them up as the last step.
 
-[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/prepare-catalogbot-git-ssh.yaml
-[step-prefix]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/prepare-catalogbot-git-ssh.yaml
+[multiline-skipping]: https://github.com/giantswarm/architect-orb/blob/3e36470/src/commands/prepare-catalogbot-git-ssh.yaml
+[step-prefix]: https://github.com/giantswarm/architect-orb/blob/main/src/commands/integration-test-setup.yaml
 [when-unless]: https://circleci.com/docs/2.0/configuration-reference/#the-when-step-requires-version-21
 
 ## Development

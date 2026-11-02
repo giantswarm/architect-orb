@@ -140,3 +140,81 @@ exported() {
   [[ "${output}" == *"release version 2.0.0"* ]]
   [ ! -e /tmp/.docker_image_tag ]
 }
+
+# A version pin-version recorded for the workflow, attached from the workspace
+# into the job's working directory.
+
+@test "without .pipeline_version a promote mid-workflow moves the resolved version" {
+  git commit -q --allow-empty -m "candidate"
+  git checkout -q -b feature/next
+  git commit -q --allow-empty -m "next"
+  export CIRCLE_BRANCH=feature/next
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [[ "$(resolved_tag)" == 1.2.4-* ]]
+  # The promote: a stable tag on a commit the branch contains.
+  git tag v1.3.0 main
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [[ "$(resolved_tag)" == 1.3.1-* ]]
+}
+
+@test "a pinned version wins over the git state, so a promote mid-workflow does not move it" {
+  git commit -q --allow-empty -m "candidate"
+  git checkout -q -b feature/next
+  git commit -q --allow-empty -m "next"
+  export CIRCLE_BRANCH=feature/next
+  gitsemver get > .pipeline_version
+  pinned="$(cat .pipeline_version)"
+  [[ "${pinned}" == 1.2.4-* ]]
+  git tag v1.3.0 main
+  [[ "$(gitsemver get)" == 1.3.1-* ]]
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  ! halted
+  [[ "${output}" == *"Using the version pin-version resolved for this workflow (.pipeline_version): ${pinned}"* ]]
+  [ "$(resolved_tag)" = "${pinned}" ]
+  [ "$(exported DOCKER_IMAGE_TAG)" = "${pinned}" ]
+  [ "$(exported DOCKER_IMAGE_VERSION)" = "${pinned}" ]
+}
+
+@test "tag-suffix is appended to a pinned version" {
+  export CIRCLE_TAG=v1.2.3 PARAM_TAG_SUFFIX=-debug
+  printf '1.2.3' > .pipeline_version
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "$(resolved_tag)" = "1.2.3-debug" ]
+  [ "$(exported DOCKER_IMAGE_VERSION)" = "1.2.3" ]
+}
+
+@test "a branch pipeline with a pinned release version ends the job" {
+  printf '1.2.3' > .pipeline_version
+  git commit -q --allow-empty -m "next"
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  halted
+  [[ "${output}" == *"branch pipeline resolved the release version 1.2.3"* ]]
+  [ ! -e /tmp/.docker_image_tag ]
+}
+
+@test "an empty .pipeline_version is ignored" {
+  export CIRCLE_TAG=v1.2.3
+  : > .pipeline_version
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "${output}" = "1.2.3" ]
+}
+
+@test "a mono repo reads the pin of its own prefix only" {
+  git tag api/v2.0.0
+  export CIRCLE_TAG=api/v2.0.0 PARAM_GIT_TAG_PREFIX=api
+  printf '9.9.9' > .pipeline_version
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "$(resolved_tag)" = "2.0.0" ]
+  printf '2.0.0' > .pipeline_version-api
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"(.pipeline_version-api): 2.0.0"* ]]
+  [ "$(resolved_tag)" = "2.0.0" ]
+}

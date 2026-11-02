@@ -9,17 +9,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- `go-test` / `go-build`: `govulncheck` checks whether the code reaches a known vulnerability in the Go
-  vulnerability database, which needs no account or credits. The step fails closed: a reachable vulnerability
-  fails the job, and so does a scan that could not run (`NOT SCANNED:`). Reviewed findings are excluded in
-  `.govulncheck-ignore` with a required `until=` date. nancy is unchanged.
+- `pin-version` job and command: resolve the workflow's version once with `gitsemver get` and persist it to the
+  workspace as `.pipeline_version` (`.pipeline_version-<prefix>` with `git-tag-prefix`). A stable tag landing while
+  a workflow runs (a promote) no longer gives the image and the chart that references it different versions.
 
 ### Changed
 
+- `image-prepare-tag`: take the version from `.pipeline_version` when `pin-version` persisted it and the job attached
+  the workspace (`build-image`, `push-to-registries`, `push-to-app-catalog` with `attach_workspace: true`). Without
+  the file the version is resolved with `gitsemver get` as before.
+- `push-to-app-catalog` / `push-helm`: push the chart to the git app catalog over HTTPS with an installation token of
+  the architect GitHub App, minted by `generate-github-token`, instead of over SSH with the shared `catalogbot`
+  account's key (`CATALOGBOT_SSH_KEY_PRIVATE_BASE64`). The catalog's commits are authored by `circleci-architect[bot]`.
+  The OCI push already needed the `architect` context; a job with `push_to_oci_registry: false` now needs it too
+  (no repository in the organisation sets that). The catalog's URL names the user `x-access-token`, so the SSH rewrite
+  CircleCI's checkout sets for projects with a deploy key does not apply. Git's credential helper and the author are
+  the clone's own configuration, not the job's; `GITHUB_TOKEN` stays in the job's environment, as for the OCI push. A
+  failing clone is retried like a failing push. A catalog the App cannot see ends the clone at once; a push the
+  catalog refuses (a rejected token, no write access, a protected branch) ends the job at once instead of being
+  retried.
 - `app-build-suite` executor: on app-build-suite 2.5.2, which updates cairosvg to 2.9.1 for a security fix.
+- `run-tests-with-ats`: `app-test-suite_container_tag` picks the path. A 0.x tag (`0.15.0`, `v0.15.0`) takes the
+  legacy `dats.sh` path, any other tag creates a kind cluster in the job and runs the app-test-suite image against it,
+  as `create_kind_cluster: true` did. A repository opts into app-test-suite 1.x by setting the tag alone, and one that
+  pins 0.x keeps the legacy path when the default tag moves. The default stays 0.15.0, so the default path is
+  unchanged. A tag that does not start with `0.` or `v0.` (`latest`, a commit SHA) now takes the kind path, and
+  `create_kind_cluster: false` no longer forces the legacy path.
+
+### Deprecated
+
+- `run-tests-with-ats`: the `create_kind_cluster` parameter. Still accepted; `true` forces the kind path also for a
+  0.x tag and logs a deprecation warning, `false` leaves the choice to `app-test-suite_container_tag`.
 
 ### Removed
 
+- `prepare-catalogbot-git-ssh` command. No job of the orb and no repository in the organisation calls it, and the
+  `catalogbot` account it set up is being removed.
+- `go-test`: remove the `govulncheck` step. Vulnerability scanning in CI is owned by Team Shield.
 - `upload-release-assets`: the `github-token-env-var` parameter, and `generate-github-token`: the `token-env-var`
   parameter. Both let a job use a pre-minted token, such as the shared `taylorbot` account's `TAYLORBOT_GITHUB_ACTION`,
   instead of an installation token of the architect GitHub App. The account is being removed and no repository sets

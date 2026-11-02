@@ -1,0 +1,28 @@
+description: |
+  Resolves the workflow's version once, at its start, and persists it to the
+  workspace as `.pipeline_version`. Every job that requires this job and
+  attaches the workspace builds with that version instead of resolving its
+  own, so a stable tag landing mid-workflow cannot give the image and the
+  chart different versions. See docs/job/pin-version.md.
+
+parameters:
+  git-tag-prefix:
+    description: |
+      Tag prefix for mono repos. Empty on a single-project repo. The jobs that
+      build with the version must pass the same prefix.
+    type: string
+    default: ""
+  resource_class:
+    default: "small"
+    description: |
+        Configures amount CPU and RAM for the job. See
+        https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+        for details.
+    type: "enum"
+    enum: ["small", "medium", "medium+", "large", "xlarge"]
+executor: "architect"
+resource_class: "<< parameters.resource_class >>"
+steps:
+  - checkout
+  - pin-version:
+      git-tag-prefix: <<parameters.git-tag-prefix>>

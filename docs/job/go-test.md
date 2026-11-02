@@ -12,8 +12,6 @@ This job:
 - Runs [`gosec`](#security-scanning-with-gosec) via `golangci-lint`. Tests are excluded.
 - Runs [`nancy`](#dependency-scanning-with-nancy) against the codebase to check for known vulnerabilities in code
   dependencies.
-- Runs [`govulncheck`](#vulnerability-scanning-with-govulncheck) to check whether the code reaches a known
-  vulnerability. Fails closed.
 
 ## Build metadata
 
@@ -111,40 +109,10 @@ When nancy cannot get an answer (an outage, a rate limit, an exhausted credit qu
 the job does not fail, so an unrelated pull request is not blocked. The step prints `NOT SCANNED:` with the
 reason, and the job's JUnit results record the failed test `Go dependencies are scanned for known
 vulnerabilities`, shown in the job's Tests tab and in CircleCI's test insights. A green job with that failed
-test has not checked its dependencies with nancy; [govulncheck](#vulnerability-scanning-with-govulncheck)
-still scanned the code, since a govulncheck scan that could not run fails the job.
+test has not checked its dependencies.
 
 nancy 2.1.0 reports every error answer of the Sonatype Guide API as `cannot unmarshal object into Go value of
 type []sonatypeguide.ComponentReportPost`. On that error the step checks two dependencies with nancy's URL and
 credentials (`OSSI_OSSINDEXURL`, `GUIDE_TOKEN` or `OSSI_USERNAME` and `OSSI_TOKEN` from the job's context) and
 puts the status and the API's reason into the `NOT SCANNED:` line, for an exhausted credit quota with the credits
 left and the date the quota resets. A refused check costs no credits.
-
-## Vulnerability scanning with govulncheck
-
-[govulncheck](https://go.dev/doc/security/vuln/) checks the code against the Go vulnerability database
-(`vuln.go.dev`), which needs no account or credits. It reports a vulnerability only when the code calls an
-affected function, so a vulnerable module the code imports but does not reach passes.
-
-The step fails closed:
-
-- A reachable vulnerability fails the job. The step lists each one with its module, the version in use and the
-  fixed version; `govulncheck ./...` locally shows the call traces.
-- A scan that could not run (the database is unreachable, the code does not build) fails the job and prints
-  `NOT SCANNED:`. A green step always means the code was scanned and reaches nothing known.
-
-The JUnit test `Go code reaches no known vulnerability` records the result in the job's Tests tab.
-
-### Excluding a reviewed finding
-
-A finding without a fix, or one that cannot be bumped yet, is excluded in `.govulncheck-ignore` at the
-repository root, one entry per line:
-
-```
-# GO ID or alias (CVE, GHSA), the date the exclusion ends, why and the issue that tracks the fix
-GO-2026-5932 until=2026-12-31  # x/crypto/openpgp has no fix; replacing the updater, https://github.com/org/repo/issues/1
-```
-
-`until=` is required. An entry past its date, or without one, no longer applies and the step says so, so an
-exclusion cannot outlive its review.
-

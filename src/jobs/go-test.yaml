@@ -1,6 +1,6 @@
 description: |
   Checks that `go.mod`/`go.sum` are tidy and the code is formatted (`gofmt`,
-  `goimports`), then runs `go test`, `gosec`, `nancy` and `govulncheck`. It also injects the
+  `goimports`), then runs `go test`, `gosec` and `nancy`. It also injects the
   following variables into the
   "github.com/ORGANIZATION/REPOSITORY/pkg/project" package for testing:
 

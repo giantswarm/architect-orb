@@ -4,11 +4,14 @@ parameters:
     type: string
     default: ""
   app-test-suite_version:
-    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit). Legacy path only: ignored when create_kind_cluster is true."
+    description: "Version of app-test-suite dats.sh container wrapper to use (git tag or commit). Legacy path only: ignored on the kind path."
     type: string
     default: "v0.15.0"
   app-test-suite_container_tag:
-    description: "Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite)"
+    description: |
+      Container tag of app-test-suite to use (check gsoci.azurecr.io/giantswarm/app-test-suite). The
+      tag picks the path: 0.x takes the legacy dats.sh path, any other tag (1.x) creates a kind
+      cluster in the job and runs the image directly against it. See the command parameter.
     type: string
     default: "0.15.0"
   additional_app-test-suite_flags:
@@ -17,26 +20,24 @@ parameters:
     default: ""
   create_kind_cluster:
     description: |
-      Create a kind cluster in the job and run the app-test-suite image directly against it
-      (app-test-suite >= 1.0, which no longer provisions clusters and no longer ships dats.sh).
-      When false, the legacy path downloads dats.sh at app-test-suite_version and lets
-      app-test-suite <= 0.15 create its own kind cluster through the Docker socket.
+      Deprecated: app-test-suite_container_tag picks the path. True forces the kind path also for a
+      0.x tag; false (the default) leaves the choice to the tag.
     type: boolean
     default: false
   kind_version:
-    description: "kind release to install when create_kind_cluster is true (https://github.com/kubernetes-sigs/kind/releases)."
+    description: "kind release to install on the kind path (https://github.com/kubernetes-sigs/kind/releases)."
     type: string
     default: "v0.33.0"
   kind_node_image:
     description: |
-      Node image of the kind cluster created when create_kind_cluster is true. The Kubernetes
+      Node image of the kind cluster created on the kind path. The Kubernetes
       version in its tag is passed to app-test-suite as --cluster-version.
     type: string
     default: "gsoci.azurecr.io/giantswarm/kind-node:v1.37.0"
   kind_config:
     description: |
       Path, relative to the checkout, of a kind Cluster configuration passed to `kind create cluster
-      --config` when create_kind_cluster is true (feature gates, runtime config, patches, extra nodes;
+      --config` on the kind path (feature gates, runtime config, patches, extra nodes;
       the job's --name and --image take precedence). Empty creates the cluster as before. See the
       command parameter.
     type: string
