@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- `push-to-registries` and `build-image`: fail before the build when the Dockerfile copies a binary from the build
+  context into an image built for another architecture.
 - `pin-version` job and command: resolve the workflow's version once with `gitsemver get` and persist it to the
   workspace as `.pipeline_version` (`.pipeline_version-<prefix>` with `git-tag-prefix`). A stable tag landing while
   a workflow runs (a promote) no longer gives the image and the chart that references it different versions.
