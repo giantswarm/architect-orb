@@ -9,7 +9,7 @@ binaries, Docker images, and Helm charts to Giant Swarm's image and chart regist
 ## Development workflow
 
 The orb is developed by pushing branches and testing against CircleCI. The one local test is
-`bats src/tests` ([bats-core](https://github.com/bats-core/bats-core), with `git` and `gitsemver` on the
+`bats src/tests` ([bats-core](https://github.com/bats-core/bats-core), with `git`, `gitsemver` and `scanelf` on the
 path): it exercises the scripts under `src/scripts/` that commands include. The orb's own pipeline runs it
 in the architect executor before publishing.
 

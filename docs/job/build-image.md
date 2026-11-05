@@ -136,6 +136,8 @@ identically. See that page for the details:
   The lint is a property of the source, not the architecture, so it runs in
   every architecture's job. It costs about a second and fails before minutes of
   building past a broken Dockerfile.
+- [Architecture check](push-to-registries.md#architecture-check) — runs in
+  every architecture's job, against that job's `platform`.
 - [OCI image labels](push-to-registries.md#oci-image-labels) — `oci-labels`.
   Labels are image-config level and survive a merge untouched. Index
   annotations do not, so `index:`-scoped `annotations` are **rejected** here;

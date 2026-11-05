@@ -1,0 +1,27 @@
+# Command: dockerfile-arch-check
+#
+# Fails when the Dockerfile copies a binary from the build context into an image
+# built for another architecture, such as the plain `<binary>` (linux/amd64)
+# that go-build writes next to `<binary>-linux-<arch>`. It runs before the
+# build, so no image ships the wrong binary.
+parameters:
+  dockerfile:
+    type: string
+    default: "./Dockerfile"
+  build-context:
+    type: string
+    default: "."
+  platforms:
+    description: |
+      Comma-separated platforms the image is built for. When empty, read from
+      the `.platforms` file go-build writes, then linux/amd64,linux/arm64.
+    type: string
+    default: ""
+steps:
+  - run:
+      name: "architect/dockerfile-arch-check: Check <<parameters.dockerfile>> copies binaries matching each image's architecture"
+      environment:
+        PARAM_DOCKERFILE: <<parameters.dockerfile>>
+        PARAM_BUILD_CONTEXT: <<parameters.build-context>>
+        PARAM_PLATFORMS: <<parameters.platforms>>
+      command: <<include(scripts/dockerfile-arch-check.sh)>>
