@@ -48,7 +48,7 @@ if [[ "$*" == *" clone "* ]]; then
     exit 128
   fi
 fi
-if [[ "$*" == *" sparse-checkout "* && -n "${CHECKOUT_FAILURES:-}" ]]; then
+if [[ "$*" == *" reset "* && -n "${CHECKOUT_FAILURES:-}" ]]; then
   checkouts=$(( $(cat "${BATS_TEST_TMPDIR}/checkouts" 2>/dev/null || echo 0) + 1 ))
   echo "${checkouts}" > "${BATS_TEST_TMPDIR}/checkouts"
   if [[ "${checkouts}" -le "${CHECKOUT_FAILURES}" ]]; then

@@ -65,7 +65,10 @@ clone_catalog() {
     git -C .app_catalog config gc.auto 0 &&
     git -C .app_catalog config user.name "circleci-architect[bot]" &&
     git -C .app_catalog config user.email "240937895+circleci-architect[bot]@users.noreply.github.com" || return
-  catalog_paths | git -C .app_catalog sparse-checkout set --no-cone --stdin
+  catalog_paths | git -C .app_catalog sparse-checkout set --no-cone --stdin || return
+  # --no-checkout leaves the index empty. Populate it only after the sparse
+  # selection is configured, so the first checkout fetches no other archives.
+  git -C .app_catalog reset -q --hard HEAD
 }
 
 for i in $(seq 1 "${PARAM_TRIES}"); do
