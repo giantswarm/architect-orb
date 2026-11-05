@@ -10,13 +10,17 @@
 
 setup() {
   SCRIPT="${BATS_TEST_DIRNAME}/../scripts/push-to-app-catalog.sh"
+  CLONE_SCRIPT="${BATS_TEST_DIRNAME}/../scripts/clone-app-catalog.sh"
   export PARAM_CHART=my-chart PARAM_TIMEOUT_SECONDS=60 PARAM_TRIES=3 PARAM_BACKOFF_SECONDS=1
   export GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@example.com
   export GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@example.com
-  export GIT_CONFIG_GLOBAL=/dev/null LC_ALL=C
+  export GITHUB_TOKEN=test-token GIT_CONFIG_NOSYSTEM=1 LC_ALL=C
   cd "${BATS_TEST_TMPDIR}" || exit 1
+  export GIT_CONFIG_GLOBAL="${PWD}/gitconfig"
+  git config --global "url.file://${PWD}/remote.git.insteadOf" https://x-access-token@github.com/giantswarm/giantswarm-test-catalog.git
 
   git init -q --bare -b master remote.git
+  git -C remote.git config uploadpack.allowFilter true
   git clone -q remote.git seed
   cat > seed/index.yaml <<'EOF'
 apiVersion: v1
@@ -27,15 +31,16 @@ entries:
   - version: 1.0.0
 generated: "seed"
 EOF
-  git -C seed add index.yaml
+  echo unrelated > seed/unrelated-1.0.0.tgz
+  git -C seed add .
   git -C seed commit -q -m init
   git -C seed push -q origin master
 
-  git clone -q --depth=1 --single-branch "file://${PWD}/remote.git" .app_catalog
   git clone -q remote.git other
   echo -n giantswarm-test-catalog > .app_catalog_name
   mkdir build
   echo chart > build/my-chart-1.0.0.tgz
+  bash "${CLONE_SCRIPT}"
 
   mkdir bin
   cat > bin/helm <<'EOF'
@@ -103,10 +108,20 @@ helm_calls() {
   cat "${BATS_TEST_TMPDIR}/helm-calls"
 }
 
+unrelated_archive_stays_remote() {
+  [ "$(remote_file unrelated-1.0.0.tgz)" = unrelated ]
+  [ ! -e .app_catalog/unrelated-1.0.0.tgz ]
+  local unrelated missing
+  unrelated="$(git -C seed rev-parse HEAD:unrelated-1.0.0.tgz)"
+  missing="$(git -C .app_catalog rev-list --objects --missing=print HEAD)"
+  [[ "${missing}" == *"?${unrelated}"* ]]
+}
+
 @test "a push without a concurrent build lands at the first attempt" {
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
   [ "$(remote_file my-chart-1.0.0.tgz)" = chart ]
+  unrelated_archive_stays_remote
   [ "$(git -C remote.git log -1 --format=%s master)" = "add my-chart-1.0.0.tgz" ]
   [[ "${output}" != *"Attempt 2:"* ]]
   [ "$(remote_file index.yaml)" = "$(cat <<'EOF'
@@ -132,11 +147,28 @@ EOF
   echo chart > build/release-aws-35.2.1-0dbf07c.tgz
   mkdir build/release-aws-35.2.1-0dbf07c.tgz-meta
   echo meta > build/release-aws-35.2.1-0dbf07c.tgz-meta/main.yaml
+  # Production packages the chart before cloning the catalog.
+  bash "${CLONE_SCRIPT}"
   run bash "${SCRIPT}"
   [ "${status}" -eq 0 ]
   [ "$(remote_file release-aws-35.2.1-0dbf07c.tgz)" = chart ]
   [ "$(remote_file release-aws-35.2.1-0dbf07c.tgz-meta/main.yaml)" = meta ]
   [ "$(git -C remote.git log -1 --format=%s master)" = "add release-aws-35.2.1-0dbf07c.tgz" ]
+  unrelated_archive_stays_remote
+}
+
+@test "existing artifact paths can be updated without deleting unrelated archives" {
+  echo previous > seed/my-chart-1.0.0.tgz
+  mkdir seed/my-chart-1.0.0.tgz-meta build/my-chart-1.0.0.tgz-meta
+  echo previous > seed/my-chart-1.0.0.tgz-meta/main.yaml
+  echo metadata > build/my-chart-1.0.0.tgz-meta/main.yaml
+  git -C seed add . && git -C seed commit -q -m previous && git -C seed push -q
+  bash "${CLONE_SCRIPT}"
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "$(remote_file my-chart-1.0.0.tgz)" = chart ]
+  [ "$(remote_file my-chart-1.0.0.tgz-meta/main.yaml)" = metadata ]
+  unrelated_archive_stays_remote
 }
 
 @test "a lost push merges the chart onto the remote's head without indexing again" {
@@ -169,6 +201,7 @@ generated: "helm-1"
 EOF
 )" ]
   [ "$(git -C remote.git rev-list --count master)" -eq 5 ]
+  unrelated_archive_stays_remote
 }
 
 @test "a change overlapping another build's indexes again on the remote's head" {
@@ -183,6 +216,7 @@ EOF
   [[ "${index}" == *"version: 0.9.0"* ]]
   [[ "${index}" != *"<<<<<<<"* ]]
   [[ "${index}" == *'generated: "helm-2"' ]]
+  unrelated_archive_stays_remote
 }
 
 @test "a lost race is retried at once until the time budget runs out" {

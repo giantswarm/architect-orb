@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
+- Clone app catalogs with a blob filter and sparse checkout of the index and this build's artifacts, avoiding
+  downloads of unrelated chart archives while retaining the existing concurrent-push recovery.
 - `image-prepare-tag`: take the version from `.pipeline_version` when `pin-version` persisted it and the job attached
   the workspace (`build-image`, `push-to-registries`, `push-to-app-catalog` with `attach_workspace: true`). Without
   the file the version is resolved with `gitsemver get` as before.
