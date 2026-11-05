@@ -22,9 +22,16 @@ setup() {
 CONFIG
 
   git init -q --bare -b master giantswarm-test-catalog.git
+  git -C giantswarm-test-catalog.git config uploadpack.allowFilter true
   git clone -q giantswarm-test-catalog.git seed 2>/dev/null
   echo "apiVersion: v1" > seed/index.yaml
-  git -C seed add index.yaml
+  echo unrelated > seed/unrelated-1.0.0.tgz
+  mkdir -p seed/release-aws-1.0.0.tgz-meta build/release-aws-1.0.0.tgz-meta
+  echo existing > seed/release-aws-1.0.0.tgz
+  echo metadata > seed/release-aws-1.0.0.tgz-meta/main.yaml
+  echo replacement > build/release-aws-1.0.0.tgz
+  echo metadata > build/release-aws-1.0.0.tgz-meta/main.yaml
+  git -C seed add .
   git -C seed commit -q -m init
   git -C seed push -q origin master
   echo -n giantswarm-test-catalog > .app_catalog_name
@@ -38,6 +45,14 @@ if [[ "$*" == *" clone "* ]]; then
   if [[ "${clones}" -le "${CLONE_FAILURES:-0}" ]]; then
     mkdir -p .app_catalog/partial
     printf '%b\n' "${CLONE_ERROR:-fatal: unable to access the catalog}" >&2
+    exit 128
+  fi
+fi
+if [[ "$*" == *" reset "* && -n "${CHECKOUT_FAILURES:-}" ]]; then
+  checkouts=$(( $(cat "${BATS_TEST_TMPDIR}/checkouts" 2>/dev/null || echo 0) + 1 ))
+  echo "${checkouts}" > "${BATS_TEST_TMPDIR}/checkouts"
+  if [[ "${checkouts}" -le "${CHECKOUT_FAILURES}" ]]; then
+    echo 'fatal: unable to fetch catalog index' >&2
     exit 128
   fi
 fi
@@ -69,6 +84,37 @@ WRAPPER
   run bash -c 'printf "protocol=https\nhost=github.com\nusername=x-access-token\n\n" | git -C .app_catalog credential fill'
   [[ "${output}" == *"password=test-token"* ]]
   [[ "$(cat .app_catalog/.git/config)" != *"test-token"* ]]
+}
+
+@test "only the index and exact build paths are checked out and downloaded" {
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "$(cat .app_catalog/release-aws-1.0.0.tgz)" = existing ]
+  [ "$(cat .app_catalog/release-aws-1.0.0.tgz-meta/main.yaml)" = metadata ]
+  [ ! -e .app_catalog/unrelated-1.0.0.tgz ]
+  unrelated="$(git -C seed rev-parse HEAD:unrelated-1.0.0.tgz)"
+  missing="$(git -C .app_catalog rev-list --objects --missing=print HEAD)"
+  [[ "${missing}" == *"?${unrelated}"* ]]
+  [ -z "$(git -C .app_catalog status --porcelain)" ]
+}
+
+@test "build path pattern characters are literal" {
+  echo literal > 'seed/package[1].tgz'
+  echo different > seed/package1.tgz
+  echo replacement > 'build/package[1].tgz'
+  git -C seed add . && git -C seed commit -q -m patterns && git -C seed push -q
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "$(cat '.app_catalog/package[1].tgz')" = literal ]
+  [ ! -e .app_catalog/package1.tgz ]
+}
+
+@test "a failed sparse checkout retries the whole clone" {
+  export CHECKOUT_FAILURES=1
+  run bash "${SCRIPT}"
+  [ "${status}" -eq 0 ]
+  [ "$(cat "${BATS_TEST_TMPDIR}/clones")" -eq 2 ]
+  [ "$(cat .app_catalog/index.yaml)" = "apiVersion: v1" ]
 }
 
 @test "a failing clone is retried with a fresh directory" {

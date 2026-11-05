@@ -19,14 +19,18 @@ BATS_TEST_TIMEOUT=180
 
 setup() {
   SCRIPT="${BATS_TEST_DIRNAME}/../scripts/push-to-app-catalog.sh"
+  CLONE_SCRIPT="${BATS_TEST_DIRNAME}/../scripts/clone-app-catalog.sh"
   export PARAM_TRIES=5 PARAM_BACKOFF_SECONDS=1 PARAM_TIMEOUT_SECONDS=120
   export GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@example.com
   export GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@example.com
-  export GIT_CONFIG_GLOBAL=/dev/null LC_ALL=C
+  export GITHUB_TOKEN=test-token GIT_CONFIG_NOSYSTEM=1 LC_ALL=C
   export LATENCY=0.5 BUILDS=3 RACES=3
   cd "${BATS_TEST_TMPDIR}" || exit 1
+  export GIT_CONFIG_GLOBAL="${PWD}/gitconfig"
+  git config --global "url.file://${PWD}/remote.git.insteadOf" https://x-access-token@github.com/giantswarm/giantswarm-test-catalog.git
 
   git init -q --bare -b master remote.git
+  git -C remote.git config uploadpack.allowFilter true
   # The catalog's push processing. A build's push (its commit adds
   # my-chart-<n>-1.0.0.tgz) that still has injected races to lose has a fleet
   # chart land first; the fleet's own pushes pass at once. Every push, the
@@ -50,7 +54,8 @@ EOF
   chmod +x remote.git/hooks/pre-receive
   git clone -q remote.git seed 2>/dev/null
   printf 'apiVersion: v1\nentries:\n  a-chart:\n  - version: 1.0.0\n  z-chart:\n  - version: 1.0.0\ngenerated: "seed"\n' > seed/index.yaml
-  git -C seed add index.yaml
+  echo unrelated > seed/unrelated-1.0.0.tgz
+  git -C seed add .
   git -C seed commit -q -m init
   git -C seed push -q origin master
 
@@ -108,10 +113,10 @@ EOF
 
   for n in $(seq 1 "${BUILDS}"); do
     mkdir "build-${n}"
-    git clone -q --depth=1 --single-branch "file://${PWD}/remote.git" "build-${n}/.app_catalog"
     echo -n giantswarm-test-catalog > "build-${n}/.app_catalog_name"
     mkdir "build-${n}/build"
     echo chart > "build-${n}/build/my-chart-${n}-1.0.0.tgz"
+    (cd "build-${n}" && bash "${CLONE_SCRIPT}")
   done
 }
 
@@ -132,12 +137,17 @@ EOF
 
   index="$(git -C remote.git show master:index.yaml)"
   [[ "${index}" != *"<<<<<<<"* ]]
+  [ "$(git -C remote.git show master:unrelated-1.0.0.tgz)" = unrelated ]
+  unrelated="$(git -C seed rev-parse HEAD:unrelated-1.0.0.tgz)"
   for n in $(seq 1 "${BUILDS}"); do
     lost="$(grep -c 'lost the race' "build-${n}.log")"
     echo "build ${n} lost ${lost} races"
     [ "${lost}" -ge "${RACES}" ]
     [ "$(git -C remote.git show "master:my-chart-${n}-1.0.0.tgz")" = chart ]
     [[ "${index}" == *"  my-chart-${n}:"* ]]
+    [ ! -e "build-${n}/.app_catalog/unrelated-1.0.0.tgz" ]
+    missing="$(git -C "build-${n}/.app_catalog" rev-list --objects --missing=print HEAD)"
+    [[ "${missing}" == *"?${unrelated}"* ]]
   done
   while read -r chart; do
     [ "$(git -C remote.git show "master:${chart}-1.0.0.tgz")" = chart ]
