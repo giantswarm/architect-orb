@@ -53,6 +53,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
+- `run-tests-with-ats`: default `app-test-suite_container_tag` and `app-test-suite_version` to app-test-suite 0.15.1, which
+  bumps `apptestctl` to v0.27.0. With 0.15.0, `apptestctl` failed to bootstrap the app platform, as `control-plane-catalog`
+  no longer has app-operator 6.7.0 and chart-operator 2.35.0.
+
 - `go-test` / `go-build`: a nancy scan the Sonatype Guide API refused says why. nancy 2.1.0 reports every Guide
   error as `cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost`; the step now
   checks two dependencies with nancy's URL and credentials and prints the status and the API's reason in the
