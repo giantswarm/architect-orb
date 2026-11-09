@@ -66,8 +66,8 @@ Jobs available in this orb are documented [here](docs/README.md#jobs)
   the orb declaration to `architect: giantswarm/architect@dev:your-branch`.
   Dev versions are mutable and deleted after 90 days. Details here
   https://circleci.com/docs/2.0/using-orbs/#development-and-production-orbs-versioning-semantics.
-- Update [Unreleased section of CHANGELOG.md](CHANGELOG.md#Unreleased) file
-  with the changes introduced in your PR.
+- Write the PR title as a [conventional commit](https://www.conventionalcommits.org/) subject.
+  It is the release note.
 
 ## Releases
 
