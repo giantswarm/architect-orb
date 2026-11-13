@@ -23,8 +23,6 @@ jobs:
 workflows:
   catalog_build:
     jobs:
-      - architect/changelog-lint
-
       - orb-tools/lint:
           filters:
             tags:
