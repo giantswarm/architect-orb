@@ -75,13 +75,15 @@ See [`push-to-registries`](./push-to-registries.md) for the full Dockerfile cont
 
 ## Build speed and concurrency
 
-The job persists two caches across runs, both keyed on `go.sum`: the Go module
-cache (`/go/pkg/mod`) and the Go build cache (`GOCACHE`). The build cache holds
-compiled stdlib and dependency objects for every GOOS/GOARCH, which are the bulk
-of build time and only change when `go.sum` changes; keying on `go.sum` keeps one
-cache object per dependency set rather than one per commit. The first run after a
-`go.sum` change is cold and slower; subsequent runs reuse the compiled stdlib and
-dependencies and only recompile the repo's own changed packages.
+The job persists two caches across runs: the Go module cache (`/go/pkg/mod`),
+keyed on `go.sum`, and the Go build cache (`GOCACHE`), keyed on the Go version
+and `go.sum`. The Go version is the executor's `go version` plus the `go` and
+`toolchain` lines of `go.mod`. The build cache holds compiled stdlib and
+dependency objects for every GOOS/GOARCH, which are the bulk of build time;
+keying on `go.sum` keeps one cache object per dependency set rather than one per
+commit. A `go.sum` change restores the latest cache of the same Go version, so
+only the changed dependencies and the repo's own packages recompile. A Go
+version change starts cold.
 
 Cross-compiling each architecture is independent work. `build_concurrency`
 controls how many run at once:

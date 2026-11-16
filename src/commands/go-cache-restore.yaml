@@ -3,11 +3,21 @@ steps:
       name: Pin GOCACHE
       command: |
         echo "export GOCACHE=${HOME}/.cache/go-build" >> "$BASH_ENV"
+  # The build cache is only valid for the Go version that compiled it. The
+  # executor's Go and the go/toolchain lines of go.mod decide that version;
+  # GOTOOLCHAIN=local reads the executor's Go without downloading a toolchain.
+  - run:
+      name: Compute the Go version for the cache keys
+      command: |
+        { GOTOOLCHAIN=local go version; grep -E '^(go|toolchain)[[:space:]]' go.mod || true; } > /tmp/go-cache-version
+        cat /tmp/go-cache-version
   - restore_cache:
       name: Restore Go module cache
       keys:
         - go-build-go-mod-v1-{{ checksum "go.sum" }}
+        - go-build-go-mod-v1-
   - restore_cache:
       name: Restore Go build cache
       keys:
-        - go-build-cache-v2-{{ checksum "go.sum" }}
+        - go-build-cache-v3-{{ checksum "/tmp/go-cache-version" }}-{{ checksum "go.sum" }}
+        - go-build-cache-v3-{{ checksum "/tmp/go-cache-version" }}-
