@@ -64,7 +64,7 @@ which bundles all required tools: `architect`, `gitsemver`, `helm`, `go`, `cosig
   a final cleanup step.
 - **Version stamping** uses `gitsemver version` (not `architect project version`). This is the canonical way
   to get the current build version.
-- Always update the `CHANGELOG.md` with a summary of changes and notable features/fixes.
+- The pull request title is the release note. Do not edit `CHANGELOG.md`.
 
 ## Versioning and signing (v9+)
 
