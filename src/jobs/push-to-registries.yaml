@@ -203,6 +203,10 @@ steps:
             dockerfile: <<parameters.dockerfile>>
             mode: <<parameters.hadolint>>
             config: <<parameters.hadolint-config>>
+        - dockerfile-arch-check:
+            dockerfile: <<parameters.dockerfile>>
+            build-context: <<parameters.build-context>>
+            platforms: <<parameters.platforms>>
         - when:
             # Build-only mode needs no registry credentials.
             condition: <<parameters.push>>
