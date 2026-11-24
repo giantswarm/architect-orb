@@ -415,6 +415,26 @@ the buildx build using the hadolint binary baked into the architect image.
 `hadolint-config` is an optional path to a `.hadolint.yaml` configuration
 file relative to the workspace; defaults to hadolint's built-in rules.
 
+## Architecture check
+
+Before the build, the job fails when the Dockerfile copies a binary from the
+build context into an image built for another architecture. The plain
+`<binary>` that `go-build` writes is the linux/amd64 copy, so `COPY <binary>`
+ships it in the arm64 image too. Copy the binary for the target architecture:
+
+```dockerfile
+ARG TARGETARCH
+COPY <binary>-linux-${TARGETARCH} /<binary>
+```
+
+The check reads `COPY` and `ADD` instructions without `--from`, once per
+platform, with `TARGETARCH`, `TARGETOS` and `TARGETPLATFORM` substituted. It
+skips stages whose `FROM` has `--platform=`. Only literal file paths are
+checked; directories, wildcards and other build arguments are not.
+
+Set `arch-check: warn` to print the mismatches without failing the job, or
+`arch-check: skip` to turn the check off.
+
 ## Cosign signing
 
 `sign: true` (default) signs the pushed image manifest with cosign keyless
