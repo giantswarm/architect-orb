@@ -23,6 +23,12 @@ refused`. Git's credential helper is configured in the catalog's clone only, and
 the clone is not rewritten to SSH by the checkout of a project with a deploy key.
 `GITHUB_TOKEN` stays in the job's environment, as it does for the OCI push.
 
+The catalog uses a shallow, blob-filtered clone and a sparse checkout of
+`index.yaml` and this build's exact artifact paths, including metadata directories.
+Unrelated archives stay in the catalog without being downloaded or checked out.
+The same selection applies when a concurrent push requires fetching a new head;
+a failed initial checkout is retried with the clone.
+
 This job assumes that the App Catalog is defined in a GitHub repository inside
 giantswarm organization. E.g. when `app_catalog` parameter is set to
 `"control-plane-test-catalog"` the job will try to use catalog

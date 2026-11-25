@@ -7,7 +7,7 @@
 #   PARAM_TRIES             the number of attempts a failing clone gets
 #   PARAM_BACKOFF_SECONDS   the base of the wait after a failed attempt
 # GITHUB_TOKEN is the token generate-github-token exported; .app_catalog_name
-# holds the catalog's name.
+# holds the catalog's name; build/ holds the chart archives and metadata.
 #
 # CircleCI's checkout of a project with a deploy key rewrites https://github.com
 # to ssh://git@github.com for the whole job (a global url.<base>.insteadOf),
@@ -40,20 +40,41 @@ app_catalog_name="$(cat .app_catalog_name)"
 readonly app_catalog_name
 readonly url="https://x-access-token@github.com/giantswarm/${app_catalog_name}.git"
 
+# Catalog archives are immutable and numerous. Fetch only the index and any
+# existing paths this build will replace. Non-cone patterns are deliberate:
+# cone mode includes every root file, including every archived chart.
+# Use the actual build paths, since a packaged chart can have another name
+# than the chart parameter, and include metadata directories with their files.
+catalog_paths() {
+  printf '/index.yaml\n'
+  local artifact
+  for artifact in build/*; do
+    [[ -e "${artifact}" ]] || continue
+    printf '/%s\n' "${artifact#build/}" | sed 's/[][?*\\]/\\&/g'
+  done
+}
+
+clone_catalog() {
+  # An empty credential.helper first drops any helper the image configures.
+  git -c http.extraHeader= -c credential.helper= -c "credential.helper=${helper}" \
+    clone -q --depth=1 --single-branch --filter=blob:none --no-checkout "${url}" .app_catalog || return
+  # Configure the helper before sparse checkout lazily fetches its blobs.
+  git -C .app_catalog config credential.helper "" &&
+    git -C .app_catalog config --add credential.helper "${helper}" &&
+    git -C .app_catalog config http.extraHeader "" &&
+    git -C .app_catalog config gc.auto 0 &&
+    git -C .app_catalog config user.name "circleci-architect[bot]" &&
+    git -C .app_catalog config user.email "240937895+circleci-architect[bot]@users.noreply.github.com" || return
+  catalog_paths | git -C .app_catalog sparse-checkout set --no-cone --stdin || return
+  # --no-checkout leaves the index empty. Populate it only after the sparse
+  # selection is configured, so the first checkout fetches no other archives.
+  git -C .app_catalog reset -q --hard HEAD
+}
+
 for i in $(seq 1 "${PARAM_TRIES}"); do
   rm -rf .app_catalog
-  echo "====> Attempt ${i}: Running: git clone --depth=1 --single-branch ${url} .app_catalog"
-  # An empty credential.helper first drops any helper the image configures.
-  if output="$(git -c http.extraHeader= -c credential.helper= -c "credential.helper=${helper}" \
-    clone -q --depth=1 --single-branch "${url}" .app_catalog 2>&1)"; then
-    # The empty helper drops any helper of the image's or the job's configuration.
-    git -C .app_catalog config credential.helper ""
-    git -C .app_catalog config --add credential.helper "${helper}"
-    git -C .app_catalog config http.extraHeader ""
-    git -C .app_catalog config gc.auto 0
-    # The App's bot user, so the catalog's commits are attributed to it on GitHub.
-    git -C .app_catalog config user.name "circleci-architect[bot]"
-    git -C .app_catalog config user.email "240937895+circleci-architect[bot]@users.noreply.github.com"
+  echo "====> Attempt ${i}: Cloning ${url} with only the index and this build's artifacts"
+  if output="$(clone_catalog 2>&1)"; then
     echo "====> Cloned ${app_catalog_name} at attempt ${i}."
     exit 0
   fi

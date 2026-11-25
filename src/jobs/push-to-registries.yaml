@@ -141,6 +141,16 @@ parameters:
       CircleCI OIDC token with audience=sigstore via `circleci run oidc get`.
     type: boolean
     default: true
+  arch-check:
+    description: |
+      Check the Dockerfile copies binaries matching each image's architecture,
+      before building. See docs/job/push-to-registries.md#architecture-check.
+      - "fail" (default): fail the job on a binary of the wrong architecture.
+      - "warn": print the mismatches, never fail the job.
+      - "skip": don't run the check at all.
+    type: enum
+    enum: ["fail", "warn", "skip"]
+    default: "fail"
   hadolint:
     description: |
       Lint the Dockerfile with hadolint before building.
@@ -203,6 +213,11 @@ steps:
             dockerfile: <<parameters.dockerfile>>
             mode: <<parameters.hadolint>>
             config: <<parameters.hadolint-config>>
+        - dockerfile-arch-check:
+            dockerfile: <<parameters.dockerfile>>
+            build-context: <<parameters.build-context>>
+            platforms: <<parameters.platforms>>
+            mode: <<parameters.arch-check>>
         - when:
             # Build-only mode needs no registry credentials.
             condition: <<parameters.push>>

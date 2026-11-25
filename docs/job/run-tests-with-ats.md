@@ -37,7 +37,7 @@ workflows:
 
 A 0.x tag (`0.15.0`, `v0.15.0`, `0.15.0-<sha>`) takes the legacy path. Up to app-test-suite 0.15 the
 tool created its own kind cluster (through the Docker socket) and was started by the `dats.sh` wrapper
-script downloaded from the app-test-suite repository. The default tag is still 0.15.0, so this is the
+script downloaded from the app-test-suite repository. The default tag is still 0.15.1, so this is the
 default path, and it is unchanged.
 
 Any other tag (1.x, `latest`) takes the kind path. app-test-suite 1.0 and later no longer provision
@@ -96,7 +96,7 @@ The container tag always comes from [`app-test-suite_container_tag`](#app-test-s
 
 Only used on the legacy path (a 0.x [`app-test-suite_container_tag`](#app-test-suite_container_tag)); ignored on the kind path.
 
-(Default: "v0.15.0")
+(Default: "v0.15.1")
 
 ### app-test-suite_container_tag
 
@@ -105,7 +105,7 @@ This parameter allows to specify the used container tag of app-test-suite.
 It also picks the path: 0.x takes the legacy `dats.sh` path, any other tag the kind path. See
 [Two paths](#two-paths-who-creates-the-test-cluster).
 
-(Default: "0.15.0")
+(Default: "0.15.1")
 
 ### additional_app-test-suite_flags
 
