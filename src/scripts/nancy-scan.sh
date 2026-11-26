@@ -48,6 +48,11 @@ write_junit() {
   } > "$junit_dir/nancy.xml"
 }
 
+# nancy picks the same credentials in the same order as guide_error_reason.
+guide_has_credentials() {
+  [[ -n "${GUIDE_TOKEN:-}" || -n "${OSSI_USERNAME:-}" || -n "${OSSI_TOKEN:-}" ]]
+}
+
 # nancy's Sonatype Guide client (2.1.0 and 2.1.1) decodes the body of an HTTP
 # 400, 401, 402 or 500 answer as a component report: a JSON object reads
 # `cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost`,
@@ -59,10 +64,6 @@ write_junit() {
 # is answered costs at most two dependencies' worth. The credentials reach curl
 # on stdin, never on its command line.
 # Sets guide_status (empty when unknown) and reason.
-guide_has_credentials() {
-  [[ -n "${GUIDE_TOKEN:-}" || -n "${OSSI_USERNAME:-}" || -n "${OSSI_TOKEN:-}" ]]
-}
-
 guide_error_reason() {
   local base="${OSSI_OSSINDEXURL:-${OSSIndexURL:-https://api.guide.sonatype.com}}"
   local auth body message
@@ -82,12 +83,13 @@ guide_error_reason() {
   guide_status=$(printf '%s\n' "$auth" | curl -sS --max-time 30 -K - -o "$body" -w '%{http_code}' \
     -X POST "${base%/}/api/v3/component-report" -H 'Content-Type: application/json' \
     -d '{"coordinates":["pkg:golang/golang.org/x/text@v0.3.8","pkg:golang/golang.org/x/net@v0.7.0"]}') || guide_status=""
-  message=$(jq -r 'if type == "object" then (.message // .code // empty) else empty end' "$body" 2>/dev/null) || message=""
+  message=$(jq -r 'if type == "object" then (.message // .code // empty | tostring | gsub("\\s+"; " ")) else empty end' "$body" 2>/dev/null) || message=""
 
   case "$guide_status" in
     402)
-      reason=$(jq -r '"Sonatype Guide answered HTTP 402 \(.code // "Payment Required"): \(.creditsRemaining // "no") credits left on the \(.tier // "unknown") tier, the quota resets on \(.resetDate // "an unknown date")"' \
-        "$body" 2>/dev/null) || reason="Sonatype Guide answered HTTP 402 Payment Required${message:+: ${message}}"
+      reason=$(jq -r 'if type == "object" then "Sonatype Guide answered HTTP 402 \(.code // "Payment Required"): \(.creditsRemaining // "no") credits left on the \(.tier // "unknown") tier, the quota resets on \(.resetDate // "an unknown date")" else empty end' \
+        "$body" 2>/dev/null) || reason=""
+      [[ -n "$reason" ]] || reason="Sonatype Guide answered HTTP 402 Payment Required${message:+: ${message}}"
       ;;
     2??)
       reason="Sonatype Guide answered a check of two dependencies, so its refusal of the scan was transient or specific to the scan's batch"
@@ -151,8 +153,9 @@ if [[ -n "$nancy_status" && "${nancy_status%% *}" != 402 ]]; then
   guide_has_credentials || reason="no Sonatype Guide credentials are set (GUIDE_TOKEN, or OSSI_USERNAME and OSSI_TOKEN)"
 elif grep -qF 'guide API request failed' "$results"; then
   guide_error_reason
-  # The check did not confirm the 402 nancy named (it is a smaller batch, or
-  # the API is unreachable now): report nancy's status.
+  # The check did not confirm the 402 nancy named (it is a smaller batch, the
+  # API is unreachable now, or it answers anything else, even a 401): report
+  # nancy's status, and a quota is never a failed step.
   if [[ -n "$nancy_status" && "$guide_status" != 402 ]] && guide_has_credentials; then
     guide_status=402
     reason="Sonatype Guide answered HTTP ${nancy_status}"

@@ -105,7 +105,7 @@ CircleCI cache per branch and 12-hour window, so a dependency costs Sonatype Gui
 instead of once per build, and a build whose dependencies are all cached scans while the API is unavailable.
 The cache never crosses branches: a branch's build cannot hand reports to the default branch or a tag.
 
-When nancy cannot get an answer (an outage, a rate limit or an exhausted credit quota),
+When nancy cannot get an answer (an outage, a rate limit, an exhausted credit quota, a 403 or missing credentials),
 the job does not fail, so an unrelated pull request is not blocked. The step prints `NOT SCANNED:` with the
 reason, and the job's JUnit results record the failed test `Go dependencies are scanned for known
 vulnerabilities`, shown in the job's Tests tab and in CircleCI's test insights. A green job with that failed
