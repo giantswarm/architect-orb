@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 # Tests of src/scripts/nancy-scan.sh: a clean scan passes, vulnerable
-# dependencies fail the step, and a scanner outage passes the step while it
-# says that nothing was scanned and records a failed JUnit test.
+# dependencies fail the step, a scanner outage passes the step while it
+# says that nothing was scanned and records a failed JUnit test, and rejected
+# credentials fail the step.
 # The script runs as CircleCI runs a step, under `bash -eo pipefail`.
 # go, nancy and curl are stubs on the PATH: nancy prints NANCY_OUTPUT, exits
 # with NANCY_EXIT and records its arguments; curl answers CURL_STATUS with
@@ -92,13 +93,136 @@ STUB
   grep -qF 'header = "Authorization: Bearer guide-token-value"' "${CURL_STDIN}"
 }
 
-@test "rejected OSS Index credentials name the status and the API's message" {
+@test "rejected OSS Index credentials fail the step and name the status and the API's message" {
   OSSI_USERNAME=ci@example.com OSSI_TOKEN=ossi-token-value CURL_STATUS=401 CURL_BODY='{"code":401,"message":"Invalid credentials"}' \
     NANCY_OUTPUT="${GUIDE_ERROR}" NANCY_EXIT=1 run bash -eo pipefail "${SCRIPT}"
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"NOT SCANNED"*"Sonatype Guide answered HTTP 401: Invalid credentials"* ]]
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"SCAN FAILED: Sonatype Guide rejected the job's credentials: Sonatype Guide answered HTTP 401: Invalid credentials"* ]]
+  [[ "$output" != *"NOT SCANNED"* ]]
+  grep -q '<failure message="SCAN FAILED: credentials rejected: .*HTTP 401' "${JUNIT}"
   grep -qF 'user = "ci@example.com:ossi-token-value"' "${CURL_STDIN}"
   ! grep -q ossi-token-value "${CURL_ARGS}"
+}
+
+@test "a 401 that nancy names itself fails the step without a status check" {
+  GUIDE_TOKEN=guide-token-value NANCY_OUTPUT="Error: guide API request failed: 401 Unauthorized" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"SCAN FAILED: Sonatype Guide rejected the job's credentials: Sonatype Guide answered HTTP 401 Unauthorized."* ]]
+  [[ "$output" == *"Check GUIDE_TOKEN"* ]]
+  grep -q '<failure message="SCAN FAILED: credentials rejected: Sonatype Guide answered HTTP 401 Unauthorized"' "${JUNIT}"
+  [ ! -e "${CURL_ARGS}" ]
+}
+
+@test "a 403 that nancy names itself passes the step but says nothing was scanned, a firewall answers it too" {
+  GUIDE_TOKEN=guide-token-value NANCY_OUTPUT="Error: guide API request failed: 403 Forbidden" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"Sonatype Guide answered HTTP 403 Forbidden"* ]]
+  [[ "$output" != *"SCAN FAILED"* ]]
+}
+
+@test "a 401 with a body that is not JSON is checked and fails the step" {
+  GUIDE_TOKEN=guide-token-value CURL_STATUS=401 CURL_BODY='<html>Unauthorized</html>' \
+    NANCY_OUTPUT="Error: guide API request failed: undefined response type" NANCY_EXIT=1 run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"SCAN FAILED"*"Sonatype Guide answered HTTP 401"* ]]
+}
+
+@test "a 401 with only OSSI_USERNAME set counts as rejected credentials" {
+  OSSI_USERNAME=ci@example.com NANCY_OUTPUT="Error: guide API request failed: 401 Unauthorized" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"SCAN FAILED"* ]]
+}
+
+@test "a 401 without credentials passes the step but says nothing was scanned" {
+  NANCY_OUTPUT="Error: guide API request failed: 401 Unauthorized" NANCY_EXIT=1 run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"no Sonatype Guide credentials are set"* ]]
+  grep -q '<failure message="NOT SCANNED' "${JUNIT}"
+}
+
+@test "a 402 that nancy names itself passes the step and is checked for the credit balance" {
+  GUIDE_TOKEN=guide-token-value NANCY_OUTPUT="Error: guide API request failed: 402 Payment Required" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"HTTP 402 CREDIT_LIMIT_EXCEEDED: 0.1 credits left on the paid tier, the quota resets on 2026-10-28"* ]]
+  [ -e "${CURL_ARGS}" ]
+}
+
+@test "a 402 that nancy names itself with an empty check body still names a reason" {
+  GUIDE_TOKEN=guide-token-value CURL_BODY='' NANCY_OUTPUT="Error: guide API request failed: 402 Payment Required" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED: no Go dependency was checked for known vulnerabilities: Sonatype Guide answered HTTP 402 Payment Required."* ]]
+  ! grep -q '<failure message="NOT SCANNED: "' "${JUNIT}"
+}
+
+@test "a 402 that nancy names itself is kept when the check of two dependencies is answered" {
+  GUIDE_TOKEN=guide-token-value CURL_STATUS=200 CURL_BODY='[]' NANCY_OUTPUT="Error: guide API request failed: 402 Payment Required" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"Sonatype Guide answered HTTP 402 Payment Required."* ]]
+}
+
+@test "a 402 that nancy names itself is kept when the check cannot reach the API" {
+  GUIDE_TOKEN=guide-token-value CURL_EXIT=6 NANCY_OUTPUT="Error: guide API request failed: 402 Payment Required" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"Sonatype Guide answered HTTP 402 Payment Required."* ]]
+}
+
+@test "a 403 from the check after an unmarshal error passes the step" {
+  GUIDE_TOKEN=guide-token-value CURL_STATUS=403 CURL_BODY='<html>blocked</html>' NANCY_OUTPUT="${GUIDE_ERROR}" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"Sonatype Guide answered HTTP 403"* ]]
+}
+
+@test "a 402 that nancy names itself is kept when the check answers 401" {
+  GUIDE_TOKEN=guide-token-value CURL_STATUS=401 CURL_BODY='' NANCY_OUTPUT="Error: guide API request failed: 402 Payment Required" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"Sonatype Guide answered HTTP 402 Payment Required."* ]]
+  [[ "$output" != *"SCAN FAILED"* ]]
+}
+
+@test "a 402 that nancy names itself without credentials says so and skips the check" {
+  NANCY_OUTPUT="Error: guide API request failed: 402 Payment Required" NANCY_EXIT=1 run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"no Sonatype Guide credentials are set"* ]]
+  [ ! -e "${CURL_ARGS}" ]
+}
+
+@test "the check sends a lone OSSI_TOKEN as a bearer token" {
+  OSSI_TOKEN=ossi-token-value CURL_STATUS=401 CURL_BODY='{"message":"Invalid token"}' NANCY_OUTPUT="${GUIDE_ERROR}" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  grep -qF 'header = "Authorization: Bearer ossi-token-value"' "${CURL_STDIN}"
+  ! grep -q ossi-token-value "${CURL_ARGS}"
+}
+
+@test "a 401 that nancy names itself with OSSI_USERNAME and OSSI_TOKEN records the failure" {
+  OSSI_USERNAME=ci@example.com OSSI_TOKEN=ossi-token-value NANCY_OUTPUT="Error: guide API request failed: 401 Unauthorized" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  grep -q '<failure message="SCAN FAILED: credentials rejected: Sonatype Guide answered HTTP 401 Unauthorized"' "${JUNIT}"
+}
+
+@test "a multi-line API message stays on one line" {
+  GUIDE_TOKEN=guide-token-value CURL_STATUS=400 CURL_BODY='{"message":"bad\nrequest"}' NANCY_OUTPUT="${GUIDE_ERROR}" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Sonatype Guide answered HTTP 400: bad request."* ]]
+}
+
+@test "a 5xx that nancy names itself passes the step but says nothing was scanned" {
+  GUIDE_TOKEN=guide-token-value NANCY_OUTPUT="Error: guide API request failed: 503 Service Unavailable" NANCY_EXIT=1 \
+    run bash -eo pipefail "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT SCANNED"*"Sonatype Guide answered HTTP 503 Service Unavailable"* ]]
+  [ ! -e "${CURL_ARGS}" ]
 }
 
 @test "a Guide error without credentials says so" {

@@ -105,14 +105,21 @@ CircleCI cache per branch and 12-hour window, so a dependency costs Sonatype Gui
 instead of once per build, and a build whose dependencies are all cached scans while the API is unavailable.
 The cache never crosses branches: a branch's build cannot hand reports to the default branch or a tag.
 
-When nancy cannot get an answer (an outage, a rate limit, an exhausted credit quota or rejected credentials),
+When nancy cannot get an answer (an outage, a rate limit, an exhausted credit quota, a 403 or missing credentials),
 the job does not fail, so an unrelated pull request is not blocked. The step prints `NOT SCANNED:` with the
 reason, and the job's JUnit results record the failed test `Go dependencies are scanned for known
 vulnerabilities`, shown in the job's Tests tab and in CircleCI's test insights. A green job with that failed
 test has not checked its dependencies.
 
-nancy 2.1.0 reports every error answer of the Sonatype Guide API as `cannot unmarshal object into Go value of
-type []sonatypeguide.ComponentReportPost`. On that error the step checks two dependencies with nancy's URL and
+Credentials that Sonatype Guide rejects (HTTP 401) fail the step with `SCAN FAILED:`: that is no outage but a
+broken CircleCI context, which leaves every build that uses it unscanned until someone fixes it. A job without
+any Sonatype Guide credentials is not failed; it reports `NOT SCANNED:`. A 403 is not failed either, since a
+firewall or IP block in front of the API answers it too.
+
+nancy (2.1.0 and 2.1.1) names the status of most error answers (`guide API request failed: 401 Unauthorized`),
+but for an HTTP 400, 401, 402 or 500 with a body it reports a decoding error instead, such as `cannot unmarshal
+object into Go value of type []sonatypeguide.ComponentReportPost` for an exhausted credit quota. On such an
+error, and on a 402, the step checks two dependencies with nancy's URL and
 credentials (`OSSI_OSSINDEXURL`, `GUIDE_TOKEN` or `OSSI_USERNAME` and `OSSI_TOKEN` from the job's context) and
 puts the status and the API's reason into the `NOT SCANNED:` line, for an exhausted credit quota with the credits
 left and the date the quota resets. A refused check costs no credits.
