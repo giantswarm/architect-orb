@@ -22,6 +22,8 @@
 # never reported as a scan either: the step says that no dependency was
 # scanned, and the JUnit result records a failed test, which the job's Tests
 # tab and CircleCI's test insights show while the job stays green.
+# Credentials that Sonatype Guide rejects (HTTP 401) are not an outage
+# but a broken context, and fail the step.
 # CircleCI runs the step with `-eo pipefail`; nancy's exit code is evaluated
 # below, so a failing scan must not end the script.
 set +e -uo pipefail
@@ -46,16 +48,25 @@ write_junit() {
   } > "$junit_dir/nancy.xml"
 }
 
-# nancy 2.1.0's Sonatype Guide client decodes an error answer (HTTP 400, 401,
-# 402, 500) as a component report and drops its status, so every refusal reads
-# `cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost`.
+# nancy's Sonatype Guide client (2.1.0 and 2.1.1) decodes the body of an HTTP
+# 400, 401, 402 or 500 answer as a component report: a JSON object reads
+# `cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost`,
+# a body that is not JSON reads `undefined response type` or a JSON syntax
+# error, and only an empty body keeps the status (`401 Unauthorized`). Any other
+# status is named whatever the body (`guide API request failed: 503 Service Unavailable`).
 # One check of two dependencies with nancy's URL and credentials recovers the
 # status and the API's reason: a refused check costs no credits, and one that
 # is answered costs at most two dependencies' worth. The credentials reach curl
 # on stdin, never on its command line.
+# Sets guide_status (empty when unknown) and reason.
+guide_has_credentials() {
+  [[ -n "${GUIDE_TOKEN:-}" || -n "${OSSI_USERNAME:-}" || -n "${OSSI_TOKEN:-}" ]]
+}
+
 guide_error_reason() {
   local base="${OSSI_OSSINDEXURL:-${OSSIndexURL:-https://api.guide.sonatype.com}}"
-  local auth body status message
+  local auth body message
+  guide_status=""
   if [[ -n "${GUIDE_TOKEN:-}" ]]; then
     auth="header = \"Authorization: Bearer ${GUIDE_TOKEN}\""
   elif [[ -n "${OSSI_USERNAME:-}" ]]; then
@@ -63,32 +74,34 @@ guide_error_reason() {
   elif [[ -n "${OSSI_TOKEN:-}" ]]; then
     auth="header = \"Authorization: Bearer ${OSSI_TOKEN}\""
   else
-    echo "no Sonatype Guide credentials are set (GUIDE_TOKEN, or OSSI_USERNAME and OSSI_TOKEN)"
+    reason="no Sonatype Guide credentials are set (GUIDE_TOKEN, or OSSI_USERNAME and OSSI_TOKEN)"
     return
   fi
 
   body=$(mktemp)
-  status=$(printf '%s\n' "$auth" | curl -sS --max-time 30 -K - -o "$body" -w '%{http_code}' \
+  guide_status=$(printf '%s\n' "$auth" | curl -sS --max-time 30 -K - -o "$body" -w '%{http_code}' \
     -X POST "${base%/}/api/v3/component-report" -H 'Content-Type: application/json' \
-    -d '{"coordinates":["pkg:golang/golang.org/x/text@v0.3.8","pkg:golang/golang.org/x/net@v0.7.0"]}') || status=""
+    -d '{"coordinates":["pkg:golang/golang.org/x/text@v0.3.8","pkg:golang/golang.org/x/net@v0.7.0"]}') || guide_status=""
   message=$(jq -r 'if type == "object" then (.message // .code // empty) else empty end' "$body" 2>/dev/null) || message=""
 
-  case "$status" in
+  case "$guide_status" in
     402)
-      jq -r '"Sonatype Guide answered HTTP 402 \(.code // "Payment Required"): \(.creditsRemaining // "no") credits left on the \(.tier // "unknown") tier, the quota resets on \(.resetDate // "an unknown date")"' \
-        "$body" 2>/dev/null || echo "Sonatype Guide answered HTTP 402 Payment Required${message:+: ${message}}"
+      reason=$(jq -r '"Sonatype Guide answered HTTP 402 \(.code // "Payment Required"): \(.creditsRemaining // "no") credits left on the \(.tier // "unknown") tier, the quota resets on \(.resetDate // "an unknown date")"' \
+        "$body" 2>/dev/null) || reason="Sonatype Guide answered HTTP 402 Payment Required${message:+: ${message}}"
       ;;
     2??)
-      echo "Sonatype Guide answered a check of two dependencies, so its refusal of the scan was transient or specific to the scan's batch"
+      reason="Sonatype Guide answered a check of two dependencies, so its refusal of the scan was transient or specific to the scan's batch"
       ;;
     ""|000)
-      echo "the Sonatype Guide API could not be reached to recover its answer"
+      guide_status=""
+      reason="the Sonatype Guide API could not be reached to recover its answer"
       ;;
     *)
-      echo "Sonatype Guide answered HTTP ${status}${message:+: ${message}}"
+      reason="Sonatype Guide answered HTTP ${guide_status}${message:+: ${message}}"
       ;;
   esac
   rm -f "$body"
+  [[ -n "$reason" ]] || reason="Sonatype Guide answered HTTP ${guide_status} without a reason"
 }
 
 go list -json -deps ./... \
@@ -127,8 +140,35 @@ if ! grep -qF \
 fi
 
 reason="the external scanner could not answer"
-if grep -qF 'cannot unmarshal object into Go value of type []sonatypeguide.ComponentReportPost' "$results"; then
-  reason=$(guide_error_reason)
+guide_status=""
+# A status that nancy names is kept, except that a 402 is checked again for its
+# credit balance and reset date; a Guide error without a status is checked for one.
+nancy_status=$(grep -m 1 -oE 'guide API request failed: [0-9]{3}( [^[:cntrl:]]*)?' "$results" \
+  | sed -e 's/^guide API request failed: //') || nancy_status=""
+if [[ -n "$nancy_status" && "${nancy_status%% *}" != 402 ]]; then
+  guide_status="${nancy_status%% *}"
+  reason="Sonatype Guide answered HTTP ${nancy_status}"
+  guide_has_credentials || reason="no Sonatype Guide credentials are set (GUIDE_TOKEN, or OSSI_USERNAME and OSSI_TOKEN)"
+elif grep -qF 'guide API request failed' "$results"; then
+  guide_error_reason
+  # The check did not confirm the 402 nancy named (it is a smaller batch, or
+  # the API is unreachable now): report nancy's status.
+  if [[ -n "$nancy_status" && "$guide_status" != 402 ]] && guide_has_credentials; then
+    guide_status=402
+    reason="Sonatype Guide answered HTTP ${nancy_status}"
+  fi
+fi
+
+# Rejected credentials are no outage: the context that holds them is broken,
+# only we can fix it, and every build that uses it goes unscanned until then.
+# A 403 is not counted: a firewall or an IP block in front of the API answers it
+# too, and that is an outage.
+if [[ "$guide_status" == 401 ]] && guide_has_credentials; then
+  echo
+  echo "SCAN FAILED: Sonatype Guide rejected the job's credentials: ${reason}."
+  echo "Check GUIDE_TOKEN (or OSSI_USERNAME and OSSI_TOKEN) in the job's CircleCI context."
+  write_junit 1 "SCAN FAILED: credentials rejected: ${reason}"
+  exit 1
 fi
 
 echo
